@@ -63,7 +63,7 @@ pre > code { border: 0; padding-right: 0; padding-left: 0; }
 .site-links { font-size: 22px; padding: 2px 0px 0px 6px; }
 .site-links a { float: left; color: silver; position: relative; padding: 0px 7px; white-space: nowrap; }
 .site-links a .link-text { visibility: hidden; font-size: 14px; position: absolute; top: 30px; left: 50%; -moz-transform: translate(-50%, 0%); -o-transform: translate(-50%, 0%); -ms-transform: translate(-50%, 0%); -webkit-transform: translate(-50%, 0%); transform: translate(-50%, 0%); }
-.site-links a:hover { color: #42a9f8; }
+.site-links a:hover { color: #ffea00; }
 .site-links a:hover .link-text { visibility: visible; }
 
 @media screen and (max-width: 768px) { .site-links { padding: 1px 0px 0px 0px; margin-left: -2px; }

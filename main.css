@@ -4,7 +4,7 @@ body, h1, h2, h3, h4, h5, h6, p, blockquote, pre, hr, dl, dd, ol, ul, figure { m
 /** Basic styling */
 html { height: 100%; }
 
-body { height: 100%; font-family: "Open Sans", Helvetica, Arial, sans-serif; font-size: 14px; line-height: 1.5; font-weight: 400; color: #1a1a1a; background-color: #fdfdfd; -webkit-text-size-adjust: 100%; }
+body { height: 100%; font-family: "Open Sans", Helvetica, Arial, sans-serif; font-size: 14px; line-height: 1.5; font-weight: 400; color: #1a1a1a; background-color: #ffffff; -webkit-text-size-adjust: 100%; }
 
 /** Set `margin-bottom` to maintain vertical rhythm */
 h1, h2, h3, h4, h5, h6, p, blockquote, pre, ul, ol, dl, figure { margin-bottom: 15px; }

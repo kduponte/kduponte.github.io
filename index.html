@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Kyle DuPonte</title>
+  <title>Kyle DuPonte — Data Scientist</title>
   <!-- Tailwind CSS -->
   <script src="https://cdn.tailwindcss.com"></script>
   <!-- Google Fonts -->
@@ -13,7 +13,7 @@
   <style>
     body { font-family: 'Inter', sans-serif; }
     h1, h2, h3, .serif { font-family: 'Playfair Display', serif; }
-    :root { --accent-color: #5BAEB7; }
+    :root { --accent-color: #E63946; }
     .accent { color: var(--accent-color); }
     .accent-bg { background-color: var(--accent-color); }
     /* Animation Speed */
@@ -24,13 +24,80 @@
 
   <!-- Hero Cover -->
   <section class="w-full h-screen flex items-center justify-center bg-black text-white relative overflow-hidden">
-    <div class="text-center px-4">
-      <h1 class="text-6xl md:text-8xl font-bold serif mb-4">Kyle DuPonte</h1>
-      <div class="w-24 h-1 mx-auto mb-4 accent-bg animate-pulse"></div>
-      <p class="text-xl md:text-2xl">Data Science & Analytics</p>
+    <header class="relative flex flex-col items-center py-16">
+  <!-- Three-logo row -->
+  <div id="logo-row" class="flex justify-center space-x-8 mb-6">
+    <!-- Logo 1: Circle + Triangle + Bar -->
+    <div class="logo logo-1 w-20 h-20">
+      <svg viewBox="0 0 100 100" preserveAspectRatio="xMidYMid meet">
+        <circle cx="50" cy="50" r="45" class="logo-circle" />
+        <polygon points="50,20 80,80 20,80" class="logo-triangle" />
+        <rect x="0" y="45" width="100" height="10" class="logo-bar" />
+      </svg>
     </div>
+    <!-- Logo 2: Circle + Square + Bar -->
+    <div class="logo logo-2 w-20 h-20">
+      <svg viewBox="0 0 100 100" preserveAspectRatio="xMidYMid meet">
+        <circle cx="50" cy="50" r="45" class="logo-circle" />
+        <rect x="20" y="20" width="60" height="60" class="logo-square" />
+        <rect x="0" y="45" width="100" height="10" class="logo-bar" />
+      </svg>
+    </div>
+    <!-- Logo 3: Circle + Hexagon + Bar -->
+    <div class="logo logo-3 w-20 h-20">
+      <svg viewBox="0 0 100 100" preserveAspectRatio="xMidYMid meet">
+        <circle cx="50" cy="50" r="45" class="logo-circle" />
+        <polygon points="84.64,50 
+        67.32,80 
+        32.68,80 
+        15.36,50 
+        32.68,20 
+        67.32,20" class="logo-hexagon" />
+        <rect x="0" y="45" width="100" height="10" class="logo-bar" />
+      </svg>
+    </div>
+  </div>
+
+  <!-- Your name & subtitle -->
+  <h1 class="text-6xl md:text-8xl font-bold serif mb-2">Kyle DuPonte</h1>
+  <p class="text-xl md:text-2xl">Data Science & Analytics</p>
+</header>
+
+<style>
+  /* Base animations */
+  .logo-circle {
+    fill: #111;
+    animation: pulse 3s ease-in-out infinite;
+  }
+  .logo-bar {
+    fill: #fff;
+    mix-blend-mode: difference;
+    animation: glitch 2s infinite;
+  }
+
+  /* Logo-specific shapes & colors */
+  .logo-1 .logo-triangle { fill: #E63946; animation: rotate 5s linear infinite; }
+  .logo-2 .logo-square   { fill: #F4D35E; animation: rotate 5.5s linear infinite; }
+  .logo-3 .logo-hexagon  { fill: #457B9D; animation: rotate 5.25s linear infinite; }
+
+  /* Keyframes */
+  @keyframes pulse {
+    0%, 100% { r: 45; }
+    50%       { r: 40; }
+  }
+  @keyframes rotate {
+    from { transform: rotate(0deg); }
+    to   { transform: rotate(360deg); }
+  }
+  @keyframes glitch {
+    0%, 100%   { transform: translateX(0); }
+    20%, 40%   { transform: translateX(-5px); }
+    60%, 80%   { transform: translateX(5px); }
+  }
+</style>
     <!-- Placeholder for animated logo/flourish -->
-    <div class="absolute bottom-10 right-10 w-32 h-32 bg-white/10 rounded-full animate-spin-slow"></div>
+    <div class="absolute bottom-10 right-10 w-32 h-32 bg-white/10 rounded-full animate-spin-slow">
+    </div>
   </section>
 
   <!-- Artist’s Statement -->
@@ -53,7 +120,7 @@
           <img src="https://via.placeholder.com/400x300.png?text=Prompt+Engineering+for+Analytics" alt="Prompt Engineering for Analytics" class="w-full h-48 object-cover group-hover:scale-105 transition-transform duration-500">
           <div class="p-6">
             <h3 class="text-2xl font-semibold mb-2 serif">Prompt Engineering for Analytics</h3>
-            <p class="text-sm leading-relaxed">Exploration of LLM-driven data queries used to streamline analysis workflows.</p>
+            <p class="text-sm leading-relaxed">An exploration of LLM-driven data queries used to streamline analysis workflows.</p>
           </div>
         </div>
 
@@ -61,7 +128,7 @@
           <img src="https://via.placeholder.com/400x300.png?text=Hacker+News+AI+Digest" alt="Hacker News TLDR" class="w-full h-48 object-cover group-hover:scale-105 transition-transform duration-500">
           <div class="p-6">
             <h3 class="text-2xl font-semibold mb-2 serif">Hacker News TLDR</h3>
-            <p class="text-sm leading-relaxed">Weekly highlights from Y Combinator’s community feed and comments summarized by AI.</p>
+            <p class="text-sm leading-relaxed">Weekly highlights from Y Combinator’s community news feed and comment section summarized by AI.</p>
           </div>
         </div>
 
@@ -85,7 +152,7 @@
           <img src="https://via.placeholder.com/400x300.png?text=Fender+Bass+Tracker" alt="Bass Slapper" class="w-full h-48 object-cover group-hover:scale-105 transition-transform duration-500">
           <div class="p-6">
             <h3 class="text-2xl font-semibold mb-2 serif">Bass Slapper v1</h3>
-            <p class="text-sm leading-relaxed">Tool for transcribing Bass (and guitar) riffs into TAB format. Next iteration to include the ability to make suggestions to make basslines even jucier.</p>
+            <p class="text-sm leading-relaxed">Tool for transcribing Bass (and guitar) riffs into TAB format. Next iteration to include optional suggestions to make basslines even jucier.</p>
           </div>
         </div>
 
@@ -93,7 +160,7 @@
           <img src="https://via.placeholder.com/400x300.png?text=Sneaker+Leaderboard" alt="Flyscore Leaderboard" class="w-full h-48 object-cover group-hover:scale-105 transition-transform duration-500">
           <div class="p-6">
             <h3 class="text-2xl font-semibold mb-2 serif">Flyscore Leaderboard</h3>
-            <p class="text-sm leading-relaxed">Visualizing top-trending sneakers from popular resale marketplaces as a high score leaderboard over time.</p>
+            <p class="text-sm leading-relaxed">Visualizing top-trending sneakers from popular resale marketplaces as a high score leaderboard.</p>
           </div>
         </div>
 
@@ -109,7 +176,7 @@
           <img src="https://via.placeholder.com/400x300.png?text=Experimentation+Toolkit" alt="Experimentation Crash Course" class="w-full h-48 object-cover group-hover:scale-105 transition-transform duration-500">
           <div class="p-6">
             <h3 class="text-2xl font-semibold mb-2 serif">Experimentation Crash Course</h3>
-            <p class="text-sm leading-relaxed">Distilled learnings from upleveling an A/B testing program and platform</p>
+            <p class="text-sm leading-relaxed">A collection of distilled learnings from my experience upleveling an A/B testing program and platform.</p>
           </div>
         </div>
 

@@ -2,14 +2,15 @@
 import BaseLayout from "../layouts/BaseLayout.astro";
 import TagPill from "../components/TagPill.astro";
 
-const tags = ["FinTech", "Experimentation Platforms", "Machine Learning", "Data Engineering"];
+const tags = ["FinTech", "Experimentation Platforms", "Strategic Analysis", "Data Engineering"];
 
 const stack = [
-	{ step: "01", label: "Exploratory analysis", detail: "Turning open questions into a first, testable read of the data." },
-	{ step: "02", label: "Data engineering / ETL", detail: "Building the pipelines that make the analysis possible in the first place." },
-	{ step: "03", label: "Applied Python analysis", detail: "The day-to-day: modeling, statistics, and getting to a defensible number." },
-	{ step: "04", label: "Machine learning", detail: "Building and shipping models when prediction, not just measurement, is the job." },
-	{ step: "05", label: "Causal inference", detail: "The newest addition to the toolkit: diff-in-diff, synthetic control, IV, for questions a randomized test can't answer." },
+	{ step: "01", label: "Strategic analysis & leadership", detail: "Primary analyst for leadership, regulator, and external requests. Metrics I've defined now feed multiple years of company OKRs and planning." },
+	{ step: "02", label: "Experimentation", detail: "Built the platform's underlying logic and its alerting/guardrail program, and led the shift from frequentist to Bayesian methods for faster, more confident decisions." },
+	{ step: "03", label: "Automation & tooling", detail: "One of my primary charters: automating repetitive work and building the tooling (including AI-powered workflows) that streamlines analysis across the team." },
+	{ step: "04", label: "Exploratory & predictive analysis", detail: "Turning open questions into a first, testable read of the data, occasionally extending into prediction models built for analysis, not production." },
+	{ step: "05", label: "Data engineering / ETL", detail: "Building the pipelines that make the analysis possible in the first place." },
+	{ step: "06", label: "Causal inference", detail: "The newest addition to the toolkit: diff-in-diff, synthetic control, IV, for questions a randomized test can't answer." },
 ];
 ---
 
@@ -50,7 +51,7 @@ const stack = [
 				</p>
 
 				<div class="border-y border-line py-8">
-					<p class="font-mono text-xs uppercase tracking-widest text-ink-soft">What I do, start to finish</p>
+					<p class="font-mono text-xs uppercase tracking-widest text-ink-soft">What I actually do</p>
 					<ul class="mt-6 space-y-5">
 						{
 							stack.map((item) => (

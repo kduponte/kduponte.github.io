@@ -7,6 +7,9 @@ import tailwindcss from '@tailwindcss/vite';
 export default defineConfig({
 	site: 'https://kyleduponte.com',
 	integrations: [sitemap()],
+	redirects: {
+		'/resume': '/experience',
+	},
 	vite: {
 		plugins: [tailwindcss()],
 	},

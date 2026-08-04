@@ -2,20 +2,20 @@
 import BaseLayout from "../layouts/BaseLayout.astro";
 import TagPill from "../components/TagPill.astro";
 
-const tags = ["FinTech", "Experimentation Platforms", "Causal Inference", "Machine Learning", "Data Engineering"];
+const tags = ["FinTech", "Experimentation Platforms", "Machine Learning", "Data Engineering"];
 
 const stack = [
 	{ step: "01", label: "Exploratory analysis", detail: "Turning open questions into a first, testable read of the data." },
 	{ step: "02", label: "Data engineering / ETL", detail: "Building the pipelines that make the analysis possible in the first place." },
 	{ step: "03", label: "Applied Python analysis", detail: "The day-to-day: modeling, statistics, and getting to a defensible number." },
 	{ step: "04", label: "Machine learning", detail: "Building and shipping models when prediction, not just measurement, is the job." },
-	{ step: "05", label: "Causal inference", detail: "Diff-in-diff, synthetic control, IV — for the questions a randomized test can't answer." },
+	{ step: "05", label: "Causal inference", detail: "The newest addition to the toolkit: diff-in-diff, synthetic control, IV, for questions a randomized test can't answer." },
 ];
 ---
 
 <BaseLayout
 	title="About"
-	description="Staff Data Scientist background in FinTech experimentation, causal inference, and full-stack data science."
+	description="Staff Data Scientist background in FinTech experimentation and full-stack data science, now growing into causal inference."
 >
 	<div class="mx-auto max-w-7xl px-6 py-20 md:px-12 md:py-28">
 		<p class="font-mono text-xs uppercase tracking-widest text-accent-blue">About</p>
@@ -31,22 +31,22 @@ const stack = [
 			<div class="max-w-[70ch] space-y-6 text-base leading-relaxed text-ink md:text-lg">
 				<p>
 					I'm a Staff Data Scientist at Intuit, working within Credit Karma, where I've spent my career at the
-					intersection of consumer FinTech and rigorous measurement — figuring out not just what's happening in the
+					intersection of consumer FinTech and rigorous measurement, figuring out not just what's happening in the
 					product, but what would happen if we did something differently, and how confident we should be about it.
 				</p>
 
 				<p>
 					Most recently, I've focused on our experimentation platform, where I became the resident expert on both
 					the tooling and the underlying methodology. I was the primary contributor to our internal experimentation
-					codebase — building the features that streamline experiment analysis and reporting, and expanding the
+					codebase, building the features that streamline experiment analysis and reporting, and expanding the
 					statistical methods available to the broader analytics org. If a team needed to know whether an effect was
 					real, how to size a test correctly, or how to interpret a messy result, that's the work I did.
 				</p>
 
 				<p>
-					More recently I've been extending that work into causal inference — methods like difference-in-differences,
-					synthetic control, and instrumental variables — for the questions where running an A/B test isn't possible,
-					but the business still needs a real answer.
+					More recently I've started learning causal inference: methods like difference-in-differences, synthetic
+					control, and instrumental variables, for the questions where running an A/B test isn't possible but the
+					business still needs a real answer. It's early days, but it's the direction I want to keep growing in.
 				</p>
 
 				<div class="border-y border-line py-8">
@@ -68,7 +68,7 @@ const stack = [
 
 				<p>
 					The work I care most about sits at the intersection of experimentation rigor and clear metric
-					ownership — measurement problems where the answer isn't obvious going in. That's held true across
+					ownership: measurement problems where the answer isn't obvious going in. That's held true across
 					FinTech, and it's the throughline I look for in whatever comes next.
 				</p>
 			</div>

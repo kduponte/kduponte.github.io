@@ -10,7 +10,7 @@ const projects = (await getCollection("projects")).sort((a, b) => a.data.order -
 
 <BaseLayout
 	title="Home"
-	description="Kyle DuPonte — Staff Data Scientist. Full-stack analytics, experimentation, and causal inference, with a background in FinTech."
+	description="Kyle DuPonte, Staff Data Scientist. Full-stack analytics and experimentation, with a background in FinTech and a growing interest in causal inference."
 >
 	<section class="border-b border-line bg-ink text-paper">
 		<div class="mx-auto flex min-h-[calc(100dvh-73px)] max-w-7xl flex-col justify-center px-6 py-24 md:px-12">
@@ -18,12 +18,13 @@ const projects = (await getCollection("projects")).sort((a, b) => a.data.order -
 
 			<h1 class="font-display max-w-3xl text-5xl font-semibold tracking-tight md:text-8xl">Kyle DuPonte</h1>
 			<p class="mt-6 max-w-2xl text-lg text-paper/80 md:text-2xl">
-				Staff Data Scientist at Intuit — full-stack analytics, experimentation, and causal inference.
+				Staff Data Scientist at Intuit. Full-stack analytics and experimentation, with a growing interest in
+				causal inference.
 			</p>
 
 			<ul class="mt-8 flex flex-wrap gap-3 font-mono text-xs uppercase tracking-wide text-paper/70">
 				<li class="rounded-full border border-paper/30 px-3 py-1">[ SF Bay Area ]</li>
-				<li class="rounded-full border border-paper/30 px-3 py-1">[ Experimentation × Causal Inference ]</li>
+				<li class="rounded-full border border-paper/30 px-3 py-1">[ Experimentation ]</li>
 			</ul>
 
 			<div class="mt-10 flex flex-wrap gap-4">
@@ -47,9 +48,9 @@ const projects = (await getCollection("projects")).sort((a, b) => a.data.order -
 		<div class="mx-auto max-w-7xl px-6 py-20 md:px-12 md:py-28">
 			<SectionHeading eyebrow="About" title="Experimentation is the throughline." />
 			<p class="mt-6 max-w-[65ch] text-base leading-relaxed text-ink-soft md:text-lg">
-				I became the resident expert on Credit Karma's experimentation platform — the primary contributor to its
-				codebase, and the person teams came to for statistical methodology. Lately that's extended into causal
-				inference, for the questions a randomized test can't answer.
+				I became the resident expert on Credit Karma's experimentation platform: the primary contributor to its
+				codebase, and the person teams came to for statistical methodology. Lately I've been picking up causal
+				inference too, for the questions a randomized test can't answer.
 			</p>
 			<a href="/about" class="mt-6 inline-block font-mono text-xs uppercase tracking-wide text-accent-blue"
 				>Read the full story →</a

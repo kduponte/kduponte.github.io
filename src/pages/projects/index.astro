@@ -1,0 +1,33 @@
+---
+import { getCollection } from "astro:content";
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import SectionHeading from "../../components/SectionHeading.astro";
+import ProjectCard from "../../components/ProjectCard.astro";
+
+const projects = (await getCollection("projects")).sort((a, b) => a.data.order - b.data.order);
+---
+
+<BaseLayout title="Projects" description="Portfolio projects from Kyle DuPonte — coming soon.">
+	<div class="mx-auto max-w-7xl px-6 py-20 md:px-12 md:py-28">
+		<SectionHeading eyebrow="[ Coming soon ]" title="Projects" />
+		<p class="mt-6 max-w-[65ch] text-base leading-relaxed text-ink-soft md:text-lg">
+			I can't share the experimentation and analytics work I've built at Credit Karma publicly, so this page will
+			hold net-new projects I'm building on my own time — starting with the experimentation and causal inference
+			tools below. Real write-ups are on the way.
+		</p>
+
+		<div class="mt-12 grid grid-cols-1 gap-6 md:grid-cols-2">
+			{
+				projects.map((project) => (
+					<ProjectCard
+						slug={project.id}
+						title={project.data.title}
+						summary={project.data.summary}
+						status={project.data.status}
+						tags={project.data.tags}
+					/>
+				))
+			}
+		</div>
+	</div>
+</BaseLayout>

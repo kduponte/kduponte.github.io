@@ -1,0 +1,58 @@
+---
+import TagPill from "./TagPill.astro";
+
+interface Props {
+	slug: string;
+	title: string;
+	summary: string;
+	status: "coming-soon" | "in-progress" | "live";
+	tags: string[];
+}
+
+const { slug, title, summary, status, tags } = Astro.props;
+
+const statusLabel: Record<Props["status"], string> = {
+	"coming-soon": "Coming soon",
+	"in-progress": "In progress",
+	live: "Live",
+};
+
+const statusTone: Record<Props["status"], "blue" | "green" | "yellow"> = {
+	"coming-soon": "yellow",
+	"in-progress": "blue",
+	live: "green",
+};
+
+const isLinkable = status !== "coming-soon";
+---
+
+<article class="group relative flex flex-col gap-4 border border-line p-6 transition-colors hover:border-accent-blue">
+	<div class="flex items-start justify-between gap-4">
+		<h3 class="font-display text-xl font-semibold">{title}</h3>
+		<TagPill tone={statusTone[status]}>{statusLabel[status]}</TagPill>
+	</div>
+	<p class="text-sm text-ink-soft">{summary}</p>
+	{
+		tags.length > 0 && (
+			<ul class="flex flex-wrap gap-2">
+				{tags.map((tag) => (
+					<li>
+						<TagPill>{tag}</TagPill>
+					</li>
+				))}
+			</ul>
+		)
+	}
+	{
+		isLinkable ? (
+			<a href={`/projects/${slug}`} class="mt-auto font-mono text-xs uppercase tracking-wide text-accent-blue">
+				View project →
+				<span class="absolute inset-0" aria-hidden="true" />
+			</a>
+		) : (
+			<span class="mt-auto font-mono text-xs uppercase tracking-wide text-ink-soft/60" aria-hidden="true">
+				Write-up coming soon
+			</span>
+		)
+	}
+</article>

@@ -1,0 +1,30 @@
+---
+import { getCollection, render } from "astro:content";
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import TagPill from "../../components/TagPill.astro";
+
+export async function getStaticPaths() {
+	const projects = await getCollection("projects");
+	return projects.map((project) => ({
+		params: { slug: project.id },
+		props: { project },
+	}));
+}
+
+const { project } = Astro.props;
+const { Content } = await render(project);
+---
+
+<BaseLayout title={project.data.title} description={project.data.summary}>
+	<article class="mx-auto max-w-3xl px-6 py-20 md:px-12 md:py-28">
+		<a href="/projects" class="font-mono text-xs uppercase tracking-wide text-accent-blue">← All projects</a>
+		<h1 class="font-display mt-6 text-4xl font-semibold tracking-tight md:text-5xl">{project.data.title}</h1>
+		<p class="mt-4 text-lg text-ink-soft">{project.data.summary}</p>
+		<ul class="mt-6 flex flex-wrap gap-2">
+			{project.data.tags.map((tag: string) => <TagPill tone="blue">{tag}</TagPill>)}
+		</ul>
+		<div class="mt-12 max-w-[65ch] space-y-4 leading-relaxed text-ink">
+			<Content />
+		</div>
+	</article>
+</BaseLayout>

@@ -1,0 +1,25 @@
+---
+interface Props {
+	tone?: "blue" | "green" | "yellow" | "neutral";
+	class?: string;
+}
+
+const { tone = "neutral", class: className = "" } = Astro.props;
+
+const toneClasses: Record<string, string> = {
+	blue: "border-accent-blue/40 text-accent-blue",
+	green: "border-accent-green/40 text-accent-green",
+	yellow: "border-accent-yellow/50 text-ink",
+	neutral: "border-line text-ink-soft",
+};
+---
+
+<span
+	class:list={[
+		"tag-pill inline-flex items-center gap-1 rounded-full border px-3 py-1 text-[11px] uppercase tracking-wide",
+		toneClasses[tone],
+		className,
+	]}
+>
+	[ <slot /> ]
+</span>

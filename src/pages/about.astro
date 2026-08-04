@@ -1,0 +1,78 @@
+---
+import BaseLayout from "../layouts/BaseLayout.astro";
+import TagPill from "../components/TagPill.astro";
+
+const tags = ["FinTech", "Experimentation Platforms", "Causal Inference", "Machine Learning", "Data Engineering"];
+
+const stack = [
+	{ step: "01", label: "Exploratory analysis", detail: "Turning open questions into a first, testable read of the data." },
+	{ step: "02", label: "Data engineering / ETL", detail: "Building the pipelines that make the analysis possible in the first place." },
+	{ step: "03", label: "Applied Python analysis", detail: "The day-to-day: modeling, statistics, and getting to a defensible number." },
+	{ step: "04", label: "Machine learning", detail: "Building and shipping models when prediction, not just measurement, is the job." },
+	{ step: "05", label: "Causal inference", detail: "Diff-in-diff, synthetic control, IV — for the questions a randomized test can't answer." },
+];
+---
+
+<BaseLayout
+	title="About"
+	description="Staff Data Scientist background in FinTech experimentation, causal inference, and full-stack data science."
+>
+	<div class="mx-auto max-w-7xl px-6 py-20 md:px-12 md:py-28">
+		<p class="font-mono text-xs uppercase tracking-widest text-accent-blue">About</p>
+		<h1 class="font-display mt-2 max-w-2xl text-4xl font-semibold tracking-tight md:text-6xl">
+			Full-stack data scientist, FinTech background.
+		</h1>
+
+		<div class="mt-16 grid grid-cols-1 gap-12 md:grid-cols-[220px_1fr] md:gap-16">
+			<div class="flex flex-row flex-wrap gap-2 md:sticky md:top-28 md:flex-col md:items-start md:self-start">
+				{tags.map((tag) => <TagPill tone="blue">{tag}</TagPill>)}
+			</div>
+
+			<div class="max-w-[70ch] space-y-6 text-base leading-relaxed text-ink md:text-lg">
+				<p>
+					I'm a Staff Data Scientist at Intuit, working within Credit Karma, where I've spent my career at the
+					intersection of consumer FinTech and rigorous measurement — figuring out not just what's happening in the
+					product, but what would happen if we did something differently, and how confident we should be about it.
+				</p>
+
+				<p>
+					Most recently, I've focused on our experimentation platform, where I became the resident expert on both
+					the tooling and the underlying methodology. I was the primary contributor to our internal experimentation
+					codebase — building the features that streamline experiment analysis and reporting, and expanding the
+					statistical methods available to the broader analytics org. If a team needed to know whether an effect was
+					real, how to size a test correctly, or how to interpret a messy result, that's the work I did.
+				</p>
+
+				<p>
+					More recently I've been extending that work into causal inference — methods like difference-in-differences,
+					synthetic control, and instrumental variables — for the questions where running an A/B test isn't possible,
+					but the business still needs a real answer.
+				</p>
+
+				<div class="border-y border-line py-8">
+					<p class="font-mono text-xs uppercase tracking-widest text-ink-soft">What I do, start to finish</p>
+					<ul class="mt-6 space-y-5">
+						{
+							stack.map((item) => (
+								<li class="flex gap-4">
+									<span class="font-mono text-xs text-accent-blue">{item.step}</span>
+									<div>
+										<p class="font-medium">{item.label}</p>
+										<p class="text-sm text-ink-soft">{item.detail}</p>
+									</div>
+								</li>
+							))
+						}
+					</ul>
+				</div>
+
+				<p>
+					I'm looking for what's next: a Staff or Senior Staff role where experimentation rigor and clear metric
+					ownership are core to the job, not a nice-to-have. I'm open to staying in FinTech or moving into a new
+					industry — the constant is that I want to keep doing data science and analytics, working on hard
+					measurement problems where the answer isn't obvious going in.
+				</p>
+			</div>
+		</div>
+	</div>
+</BaseLayout>

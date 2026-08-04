@@ -7,6 +7,30 @@ const timeline = [
 	{ range: "2011 — 2017", role: "Finance & venture capital" },
 	{ range: "2011", role: "B.A., Stanford University" },
 ];
+
+const roles = [
+	{
+		range: "2019 — Present",
+		title: "Staff Data Scientist",
+		org: "Credit Karma / Intuit",
+		bullets: [
+			"Analytics owner of the experimentation program: defined the platform standards, guardrail metrics, and alerting, credited with saving roughly $200M/year in unnecessary losses.",
+			"Currently leading a roadmap to move the org from frequentist to Bayesian experiment analysis.",
+			"Designed a cross-functional engagement framework that became a companywide OKR for multiple years.",
+			"Led the analytics org's push into AI: built internal tooling and automation, including the team's go-to AI-powered workflows.",
+			"Mentored 8+ analysts.",
+		],
+	},
+	{
+		range: "2017 — 2019",
+		title: "Senior Data Science Analyst",
+		org: "LendUp",
+		bullets: [
+			"Built ML-driven credit policy models that increased loan approval rates by 12% with no meaningful effect on default rates.",
+			"Built forecasting models that improved volume prediction accuracy by 20%.",
+		],
+	},
+];
 ---
 
 <BaseLayout
@@ -35,35 +59,37 @@ const timeline = [
 				</ul>
 			</div>
 
-			<div class="max-w-[70ch] space-y-6 text-base leading-relaxed text-ink md:text-lg">
-				<p>
-					I'm the analytics owner of Credit Karma's experimentation program: I defined the platform standards,
-					guardrail metrics, and alerting that govern how the whole org runs and trusts experiments, work
-					credited with saving roughly $200M a year in unnecessary losses. I'm currently leading a roadmap to
-					uplevel that program further, moving us from frequentist to Bayesian methods for faster, more
-					confident decisions.
-				</p>
+			<div class="max-w-[70ch] space-y-10">
+				{
+					roles.map((job) => (
+						<div>
+							<p class="font-mono text-xs uppercase tracking-widest text-ink-soft">{job.range}</p>
+							<h2 class="font-display mt-1 text-xl font-semibold">
+								{job.title} <span class="text-ink-soft">&middot; {job.org}</span>
+							</h2>
+							<ul class="mt-3 space-y-2 border-l border-line pl-5">
+								{job.bullets.map((bullet) => (
+									<li class="text-base leading-relaxed text-ink md:text-lg">{bullet}</li>
+								))}
+							</ul>
+						</div>
+					))
+				}
 
-				<p>
-					I'm usually the primary analyst for leadership, regulator, and external requests, and I sit on the
-					central analytics team helping guide company strategy. A cross-functional engagement framework I
-					designed became a companywide OKR for multiple years, and several metrics I've defined are now core
-					business metrics feeding multi-year OKRs and planning. I also lead a lot of the team's automation
-					and tooling work, including our AI-powered internal workflows, and mentor analysts on my team and
-					beyond, 8 and counting.
-				</p>
+				<div>
+					<p class="font-mono text-xs uppercase tracking-widest text-ink-soft">2011 — 2017</p>
+					<h2 class="font-display mt-1 text-xl font-semibold">Finance & venture capital</h2>
+					<p class="mt-3 text-base leading-relaxed text-ink-soft md:text-lg">
+						Earlier roles in venture capital and commercial banking, including data and performance tracking
+						for a $1.2B VC/PE portfolio.
+					</p>
+				</div>
 
-				<p>
-					Before Credit Karma, I was a Senior Data Science Analyst at LendUp, where I built ML-driven credit
-					policy models that increased loan approval rates by 12% with no meaningful effect on default rates,
-					and forecasting models that improved volume prediction accuracy by 20%.
-				</p>
-
-				<p class="text-ink-soft">
-					Earlier in my career, I spent several years in venture capital and commercial banking, including
-					data and performance tracking for a $1.2B VC/PE portfolio. I have a B.A. in Science, Technology,
-					and Society from Stanford.
-				</p>
+				<div>
+					<p class="font-mono text-xs uppercase tracking-widest text-ink-soft">2011</p>
+					<h2 class="font-display mt-1 text-xl font-semibold">B.A., Science, Technology & Society</h2>
+					<p class="mt-3 text-base leading-relaxed text-ink-soft md:text-lg">Stanford University.</p>
+				</div>
 			</div>
 		</div>
 

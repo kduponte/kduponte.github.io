@@ -1,0 +1,12 @@
+{
+  "profile_id": "personal_default",
+  "dataset": "C",
+  "weight_lb": 180,
+  "height_in": 71,
+  "age": 30,
+  "skill": "beginner",
+  "fitness": "average",
+  "frequency": "occasional",
+  "conditions": "average",
+  "wetsuit": "standard"
+}

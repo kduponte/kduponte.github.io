@@ -1,0 +1,176 @@
+{
+  "coefficients": [
+    {
+      "term": "intercept",
+      "estimate": 51.270992063492024,
+      "ci_low": 47.78932555097585,
+      "ci_high": 54.70466258793245
+    },
+    {
+      "term": "weight_kg_centered",
+      "estimate": 0.5313553513256992,
+      "ci_low": 0.46597593685821104,
+      "ci_high": 0.6015352099433601
+    },
+    {
+      "term": "skill_intermediate",
+      "estimate": -11.530714285714264,
+      "ci_low": -12.844858605082333,
+      "ci_high": -10.285810918576912
+    },
+    {
+      "term": "skill_advanced",
+      "estimate": -16.989404761904748,
+      "ci_low": -18.501331883218036,
+      "ci_high": -15.588973341154194
+    },
+    {
+      "term": "weight_kg_centered:skill_intermediate",
+      "estimate": -0.10824587258056972,
+      "ci_low": -0.18719740268267998,
+      "ci_high": -0.03834990352939531
+    },
+    {
+      "term": "weight_kg_centered:skill_advanced",
+      "estimate": -0.1678643798331898,
+      "ci_low": -0.25063899563286945,
+      "ci_high": -0.09492645207306331
+    },
+    {
+      "term": "source_guild_factor_heuristic",
+      "estimate": -7.2009523809523515,
+      "ci_low": -10.034309614507787,
+      "ci_high": -4.392251571032865
+    },
+    {
+      "term": "source_js_industries",
+      "estimate": -7.65809523809515,
+      "ci_low": -11.071836087344792,
+      "ci_high": -4.231575192151176
+    },
+    {
+      "term": "source_lost",
+      "estimate": -9.105238095238015,
+      "ci_low": -12.604960840126758,
+      "ci_high": -6.014873992088674
+    },
+    {
+      "term": "source_matta",
+      "estimate": -7.772380952380935,
+      "ci_low": -10.68212237964601,
+      "ci_high": -4.927917070961346
+    },
+    {
+      "term": "source_nsp",
+      "estimate": -5.023333333333412,
+      "ci_low": -8.109045950040915,
+      "ci_high": -2.1068081679433917
+    },
+    {
+      "term": "source_pyzel",
+      "estimate": -3.769523809523811,
+      "ci_low": -6.805090716602926,
+      "ci_high": -1.0253024054282278
+    },
+    {
+      "term": "source_roberts",
+      "estimate": -6.929047619047665,
+      "ci_low": -9.90236618491275,
+      "ci_high": -3.9565233326631812
+    },
+    {
+      "term": "source_rusty",
+      "estimate": -4.559523809523867,
+      "ci_low": -7.582096508511597,
+      "ci_high": -1.614388535440213
+    },
+    {
+      "term": "source_surfboard_empire",
+      "estimate": -2.660476190476089,
+      "ci_low": -5.685281643995129,
+      "ci_high": 0.29461399864491966
+    },
+    {
+      "term": "source_surftech",
+      "estimate": 0.3723809523810431,
+      "ci_low": -3.1507721133732147,
+      "ci_high": 3.748774882471963
+    },
+    {
+      "term": "source_weight_rule_heuristic",
+      "estimate": -1.212857142857061,
+      "ci_low": -4.135054625020302,
+      "ci_high": 1.9056628339559296
+    }
+  ],
+  "r_squared": 0.9079109480813881,
+  "cv_rmse": 4.144883046072394,
+  "residuals_by_source": [
+    {
+      "source_id": "firewire",
+      "mean_residual": 8.594183565860259e-14,
+      "rmse": 6.197329873738047
+    },
+    {
+      "source_id": "guild_factor_heuristic",
+      "mean_residual": 5.650506517711273e-14,
+      "rmse": 1.7771737764232587
+    },
+    {
+      "source_id": "js_industries",
+      "mean_residual": -2.1992989440193578e-15,
+      "rmse": 4.385270093918117
+    },
+    {
+      "source_id": "lost",
+      "mean_residual": 4.906128413581644e-15,
+      "rmse": 3.977776727236746
+    },
+    {
+      "source_id": "matta",
+      "mean_residual": 6.817826726460009e-14,
+      "rmse": 1.5810753900473897
+    },
+    {
+      "source_id": "nsp",
+      "mean_residual": 1.641015365922136e-13,
+      "rmse": 2.7063241670158846
+    },
+    {
+      "source_id": "pyzel",
+      "mean_residual": 8.83103114444696e-14,
+      "rmse": 2.416580625668863
+    },
+    {
+      "source_id": "roberts",
+      "mean_residual": 1.316195829574662e-13,
+      "rmse": 2.5198335411545907
+    },
+    {
+      "source_id": "rusty",
+      "mean_residual": 1.4481537662158231e-13,
+      "rmse": 2.4793998718706085
+    },
+    {
+      "source_id": "surfboard_empire",
+      "mean_residual": -1.522591576628786e-14,
+      "rmse": 2.878651813922948
+    },
+    {
+      "source_id": "surftech",
+      "mean_residual": -4.3985978880387156e-15,
+      "rmse": 5.590920099009179
+    },
+    {
+      "source_id": "weight_rule_heuristic",
+      "mean_residual": 4.567774729886359e-15,
+      "rmse": 2.7466753003198674
+    }
+  ],
+  "n_observations": 252,
+  "notes": [
+    "Reference source: firewire. Reference skill: beginner.",
+    "This is an explanatory lens over the core comparison grid, not the primary consensus calculator.",
+    "Confidence intervals are 1000-rep case-resampling bootstrap percentile intervals, not analytic standard errors."
+  ]
+}

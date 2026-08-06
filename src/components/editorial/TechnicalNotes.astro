@@ -1,0 +1,27 @@
+---
+interface Note {
+	heading: string;
+	body: string;
+}
+
+interface Props {
+	title?: string;
+	notes: Note[];
+}
+
+const { title = "Technical notes", notes } = Astro.props;
+---
+
+<section class="mx-auto max-w-7xl px-6 py-16 md:px-12 md:py-20">
+	<h2 class="font-display text-2xl font-semibold tracking-tight md:text-3xl">{title}</h2>
+	<div class="mt-8 space-y-8">
+		{
+			notes.map((note) => (
+				<div class="max-w-[65ch] border-t border-line pt-6 font-mono text-sm">
+					<h3 class="font-sans text-base font-semibold text-ink">{note.heading}</h3>
+					<p class="mt-2 leading-relaxed whitespace-pre-line text-ink-soft">{note.body}</p>
+				</div>
+			))
+		}
+	</div>
+</section>

@@ -1,0 +1,65 @@
+---
+// Visualization 6 (brief §17) — descriptive behavioral scorecards, explicitly not an overall
+// quality ranking (brief §14). CSS width-percentage bars rather than SVG: matches the site's
+// flat/square/no-shadow aesthetic and these are simple enough not to need a chart library.
+import type { SourceMetadata, SourceScores } from "../../../lib/surf-volume/types";
+import sourceMetadata from "../../../../public/data/surf-volume/source_metadata.json";
+import sourceScoresData from "../../../../public/data/surf-volume/source_scores.json";
+
+const sources = sourceMetadata as SourceMetadata[];
+const { scores } = sourceScoresData as { scores: SourceScores[] };
+const sourceById = new Map(sources.map((s) => [s.source_id, s]));
+
+const SCORE_ROWS: { key: keyof Omit<SourceScores, "source_id">; label: string; signed?: boolean }[] = [
+	{ key: "complexity", label: "Complexity" },
+	{ key: "transparency", label: "Transparency" },
+	{ key: "coverage", label: "Coverage" },
+	{ key: "consistency", label: "Consistency" },
+	{ key: "sensitivity", label: "Sensitivity" },
+	{ key: "relative_volume_tendency", label: "Relative-volume tendency", signed: true },
+];
+---
+
+<section id="scorecards" class="mx-auto max-w-7xl px-6 py-16 md:px-12 md:py-20">
+	<h2 class="font-display text-2xl font-semibold tracking-tight md:text-3xl">Recommendation-system profiles</h2>
+	<p class="mt-3 max-w-[65ch] text-base leading-relaxed text-ink-soft">
+		These scores characterize how each system behaves, not how good it is. A high complexity score isn't a flaw and
+		a high transparency score isn't a guarantee of accuracy. Where a score reads "not measurable," that means we
+		don't yet have enough data to compute it responsibly, never a hidden zero.
+	</p>
+	<div class="mt-8 grid grid-cols-1 gap-6 md:grid-cols-2">
+		{
+			scores.map((score) => {
+				const source = sourceById.get(score.source_id);
+				if (!source) return null;
+				return (
+					<div class="border border-line p-6">
+						<p class="font-display text-lg font-semibold">{source.source_name}</p>
+						<div class="mt-4 space-y-3">
+							{SCORE_ROWS.map((row) => {
+								const value = score[row.key];
+								const isSigned = row.signed === true;
+								const pct = value === null ? 0 : isSigned ? 50 + Math.max(-50, Math.min(50, value * 100)) : Math.max(0, Math.min(100, value * 100));
+								return (
+									<div>
+										<div class="flex items-center justify-between font-mono text-[11px] uppercase tracking-wide text-ink-soft">
+											<span>{row.label}</span>
+											<span>{value === null ? "not measurable" : isSigned ? `${value >= 0 ? "+" : ""}${(value * 100).toFixed(0)}%` : value.toFixed(2)}</span>
+										</div>
+										<div class="mt-1 h-2 w-full border border-line bg-paper">
+											{value === null ? (
+												<div class="h-full w-full bg-[repeating-linear-gradient(45deg,var(--color-line),var(--color-line)_4px,transparent_4px,transparent_8px)]" />
+											) : (
+												<div class="h-full bg-accent-blue" style={`width: ${pct}%`} />
+											)}
+										</div>
+									</div>
+								);
+							})}
+						</div>
+					</div>
+				);
+			})
+		}
+	</div>
+</section>

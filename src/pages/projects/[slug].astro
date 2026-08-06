@@ -4,7 +4,10 @@ import BaseLayout from "../../layouts/BaseLayout.astro";
 import TagPill from "../../components/TagPill.astro";
 
 export async function getStaticPaths() {
-	const projects = await getCollection("projects");
+	// "the-volume-gap" has its own dedicated static route (richer than this generic markdown
+	// template can express) — excluded here to avoid generating a duplicate /projects/the-volume-gap
+	// path at build time.
+	const projects = (await getCollection("projects")).filter((project) => project.id !== "the-volume-gap");
 	return projects.map((project) => ({
 		params: { slug: project.id },
 		props: { project },

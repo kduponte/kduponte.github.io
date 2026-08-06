@@ -1,0 +1,69 @@
+---
+// Visualization 1 (brief §17) — the hero interaction. Markup + mount points only; all
+// behavior lives in src/scripts/surf-volume/{profile-form,hero-comparison-chart}.ts.
+---
+
+<section id="personal-comparison" class="mx-auto max-w-7xl px-6 py-16 md:px-12 md:py-20">
+	<h2 class="font-display text-2xl font-semibold tracking-tight md:text-3xl">One surfer, many answers</h2>
+	<p class="mt-3 max-w-[65ch] text-base leading-relaxed text-ink-soft">
+		Enter a profile and see what every system in this comparison recommends for it, including where a system's
+		answer is directly observed, interpolated between collected data points, or a community heuristic rather than a
+		branded calculator.
+	</p>
+
+	<form id="vg-profile-form" class="mt-8 grid grid-cols-2 gap-4 border border-line p-6 md:grid-cols-5">
+		<label class="flex flex-col gap-1 text-sm">
+			<span class="font-mono text-xs uppercase tracking-wide text-ink-soft">Weight (lb)</span>
+			<input id="vg-weight" type="number" min="100" max="280" step="1" class="border border-line bg-paper px-3 py-2 text-ink" />
+		</label>
+		<label class="flex flex-col gap-1 text-sm">
+			<span class="font-mono text-xs uppercase tracking-wide text-ink-soft">Skill</span>
+			<select id="vg-skill" class="border border-line bg-paper px-3 py-2 text-ink">
+				<option value="beginner">Beginner</option>
+				<option value="intermediate">Intermediate</option>
+				<option value="advanced">Advanced</option>
+			</select>
+		</label>
+		<label class="flex flex-col gap-1 text-sm">
+			<span class="font-mono text-xs uppercase tracking-wide text-ink-soft">Age (optional)</span>
+			<input id="vg-age" type="number" min="10" max="90" step="1" class="border border-line bg-paper px-3 py-2 text-ink" />
+		</label>
+		<label class="flex flex-col gap-1 text-sm">
+			<span class="font-mono text-xs uppercase tracking-wide text-ink-soft">Fitness (optional)</span>
+			<select id="vg-fitness" class="border border-line bg-paper px-3 py-2 text-ink">
+				<option value="">Not specified</option>
+				<option value="low">Low</option>
+				<option value="average">Average</option>
+				<option value="high">High</option>
+			</select>
+		</label>
+		<label class="flex flex-col gap-1 text-sm">
+			<span class="font-mono text-xs uppercase tracking-wide text-ink-soft">Frequency (optional)</span>
+			<select id="vg-frequency" class="border border-line bg-paper px-3 py-2 text-ink">
+				<option value="">Not specified</option>
+				<option value="occasional">Occasional</option>
+				<option value="weekly">Weekly</option>
+				<option value="frequent">Frequent</option>
+			</select>
+		</label>
+	</form>
+
+	<p class="mt-3 max-w-[65ch] text-xs leading-relaxed text-ink-soft">
+		Age, fitness, and frequency only change a system's answer where that exact variation was actually collected for
+		it. We don't invent adjustments a system never published (see Methodology).
+	</p>
+
+	<div id="vg-hero-comparison" class="mt-6">
+		<div data-vg-summary class="border border-line p-4 font-mono text-sm"></div>
+		<div class="mt-4 flex justify-end">
+			<button type="button" data-vg-table-toggle class="font-mono text-xs uppercase tracking-wide text-accent-blue" aria-pressed="false">
+				View as table
+			</button>
+		</div>
+		<div data-vg-chart class="mt-2 overflow-x-auto"></div>
+		<div data-vg-table class="mt-2 overflow-x-auto"></div>
+	</div>
+
+	<script src="../../../scripts/surf-volume/profile-form.ts"></script>
+	<script src="../../../scripts/surf-volume/hero-comparison-chart.ts"></script>
+</section>

@@ -1,0 +1,90 @@
+---
+const FACTORS: { term: string; detail: string }[] = [
+	{
+		term: "Length",
+		detail:
+			"Longer boards paddle into waves earlier and catch more of them; shorter boards turn and accelerate faster. Two boards can carry the same volume at very different lengths by trading length for width or thickness.",
+	},
+	{
+		term: "Width",
+		detail:
+			"Wider boards are more stable and plane sooner, which is why beginner boards run wide. Width also slows down rail-to-rail transitions, so the same volume in a narrower board turns quicker at the cost of some stability.",
+	},
+	{
+		term: "Outline",
+		detail:
+			"The curve of the edge from nose to tail. A fuller, rounder outline paddles easily and holds speed through flat sections; a curvier outline turns tighter but demands more precise footwork.",
+	},
+	{
+		term: "Rocker",
+		detail:
+			"The curve from nose to tail measured through the bottom of the board. Flatter rocker paddles fast and planes early, good for weak waves, but catches on steep faces; more rocker suits powerful waves but paddles slower.",
+	},
+	{
+		term: "Rails",
+		detail:
+			"The edges of the board. Thick, soft rails float more and forgive mistakes; thin, hard rails bite into the wave face for sharper turns but punish poor timing.",
+	},
+	{
+		term: "Foil",
+		detail:
+			"How thickness is distributed from nose to tail. Two boards can share a volume number while carrying it in very different places, changing how the board pivots and how forgiving the nose feels.",
+	},
+	{
+		term: "Volume distribution",
+		detail:
+			"Related to foil: where the volume sits, not just how much of it there is, shapes how a board paddles and turns. A board that's volume-heavy under the chest behaves differently than one that's volume-heavy underfoot, even at the same total liters.",
+	},
+	{
+		term: "Construction",
+		detail:
+			"PU/polyester, epoxy, and foam constructions flex, float, and feel different in the water even at identical volume. Epoxy boards in particular often paddle and float livelier than PU at the same liters.",
+	},
+	{
+		term: "Board category",
+		detail:
+			"A 32-liter shortboard and a 32-liter fish express that volume through completely different shapes, and surf completely differently, despite sharing a number.",
+	},
+	{
+		term: "Wave type",
+		detail:
+			"A board tuned for soft, mushy waves handles differently than one tuned for punchy, powerful surf, independent of whether its volume matches a calculator's recommendation.",
+	},
+	{
+		term: "Surfer goals",
+		detail:
+			"Someone chasing performance and responsiveness might deliberately ride less volume than recommended; someone prioritizing wave count might want more. \"Recommended\" assumes a goal the calculator never actually asked about.",
+	},
+	{
+		term: "Technique",
+		detail:
+			"Paddling technique, positioning, and timing can compensate for, or amplify, the effects of volume. Two surfers with identical stats can need different volumes depending on how well they execute in the water.",
+	},
+	{
+		term: "Paddling ability",
+		detail:
+			'Upper-body strength and paddling endurance affect how much volume a surfer actually needs to catch waves comfortably, somewhat independent of the "skill level" category a calculator asks for.',
+	},
+];
+---
+
+<section id="what-liters-leave-out" class="mx-auto max-w-7xl px-6 py-16 md:px-12 md:py-20">
+	<h2 class="font-display text-2xl font-semibold tracking-tight md:text-3xl">What liters leave out</h2>
+	<p class="mt-3 max-w-[65ch] text-base leading-relaxed text-ink-soft">
+		A single liter figure is a useful starting point, not a full board prescription. None of the systems compared
+		here account for the factors below, and each one changes how a board actually rides independent of volume.
+	</p>
+	<dl class="mt-8 grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
+		{
+			FACTORS.map((f) => (
+				<div class="border border-line p-5">
+					<dt class="font-mono text-xs uppercase tracking-wide text-accent-blue">{f.term}</dt>
+					<dd class="mt-2 text-sm leading-relaxed text-ink-soft">{f.detail}</dd>
+				</div>
+			))
+		}
+	</dl>
+	<p class="mt-8 max-w-[65ch] font-display text-lg italic text-ink">
+		Two boards with the same volume can paddle and surf very differently.
+	</p>
+</section>

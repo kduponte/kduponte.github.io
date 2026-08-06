@@ -1,0 +1,171 @@
+{
+  "profile": {
+    "profile_id": "personal_default",
+    "dataset": "C",
+    "weight_lb": 180,
+    "height_in": 71,
+    "age": 30,
+    "skill": "beginner",
+    "fitness": "average",
+    "frequency": "occasional",
+    "conditions": "average",
+    "wetsuit": "standard"
+  },
+  "rows": [
+    {
+      "source_id": "firewire",
+      "source_name": "Firewire",
+      "status": "observed",
+      "recommended_volume_min_l": 57.27,
+      "recommended_volume_max_l": 57.27,
+      "recommended_volume_point_l": 57.27,
+      "volume_to_weight_ratio": 0.7014374308515522,
+      "deviation_from_consensus_l": 13.015000000000008,
+      "deviation_from_consensus_pct": 0.29409106315670563
+    },
+    {
+      "source_id": "surf_simply",
+      "source_name": "Surf Simply",
+      "status": "unavailable",
+      "recommended_volume_min_l": null,
+      "recommended_volume_max_l": null,
+      "recommended_volume_point_l": null,
+      "volume_to_weight_ratio": null,
+      "deviation_from_consensus_l": null,
+      "deviation_from_consensus_pct": null
+    },
+    {
+      "source_id": "roberts",
+      "source_name": "Roberts Surfboards",
+      "status": "observed",
+      "recommended_volume_min_l": 40.83,
+      "recommended_volume_max_l": 40.83,
+      "recommended_volume_point_l": 40.83,
+      "volume_to_weight_ratio": 0.5000818980560306,
+      "deviation_from_consensus_l": -3.424999999999997,
+      "deviation_from_consensus_pct": -0.07739238504123822
+    },
+    {
+      "source_id": "lost",
+      "source_name": "Lost Surfboards",
+      "status": "observed",
+      "recommended_volume_min_l": 36.74,
+      "recommended_volume_max_l": 36.74,
+      "recommended_volume_point_l": 36.74,
+      "volume_to_weight_ratio": 0.4499879729262446,
+      "deviation_from_consensus_l": -7.5149999999999935,
+      "deviation_from_consensus_pct": -0.16981132075471686
+    },
+    {
+      "source_id": "rusty",
+      "source_name": "Rusty Surfboards",
+      "status": "observed",
+      "recommended_volume_min_l": 47.7,
+      "recommended_volume_max_l": 47.7,
+      "recommended_volume_point_l": 47.7,
+      "volume_to_weight_ratio": 0.5842249947899256,
+      "deviation_from_consensus_l": 3.4450000000000074,
+      "deviation_from_consensus_pct": 0.07784431137724568
+    },
+    {
+      "source_id": "js_industries",
+      "source_name": "JS Industries",
+      "status": "observed",
+      "recommended_volume_min_l": 38.63,
+      "recommended_volume_max_l": 38.63,
+      "recommended_volume_point_l": 38.63,
+      "volume_to_weight_ratio": 0.47313651045565674,
+      "deviation_from_consensus_l": -5.624999999999993,
+      "deviation_from_consensus_pct": -0.12710428200203353
+    },
+    {
+      "source_id": "guild_factor_heuristic",
+      "source_name": "Guild Factor heuristic",
+      "status": "community_heuristic",
+      "recommended_volume_min_l": 44.91,
+      "recommended_volume_max_l": 44.91,
+      "recommended_volume_point_l": 44.91,
+      "volume_to_weight_ratio": 0.5500533441512695,
+      "deviation_from_consensus_l": 0.6550000000000011,
+      "deviation_from_consensus_pct": 0.014800587504236837
+    },
+    {
+      "source_id": "weight_rule_heuristic",
+      "source_name": "Weight-based rule of thumb",
+      "status": "community_heuristic",
+      "recommended_volume_min_l": 53.07,
+      "recommended_volume_max_l": 53.07,
+      "recommended_volume_point_l": 53.07,
+      "volume_to_weight_ratio": 0.6499962363417474,
+      "deviation_from_consensus_l": 8.815000000000005,
+      "deviation_from_consensus_pct": 0.19918653259518712
+    },
+    {
+      "source_id": "nsp",
+      "source_name": "NSP",
+      "status": "observed",
+      "recommended_volume_min_l": 42.46,
+      "recommended_volume_max_l": 42.46,
+      "recommended_volume_point_l": 42.46,
+      "volume_to_weight_ratio": 0.5200459806872167,
+      "deviation_from_consensus_l": -1.7949999999999946,
+      "deviation_from_consensus_pct": -0.04056038865664885
+    },
+    {
+      "source_id": "matta",
+      "source_name": "Matta Surfboards",
+      "status": "observed",
+      "recommended_volume_min_l": 42.66,
+      "recommended_volume_max_l": 42.66,
+      "recommended_volume_point_l": 42.66,
+      "volume_to_weight_ratio": 0.5224955613781598,
+      "deviation_from_consensus_l": -1.5949999999999989,
+      "deviation_from_consensus_pct": -0.03604112529657664
+    },
+    {
+      "source_id": "surftech",
+      "source_name": "Surftech",
+      "status": "observed",
+      "recommended_volume_min_l": 58.66,
+      "recommended_volume_max_l": 58.66,
+      "recommended_volume_point_l": 58.66,
+      "volume_to_weight_ratio": 0.7184620166536065,
+      "deviation_from_consensus_l": 14.405000000000001,
+      "deviation_from_consensus_pct": 0.3254999435092081
+    },
+    {
+      "source_id": "surfboard_empire",
+      "source_name": "Surfboard Empire",
+      "status": "observed",
+      "recommended_volume_min_l": 51.5,
+      "recommended_volume_max_l": 51.5,
+      "recommended_volume_point_l": 51.5,
+      "volume_to_weight_ratio": 0.6307670279178441,
+      "deviation_from_consensus_l": 7.2450000000000045,
+      "deviation_from_consensus_pct": 0.16371031521861948
+    },
+    {
+      "source_id": "pyzel",
+      "source_name": "Pyzel",
+      "status": "observed",
+      "recommended_volume_min_l": 43.6,
+      "recommended_volume_max_l": 43.6,
+      "recommended_volume_point_l": 43.6,
+      "volume_to_weight_ratio": 0.5340085906255924,
+      "deviation_from_consensus_l": -0.654999999999994,
+      "deviation_from_consensus_pct": -0.014800587504236675
+    }
+  ],
+  "consensus": {
+    "median": 44.254999999999995,
+    "min": 36.74,
+    "max": 58.66,
+    "q25": 42.052499999999995,
+    "q75": 51.8925,
+    "iqr": 9.840000000000003,
+    "mad": 4.535,
+    "relative_iqr": 0.22234775731555767,
+    "agreement_label": "low",
+    "n_contributing_systems": 12
+  }
+}

@@ -1,0 +1,29 @@
+---
+---
+
+<div id="vg-sensitivity-explorer" class="mt-16 border-t border-line pt-12">
+	<h3 class="font-display text-xl font-semibold">Sensitivity explorer</h3>
+	<p class="mt-2 max-w-[65ch] text-sm leading-relaxed text-ink-soft">
+		Pick a system and vary one input at a time around a starting profile, holding everything else fixed.
+	</p>
+	<p data-vg-note class="mt-1 max-w-[65ch] font-mono text-xs text-ink-soft"></p>
+
+	<div data-vg-controls class="mt-4 flex flex-wrap gap-4">
+		<label class="flex flex-col gap-1 text-sm">
+			<span class="font-mono text-xs uppercase tracking-wide text-ink-soft">System</span>
+			<select data-vg-source-select class="border border-line bg-paper px-3 py-1.5 text-ink"></select>
+		</label>
+		<label class="flex flex-col gap-1 text-sm">
+			<span class="font-mono text-xs uppercase tracking-wide text-ink-soft">Starting profile</span>
+			<select data-vg-archetype-select class="border border-line bg-paper px-3 py-1.5 text-ink"></select>
+		</label>
+		<label class="flex flex-col gap-1 text-sm">
+			<span class="font-mono text-xs uppercase tracking-wide text-ink-soft">Vary</span>
+			<select data-vg-variable-select class="border border-line bg-paper px-3 py-1.5 text-ink"></select>
+		</label>
+	</div>
+
+	<div data-vg-result class="mt-6"></div>
+</div>
+
+<script src="../../../scripts/surf-volume/sensitivity-explorer.ts"></script>

@@ -1,0 +1,25 @@
+---
+import TagPill from "../TagPill.astro";
+
+interface Props {
+	summary: string;
+	tags: string[];
+}
+
+const { summary, tags } = Astro.props;
+---
+
+<div class="mx-auto max-w-[65ch] px-6 md:px-12">
+	<p class="text-base leading-relaxed text-ink-soft md:text-lg">{summary}</p>
+	{
+		tags.length > 0 && (
+			<ul class="mt-4 flex flex-wrap gap-2">
+				{tags.map((tag) => (
+					<li>
+						<TagPill tone="blue">{tag}</TagPill>
+					</li>
+				))}
+			</ul>
+		)
+	}
+</div>

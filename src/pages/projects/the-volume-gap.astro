@@ -1,0 +1,147 @@
+---
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import HeroSection from "../../components/projects/the-volume-gap/HeroSection.astro";
+import PersonalComparisonSection from "../../components/projects/the-volume-gap/PersonalComparisonSection.astro";
+import MethodologyMatrixSection from "../../components/projects/the-volume-gap/MethodologyMatrixSection.astro";
+import RecommendationCurvesSection from "../../components/projects/the-volume-gap/RecommendationCurvesSection.astro";
+import RelativeTendencySection from "../../components/projects/the-volume-gap/RelativeTendencySection.astro";
+import AgreementSection from "../../components/projects/the-volume-gap/AgreementSection.astro";
+import ScorecardsSection from "../../components/projects/the-volume-gap/ScorecardsSection.astro";
+import ConsensusModelSection from "../../components/projects/the-volume-gap/ConsensusModelSection.astro";
+import WhatLitersLeaveOutSection from "../../components/projects/the-volume-gap/WhatLitersLeaveOutSection.astro";
+import KeyFindings from "../../components/editorial/KeyFindings.astro";
+import Methodology from "../../components/editorial/Methodology.astro";
+import Limitations from "../../components/editorial/Limitations.astro";
+import NextSteps from "../../components/editorial/NextSteps.astro";
+import SourceList from "../../components/editorial/SourceList.astro";
+import type { CollectionMethod, Observation, SourceMetadata } from "../../lib/surf-volume/types";
+import sourceMetadata from "../../../public/data/surf-volume/source_metadata.json";
+import calculatorObservations from "../../../public/data/surf-volume/calculator_observations.json";
+
+const sources = sourceMetadata as SourceMetadata[];
+const observations = calculatorObservations as Observation[];
+const isPlaceholderData = sources.some((s) => s.source_id.endsWith("_fake"));
+
+function collectedAtFor(sourceId: string): string {
+	return observations.find((o) => o.source_id === sourceId)?.collected_at ?? "—";
+}
+---
+
+<BaseLayout
+	title="The Volume Gap"
+	description="How much should you trust surfboard volume calculators? A comparison of how surfboard volume recommendation systems disagree for the same surfer."
+>
+	{
+		isPlaceholderData && (
+			<div class="border-b border-accent-yellow/50 bg-accent-yellow/10 px-6 py-3 text-center font-mono text-xs text-ink">
+				Development preview: the data below is synthetic placeholder data, not real calculator output.
+			</div>
+		)
+	}
+
+	<HeroSection />
+	<PersonalComparisonSection />
+	<MethodologyMatrixSection />
+	<RecommendationCurvesSection />
+	<RelativeTendencySection />
+	<AgreementSection />
+
+	<KeyFindings
+		findings={[
+			{
+				label: "Disagreement grows sharply for beginners",
+				detail: "Across the core comparison grid, the typical spread between systems (relative IQR) averages 0.22 for beginner profiles versus 0.07 for advanced profiles, roughly 3x tighter agreement on what an advanced surfer should ride than what a beginner should ride.",
+			},
+			{
+				label: "Surftech and Firewire run consistently high, Lost runs consistently low",
+				detail: "Surftech's recommendations sit about 13% above the cross-system median on average and Firewire about 12% above, the highest relative-volume tendencies of any sources compared. Lost Surfboards sits about 10% below the median, the lowest.",
+			},
+			{
+				label: "Three systems here are really one idea, worn differently",
+				detail: "Roberts Surfboards, Lost Surfboards, and the Guild Factor heuristic are all variations on the same weight-to-volume ratio system credited to pro surfer Whitney Guild. Treat their agreement as one correlated data point, not three independent opinions. (A fourth brand, Graham Smith Surfboards, shares the exact same embedded widget as Lost but wasn't added to this comparison for that reason, see Methodology.)",
+			},
+			{
+				label: "The tightest and widest gaps, concretely",
+				detail: "The 12 directly comparable systems agree most closely on a 180 lb advanced surfer (26.7–31.6 L, a 5 L spread) and disagree most on a 120 lb beginner (24.5–41.7 L, a 17 L spread, more than 3x wider).",
+			},
+		]}
+	/>
+
+	<ScorecardsSection />
+	<ConsensusModelSection />
+	<WhatLitersLeaveOutSection />
+
+	<Methodology
+		id="methodology"
+		sections={[
+			{
+				heading: "Sources & collection",
+				body: "Each system is collected via the method most faithful to how it actually works: published tables and ratios are extracted directly, interactive calculators are automated with cached, dated captures, and hard-to-automate sources fall back to documented manual entry. Every observation records its collection method and date.",
+			},
+			{
+				heading: "Sampling design",
+				body: "A core comparison grid of 7 weights (120–240 lb) × 3 skill levels (21 profiles) is collected from every source, plus 6 named archetype profiles and one-factor-at-a-time variations for systems that support richer inputs. This is a deliberately staged design, not a full Cartesian product, so richer calculators don't dominate the comparison.",
+			},
+			{
+				heading: "Normalization",
+				body: "Skill, fitness, frequency, conditions, and wetsuit inputs are mapped to a small shared taxonomy. Every mapping from a source's original label to the normalized category is documented with a rationale and a confidence level. Ambiguous mappings are never hidden.",
+			},
+			{
+				heading: "Interpolation policy",
+				body: "Missing weights are linearly interpolated only within the same source and skill level, and only between two actually-collected weights, with no extrapolation beyond the collected range and no interpolation across skill levels or unsupported inputs like age or fitness.",
+			},
+			{
+				heading: "Comparability rules",
+				body: "A system is excluded from the consensus for a given profile when it returns only a board model, assumes a materially different board category, can't be aligned to the requested inputs responsibly, or its recommendation can't be translated into liters. The number of contributing systems is always shown alongside any consensus figure.",
+			},
+			{
+				heading: "Consensus definition",
+				body: "The consensus shown throughout is the median recommended volume across directly comparable systems, reported with the interquartile range, full range, and median absolute deviation. Agreement labels (high/moderate/low) are a presentation convention based on relative IQR thresholds, not a scientific claim.",
+			},
+			{
+				heading: "Score definitions",
+				body: "Complexity (input count, min-max normalized), transparency (a 4-factor rubric: published methodology, published formula, stated assumptions, reproducible outputs), sensitivity (mean % change across collected one-factor variations), relative-volume tendency (mean deviation from the cross-system median), consistency (monotonicity across adjacent weights, with outsized jumps flagged but never auto-labeled errors), and coverage (fraction of supported input types). All descriptive, none a quality ranking.",
+			},
+			{
+				heading: "Heuristic provenance",
+				body: "Community heuristics are included only once their exact formula, source, intended surfer type, and limitations are documented (see the Sources table below for citations).",
+			},
+		]}
+	/>
+
+	<Limitations
+		items={[
+			"This project compares how recommendation systems behave, not which surfer outcomes they actually produce. Nothing here has been validated against real paddling, wave-catching, or performance data.",
+			"A single liter figure leaves out length, width, outline, rocker, rails, foil, volume distribution, construction, board category, wave type, surfer goals, technique, and paddling ability.",
+			"The consensus median is a summary of the specific systems sampled here, not an objectively correct, ideal, optimal, or scientifically validated volume.",
+			"Some systems share an underlying methodology (see Methodology Families); treat those as correlated evidence, not fully independent opinions.",
+			"Sensitivity and consistency scores are only as good as the profile variations actually collected for a given system; where a score reads 'not measurable,' that's a data gap, not a real zero.",
+			"None of the 13 systems compared here cite peer-reviewed research backing their specific numbers. The one controlled study that does exist (Ekmecic et al., 2017, Ergonomics) confirms that more volume reduces paddling energy cost, but stops well short of saying how much volume any individual surfer needs.",
+		]}
+	/>
+
+	<NextSteps
+		reflection={{
+			surprising:
+				"How much the brief's guesses about complexity were wrong in both directions. Lost was expected to be a rich multi-input calculator but turned out to be the same simple Guild Factor system as Roberts, right down to sharing an explicit \"Whitney Guild 2013\" credit on the page. JS Industries was expected to be complex and opaque but shipped a fully commented formula in plain client-side JavaScript, more transparent in practice than several sources that only publish a black-box table.",
+			hardest:
+				"Easiest: the four sources with a published table, ratio, or formula (Firewire, Surf Simply, Roberts, Pyzel), no automation needed, just careful reading. Hardest, in a different sense than expected: not Rusty's genuine multi-input form (Playwright handled it cleanly once the hidden-select quirk was found), but resolving ambiguous unit and skill-tier mappings. For example, figuring out whether Roberts' \"Guild Factor\" meant liters-per-pound or liters-per-kilogram required cross-checking the resulting volumes against Firewire's independently-collected real numbers.",
+			unresolved:
+				"Nothing here is validated against how a real board with that volume actually paddled or performed for a real surfer. A genuinely validated version would need outcome data: surfers trying boards at the consensus volume (and above/below it) and reporting back on wave count, paddling effort, and how it felt, not just what thirteen calculators say before a single wave is caught.",
+		}}
+		nextSteps={[
+			"Resolve DHD's calculator: it has a genuinely rich 5-input form (age, height, weight, 5-tier experience, 4-tier fitness) with dual soft-wave/powerful-wave outputs, but its formula lives behind a code path this pass couldn't locate in the site's shipped JS. Worth a targeted network-traffic capture rather than static source-reading. SMTH Shapes (a distinct \"Shape3D BoardAdvisor\" third-party engine) is a similar unresolved case.",
+			"Revisit Boardcave and Chemistry Surfboards specifically to check whether their Cavewire tuning diverges meaningfully from Rusty's, now that the shared-engine finding is documented rather than assumed.",
+			"Add outcome data (real surfers, real boards, real feedback) as a second, independent axis to compare against the calculator consensus. That's the single biggest gap this project can't close with public calculator pages alone.",
+		]}
+	/>
+
+	<SourceList
+		sources={sources.map((s) => ({
+			name: s.source_name,
+			url: s.source_url,
+			collectedAt: collectedAtFor(s.source_id),
+			method: (observations.find((o) => o.source_id === s.source_id)?.collection_method ?? "manual_entry") as CollectionMethod,
+		}))}
+	/>
+</BaseLayout>

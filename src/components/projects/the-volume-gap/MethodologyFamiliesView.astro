@@ -1,0 +1,76 @@
+---
+// Visualization 8 (optional in the brief, included for this v1) — groups sources by
+// methodology_family so apparently-independent calculators that share a conceptual
+// foundation (e.g. Guild Factor derivatives) aren't mistaken for fully independent evidence.
+import type { SourceMetadata } from "../../../lib/surf-volume/types";
+
+interface Props {
+	sources: SourceMetadata[];
+}
+
+const { sources } = Astro.props;
+
+const families = new Map<string, SourceMetadata[]>();
+for (const source of sources) {
+	if (!families.has(source.methodology_family)) families.set(source.methodology_family, []);
+	families.get(source.methodology_family)!.push(source);
+}
+
+const FAMILY_LABEL: Record<string, string> = {
+	weight_and_skill_table: "Weight-and-skill tables",
+	guild_factor: "Guild Factor systems",
+	rich_profile_calculator: "Rich profile calculators",
+	volume_to_weight_ratio_reference: "Volume-to-weight ratio reference",
+	weight_ratio_folk_heuristic: "Weight-ratio folk heuristic",
+	board_type_weighted_ratio: "Board-type-weighted ratio",
+	additive_skill_offset: "Additive skill offset",
+	weight_skill_table_with_multipliers: "Weight/skill table with multipliers",
+};
+
+const FAMILY_DESCRIPTION: Record<string, string> = {
+	weight_and_skill_table:
+		"A published lookup table indexed by body weight and skill level. No formula to reverse-engineer, just pre-computed values the brand publishes directly.",
+	guild_factor:
+		'A ratio of board volume to body weight ("Guild Factor" = liters ÷ kg), popularized by pro surfer Whitney Guild. The surfer picks a ratio band based on skill and fitness, then multiplies it by their weight.',
+	rich_profile_calculator:
+		"A multi-input formula that adjusts a weight-based baseline using factors like age, fitness, surf frequency, and wave conditions, rather than reading straight off a table.",
+	volume_to_weight_ratio_reference:
+		'A published minimum-functional ratio framework rather than a single recommended number. It describes the smallest board that is still practical to ride, not the most comfortable one, which is why it is excluded from the consensus.',
+	board_type_weighted_ratio:
+		"A weight-based ratio multiplied again by a board-type factor (shortboard, fish, midlength, longboard). The only family here where board type is an input to the volume, not just an output of it.",
+	additive_skill_offset:
+		"Adds or subtracts a flat number of liters by skill level on top of a weight-based baseline, rather than multiplying by a ratio. A structurally different kind of formula from every ratio-based family above.",
+	weight_ratio_folk_heuristic:
+		"A simple weight-times-coefficient rule repeated across surf-education content, without one clearly identifiable original source.",
+	weight_skill_table_with_multipliers:
+		"Its own published lookup table indexed jointly by weight and skill (not just weight), then further scaled by age and fitness multipliers on top. A hybrid of the table-lookup and multi-factor approaches above.",
+};
+---
+
+<div class="mt-10">
+	<h3 class="font-display text-lg font-semibold">Methodology families</h3>
+	<p class="mt-2 max-w-[65ch] text-sm leading-relaxed text-ink-soft">
+		Systems in the same family share a conceptual foundation, not necessarily an organization. Treat calculators in
+		the same family as more correlated evidence, not fully independent opinions.
+	</p>
+	<div class="mt-6 grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
+		{
+			[...families.entries()].map(([family, familySources]) => (
+				<div class="flex flex-col border border-line p-5">
+					<p class="font-mono text-xs uppercase tracking-wide text-accent-blue">{FAMILY_LABEL[family] ?? family.replace(/_/g, " ")}</p>
+					{FAMILY_DESCRIPTION[family] && <p class="mt-2 text-sm leading-relaxed text-ink-soft">{FAMILY_DESCRIPTION[family]}</p>}
+					<ul class="mt-3 space-y-1 text-sm text-ink">
+						{familySources.map((s) => (
+							<li>{s.source_name}</li>
+						))}
+					</ul>
+					{familySources.length > 1 && (
+						<p class="mt-3 inline-flex w-fit items-center border border-accent-yellow/50 bg-accent-yellow/10 px-2 py-1 font-mono text-[11px] text-ink">
+							{familySources.length} systems share this methodology, not fully independent
+						</p>
+					)}
+				</div>
+			))
+		}
+	</div>
+</div>

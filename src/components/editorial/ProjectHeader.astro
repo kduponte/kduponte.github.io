@@ -1,0 +1,41 @@
+---
+interface Props {
+	eyebrow?: string;
+	title: string;
+	subtitle?: string;
+	summary: string;
+	primaryCta?: { label: string; href: string };
+	secondaryCta?: { label: string; href: string };
+}
+
+const { eyebrow, title, subtitle, summary, primaryCta, secondaryCta } = Astro.props;
+---
+
+<header class="mx-auto max-w-4xl px-6 py-20 text-center md:px-12 md:py-28">
+	{eyebrow && <p class="font-mono text-xs uppercase tracking-widest text-accent-blue">{eyebrow}</p>}
+	<h1 class="font-display mt-4 text-4xl font-semibold tracking-tight md:text-6xl">{title}</h1>
+	{subtitle && <p class="font-display mt-4 text-xl text-ink-soft md:text-2xl">{subtitle}</p>}
+	<p class="mx-auto mt-6 max-w-[60ch] text-base leading-relaxed text-ink-soft md:text-lg">{summary}</p>
+	{
+		(primaryCta || secondaryCta) && (
+			<div class="mt-8 flex flex-wrap items-center justify-center gap-4">
+				{primaryCta && (
+					<a
+						href={primaryCta.href}
+						class="border border-ink bg-ink px-5 py-2.5 font-mono text-xs uppercase tracking-wide text-paper transition-colors hover:bg-accent-blue hover:border-accent-blue"
+					>
+						{primaryCta.label}
+					</a>
+				)}
+				{secondaryCta && (
+					<a
+						href={secondaryCta.href}
+						class="border border-line px-5 py-2.5 font-mono text-xs uppercase tracking-wide text-ink transition-colors hover:border-accent-blue hover:text-accent-blue"
+					>
+						{secondaryCta.label}
+					</a>
+				)}
+			</div>
+		)
+	}
+</header>

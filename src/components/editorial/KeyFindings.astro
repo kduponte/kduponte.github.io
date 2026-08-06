@@ -1,0 +1,27 @@
+---
+interface Finding {
+	label: string;
+	detail: string;
+}
+
+interface Props {
+	title?: string;
+	findings: Finding[];
+}
+
+const { title = "Key findings", findings } = Astro.props;
+---
+
+<section class="mx-auto max-w-7xl px-6 py-16 md:px-12 md:py-20">
+	<h2 class="font-display text-2xl font-semibold tracking-tight md:text-3xl">{title}</h2>
+	<ul class="mt-8 grid grid-cols-1 gap-6 md:grid-cols-2">
+		{
+			findings.map((finding) => (
+				<li class="border border-line p-6">
+					<p class="font-display text-lg font-semibold">{finding.label}</p>
+					<p class="mt-2 text-sm leading-relaxed text-ink-soft">{finding.detail}</p>
+				</li>
+			))
+		}
+	</ul>
+</section>

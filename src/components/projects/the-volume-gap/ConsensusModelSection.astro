@@ -1,0 +1,73 @@
+---
+import type { RegressionOutput } from "../../../lib/surf-volume/types";
+import modelOutputs from "../../../../public/data/surf-volume/model_outputs.json";
+
+const regression = modelOutputs as RegressionOutput;
+---
+
+<section id="consensus-model" class="mx-auto max-w-7xl px-6 py-16 md:px-12 md:py-20">
+	<h2 class="font-display text-2xl font-semibold tracking-tight md:text-3xl">The consensus model</h2>
+	<div class="mt-6 grid grid-cols-1 gap-10 md:grid-cols-2">
+		<div class="max-w-[60ch] space-y-4 text-sm leading-relaxed text-ink-soft">
+			<p>
+				The consensus shown throughout this project is the <strong class="text-ink">median</strong> recommended volume
+				across directly comparable systems for a given profile, not an average, and not any single system's answer.
+			</p>
+			<p>
+				Alongside it we report the middle 50% of systems (the interquartile range) and the full observed range, so
+				the consensus is never presented without its own uncertainty.
+			</p>
+			<p class="font-medium text-ink">
+				This consensus is not claimed to be correct, ideal, optimal, or scientifically validated. It's a transparent
+				summary of what the systems we sampled currently say, nothing more.
+			</p>
+		</div>
+		<div class="border border-line p-6">
+			<p class="font-mono text-xs uppercase tracking-wide text-accent-blue">Secondary layer: explanatory regression</p>
+			<p class="mt-2 text-xs leading-relaxed text-ink-soft">
+				An interpretable model (weight, skill, their interaction, and per-source fixed effects) fit across the core
+				comparison grid: an explanatory lens on the data, not the consensus calculator itself.
+			</p>
+			<dl class="mt-4 grid grid-cols-2 gap-3 font-mono text-xs">
+				<div>
+					<dt class="text-ink-soft">R²</dt>
+					<dd class="text-ink">{regression.r_squared.toFixed(3)}</dd>
+				</div>
+				<div>
+					<dt class="text-ink-soft">CV RMSE</dt>
+					<dd class="text-ink">{Number.isNaN(regression.cv_rmse) ? "—" : `${regression.cv_rmse.toFixed(2)} L`}</dd>
+				</div>
+				<div>
+					<dt class="text-ink-soft">Observations</dt>
+					<dd class="text-ink">{regression.n_observations}</dd>
+				</div>
+			</dl>
+			{
+				regression.coefficients.length > 0 && (
+					<div class="mt-4 overflow-x-auto">
+						<table class="w-full text-left font-mono text-[11px]">
+							<thead>
+								<tr class="border-b border-line text-ink-soft">
+									<th class="py-1 pr-2">Term</th>
+									<th class="py-1 pr-2">Estimate</th>
+									<th class="py-1">95% CI</th>
+								</tr>
+							</thead>
+							<tbody>
+								{regression.coefficients.map((c) => (
+									<tr class="border-b border-line/60">
+										<td class="py-1 pr-2 text-ink-soft">{c.term}</td>
+										<td class="py-1 pr-2 text-ink">{c.estimate.toFixed(2)}</td>
+										<td class="py-1 text-ink-soft">
+											[{c.ci_low.toFixed(2)}, {c.ci_high.toFixed(2)}]
+										</td>
+									</tr>
+								))}
+							</tbody>
+						</table>
+					</div>
+				)
+			}
+		</div>
+	</div>
+</section>

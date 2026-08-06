@@ -1,0 +1,68 @@
+---
+// Visualization 5 (brief §17) — a plain semantic table, no chart library needed. Build-time only.
+import type { SourceMetadata } from "../../../lib/surf-volume/types";
+import sourceMetadata from "../../../../public/data/surf-volume/source_metadata.json";
+import MethodologyFamiliesView from "./MethodologyFamiliesView.astro";
+
+const sources = sourceMetadata as SourceMetadata[];
+
+const INPUT_COLUMNS: { key: keyof SourceMetadata; label: string }[] = [
+	{ key: "supports_weight", label: "Weight" },
+	{ key: "supports_height", label: "Height" },
+	{ key: "supports_age", label: "Age" },
+	{ key: "supports_gender", label: "Gender" },
+	{ key: "supports_fitness", label: "Fitness" },
+	{ key: "supports_frequency", label: "Frequency" },
+	{ key: "supports_skill", label: "Skill" },
+	{ key: "supports_wave_type", label: "Wave type" },
+	{ key: "supports_wave_size", label: "Wave size" },
+	{ key: "supports_wetsuit", label: "Wetsuit" },
+];
+---
+
+<section id="methodology-matrix" class="mx-auto max-w-7xl px-6 py-16 md:px-12 md:py-20">
+	<h2 class="font-display text-2xl font-semibold tracking-tight md:text-3xl">Not all calculators work the same way</h2>
+	<p class="mt-3 max-w-[65ch] text-base leading-relaxed text-ink-soft">
+		Some systems ask for two inputs and look up a table. Others ask for ten and run an undisclosed formula. Neither
+		approach is inherently better, but they're not answering exactly the same question, and it's worth seeing which
+		is which before comparing their numbers.
+	</p>
+	<div class="mt-8 overflow-x-auto">
+		<table class="w-full min-w-[720px] border-collapse text-sm">
+			<thead>
+				<tr class="border-b border-line text-left font-mono text-xs uppercase tracking-wide text-ink-soft">
+					<th class="py-2 pr-4">System</th>
+					{INPUT_COLUMNS.map((col) => <th class="px-2 py-2 text-center">{col.label}</th>)}
+					<th class="py-2 pl-4 text-center">Inputs</th>
+					<th class="py-2 pl-4 text-center">Output</th>
+				</tr>
+			</thead>
+			<tbody>
+				{
+					sources.map((source) => (
+						<tr class="border-b border-line/60">
+							<td class="py-2 pr-4 font-medium text-ink">{source.source_name}</td>
+							{INPUT_COLUMNS.map((col) => (
+								<td class="px-2 py-2 text-center">
+									{source[col.key] ? (
+										<span class="text-accent-green" aria-label="Supported">
+											●
+										</span>
+									) : (
+										<span class="text-line" aria-label="Not supported">
+											○
+										</span>
+									)}
+								</td>
+							))}
+							<td class="py-2 pl-4 text-center font-mono text-ink-soft">{source.input_count}</td>
+							<td class="py-2 pl-4 text-center font-mono text-xs text-ink-soft">{source.output_type.replace(/_/g, " ")}</td>
+						</tr>
+					))
+				}
+			</tbody>
+		</table>
+	</div>
+
+	<MethodologyFamiliesView sources={sources} />
+</section>

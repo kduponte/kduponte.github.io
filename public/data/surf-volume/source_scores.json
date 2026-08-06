@@ -1,0 +1,130 @@
+{
+  "scores": [
+    {
+      "source_id": "firewire",
+      "complexity": 0,
+      "transparency": 0.5,
+      "sensitivity": null,
+      "relative_volume_tendency": 0.11510830289236033,
+      "consistency": 1,
+      "coverage": 0.2
+    },
+    {
+      "source_id": "surf_simply",
+      "complexity": 0,
+      "transparency": 1,
+      "sensitivity": null,
+      "relative_volume_tendency": null,
+      "consistency": 1,
+      "coverage": 0.2
+    },
+    {
+      "source_id": "roberts",
+      "complexity": 0,
+      "transparency": 1,
+      "sensitivity": null,
+      "relative_volume_tendency": -0.043358019751595776,
+      "consistency": 1,
+      "coverage": 0.3
+    },
+    {
+      "source_id": "lost",
+      "complexity": 0,
+      "transparency": 1,
+      "sensitivity": null,
+      "relative_volume_tendency": -0.09822113277769444,
+      "consistency": 1,
+      "coverage": 0.3
+    },
+    {
+      "source_id": "rusty",
+      "complexity": 0.5714285714285714,
+      "transparency": 0,
+      "sensitivity": 0.02102351731259026,
+      "relative_volume_tendency": 0.02222132690969512,
+      "consistency": 1,
+      "coverage": 0.6
+    },
+    {
+      "source_id": "js_industries",
+      "complexity": 1,
+      "transparency": 1,
+      "sensitivity": 0.021179242022647378,
+      "relative_volume_tendency": -0.05237583792473362,
+      "consistency": 1,
+      "coverage": 0.9
+    },
+    {
+      "source_id": "guild_factor_heuristic",
+      "complexity": 0,
+      "transparency": 1,
+      "sensitivity": null,
+      "relative_volume_tendency": -0.060645907978581215,
+      "consistency": 1,
+      "coverage": 0.2
+    },
+    {
+      "source_id": "weight_rule_heuristic",
+      "complexity": 0,
+      "transparency": 0.75,
+      "sensitivity": null,
+      "relative_volume_tendency": 0.09531835916092621,
+      "consistency": 1,
+      "coverage": 0.2
+    },
+    {
+      "source_id": "nsp",
+      "complexity": 0.14285714285714285,
+      "transparency": 0.5,
+      "sensitivity": null,
+      "relative_volume_tendency": 0.010216073675768565,
+      "consistency": 1,
+      "coverage": 0.2
+    },
+    {
+      "source_id": "matta",
+      "complexity": 0,
+      "transparency": 0.5,
+      "sensitivity": null,
+      "relative_volume_tendency": -0.07567391708595553,
+      "consistency": 1,
+      "coverage": 0.2
+    },
+    {
+      "source_id": "surftech",
+      "complexity": 0,
+      "transparency": 0.5,
+      "sensitivity": null,
+      "relative_volume_tendency": 0.13206357962397203,
+      "consistency": 1,
+      "coverage": 0.2
+    },
+    {
+      "source_id": "surfboard_empire",
+      "complexity": 0.42857142857142855,
+      "transparency": 0.5,
+      "sensitivity": null,
+      "relative_volume_tendency": 0.061185433277472535,
+      "consistency": 1,
+      "coverage": 0.4
+    },
+    {
+      "source_id": "pyzel",
+      "complexity": 0.14285714285714285,
+      "transparency": 1,
+      "sensitivity": null,
+      "relative_volume_tendency": 0.04150430349710806,
+      "consistency": 1,
+      "coverage": 0.3
+    }
+  ],
+  "consistencyFlags": [
+    {
+      "source_id": "firewire",
+      "skill": "beginner",
+      "from_weight_lb": 220,
+      "to_weight_lb": 240,
+      "jump_l": 10.909999999999997
+    }
+  ]
+}

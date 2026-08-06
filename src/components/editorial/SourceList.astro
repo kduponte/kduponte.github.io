@@ -1,0 +1,56 @@
+---
+import type { CollectionMethod } from "../../lib/surf-volume/types";
+
+interface SourceEntry {
+	name: string;
+	url: string;
+	collectedAt: string;
+	method: CollectionMethod;
+}
+
+interface Props {
+	title?: string;
+	sources: SourceEntry[];
+}
+
+const { title = "Sources", sources } = Astro.props;
+
+const METHOD_LABEL: Record<CollectionMethod, string> = {
+	table_extraction: "Published table",
+	browser_automation: "Automated collection",
+	manual_entry: "Manual entry",
+	derived_from_published_ratio: "Derived from published ratio",
+	derived_from_published_formula: "Derived from published formula",
+	community_heuristic: "Community heuristic",
+};
+---
+
+<section class="mx-auto max-w-7xl px-6 py-16 md:px-12 md:py-20">
+	<h2 class="font-display text-2xl font-semibold tracking-tight md:text-3xl">{title}</h2>
+	<div class="mt-8 overflow-x-auto">
+		<table class="w-full max-w-4xl border-collapse text-sm">
+			<thead>
+				<tr class="border-b border-line text-left font-mono text-xs uppercase tracking-wide text-ink-soft">
+					<th class="py-2 pr-4">Source</th>
+					<th class="py-2 pr-4">Collected</th>
+					<th class="py-2">Method</th>
+				</tr>
+			</thead>
+			<tbody>
+				{
+					sources.map((s) => (
+						<tr class="border-b border-line/60">
+							<td class="py-2 pr-4">
+								<a href={s.url} class="text-accent-blue hover:underline" target="_blank" rel="noopener noreferrer">
+									{s.name}
+								</a>
+							</td>
+							<td class="py-2 pr-4 text-ink-soft">{s.collectedAt}</td>
+							<td class="py-2 text-ink-soft">{METHOD_LABEL[s.method]}</td>
+						</tr>
+					))
+				}
+			</tbody>
+		</table>
+	</div>
+</section>

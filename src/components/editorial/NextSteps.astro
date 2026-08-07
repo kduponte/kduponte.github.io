@@ -9,9 +9,19 @@ interface Props {
 	title?: string;
 	reflection?: Reflection;
 	nextSteps: string[];
+	surprisingLabel?: string;
+	hardestLabel?: string;
+	unresolvedLabel?: string;
 }
 
-const { title = "Reflection & next steps", reflection, nextSteps } = Astro.props;
+const {
+	title = "Reflection & next steps",
+	reflection,
+	nextSteps,
+	surprisingLabel = "What was surprising",
+	hardestLabel = "Easiest vs. hardest to compare",
+	unresolvedLabel = "What real surfer outcomes would take",
+} = Astro.props;
 ---
 
 <section class="mx-auto max-w-7xl px-6 py-16 md:px-12 md:py-28">
@@ -20,15 +30,15 @@ const { title = "Reflection & next steps", reflection, nextSteps } = Astro.props
 		reflection && (
 			<dl class="mt-8 grid max-w-[65ch] grid-cols-1 gap-6">
 				<div>
-					<dt class="font-mono text-xs uppercase tracking-wide text-accent-blue">What was surprising</dt>
+					<dt class="font-mono text-xs uppercase tracking-wide text-accent-blue">{surprisingLabel}</dt>
 					<dd class="mt-1 text-sm leading-relaxed text-ink-soft">{reflection.surprising}</dd>
 				</div>
 				<div>
-					<dt class="font-mono text-xs uppercase tracking-wide text-accent-blue">Easiest vs. hardest to compare</dt>
+					<dt class="font-mono text-xs uppercase tracking-wide text-accent-blue">{hardestLabel}</dt>
 					<dd class="mt-1 text-sm leading-relaxed text-ink-soft">{reflection.hardest}</dd>
 				</div>
 				<div>
-					<dt class="font-mono text-xs uppercase tracking-wide text-accent-blue">What real surfer outcomes would take</dt>
+					<dt class="font-mono text-xs uppercase tracking-wide text-accent-blue">{unresolvedLabel}</dt>
 					<dd class="mt-1 text-sm leading-relaxed text-ink-soft">{reflection.unresolved}</dd>
 				</div>
 			</dl>

@@ -11,7 +11,7 @@
 import * as Plot from "@observablehq/plot";
 import { computeConsensus } from "../../lib/surf-volume/consensus";
 import type { Observation, Skill, SourceMetadata } from "../../lib/surf-volume/types";
-import { capitalize, wireTableToggle } from "./chart-utils";
+import { capitalize, wireTableToggle } from "../shared/chart-utils";
 import { loadSurfVolumeData } from "./data-client";
 
 const SKILL_ORDER = ["beginner", "intermediate", "advanced"] as const satisfies readonly Skill[];

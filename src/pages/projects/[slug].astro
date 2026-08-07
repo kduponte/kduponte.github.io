@@ -4,10 +4,14 @@ import BaseLayout from "../../layouts/BaseLayout.astro";
 import TagPill from "../../components/TagPill.astro";
 
 export async function getStaticPaths() {
-	// "the-volume-gap" has its own dedicated static route (richer than this generic markdown
-	// template can express) — excluded here to avoid generating a duplicate /projects/the-volume-gap
-	// path at build time.
-	const projects = (await getCollection("projects")).filter((project) => project.id !== "the-volume-gap");
+	// Projects with their own dedicated static route (richer than this generic markdown template
+	// can express) — every entry here must be excluded from this dynamic route, or the build
+	// collides with the dedicated page at the same path. Every future entry in the
+	// interactive-explainer series joins this set. Declared inside getStaticPaths itself: Astro
+	// extracts this function into an isolated build chunk that doesn't reliably capture
+	// module-scope consts declared outside it.
+	const dedicatedRouteSlugs = new Set(["the-volume-gap", "the-peeking-problem"]);
+	const projects = (await getCollection("projects")).filter((project) => !dedicatedRouteSlugs.has(project.id));
 	return projects.map((project) => ({
 		params: { slug: project.id },
 		props: { project },

@@ -3,7 +3,7 @@
 import * as Plot from "@observablehq/plot";
 import type { ComparisonResult } from "../../lib/surf-volume/types";
 import { STATUS_LABEL } from "../../lib/surf-volume/format";
-import { formatL, wireTableToggle } from "./chart-utils";
+import { formatL, wireTableToggle } from "../shared/chart-utils";
 import { onProfileChange } from "./state";
 
 const STATUS_COLOR: Record<string, string> = {

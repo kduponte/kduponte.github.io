@@ -2,7 +2,7 @@
 // around the consensus median, faceted by skill. Static per Dataset A grid.
 import * as Plot from "@observablehq/plot";
 import { computeConsensus } from "../../lib/surf-volume/consensus";
-import { capitalize, wireTableToggle } from "./chart-utils";
+import { capitalize, wireTableToggle } from "../shared/chart-utils";
 import { loadSurfVolumeData } from "./data-client";
 
 const SKILL_ORDER = ["beginner", "intermediate", "advanced"] as const;

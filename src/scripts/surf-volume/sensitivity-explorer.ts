@@ -4,7 +4,7 @@
 // pre-collected Dataset B one-factor-at-a-time observations and shows "unavailable" for any
 // level that wasn't actually collected for that source.
 import type { Observation } from "../../lib/surf-volume/types";
-import { formatL } from "./chart-utils";
+import { formatL } from "../shared/chart-utils";
 import { loadSurfVolumeData } from "./data-client";
 
 const VARIABLES = ["age", "fitness", "frequency", "conditions", "wetsuit"] as const;

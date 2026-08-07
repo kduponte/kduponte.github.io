@@ -4,7 +4,7 @@
 import * as Plot from "@observablehq/plot";
 import { computeConsensus } from "../../lib/surf-volume/consensus";
 import type { Observation, SourceMetadata } from "../../lib/surf-volume/types";
-import { wireTableToggle } from "./chart-utils";
+import { wireTableToggle } from "../shared/chart-utils";
 import { loadSurfVolumeData } from "./data-client";
 
 const PALETTE = ["var(--color-accent-blue)", "var(--color-accent-green)", "var(--color-accent-yellow)", "var(--color-ink)", "var(--color-ink-soft)"];

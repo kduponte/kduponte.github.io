@@ -8,7 +8,7 @@ interface Reflection {
 interface Props {
 	title?: string;
 	reflection?: Reflection;
-	nextSteps: string[];
+	nextSteps?: string[];
 	surprisingLabel?: string;
 	hardestLabel?: string;
 	unresolvedLabel?: string;
@@ -44,17 +44,21 @@ const {
 			</dl>
 		)
 	}
-	<div class="mt-10 max-w-[65ch]">
-		<p class="font-mono text-xs uppercase tracking-wide text-ink-soft">Next highest-value improvements</p>
-		<ol class="mt-3 space-y-2">
-			{
-				nextSteps.map((step, i) => (
-					<li class="flex gap-3 text-sm leading-relaxed text-ink">
-						<span class="font-mono text-ink-soft">{i + 1}.</span>
-						<span>{step}</span>
-					</li>
-				))
-			}
-		</ol>
-	</div>
+	{
+		nextSteps && nextSteps.length > 0 && (
+			<div class="mt-10 max-w-[65ch]">
+				<p class="font-mono text-xs uppercase tracking-wide text-ink-soft">Next highest-value improvements</p>
+				<ol class="mt-3 space-y-2">
+					{
+						nextSteps.map((step, i) => (
+							<li class="flex gap-3 text-sm leading-relaxed text-ink">
+								<span class="font-mono text-ink-soft">{i + 1}.</span>
+								<span>{step}</span>
+							</li>
+						))
+					}
+				</ol>
+			</div>
+		)
+	}
 </section>

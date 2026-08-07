@@ -66,9 +66,9 @@ import NextSteps from "../../components/editorial/NextSteps.astro";
 
 	<Limitations
 		items={[
-			"This simulates one metric (a single conversion rate) with a stationary true rate across the whole run. Real experiments often track several metrics at once and can drift over time. Testing many metrics simultaneously compounds a different, related problem, false discovery across metrics, not simulated here; it's the subject of the next project in this series.",
+			"This simulates one metric (a single conversion rate) with a stationary true rate across the whole run. Real experiments often track several metrics at once and can drift over time. Testing many metrics simultaneously compounds a different, related problem, false discovery across metrics, which isn't simulated here.",
 			"The Bayesian posterior probability at each day is a Monte Carlo estimate (1,500 samples in the live panel, 250 in the repeated-trials study to stay responsive), not a closed-form number. It has its own sampling noise, smaller than the effects demonstrated here, but real; see the stats-sim test suite for a direct check of how that noise shrinks as sample count grows.",
-			"Neither engine here is the properly engineered fix for peeking. Formal sequential designs (group sequential boundaries, alpha-spending functions, mSPRT-based \"always-valid\" testing) and properly constructed Bayesian stopping rules (sequential Bayes factor designs, expected-loss-based rules) are built specifically to stay valid under continuous monitoring. This project demonstrates why peeking is a problem, not how those fixes work; expected-loss stopping rules are planned for a later project in this series.",
+			"Neither engine here is the properly engineered fix for peeking. Formal sequential designs (group sequential boundaries, alpha-spending functions, mSPRT-based \"always-valid\" testing) and properly constructed Bayesian stopping rules (sequential Bayes factor designs, expected-loss-based rules) are built specifically to stay valid under continuous monitoring. This project demonstrates why peeking is a problem, not how those fixes work.",
 			"Some vendors describe their Bayesian A/B testing tools as immune to peeking outright. That claim can be true of an actual engineered product, if it implements a proper sequential correction internally, while being false of the naive posterior-threshold rule demonstrated on this page. Worth checking what's actually running underneath before taking a vendor's calibration claims at face value.",
 		]}
 	/>
@@ -85,11 +85,5 @@ import NextSteps from "../../components/editorial/NextSteps.astro";
 			unresolved:
 				"This project shows the problem, not the properly engineered fix. A useful follow-up would simulate an actual always-valid sequential test (mSPRT) or a formal Bayesian expected-loss stopping rule side by side with the naive rules shown here, to make the size of the fix as visible as the size of the problem.",
 		}}
-		nextSteps={[
-			"Simpson's Paradox, next in this series: a simulator showing how aggregated data can reverse the story a segmented breakdown tells.",
-			"Multiple comparison corrections: the same \"checking too often\" problem, but across many metrics at once instead of across time.",
-			"Variance reduction techniques (CUPED, winsorization, outlier clipping): how experiments get more sensitive without collecting more data.",
-			"A deeper Bayesian dive: setting priors deliberately, expected-loss-based stopping rules, and eventually MCMC for models the closed-form Beta-Binomial can't handle.",
-		]}
 	/>
 </BaseLayout>

@@ -3,17 +3,29 @@
 ---
 
 <section id="live-experiment" class="mx-auto max-w-7xl px-6 py-16 md:px-12 md:py-20">
-	<h2 class="font-display text-2xl font-semibold tracking-tight md:text-3xl">One experiment, watched two ways</h2>
+	<h2 class="font-display text-2xl font-semibold tracking-tight md:text-3xl">One experiment, watched three ways</h2>
 	<p class="mt-3 max-w-[65ch] text-base leading-relaxed text-ink-soft">
-		A simulated A/B test on a conversion rate, with two engines re-checking the same accumulating data every simulated
-		day: a frequentist p-value and a Bayesian probability that B beats A. Change the settings or press run to generate
-		a new random experiment.
+		A simulated A/B test, on a revenue-per-user metric by default (most visitors spend $0, the rest are right-skewed)
+		or a simple conversion rate, with three engines re-checking the same accumulating data every simulated day: a
+		frequentist p-value, a Bayesian probability that B beats A, and an always-valid p-value built to stay honest
+		under continuous monitoring. Change the settings or press run to generate a new random experiment.
 	</p>
 
 	<form id="pp-controls" class="mt-8 grid grid-cols-2 gap-4 border border-line p-6 md:grid-cols-5">
 		<label class="flex flex-col gap-1 text-sm">
-			<span class="font-mono text-xs uppercase tracking-wide text-ink-soft">Baseline rate (%)</span>
-			<input id="pp-baseline-rate" type="number" min="1" max="50" step="0.5" class="border border-line bg-paper px-3 py-2 text-ink" />
+			<span class="font-mono text-xs uppercase tracking-wide text-ink-soft">Metric</span>
+			<select id="pp-metric-type" class="border border-line bg-paper px-3 py-2 text-ink">
+				<option value="revenue" selected>Revenue per user</option>
+				<option value="conversion">Conversion rate</option>
+			</select>
+		</label>
+		<label class="flex flex-col gap-1 text-sm">
+			<span class="font-mono text-xs uppercase tracking-wide text-ink-soft" data-pp-baseline-label>Spend rate (%)</span>
+			<input id="pp-baseline-rate" type="number" min="0.1" max="50" step="0.1" class="border border-line bg-paper px-3 py-2 text-ink" />
+		</label>
+		<label id="pp-avg-revenue-field" class="flex flex-col gap-1 text-sm">
+			<span class="font-mono text-xs uppercase tracking-wide text-ink-soft">Avg. revenue/spender ($)</span>
+			<input id="pp-avg-revenue" type="number" min="1" max="10000" step="1" class="border border-line bg-paper px-3 py-2 text-ink" />
 		</label>
 		<label class="flex flex-col gap-1 text-sm">
 			<span class="font-mono text-xs uppercase tracking-wide text-ink-soft">Scenario</span>
@@ -28,7 +40,7 @@
 		</label>
 		<label class="flex flex-col gap-1 text-sm">
 			<span class="font-mono text-xs uppercase tracking-wide text-ink-soft">Visitors/day/arm</span>
-			<input id="pp-visitors" type="number" min="10" max="1000" step="10" class="border border-line bg-paper px-3 py-2 text-ink" />
+			<input id="pp-visitors" type="number" min="10" max="500000" step="10" class="border border-line bg-paper px-3 py-2 text-ink" />
 		</label>
 		<label class="flex flex-col gap-1 text-sm">
 			<span class="font-mono text-xs uppercase tracking-wide text-ink-soft">Days to run</span>
@@ -38,7 +50,7 @@
 			<span class="font-mono text-xs uppercase tracking-wide text-ink-soft">Prior strength (Bayesian panel): weak &rarr; skeptical</span>
 			<input id="pp-prior-strength" type="range" min="0" max="1" step="0.01" class="accent-accent-blue w-full" />
 		</label>
-		<div class="col-span-2 flex items-end md:col-span-2">
+		<div class="flex items-end">
 			<button
 				type="button"
 				id="pp-run-button"
@@ -56,7 +68,7 @@
 				View as table
 			</button>
 		</div>
-		<div data-vg-chart class="mt-2 grid grid-cols-1 gap-8 overflow-x-auto md:grid-cols-2"></div>
+		<div data-vg-chart class="mt-2 grid grid-cols-1 gap-8 overflow-x-auto sm:grid-cols-2 xl:grid-cols-3"></div>
 		<div data-vg-table class="mt-2 overflow-x-auto"></div>
 	</div>
 

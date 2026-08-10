@@ -11,7 +11,7 @@ import NextSteps from "../../components/editorial/NextSteps.astro";
 
 <BaseLayout
 	title="The Peeking Problem"
-	description="What happens when you check your A/B test every day? A live simulation of what continuous peeking costs you, in both frequentist and Bayesian terms."
+	description="What happens when you check your A/B test every day, and can anything actually fix it? A live simulation of the cost of peeking, and a real, provable construction that removes it."
 >
 	<HeroSection />
 	<LiveExperimentSection />
@@ -20,20 +20,44 @@ import NextSteps from "../../components/editorial/NextSteps.astro";
 	<KeyFindings
 		findings={[
 			{
-				label: "Checking every day is almost as risky under a naive Bayesian rule as under a frequentist one",
-				detail: "At default settings (10% baseline rate, 50 visitors/day per arm, 30 simulated days), checking once at a fixed end date lands close to the textbook 5% false-positive rate for both methods (4.7% frequentist, 5.3% Bayesian with a weak prior). Checking every day and stopping at the first convincing result inflates both to about 30%, roughly a 6x increase either way. A naive Bayesian probability threshold offers essentially no built-in protection against peeking on its own.",
+				label: "Checking every day is almost as risky under a fixed posterior threshold as under a frequentist test",
+				detail: "At default settings (10% baseline rate, 50 visitors/day per arm, 30 simulated days), checking once at a fixed end date lands close to the textbook 5% false-positive rate for both methods (5.1% frequentist, 5.5% Bayesian with a weak prior). Checking every day and stopping at the first convincing result inflates both to roughly 27–35%, a 5–6x increase either way. A Bayesian probability crossing a fixed threshold offers essentially no built-in protection against peeking on its own.",
 			},
 			{
-				label: "A skeptical prior tempers the inflation, but it isn't free",
-				detail: "Raising the Bayesian prior's strength cuts the any-day false-positive rate from 33% (weak prior) to 9% (moderate) to 5% (strong). But the same run shows the cost: the final-day-only rate drops well below 5% too, from 5.3% to 2.9% to 1.9%. A stronger prior doesn't just resist peeking, it makes the test slower to detect real effects across the board.",
+				label: "A properly constructed Bayes factor actually fixes this",
+				detail: "Add a third method, an \"always-valid\" test built from a genuine Bayes factor (a mixture likelihood ratio over a prior on the effect size, not a posterior-probability threshold), and the story changes completely: at the same default settings, its any-day rate is 1.3%, next to 27.2% for the frequentist test and 34.6% for the fixed Bayesian threshold. This isn't a smaller version of the same problem, it's a genuinely different kind of guarantee, provable rather than merely observed to be smaller (see Methodology).",
+			},
+			{
+				label: "That guarantee holds up even if you keep watching for months",
+				detail: "Extend the monitoring window from 20 to 120 days and the naive methods get worse the longer you watch: the frequentist any-day rate climbs from 25.4% to 39.4%, the fixed Bayesian threshold from 32.6% to 49.3%. The always-valid test's any-day rate also rises, but from 0.9% to 2.55%, staying comfortably under the 5% nominal rate the entire time. More looks make the naive methods meaningfully worse; they barely move this one.",
+			},
+			{
+				label: "The fix has a real cost: less power, not a free lunch",
+				detail: "Against a genuine 20% relative lift, by day 30 the frequentist and fixed Bayesian tests each detect it in about 41% of trials; the always-valid test detects it in 10.3%. That gap narrows with more data (66% vs. 94% by day 120) but doesn't close. A test built to stay safe under unlimited peeking is, at any fixed sample size, less eager to declare a winner than a test that isn't safe. That's the actual trade, not a defect to route around.",
+			},
+			{
+				label: "The same story holds for a zero-inflated, right-skewed metric, not just a clean conversion rate",
+				detail: "Switch the metric to revenue per user (the default above: 1% of visitors spend anything at all, the rest right-skewed around a $50 average), at a realistic 500,000 visitors/day, and the pattern repeats almost exactly. Frequentist: 4.6% checking once, 26.6% checking every day (5.8x). Fixed Bayesian threshold: 5.5% to 32.7% (5.9x). Always-valid: 0.07% to 0.47%, staying in the same dramatically-lower regime it holds for a simple conversion rate. Zero-inflation and heavy skew change what the metric looks like, not whether checking every day inflates a threshold-based test, or whether a genuine Bayes factor resists it.",
+			},
+			{
+				label: "A skeptical prior tempers the inflation, but the real cost shows up under a genuine effect, not under the null",
+				detail: "Raising the Bayesian prior's strength cuts the any-day false-positive rate from 34.6% (weak) to 24.0% (mild) to 17.0% (strong), while the final-day-only rate stays close to the nominal 5% throughout (5.5%, 4.9%, 4.7%). So the prior isn't just quietly failing to detect real effects under the null, that would show up as a falling final-day rate, and it doesn't. Run the same comparison under a genuine 20% lift instead, and the cost appears exactly where it should: a weak prior correctly detects the real effect by day 30 in 42.0% of trials, dropping to 38.4% (mild) and 36.3% (strong prior). A stronger prior trades detection power for peeking resistance, not single-look accuracy.",
+			},
+			{
+				label: "That protection depends entirely on how the prior's weight compares to your daily traffic",
+				detail: "The same “strong” prior that cuts the any-day rate from 34.6% to 17.0% at 50 visitors/day per arm does essentially nothing at 5,000/day (32.9% vs. 32.5%) and literally nothing at 500,000/day (33.5% vs. 33.5%, identical to three significant figures). A prior is a fixed number of pseudo-observations; once a single day of real traffic outweighs it by orders of magnitude, it gets overwhelmed within the first day or two and stops influencing anything. Try it yourself in the peeking study above: a prior sized to matter at modest traffic is functionally weightless at real production scale.",
+			},
+			{
+				label: "The core inflation number barely moves across baseline rate or traffic volume",
+				detail: "A 10% baseline at 50 visitors/day, a 1% baseline at 5,000/day, and a 1% baseline at 500,000/day all produced the same story for the frequentist test: a final-day-only rate near the nominal 5% (4.9–5.2%), inflating to 27–28% under daily peeking, a consistent 5.3–5.5x. The classical asymptotic behavior behind this holds even at the sparsest scale tested here (about 5 expected successes per arm per day).",
 			},
 			{
 				label: "False positives cluster early",
-				detail: "Across the simulation, the median day of a first false positive is day 5 of 30 for the frequentist test (day 6 for Bayesian under a weak prior), and 71% of all frequentist false positives happen within the first third of the experiment. The moment it feels most tempting to peek, early in a test, is also the riskiest moment to trust what you see.",
+				detail: "At the default scale, the median day of a first false positive is day 5 of 30 for both methods, and 69% of all frequentist false positives happen within the first third of the experiment. The moment it feels most tempting to peek, early in a test, is also the riskiest moment to trust what you see.",
 			},
 			{
 				label: "This matches independently published numbers",
-				detail: "Evan Miller's widely cited \"How Not To Run An A/B Test\" reports roughly a 26% false-positive rate when checking after every single observation at a nominal 5% threshold. This simulation's own model, built independently, lands at a comparable 29% for daily checks over 30 days. A 2025 simulation by Alex Molas found naive Bayesian posterior-threshold peeking similarly overshoots its nominal rate, consistent with the pattern shown here.",
+				detail: "Evan Miller's widely cited \"How Not To Run An A/B Test\" reports roughly a 26% false-positive rate when checking after every single observation at a nominal 5% threshold. This simulation's own model, built independently, lands at a comparable 27–29% for daily checks over 30 days. A 2025 simulation by Alex Molas found a fixed Bayesian posterior threshold similarly overshoots its nominal rate under peeking, consistent with the pattern shown here.",
 			},
 		]}
 	/>
@@ -42,24 +66,44 @@ import NextSteps from "../../components/editorial/NextSteps.astro";
 		id="methodology"
 		sections={[
 			{
-				heading: "The two engines",
-				body: "Each simulated day, a pooled two-proportion z-test recomputes a two-sided p-value on the cumulative data, and a Beta-Binomial model updates each arm's posterior conversion-rate distribution, from which P(B beats A) is estimated by Monte Carlo sampling (1,500 posterior draws per day in the live panel, fewer in the repeated-trials study to stay responsive). Both engines see exactly the same accumulating data at exactly the same time.",
+				heading: "The first two engines",
+				body: "For a conversion-rate metric, each simulated day a pooled two-proportion z-test recomputes a two-sided p-value on the cumulative data, and a Beta-Binomial model updates each arm's posterior conversion-rate distribution, from which P(B beats A) is estimated by Monte Carlo sampling (1,500 posterior draws per day in the live panel, 200 in the repeated-trials study to stay responsive). Both engines see exactly the same accumulating data at exactly the same time. A third engine, described below, watches too.",
+			},
+			{
+				heading: "Modeling a revenue-style metric",
+				body: "Revenue per user isn't a proportion, most visitors contribute exactly $0, and the rest are right-skewed. This project models it as a standard two-part (\"hurdle\") model: whether a visitor spends anything at all is the same Beta-Binomial machinery as the conversion-rate engine, and how much they spend given they do is modeled as log-normal (a fixed, shared spread across arms, a simplification: most treatments change whether or how much people spend, not the underlying shape of spend variability). The frequentist test becomes a two-sample z-test on mean revenue per user; the Bayesian side adds a second, jointly-sampled posterior for the log-revenue mean; the always-valid test needs no new theory at all, it already operates on a raw difference and variance, whichever metric they came from.",
 			},
 			{
 				heading: "Why a 0.975 Bayesian threshold, not 0.95",
 				body: "A symmetric two-sided decision rule (declare a winner when P(B beats A) is above the threshold or below one minus it) needs its threshold calibrated before the two methods can be compared fairly. At 0.95 the Bayesian rule's single-look false-positive rate runs closer to 10%, roughly double the frequentist test's 5%, since two one-sided 95% checks compound. Calibrating to 0.975 instead brings the Bayesian single-look rate back in line with the frequentist test's, so the \"checking every day vs. checking once\" comparison on this page is apples to apples rather than comparing two differently calibrated tests.",
 			},
 			{
-				heading: "The prior-strength slider",
-				body: "Both arms start from the same Beta(k, k) prior, symmetric around 50%. Weak (k=1) is an uninformative uniform prior; strong (k=200) is a skeptical prior that takes real evidence to move away from believing the two arms are identical. This is the one dial that changes how much protection peeking gets from the Bayesian side, and it comes with a real cost (see Key Findings).",
+				heading: "What makes a prior \"weak\" or \"strong\" here",
+				body: "A common, principled way to encode \"skeptical that A and B differ\" is a prior directly on the lift (B minus A), centered at zero: weak means wide and diffuse, strong means tightly concentrated at zero. This project does something related but not identical: both arms start from a Beta prior whose mean equals the assumed baseline rate (not 50%, and not the lift), so a strong prior doesn't fight the true baseline the way a prior fixed at 50% would at, say, a 1% conversion rate. What the slider controls is the prior's concentration (a pseudo-observation count, from 1 at the weak end to 200 at the strong end): weak takes almost no real data to move away from the baseline; strong takes substantially more evidence before either arm's estimate is allowed to drift. It's the same spirit as a lift-centered prior, skepticism that either arm has really changed, expressed as skepticism that either arm has moved from a shared starting point, rather than as a prior on the difference itself.",
+			},
+			{
+				heading: "Why the prior's effect depends on your traffic volume",
+				body: "A pseudo-observation count is a fixed quantity (at most 200 here), and Bayesian updating simply weighs it against however much real data has accumulated. At 50 visitors/day, 200 pseudo-observations are comparable to several days of real traffic, so the prior meaningfully shapes the posterior for a while. At 5,000 or 500,000 visitors/day, 200 pseudo-observations are dwarfed by a single day's real data, so the prior's influence disappears almost immediately regardless of how \"strong\" it's set. This isn't a quirk of this particular simulation, it's a direct, general consequence of what a fixed-size prior actually is: a prior sized to matter at one traffic volume needs to be resized to matter at another.",
 			},
 			{
 				heading: "The repeated-trials peeking study",
-				body: "The centerpiece comparison runs several hundred independent simulated experiments where the two arms genuinely share the same true rate (the null is true by construction), then measures how often each method would have called a winner: checking once at the end, versus checking every day and stopping at the first convincing result. This measures the classic \"optional stopping\" problem directly instead of asserting it.",
+				body: "The centerpiece comparison runs several hundred independent simulated experiments where the two arms genuinely share the same true rate (the null is true by construction), then measures how often each method would have called a winner: checking once at the end, versus checking every day and stopping at the first convincing result. Baseline rate, daily traffic, and prior strength are all adjustable above, so the comparison can be run at whatever scale is relevant, not just the default one. This measures the classic \"optional stopping\" problem directly instead of asserting it.",
 			},
 			{
-				heading: "What the published literature says",
-				body: "Optional stopping inflating frequentist false-positive rates is a well-established result dating to Armitage, McPherson and Rowe (1969), popularized for practitioners by Evan Miller's \"How Not To Run An A/B Test\" (2010) and formalized into \"always-valid\" sequential testing by Johari, Pekelis and Walsh (2017), the basis for Optimizely's Stats Engine. Whether Bayesian methods are immune is more contested than often assumed: Rouder (2014) argued Bayes factors under certain priors resist optional stopping, but de Heide and Grünwald (2021) and Sanborn and Hills (2014) show that a naive posterior-probability threshold, exactly the kind of rule simulated here, doesn't get that protection for free, and that the severity depends heavily on the prior's informativeness, consistent with this simulation's own results. Deng, Lu and Chen (2016, Microsoft) explicitly call a fixed posterior-threshold stopping rule a \"bad practice\", distinct from a properly designed sequential Bayesian test.",
+				heading: "Peeking isn't the problem, acting on it early is",
+				body: "The two bars in the chart above aren't \"looked at the data\" vs. \"didn't\", interim results exist every day in both scenarios. The \"checked once (end)\" bar is what happens when the decision rule ignores those interim results and only depends on the final day: it sits right at the nominal rate, because the decision was fixed in advance and never actually reacted to anything that happened before day 30. The \"checked every day\" bar is what happens when the decision rule reacts to whichever day looks most convincing. So watching a dashboard every day out of curiosity, while genuinely waiting for a pre-committed end date to decide, isn't the problem this page describes. That guarantee has zero tolerance for exceptions, though: even a rare \"I'd stop early if it looked extreme enough\" escape hatch reintroduces the same inflation, in proportion to how likely that escape hatch actually is to fire.",
+			},
+			{
+				heading: "A third engine: an always-valid test",
+				body: "The first two engines share a structural weakness: both compare a single number, a p-value, a posterior probability, against a fixed threshold, and neither number was built to stay well-behaved under repeated looks. The always-valid test is built differently, from the start, for exactly that purpose. At each day, it computes a genuine Bayes factor: the likelihood of the observed difference under a mixture of possible true effect sizes (a Normal(0, τ²) prior on the effect itself, not on each arm's raw rate) divided by the likelihood under \"no effect.\" τ, how large an effect this test is tuned to detect efficiently, is derived automatically here from the baseline rate (tuned around a ~30% relative lift) rather than exposed as its own control; a real analysis would choose it deliberately. That one design choice, mixing over a range of possible effects rather than fixing a single alternative, is what makes the resulting quantity behave completely differently under continuous monitoring.",
+			},
+			{
+				heading: "Why this one is provably different",
+				body: "This mixture likelihood ratio is a nonnegative martingale under the null: its expected value stays exactly 1 at every fixed point in time, no matter how the data actually turns out. That property comes with a real theorem attached (Ville's inequality): the probability that this ratio ever crosses 1/α, checked at any time, however often, is bounded by α. That's an exact, provable statement covering every possible stopping rule at once, not an empirical pattern that happens to hold in this particular simulation. The numbers in Key Findings exist to confirm the theorem actually plays out in a real repeated-trials simulation, not to substitute for it.",
+			},
+			{
+				heading: "What the published literature says, and what actually resolves the Rouder question",
+				body: "Optional stopping inflating frequentist false-positive rates is a well-established result dating to Armitage, McPherson and Rowe (1969), popularized for practitioners by Evan Miller's \"How Not To Run An A/B Test\" (2010) and formalized into \"always-valid\" sequential testing by Johari, Pekelis and Walsh (2017), the exact construction used above and the basis for Optimizely's Stats Engine. Rouder (2014) argued Bayes factors resist optional stopping, while de Heide and Grünwald (2021) and Sanborn and Hills (2014) showed a fixed posterior-probability threshold doesn't get that protection for free. Both are right, about different things: Rouder's claim is specifically about genuine Bayes factors like the mixture likelihood ratio built here, and this page's own numbers show exactly that distinction in practice, a raw P(B beats A) threshold inflates under peeking, a real Bayes factor over a mixture prior on the effect doesn't. Deng, Lu and Chen (2016, Microsoft) make the same distinction, explicitly calling a fixed posterior-threshold stopping rule a \"bad practice\" separate from a properly designed sequential Bayesian test.",
 			},
 		]}
 	/>
@@ -68,8 +112,8 @@ import NextSteps from "../../components/editorial/NextSteps.astro";
 		items={[
 			"This simulates one metric (a single conversion rate) with a stationary true rate across the whole run. Real experiments often track several metrics at once and can drift over time. Testing many metrics simultaneously compounds a different, related problem, false discovery across metrics, which isn't simulated here.",
 			"The Bayesian posterior probability at each day is a Monte Carlo estimate (1,500 samples in the live panel, 250 in the repeated-trials study to stay responsive), not a closed-form number. It has its own sampling noise, smaller than the effects demonstrated here, but real; see the stats-sim test suite for a direct check of how that noise shrinks as sample count grows.",
-			"Neither engine here is the properly engineered fix for peeking. Formal sequential designs (group sequential boundaries, alpha-spending functions, mSPRT-based \"always-valid\" testing) and properly constructed Bayesian stopping rules (sequential Bayes factor designs, expected-loss-based rules) are built specifically to stay valid under continuous monitoring. This project demonstrates why peeking is a problem, not how those fixes work.",
-			"Some vendors describe their Bayesian A/B testing tools as immune to peeking outright. That claim can be true of an actual engineered product, if it implements a proper sequential correction internally, while being false of the naive posterior-threshold rule demonstrated on this page. Worth checking what's actually running underneath before taking a vendor's calibration claims at face value.",
+			"The always-valid test's mixing variance (τ², how large an effect it's tuned to detect efficiently) is auto-derived from the baseline rate here rather than exposed as its own control. A real analysis should choose it deliberately, tuned to the smallest effect actually worth detecting, since a mismatched τ costs real power (see Key Findings). Other valid constructions exist too, group sequential designs with alpha-spending functions, and sequential Bayes factor designs with different mixing choices, that this page doesn't build out; the one implemented here is a real, representative example, not the only correct construction.",
+			"Some vendors describe their Bayesian A/B testing tools as immune to peeking outright. That claim can be true of an actual engineered product, if it implements a proper sequential correction internally, while being false of the fixed posterior-threshold rule demonstrated on this page. Worth checking what's actually running underneath before taking a vendor's calibration claims at face value.",
 		]}
 	/>
 
@@ -83,7 +127,7 @@ import NextSteps from "../../components/editorial/NextSteps.astro";
 			hardest:
 				"Calibrating the Bayesian decision threshold to a comparable single-look false-positive rate before trusting any \"any day vs. final day\" comparison between the two methods. It would have been easy to compare an under-calibrated 0.95 threshold against a well-calibrated frequentist test and draw the wrong conclusion.",
 			unresolved:
-				"This project shows the problem, not the properly engineered fix. A useful follow-up would simulate an actual always-valid sequential test (mSPRT) or a formal Bayesian expected-loss stopping rule side by side with the naive rules shown here, to make the size of the fix as visible as the size of the problem.",
+				"The always-valid test here uses one fixed, auto-derived choice of mixing variance, tuned generically from the baseline rate rather than a deliberately chosen minimum-effect-of-interest. A natural follow-up would expose that as a real control and show how the power/safety trade shifts as it's tuned differently, alongside a genuinely different kind of fix: a decision-theoretic, expected-loss-based stopping rule that weighs the size of being wrong, not just the probability of it.",
 		}}
 	/>
 </BaseLayout>

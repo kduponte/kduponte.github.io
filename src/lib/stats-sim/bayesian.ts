@@ -45,9 +45,23 @@ export function liftCredibleInterval(posteriorA: BetaParams, posteriorB: BetaPar
 	};
 }
 
-/** Maps a 0-1 "prior strength" slider to Beta(k,k) pseudo-counts (centered at 50/50, weak..skeptical). */
-export function priorStrengthToBetaParams(strength01: number, priorMinK = 1, priorMaxK = 200): BetaParams {
+/**
+ * Maps a 0-1 "prior strength" slider to Beta(k*baselineRate, k*(1-baselineRate)) pseudo-counts:
+ * a prior whose MEAN always equals the assumed baseline rate (both arms start believing they
+ * behave like the known baseline, which is realistic, e.g. the control's historical rate), and
+ * whose CONCENTRATION (k, "pseudo-observations") is what the slider actually controls. Weak
+ * (small k) is close to uninformative; strong (large k) takes real evidence to move either arm's
+ * estimate away from the baseline, this project's stand-in for "skeptical that A and B differ."
+ *
+ * Earlier versions of this used a fixed Beta(k, k), centered at 50% regardless of the baseline
+ * rate. That's a real bug, not just an imprecision: at a 1% or 10% baseline, a "strong" prior
+ * was actively dragging both arms' estimates up toward 50% rather than expressing skepticism
+ * about a difference, which would have distorted results specifically in low-baseline-rate,
+ * high-traffic regimes. Anchoring the prior's mean at the baseline rate fixes that.
+ */
+export function priorStrengthToBetaParams(strength01: number, baselineRate: number, priorMinK = 1, priorMaxK = 200): BetaParams {
 	const clamped = Math.max(0, Math.min(1, strength01));
+	const clampedBaseline = Math.min(0.999, Math.max(0.001, baselineRate));
 	const k = priorMinK + clamped * (priorMaxK - priorMinK);
-	return { alpha: k, beta: k };
+	return { alpha: k * clampedBaseline, beta: k * (1 - clampedBaseline) };
 }

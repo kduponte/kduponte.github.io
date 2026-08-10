@@ -27,10 +27,67 @@ export function bernoulli(p: number, rng: Rng): boolean {
 	return rng() < p;
 }
 
+/**
+ * Geometric distribution (number of failures before the first success), support {0, 1, 2, ...},
+ * via inverse-CDF sampling: for U ~ Uniform(0,1), floor(log(1-U) / log(1-p)) is exactly
+ * Geometric(p)-distributed. Used by `binomial` below to sample large-n/small-p binomials in
+ * O(successes) time instead of O(n).
+ */
+export function geometricSample(p: number, rng: Rng): number {
+	if (p <= 0) throw new Error(`geometricSample requires p > 0, got ${p}`);
+	if (p >= 1) return 0;
+	const u = rng();
+	return Math.floor(Math.log(1 - u) / Math.log(1 - p));
+}
+
+/** Threshold above which both n*p and n*(1-p) are large enough for the normal approximation to
+ * be accurate to a small fraction of a percent (a common, conservative rule of thumb). */
+const NORMAL_APPROX_THRESHOLD = 50;
+
+/**
+ * Binomial(n, p) sampling, using whichever of three methods fits the regime:
+ *
+ * 1. n < 30: the naive per-trial loop (n is already tiny, so there's nothing to optimize).
+ * 2. n*p and n*(1-p) both large (>= 50): a normal approximation with rounding, O(1) regardless
+ *    of n. This is what makes exploring high-traffic regimes (100,000+ visitors/day) practical —
+ *    without it, even the skip-count method below costs thousands of iterations per call, which
+ *    adds up across many simulated days and repeated trials into a multi-second wait in-browser.
+ * 3. Otherwise (moderate n, p far from 0.5): exact sampling by counting the "positions" of n
+ *    independent Bernoulli(p) trials that land on a success, skipping ahead by a Geometric(p) gap
+ *    each time rather than flipping n individual coins — cost O(min(n*p, n*(1-p))), fast whenever
+ *    p is far from 0.5 even if the normal approximation isn't yet accurate (e.g. n*p a bit below
+ *    the threshold above).
+ */
 export function binomial(n: number, p: number, rng: Rng): number {
-	let successes = 0;
-	for (let i = 0; i < n; i++) if (bernoulli(p, rng)) successes++;
-	return successes;
+	if (n <= 0 || p <= 0) return 0;
+	if (p >= 1) return n;
+
+	if (n < 30) {
+		let successes = 0;
+		for (let i = 0; i < n; i++) if (bernoulli(p, rng)) successes++;
+		return successes;
+	}
+
+	const mean = n * p;
+	const meanOfComplement = n * (1 - p);
+	if (mean >= NORMAL_APPROX_THRESHOLD && meanOfComplement >= NORMAL_APPROX_THRESHOLD) {
+		const sd = Math.sqrt(n * p * (1 - p));
+		const raw = Math.round(mean + sd * standardNormal(rng));
+		return Math.min(n, Math.max(0, raw));
+	}
+
+	// Count failures instead when p > 0.5, since the skip-count cost is proportional to the
+	// number of "hits" being counted, and hits are the minority outcome exactly when p <= 0.5.
+	const countFailures = p > 0.5;
+	const skipProb = countFailures ? 1 - p : p;
+	let hits = 0;
+	let position = -1;
+	for (;;) {
+		position += geometricSample(skipProb, rng) + 1;
+		if (position >= n) break;
+		hits++;
+	}
+	return countFailures ? n - hits : hits;
 }
 
 /**

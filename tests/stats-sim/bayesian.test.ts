@@ -9,14 +9,17 @@ describe("updatePosterior / posteriorMean", () => {
 		expect(posteriorMean(posterior)).toBeCloseTo(81 / 102, 4);
 	});
 
-	it("a stronger prior shrinks the posterior mean toward the prior", () => {
-		const weakPrior = priorStrengthToBetaParams(0);
-		const strongPrior = priorStrengthToBetaParams(1);
+	it("a stronger prior shrinks the posterior mean toward the baseline rate, not toward 50%", () => {
+		// This is exactly the case that would have caught the earlier bug (a fixed Beta(k,k)
+		// prior always centered at 50%, which actively fought a low baseline rate instead of
+		// expressing "skeptical that B differs from A"). Baseline is deliberately far from 0.5.
+		const baselineRate = 0.1;
+		const weakPrior = priorStrengthToBetaParams(0, baselineRate);
+		const strongPrior = priorStrengthToBetaParams(1, baselineRate);
 		const weakPosterior = updatePosterior(weakPrior, 8, 2); // small sample, 80% observed
 		const strongPosterior = updatePosterior(strongPrior, 8, 2);
-		// Both start below the observed 0.8, but the strong-prior posterior should sit closer to 0.5.
 		expect(posteriorMean(strongPosterior)).toBeLessThan(posteriorMean(weakPosterior));
-		expect(Math.abs(posteriorMean(strongPosterior) - 0.5)).toBeLessThan(Math.abs(posteriorMean(weakPosterior) - 0.5));
+		expect(Math.abs(posteriorMean(strongPosterior) - baselineRate)).toBeLessThan(Math.abs(posteriorMean(weakPosterior) - baselineRate));
 	});
 });
 
@@ -77,24 +80,35 @@ describe("liftCredibleInterval", () => {
 });
 
 describe("priorStrengthToBetaParams", () => {
-	it("is centered at alpha === beta across the full range", () => {
-		for (const s of [0, 0.25, 0.5, 0.75, 1]) {
-			const { alpha, beta } = priorStrengthToBetaParams(s);
-			expect(alpha).toBeCloseTo(beta, 6);
+	it("has mean equal to the baseline rate at any strength, not fixed at 50%", () => {
+		for (const baselineRate of [0.01, 0.1, 0.5, 0.9]) {
+			for (const s of [0, 0.25, 0.5, 0.75, 1]) {
+				const { alpha, beta } = priorStrengthToBetaParams(s, baselineRate);
+				expect(alpha / (alpha + beta)).toBeCloseTo(baselineRate, 6);
+			}
 		}
 	});
 
-	it("maps 0 to the weak end and 1 to the strong end", () => {
-		const weak = priorStrengthToBetaParams(0, 1, 200);
-		const strong = priorStrengthToBetaParams(1, 1, 200);
-		expect(weak.alpha).toBeCloseTo(1, 6);
-		expect(strong.alpha).toBeCloseTo(200, 6);
+	it("maps strength 0 to the weak pseudo-count and 1 to the strong one", () => {
+		const baselineRate = 0.1;
+		const weak = priorStrengthToBetaParams(0, baselineRate, 1, 200);
+		const strong = priorStrengthToBetaParams(1, baselineRate, 1, 200);
+		expect(weak.alpha + weak.beta).toBeCloseTo(1, 6);
+		expect(strong.alpha + strong.beta).toBeCloseTo(200, 6);
 	});
 
-	it("clamps out-of-range input", () => {
-		const below = priorStrengthToBetaParams(-5, 1, 200);
-		const above = priorStrengthToBetaParams(5, 1, 200);
-		expect(below.alpha).toBeCloseTo(1, 6);
-		expect(above.alpha).toBeCloseTo(200, 6);
+	it("clamps out-of-range strength input", () => {
+		const baselineRate = 0.1;
+		const below = priorStrengthToBetaParams(-5, baselineRate, 1, 200);
+		const above = priorStrengthToBetaParams(5, baselineRate, 1, 200);
+		expect(below.alpha + below.beta).toBeCloseTo(1, 6);
+		expect(above.alpha + above.beta).toBeCloseTo(200, 6);
+	});
+
+	it("clamps a degenerate baseline rate away from exactly 0 or 1", () => {
+		const zero = priorStrengthToBetaParams(0.5, 0, 1, 200);
+		const one = priorStrengthToBetaParams(0.5, 1, 1, 200);
+		expect(zero.alpha).toBeGreaterThan(0);
+		expect(one.beta).toBeGreaterThan(0);
 	});
 });

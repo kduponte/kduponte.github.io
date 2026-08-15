@@ -3,6 +3,7 @@ import BaseLayout from "../../layouts/BaseLayout.astro";
 import HeroSection from "../../components/projects/the-peeking-problem/HeroSection.astro";
 import FoundationsSection from "../../components/projects/the-peeking-problem/FoundationsSection.astro";
 import CoreIdeaSection from "../../components/projects/the-peeking-problem/CoreIdeaSection.astro";
+import PriorPrimerSection from "../../components/projects/the-peeking-problem/PriorPrimerSection.astro";
 import LiveExperimentSection from "../../components/projects/the-peeking-problem/LiveExperimentSection.astro";
 import PeekingStudySection from "../../components/projects/the-peeking-problem/PeekingStudySection.astro";
 import KeyFindings from "../../components/editorial/KeyFindings.astro";
@@ -18,6 +19,7 @@ import NextSteps from "../../components/editorial/NextSteps.astro";
 	<HeroSection />
 	<FoundationsSection />
 	<CoreIdeaSection />
+	<PriorPrimerSection />
 	<LiveExperimentSection />
 	<PeekingStudySection />
 
@@ -147,7 +149,7 @@ import NextSteps from "../../components/editorial/NextSteps.astro";
 			},
 			{
 				heading: "What makes a prior \"weak\" or \"strong\" here",
-				tldr: "The prior slider controls how much real evidence it takes to move either arm's estimate away from the assumed baseline.",
+				tldr: "The prior slider controls how much real evidence it takes to move either arm's estimate away from the assumed baseline (see \"What makes a prior trustworthy?\" above for the intuition and a playground to try it).",
 				body: "A common, principled way to encode \"skeptical that A and B differ\" is a prior directly on the lift (B minus A), centered at zero: weak means wide and diffuse, strong means tightly concentrated at zero. This project does something related but not identical: both arms start from a Beta prior whose mean equals the assumed baseline rate (not 50%, and not the lift), so a strong prior doesn't fight the true baseline the way a prior fixed at 50% would at, say, a 1% conversion rate. What the slider controls is the prior's concentration (a pseudo-observation count, from 1 at the weak end to 200 at the strong end): weak takes almost no real data to move away from the baseline; strong takes substantially more evidence before either arm's estimate is allowed to drift. It's the same spirit as a lift-centered prior, skepticism that either arm has really changed, expressed as skepticism that either arm has moved from a shared starting point, rather than as a prior on the difference itself.",
 			},
 			{

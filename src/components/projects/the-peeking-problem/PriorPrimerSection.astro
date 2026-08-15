@@ -1,0 +1,85 @@
+---
+// Markup + mount points only; the playground's behavior lives in
+// src/scripts/peeking-problem/prior-playground.ts.
+---
+
+<section id="prior-primer" class="mx-auto max-w-7xl px-6 py-16 md:px-12 md:py-20">
+	<h2 class="font-display text-2xl font-semibold tracking-tight md:text-3xl">What makes a prior trustworthy?</h2>
+
+	<p class="mt-3 max-w-[65ch] text-base leading-relaxed text-ink-soft">
+		Picture a doctor seeing a patient before running any test. They already have a rough sense of how likely
+		different diagnoses are, based on the patient's age, symptoms, and what's common in general, formed before any
+		test result comes back. That's a prior. The test result then updates it.
+	</p>
+	<p class="mt-3 max-w-[65ch] text-base leading-relaxed text-ink-soft">
+		On this page, the prior is a starting guess about each page version's conversion rate (or revenue), before any
+		of this experiment's visitors have shown up. The prior-strength slider in the panels below controls how much
+		that starting guess resists being moved by new data, the same way a doctor who's seen a thousand similar cases
+		moves less than one who's guessing.
+	</p>
+
+	<div class="mt-6 max-w-[65ch] border-l-2 border-accent-blue pl-4">
+		<p class="font-mono text-xs uppercase tracking-wide text-accent-blue">Before you trust a prior, ask</p>
+		<ul class="mt-2 space-y-2 text-sm leading-relaxed text-ink-soft">
+			<li>Is it based on something real, like this page's own history, not a guess or a hope?</li>
+			<li>Is its confidence level honest? If you're not actually sure, the prior shouldn't act sure.</li>
+			<li>Would you be comfortable if this prior alone, with zero new data, made the decision?</li>
+		</ul>
+	</div>
+
+	<p class="mt-8 max-w-[65ch] text-base leading-relaxed text-ink">
+		Try it yourself: drag prior strength, what the data alone suggests, and how many visitors have been observed,
+		and watch where the resulting posterior actually lands.
+	</p>
+
+	<div class="mt-4 grid grid-cols-1 gap-6 border border-line p-6 md:grid-cols-3">
+		<label class="flex flex-col gap-1 text-sm">
+			<span class="font-mono text-xs uppercase tracking-wide text-ink-soft">Prior strength: weak &rarr; strong</span>
+			<input id="pp-primer-strength" type="range" min="0" max="1" step="0.01" class="accent-accent-blue w-full" />
+			<span id="pp-primer-strength-value" class="font-mono text-xs text-ink-soft"></span>
+		</label>
+		<label class="flex flex-col gap-1 text-sm">
+			<span class="font-mono text-xs uppercase tracking-wide text-ink-soft">What the data alone suggests</span>
+			<input id="pp-primer-data-rate" type="range" min="0" max="30" step="0.5" class="accent-accent-blue w-full" />
+			<span id="pp-primer-data-rate-value" class="font-mono text-xs text-ink-soft"></span>
+		</label>
+		<label class="flex flex-col gap-1 text-sm">
+			<span class="font-mono text-xs uppercase tracking-wide text-ink-soft">Visitors observed so far</span>
+			<input id="pp-primer-visitors" type="range" min="10" max="3000" step="10" class="accent-accent-blue w-full" />
+			<span id="pp-primer-visitors-value" class="font-mono text-xs text-ink-soft"></span>
+		</label>
+	</div>
+	<p class="mt-2 max-w-[65ch] text-xs leading-relaxed text-ink-soft">
+		Assumed baseline: 10%, matching the default above. The prior is always centered there; only its concentration
+		changes as you drag its strength.
+	</p>
+	<div id="pp-primer-chart" class="mt-4"></div>
+
+	<p class="mt-8 max-w-[65ch] text-sm leading-relaxed text-ink-soft">
+		A weak prior barely resists: the posterior lands close to whatever the data alone suggests, fast to react,
+		including fast to overreact to early noise, which is exactly why a weak Bayesian prior offers so little
+		protection against peeking (see Key Findings). A strong prior resists more: the posterior stays closer to the
+		assumed baseline until real evidence accumulates, which cuts the any-day false-positive rate from 34.6% down to
+		17.0% at this page's default scale, at a real cost, correctly detecting a genuine 20% lift drops from 42.0% to
+		36.3% by day 30. Drag "visitors observed" up and even a strong prior gets overwhelmed: at real production
+		traffic volumes, a prior sized to matter at modest traffic becomes functionally weightless within the first day
+		or two (see Methodology).
+	</p>
+
+	<p class="mt-4 max-w-[65ch] text-sm leading-relaxed text-ink-soft">
+		None of that says whether the prior itself was right. Picture that same doctor, but their experience actually
+		comes from a small, biased, or outdated set of patients, they still walk in confident, and that confidence now
+		works against the patient: the more strongly they hold a wrong assumption, the more real evidence it takes to
+		correct them. Same here: if a prior's central guess is wrong, or its source data was contaminated (a buggy prior
+		experiment, a different audience, a seasonal fluke), a strong prior doesn't just resist noise, it resists the
+		correction too. A weak, wrong prior is comparatively harmless, it barely resists anything, real data takes over
+		quickly. Strong and wrong is the dangerous combination, not strong by itself, confidently wrong beats honestly
+		uncertain in exactly the wrong direction.
+	</p>
+
+	<p class="mt-4 max-w-[65ch] text-sm leading-relaxed text-ink-soft">
+		That's the exact tug-of-war the prior-strength slider in the panels below controls.
+	</p>
+
+	<script src="../../../scripts/peeking-problem/prior-playground.ts"></script>
+</section>

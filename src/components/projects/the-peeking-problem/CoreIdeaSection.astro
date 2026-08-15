@@ -1,0 +1,168 @@
+---
+// Static, hand-drawn illustrative diagrams (deterministic pseudo-random walks generated offline,
+// then hardcoded here as plain SVG). These are sketches of the *mechanism*, not simulation output,
+// the live charts below use real computed numbers; these three exist purely to build intuition.
+const d1Path =
+	"60,190 77.9,202.6 95.9,191.4 113.8,191 131.7,175 149.7,160.8 167.6,161.3 185.5,150.4 203.4,135.6 221.4,129.9 239.3,118.7 257.2,127.3 275.2,118.2 293.1,111.8 311,115.5 329,114.2 346.9,96.8 364.8,90.9 382.8,95 400.7,94.4 418.6,99.4 436.6,92.1 454.5,94.6 472.4,94.5 490.3,88.9 508.3,72.4 526.2,61 544.1,66.8 562.1,55.3 580,58.5";
+
+const d2Paths = [
+	{
+		opacity: 0.85,
+		points:
+			"60,190 77.9,180.3 95.9,176.9 113.8,167.9 131.7,167.3 149.7,162 167.6,175.7 185.5,174.1 203.4,172.3 221.4,183.4 239.3,180.8 257.2,158.7 275.2,152.8 293.1,137.4 311,125.8 329,106.8 346.9,112.1 364.8,113.5 382.8,110.8 400.7,117.8 418.6,110 436.6,102.7 454.5,113.9 472.4,110.1 490.3,106 508.3,111.4 526.2,99.9 544.1,101.8 562.1,103.7 580,108.1",
+	},
+	{
+		opacity: 0.6,
+		points:
+			"60,190 77.9,195.9 95.9,202.2 113.8,210 131.7,210 149.7,208.6 167.6,204.4 185.5,200.2 203.4,193.5 221.4,201.5 239.3,181 257.2,164.7 275.2,163.2 293.1,162.3 311,168.1 329,165.5 346.9,170.7 364.8,173.3 382.8,170 400.7,163.1 418.6,162.9 436.6,159.8 454.5,156.5 472.4,145.2 490.3,133.6 508.3,147.5 526.2,130.1 544.1,117.7 562.1,127.2 580,117.8",
+	},
+	{
+		opacity: 0.45,
+		points:
+			"60,190 77.9,188.3 95.9,192.3 113.8,195.1 131.7,207.3 149.7,205 167.6,205.9 185.5,194.3 203.4,197 221.4,201 239.3,203.2 257.2,197.2 275.2,193.6 293.1,189.1 311,180.1 329,174.9 346.9,181.2 364.8,173.2 382.8,177.9 400.7,174.2 418.6,165 436.6,161.8 454.5,154.4 472.4,164.4 490.3,163.1 508.3,152.3 526.2,162.3 544.1,157.1 562.1,154.4 580,157.1",
+	},
+	{
+		opacity: 0.35,
+		points:
+			"60,190 77.9,177.7 95.9,169.9 113.8,183.3 131.7,178.5 149.7,184.3 167.6,179.8 185.5,192.2 203.4,182 221.4,184.5 239.3,187.6 257.2,182.8 275.2,173 293.1,179 311,176.7 329,178.5 346.9,181.6 364.8,169 382.8,170 400.7,182.6 418.6,179.9 436.6,189 454.5,191.1 472.4,186 490.3,193.9 508.3,202.3 526.2,193.9 544.1,202 562.1,205.8 580,197",
+	},
+	{
+		opacity: 0.3,
+		points:
+			"60,190 77.9,188.2 95.9,186 113.8,189.3 131.7,198.8 149.7,204.4 167.6,203.1 185.5,204.9 203.4,203.1 221.4,197.7 239.3,209 257.2,210 275.2,210 293.1,210 311,210 329,205.9 346.9,207.2 364.8,204.3 382.8,210 400.7,210 418.6,210 436.6,210 454.5,210 472.4,210 490.3,210 508.3,203.2 526.2,198.3 544.1,203 562.1,197.5 580,202.7",
+	},
+];
+---
+
+<section id="core-idea" class="mx-auto max-w-7xl px-6 py-16 md:px-12 md:py-20">
+	<h2 class="font-display text-2xl font-semibold tracking-tight md:text-3xl">Can you actually peek safely?</h2>
+	<p class="mt-3 max-w-[65ch] text-base leading-relaxed text-ink">
+		Yes, but only with the right kind of test. The two sketches below are the whole mechanism, in miniature: why
+		watching a normal test every day is dangerous, and what a genuinely different construction does instead.
+	</p>
+
+	<div class="mt-10 grid grid-cols-1 gap-10 lg:grid-cols-2">
+		<figure>
+			<figcaption class="font-display text-lg font-semibold">A wandering statistic will eventually cross any line</figcaption>
+			<svg viewBox="0 0 640 260" class="mt-3 w-full" role="img" aria-label="A single noisy line wanders under a threshold for most of the chart, then spikes above it near the end.">
+				<line x1="60" y1="70" x2="580" y2="70" stroke="var(--color-ink-soft)" stroke-width="1" stroke-dasharray="4 4" />
+				<text x="580" y="62" text-anchor="end" class="font-mono" font-size="11" fill="var(--color-ink-soft)">looks convincing</text>
+				<line x1="60" y1="210" x2="580" y2="210" stroke="var(--color-line)" stroke-width="1" />
+				<text x="60" y="228" class="font-mono" font-size="11" fill="var(--color-ink-soft)">Day 1</text>
+				<text x="580" y="228" text-anchor="end" class="font-mono" font-size="11" fill="var(--color-ink-soft)">Day 30</text>
+				<polyline points={d1Path} fill="none" stroke="var(--color-accent-blue)" stroke-width="2" stroke-linejoin="round" />
+				<line x1="230" y1="52" x2="520" y2="60" stroke="var(--color-ink-soft)" stroke-width="1" stroke-dasharray="2 3" />
+				<circle cx="526.2" cy="61" r="4.5" fill="var(--color-accent-yellow)" stroke="var(--color-ink)" stroke-width="1" />
+				<text x="66" y="34" class="font-mono" font-size="11" fill="var(--color-ink)">you'd stop here,</text>
+				<text x="66" y="48" class="font-mono" font-size="11" fill="var(--color-ink)">but nothing's actually different</text>
+			</svg>
+			<p class="mt-3 text-sm leading-relaxed text-ink-soft">
+				This is pure noise, no real difference between A and B, checked every day. A p-value or a raw posterior
+				probability wanders like this under the null. Wait long enough, and it is guaranteed to cross any fixed line
+				eventually, purely by chance. That's the actual mechanism behind "checking every day inflates false
+				positives."
+			</p>
+		</figure>
+
+		<figure>
+			<figcaption class="font-display text-lg font-semibold">A fair game stays bounded, almost always</figcaption>
+			<svg viewBox="0 0 640 260" class="mt-3 w-full" role="img" aria-label="Several faint noisy lines representing many possible experiment runs, nearly all staying well below a threshold line.">
+				<line x1="60" y1="70" x2="580" y2="70" stroke="var(--color-ink-soft)" stroke-width="1" stroke-dasharray="4 4" />
+				<text x="580" y="62" text-anchor="end" class="font-mono" font-size="11" fill="var(--color-ink-soft)">looks convincing</text>
+				<line x1="60" y1="210" x2="580" y2="210" stroke="var(--color-line)" stroke-width="1" />
+				<text x="60" y="228" class="font-mono" font-size="11" fill="var(--color-ink-soft)">Day 1</text>
+				<text x="580" y="228" text-anchor="end" class="font-mono" font-size="11" fill="var(--color-ink-soft)">Day 30</text>
+				{
+					d2Paths.map((p) => (
+						<polyline
+							points={p.points}
+							fill="none"
+							stroke="var(--color-accent-green)"
+							stroke-width="2"
+							stroke-linejoin="round"
+							opacity={p.opacity}
+						/>
+					))
+				}
+				<line x1="420" y1="90" x2="500" y2="75" stroke="var(--color-ink-soft)" stroke-width="1" stroke-dasharray="2 3" />
+				<text x="330" y="88" class="font-mono" font-size="11" fill="var(--color-ink)">only a small, capped fraction</text>
+				<text x="330" y="102" class="font-mono" font-size="11" fill="var(--color-ink)">of runs ever reach here</text>
+			</svg>
+			<p class="mt-3 text-sm leading-relaxed text-ink-soft">
+				These are many possible runs of a test built as a "fair game": engineered so its expected value under the
+				null never drifts upward, however often it's checked. That specific property, not "being Bayesian," is what
+				Ville's inequality turns into a real, provable bound on how often it ever crosses a high bar.
+			</p>
+		</figure>
+	</div>
+
+	<figure class="mt-10 max-w-2xl">
+		<figcaption class="font-display text-lg font-semibold">What a Bayes factor mixture actually weighs</figcaption>
+		<svg viewBox="0 0 480 170" class="mt-3 w-full max-w-md" role="img" aria-label="A bell-shaped curve over a range of possible effect sizes, with five marked points from minus two tau to plus two tau.">
+			<line x1="40" y1="130" x2="440" y2="130" stroke="var(--color-line)" stroke-width="1" />
+			<path
+				d="M40,130 C100,130 150,35 240,30 C330,35 380,130 440,130"
+				fill="none"
+				stroke="var(--color-accent-blue)"
+				stroke-width="2"
+			/>
+			{
+				[
+					{ x: 100, y: 118, label: "−2τ" },
+					{ x: 170, y: 55, label: "−τ" },
+					{ x: 240, y: 30, label: "0" },
+					{ x: 310, y: 55, label: "τ" },
+					{ x: 380, y: 118, label: "2τ" },
+				].map((tick) => (
+					<>
+						<line x1={tick.x} y1="130" x2={tick.x} y2={tick.y} stroke="var(--color-ink-soft)" stroke-width="1" stroke-dasharray="2 3" />
+						<circle cx={tick.x} cy={tick.y} r="3" fill="var(--color-accent-yellow)" stroke="var(--color-ink)" stroke-width="1" />
+						<text x={tick.x} y="146" text-anchor="middle" class="font-mono" font-size="11" fill="var(--color-ink-soft)">
+							{tick.label}
+						</text>
+					</>
+				))
+			}
+			<text x="240" y="163" text-anchor="middle" class="font-mono" font-size="10" fill="var(--color-ink-soft)">possible true effect size</text>
+		</svg>
+		<p class="mt-3 max-w-[65ch] text-sm leading-relaxed text-ink-soft">
+			Instead of testing one guess about the effect size, the always-valid test blends the likelihood of the data
+			across a whole range of plausible effects, weighted by how plausible each one is. That blending, not the
+			Bayesian-ness by itself, is what makes the resulting ratio behave like the fair game above instead of the
+			wandering statistic.
+		</p>
+	</figure>
+
+	<div class="mt-10 border border-line p-6">
+		<p class="font-mono text-xs uppercase tracking-wide text-accent-blue">So, can you peek safely?</p>
+		<dl class="mt-4 grid grid-cols-1 gap-6 md:grid-cols-2">
+			<div>
+				<dt class="font-display text-base font-semibold">Yes, if</dt>
+				<dd class="mt-1 text-sm leading-relaxed text-ink-soft">
+					you're using a genuine mixture Bayes factor, the fair-game construction above, this page's third engine.
+				</dd>
+			</div>
+			<div>
+				<dt class="font-display text-base font-semibold">No, if</dt>
+				<dd class="mt-1 text-sm leading-relaxed text-ink-soft">
+					you're watching a raw posterior probability cross a fixed threshold. That's the same wandering-statistic
+					problem as a p-value, wearing different clothes (see Key Findings).
+				</dd>
+			</div>
+			<div>
+				<dt class="font-display text-base font-semibold">The guarantee breaks, not just weakens, if</dt>
+				<dd class="mt-1 text-sm leading-relaxed text-ink-soft">
+					the underlying model is badly misspecified, or there's an unprincipled "I'll act early if it's extreme
+					enough" override sitting outside the formal rule.
+				</dd>
+			</div>
+			<div>
+				<dt class="font-display text-base font-semibold">It costs you, without breaking, if</dt>
+				<dd class="mt-1 text-sm leading-relaxed text-ink-soft">
+					the assumed effect size (τ) is badly mismatched to reality. Safety holds regardless; you pay for the
+					mismatch in how quickly you can detect a real effect (see Key Findings).
+				</dd>
+			</div>
+		</dl>
+	</div>
+</section>

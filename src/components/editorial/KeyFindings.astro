@@ -1,27 +1,58 @@
 ---
+import FindingCard from "./FindingCard.astro";
+
+interface Bar {
+	label: string;
+	value: number;
+	unit?: string;
+}
+
 interface Finding {
 	label: string;
 	detail: string;
+	bars?: Bar[];
+}
+
+interface Group {
+	heading: string;
+	description?: string;
+	findings: Finding[];
 }
 
 interface Props {
 	title?: string;
-	findings: Finding[];
+	lede?: string;
+	findings?: Finding[];
+	groups?: Group[];
 }
 
-const { title = "Key findings", findings } = Astro.props;
+const { title = "Key findings", lede, findings, groups } = Astro.props;
 ---
 
 <section class="mx-auto max-w-7xl px-6 py-16 md:px-12 md:py-20">
 	<h2 class="font-display text-2xl font-semibold tracking-tight md:text-3xl">{title}</h2>
-	<ul class="mt-8 grid grid-cols-1 gap-6 md:grid-cols-2">
-		{
-			findings.map((finding) => (
-				<li class="border border-line p-6">
-					<p class="font-display text-lg font-semibold">{finding.label}</p>
-					<p class="mt-2 text-sm leading-relaxed text-ink-soft">{finding.detail}</p>
-				</li>
-			))
-		}
-	</ul>
+	{lede && <p class="mt-3 max-w-[65ch] text-base leading-relaxed text-ink">{lede}</p>}
+	{
+		groups && groups.length > 0 ? (
+			<div class="mt-8 space-y-10">
+				{groups.map((group) => (
+					<div>
+						<h3 class="font-mono text-xs uppercase tracking-wide text-accent-blue">{group.heading}</h3>
+						{group.description && <p class="mt-1 max-w-[65ch] text-sm text-ink-soft">{group.description}</p>}
+						<ul class="mt-4 grid grid-cols-1 gap-6 md:grid-cols-2">
+							{group.findings.map((finding) => (
+								<FindingCard finding={finding} />
+							))}
+						</ul>
+					</div>
+				))}
+			</div>
+		) : (
+			<ul class="mt-8 grid grid-cols-1 gap-6 md:grid-cols-2">
+				{(findings ?? []).map((finding) => (
+					<FindingCard finding={finding} />
+				))}
+			</ul>
+		)
+	}
 </section>

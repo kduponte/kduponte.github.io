@@ -1,0 +1,61 @@
+---
+// Markup + mount points only; all behavior lives in src/scripts/the-noise-problem/live-experiment.ts.
+---
+
+<section id="live-experiment" class="mx-auto max-w-7xl px-6 py-16 md:px-12 md:py-20">
+	<h2 class="font-display text-2xl font-semibold tracking-tight md:text-3xl">One experiment, watched two ways</h2>
+	<p class="mt-3 max-w-[65ch] text-base leading-relaxed text-ink-soft">
+		A simulated A/B test on a continuous metric (think revenue or engagement per visitor), run twice on the exact
+		same simulated data: once on the raw metric, once adjusted with CUPED using each visitor's own pre-period value.
+		Both always land on the same real answer, watch which one gets there faster.
+	</p>
+
+	<form id="pp-controls" class="mt-8 grid grid-cols-2 gap-4 border border-line p-6 md:grid-cols-5">
+		<label class="flex flex-col gap-1 text-sm">
+			<span class="font-mono text-xs uppercase tracking-wide text-ink-soft">Pre/post correlation</span>
+			<input id="pp-correlation" type="range" min="0" max="0.95" step="0.05" class="accent-accent-blue w-full" />
+			<span id="pp-correlation-value" class="font-mono text-xs text-ink-soft"></span>
+		</label>
+		<label class="flex flex-col gap-1 text-sm">
+			<span class="font-mono text-xs uppercase tracking-wide text-ink-soft">Scenario</span>
+			<select id="pp-scenario" class="border border-line bg-paper px-3 py-2 text-ink">
+				<option value="none">No real difference</option>
+				<option value="lift">Real difference exists</option>
+			</select>
+		</label>
+		<label class="flex flex-col gap-1 text-sm">
+			<span class="font-mono text-xs uppercase tracking-wide text-ink-soft">B's lift (points)</span>
+			<input id="pp-lift" type="number" min="0" max="20" step="0.5" class="border border-line bg-paper px-3 py-2 text-ink disabled:opacity-40" />
+		</label>
+		<label class="flex flex-col gap-1 text-sm">
+			<span class="font-mono text-xs uppercase tracking-wide text-ink-soft">Visitors/day/arm</span>
+			<input id="pp-visitors" type="number" min="5" max="500" step="5" class="border border-line bg-paper px-3 py-2 text-ink" />
+		</label>
+		<label class="flex flex-col gap-1 text-sm">
+			<span class="font-mono text-xs uppercase tracking-wide text-ink-soft">Days to run</span>
+			<input id="pp-days" type="number" min="5" max="60" step="1" class="border border-line bg-paper px-3 py-2 text-ink" />
+		</label>
+		<div class="col-span-2 flex items-end md:col-span-5">
+			<button
+				type="button"
+				id="pp-run-button"
+				class="w-full border border-ink bg-ink px-5 py-2.5 font-mono text-xs uppercase tracking-wide text-paper transition-colors hover:border-accent-blue hover:bg-accent-blue md:w-auto"
+			>
+				Run new experiment
+			</button>
+		</div>
+	</form>
+
+	<div id="pp-live-experiment" class="mt-6">
+		<div data-vg-summary class="border border-line p-4 font-mono text-sm"></div>
+		<div class="mt-4 flex justify-end">
+			<button type="button" data-vg-table-toggle class="font-mono text-xs uppercase tracking-wide text-accent-blue" aria-pressed="false">
+				View as table
+			</button>
+		</div>
+		<div data-vg-chart class="mt-2 grid grid-cols-1 gap-8 overflow-x-auto sm:grid-cols-2"></div>
+		<div data-vg-table class="mt-2 overflow-x-auto"></div>
+	</div>
+
+	<script src="../../../scripts/the-noise-problem/live-experiment.ts"></script>
+</section>

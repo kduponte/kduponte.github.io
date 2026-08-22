@@ -1,0 +1,134 @@
+---
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import HeroSection from "../../components/projects/the-dashboard-problem/HeroSection.astro";
+import FoundationsSection from "../../components/projects/the-dashboard-problem/FoundationsSection.astro";
+import CoreIdeaSection from "../../components/projects/the-dashboard-problem/CoreIdeaSection.astro";
+import LiveExperimentSection from "../../components/projects/the-dashboard-problem/LiveExperimentSection.astro";
+import StudySection from "../../components/projects/the-dashboard-problem/StudySection.astro";
+import KeyFindings from "../../components/editorial/KeyFindings.astro";
+import Methodology from "../../components/editorial/Methodology.astro";
+import Limitations from "../../components/editorial/Limitations.astro";
+import NextSteps from "../../components/editorial/NextSteps.astro";
+---
+
+<BaseLayout
+	title="The Dashboard Problem"
+	description="Test twenty metrics at once and something will look like a winner by chance, even when nothing real changed. A live simulation of why, and what actually controls it."
+>
+	<HeroSection />
+	<FoundationsSection />
+	<CoreIdeaSection />
+	<LiveExperimentSection />
+	<StudySection />
+
+	<KeyFindings
+		lede="Short version: checking more metrics at once inflates the chance that at least one looks like a winner by chance, from under 5% at just a couple of metrics to over 80% at fifty. Bonferroni fixes that at a real cost in power; Benjamini-Hochberg controls a different, usually more useful quantity instead, and keeps meaningfully more power as the metric count grows."
+		groups={[
+			{
+				heading: "The problem",
+				description: "What checking a whole dashboard of metrics, uncorrected, actually costs you.",
+				findings: [
+					{
+						label: "Testing more metrics finds more \"winners\", many of them fake",
+						bars: [
+							{ label: "2 metrics", value: 4.8 },
+							{ label: "10 metrics", value: 30.8 },
+							{ label: "20 metrics", value: 50.3 },
+							{ label: "50 metrics", value: 83.5 },
+						],
+						detail:
+							"With 70% of metrics genuinely unchanged and 30% genuinely lifted, the naive rule's chance of flagging at least one false winner climbs from 4.8% at 2 metrics, to 30.8% at 10, 50.3% at 20, and 83.5% at 50. At real dashboard scale, a false discovery isn't an edge case, it's close to guaranteed.",
+					},
+					{
+						label: "Around one in eight flagged \"winners\" is fake, at any scale",
+						detail:
+							"The naive rule's false discovery rate, the fraction of everything it flags that's actually a false positive, sits between 11.9% and 13.5% regardless of whether 2, 10, or 50 metrics are being tested. More metrics doesn't make each individual flagged result any less trustworthy, it just makes it far more likely that at least one shows up.",
+					},
+				],
+			},
+			{
+				heading: "The two real fixes, and their trade-off",
+				description: "Bonferroni and Benjamini-Hochberg both work, they just promise different things.",
+				findings: [
+					{
+						label: "Bonferroni keeps false discoveries rare, at a real cost in power",
+						bars: [
+							{ label: "Naive power", value: 71.6 },
+							{ label: "Bonferroni power", value: 21.8 },
+						],
+						detail:
+							"At 50 metrics, Bonferroni's chance of any false discovery stays at 3.4% (vs. naive's 83.5%), but its power to actually detect the genuinely real effects drops to 21.8%, compared to naive's 71.6%. The stricter per-test threshold that buys safety is the same threshold that buys away sensitivity.",
+					},
+					{
+						label: "Benjamini-Hochberg keeps roughly double Bonferroni's power at the same scale",
+						bars: [
+							{ label: "Bonferroni power", value: 21.8 },
+							{ label: "BH power", value: 43.9 },
+						],
+						detail:
+							"At 50 metrics, both corrections keep their false discovery rate well under 5% (Bonferroni 1.0%, BH 3.5%), but BH still detects 43.9% of the genuinely real effects, compared to Bonferroni's 21.8%. Controlling the rate of false discoveries, rather than the chance of any at all, buys back real sensitivity.",
+					},
+					{
+						label: "BH isn't magic: it allows individual false discoveries, it just keeps their proportion capped",
+						detail:
+							"BH's own chance of any false discovery (its family-wise error rate) actually climbs with the metric count, from 4.2% at 2 metrics to 23.9% at 50, unlike Bonferroni's, which stays flat. That's the real trade, not a flaw: BH promises something different, the expected proportion of flagged winners that are fake stays capped near the nominal rate (3.4% at 50 metrics), not that a false discovery can never happen at all.",
+					},
+				],
+			},
+		]}
+	/>
+
+	<Methodology
+		id="methodology"
+		intro="This section is the full construction and citations behind everything above. If you just want the intuition and the two analogies, see Why does testing more metrics find more winners? earlier on this page, each section below also opens with a one-line plain-English summary."
+		sections={[
+			{
+				heading: "Three rules, run on the same simulated dashboard",
+				tldr: "Every simulated metric gets one real p-value from real simulated data, then all three rules are applied to the exact same batch of p-values.",
+				body: "Each simulated \"experiment\" generates N metrics, a configurable fraction genuinely null and the rest genuinely lifted, each as its own two-arm binomial comparison (reusing the same binomial sampling and two-proportion z-test used throughout this series), producing one real p-value per metric. Naive rejects whichever p-values individually fall under alpha. Bonferroni rejects whichever fall under alpha divided by the number of metrics. Benjamini-Hochberg sorts the p-values and rejects every one at or below the largest rank whose p-value clears that rank's own line, (rank/N)·alpha, which is why it can reject some p-values individually above alpha/N that Bonferroni would have missed.",
+			},
+			{
+				heading: "Why Bonferroni is conservative",
+				tldr: "Bonferroni's per-test threshold guarantees the chance of any false discovery stays at alpha, by union-bound logic that doesn't need the tests to be independent.",
+				body: "If each of N true-null tests is run at alpha/N, the probability any one of them falsely rejects is at most N·(alpha/N) = alpha, by the union bound, a simple inequality that holds regardless of whether the tests are independent or correlated. That generality is exactly why it's conservative: it's designed to be safe under the worst case, not tuned to the specific dependence structure of any one dashboard.",
+			},
+			{
+				heading: "What Benjamini-Hochberg actually promises",
+				tldr: "BH controls the expected proportion of flagged winners that are fake, not the chance of any fake winner existing at all, a different and usually more useful guarantee.",
+				body: "Benjamini and Hochberg's 1995 procedure guarantees E[false rejections / total rejections] <= (m0/m)·alpha under independence (or a common form of positive dependence), where m0 is the true number of null hypotheses, at most alpha regardless. It says nothing about whether any individual false discovery happens, only about their expected share of whatever gets flagged, which is exactly the quantity this page's Key Findings confirm stays controlled even as the metric count climbs.",
+			},
+			{
+				heading: "The repeated-trials metric-count study",
+				tldr: "The same batch simulation runs hundreds of times at each of six metric counts, and the false-discovery and power numbers are tallied at every count, not asserted from one run.",
+				body: "At each metric count in {2, 5, 10, 20, 30, 50}, 300 independent simulated dashboards are generated (1,800 total per full study run), and for each of the three rules: whether any true-null metric was falsely flagged (feeding the family-wise error rate), and what fraction of genuinely-lifted metrics were correctly flagged (feeding power). Baseline rate, the size of the real lift, and the fraction of genuinely-lifted metrics are all adjustable above.",
+			},
+			{
+				heading: "What the published research says",
+				tldr: "Benjamini-Hochberg is the actual, widely-cited 1995 paper that introduced controlling the false discovery rate as an alternative to the older, more conservative family-wise corrections.",
+				body: "Benjamini, Y. and Hochberg, Y. (1995), \"Controlling the False Discovery Rate: A Practical and Powerful Approach to Multiple Testing,\" Journal of the Royal Statistical Society, Series B, is the paper this page's second correction is built from directly. Bonferroni's correction predates it by decades and remains the standard conservative baseline it's usually compared against, exactly the comparison made throughout this page.",
+			},
+		]}
+	/>
+
+	<Limitations
+		items={[
+			"Metrics are simulated independently of each other. Real dashboard metrics are often correlated, revenue and conversion rate tend to move together, which changes the exact false-discovery and power numbers (BH's guarantee in particular is proven under independence or a specific form of positive dependence, not arbitrary correlation). The qualitative story, naive inflates, corrections control it at a cost, is robust to this, the precise numbers here are not.",
+			"The fraction of metrics that are genuinely lifted is a known input to this simulation, so its ground-truth column can be shown at all. A real dashboard never gets to see that column, that's the actual problem this page is about, not a simplification that changes any of the numbers.",
+			"This uses the original 1995 Benjamini-Hochberg procedure. Variants exist for arbitrary dependence structures (Benjamini-Yekutieli) and other refinements: this page implements one real, representative correction, not the only correct one.",
+		]}
+	/>
+
+	<NextSteps
+		surprisingLabel="What was surprising"
+		hardestLabel="Hardest part to get right"
+		unresolvedLabel="What a proper fix would take"
+		reflection={{
+			surprising:
+				"That Benjamini-Hochberg's own chance of any false discovery climbs with the metric count, the same failure mode as the naive rule, just slower. It's easy to assume BH \"fixes\" multiple testing the way Bonferroni does; it actually trades one guarantee for a different, usually more useful one, not a strictly stronger version of the same guarantee.",
+			hardest:
+				"Getting the false discovery rate's own definition right in code: it's an average over trials where trials with zero rejections contribute exactly 0, not an average only over trials that had rejections, a subtle difference that changes the number. Confirming the observed family-wise error rate against the textbook 1-(1-alpha)^m formula also required remembering that formula only applies when every tested metric is truly null, not the total metric count in a mixed batch.",
+			unresolved:
+				"Simulating metrics with a realistic correlation structure instead of independent ones, and implementing the Benjamini-Yekutieli variant built for that case, would be the natural next step, along with letting the fraction of genuinely-lifted metrics vary within a single dashboard rather than being fixed for a whole run.",
+		}}
+	/>
+</BaseLayout>

@@ -1,0 +1,54 @@
+---
+interface Term {
+	name: string;
+	plain: string;
+	technical: string;
+}
+
+const terms: Term[] = [
+	{
+		name: "Family-wise error rate (FWER)",
+		plain: "The chance that at least one metric out of a whole batch looks like a winner purely by chance, even though nothing actually changed anywhere.",
+		technical:
+			"P(at least one false rejection among m simultaneous tests). Grows toward 1 − (1 − α)^m as m increases, even though each individual test still runs at the same α.",
+	},
+	{
+		name: "False discovery rate (FDR)",
+		plain: "Instead of asking \"did anything go wrong at all,\" this asks \"of the metrics I'm calling winners, what fraction are actually mistakes?\" A more forgiving, often more useful question once you're testing a lot of metrics at once.",
+		technical:
+			"E[false rejections / total rejections], with the ratio defined as 0 when nothing was rejected. Controlling FDR at α means: on average, no more than an α fraction of whatever gets flagged as significant is actually a false positive.",
+	},
+	{
+		name: "False positive, for a batch of metrics",
+		plain: "The same idea as a single false positive, a metric that looks like it moved when it actually didn't, just now happening somewhere inside a whole dashboard of metrics checked at once, not just one.",
+		technical:
+			"Rejecting the null for a metric where the null is actually true. What's different here isn't the definition, it's that it's now one event among many simultaneous tests, which is exactly what makes the at-least-one version (FWER) and the proportion version (FDR) two different, both useful, ways to measure it.",
+	},
+];
+---
+
+<section class="mx-auto max-w-7xl px-6 py-16 md:px-12 md:py-20">
+	<h2 class="font-display text-2xl font-semibold tracking-tight md:text-3xl">Before we start: three terms this page leans on</h2>
+	<p class="mt-3 max-w-[65ch] text-base leading-relaxed text-ink-soft">
+		Each one gets a plain-language sentence first, that's the whole idea if you only want the whole idea, and a more
+		precise technical line underneath it for anyone who wants the exact definition.
+	</p>
+	<dl class="mt-8 grid grid-cols-1 gap-6 md:grid-cols-3">
+		{
+			terms.map((term) => (
+				<div class="border border-line p-6">
+					<dt class="font-display text-lg font-semibold">{term.name}</dt>
+					<dd class="mt-2 text-sm leading-relaxed font-semibold text-ink">{term.plain}</dd>
+					<div class="mt-3 border-t border-line pt-3">
+						<p class="font-mono text-xs uppercase tracking-wide text-accent-blue">More precisely</p>
+						<dd class="mt-1 text-xs leading-relaxed text-ink-soft">{term.technical}</dd>
+					</div>
+				</div>
+			))
+		}
+	</dl>
+	<p class="mt-6 max-w-[65ch] text-sm leading-relaxed text-ink-soft">
+		The rest of this page is about what happens to these two numbers as you test more metrics at once, and what two
+		real corrections actually do about it.
+	</p>
+</section>

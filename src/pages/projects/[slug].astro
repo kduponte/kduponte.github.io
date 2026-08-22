@@ -10,7 +10,7 @@ export async function getStaticPaths() {
 	// interactive-explainer series joins this set. Declared inside getStaticPaths itself: Astro
 	// extracts this function into an isolated build chunk that doesn't reliably capture
 	// module-scope consts declared outside it.
-	const dedicatedRouteSlugs = new Set(["the-volume-gap", "the-peeking-problem"]);
+	const dedicatedRouteSlugs = new Set(["the-volume-gap", "the-peeking-problem", "the-noise-problem", "the-dashboard-problem"]);
 	const projects = (await getCollection("projects")).filter((project) => !dedicatedRouteSlugs.has(project.id));
 	return projects.map((project) => ({
 		params: { slug: project.id },

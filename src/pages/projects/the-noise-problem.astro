@@ -1,0 +1,138 @@
+---
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import HeroSection from "../../components/projects/the-noise-problem/HeroSection.astro";
+import FoundationsSection from "../../components/projects/the-noise-problem/FoundationsSection.astro";
+import CoreIdeaSection from "../../components/projects/the-noise-problem/CoreIdeaSection.astro";
+import LiveExperimentSection from "../../components/projects/the-noise-problem/LiveExperimentSection.astro";
+import StudySection from "../../components/projects/the-noise-problem/StudySection.astro";
+import KeyFindings from "../../components/editorial/KeyFindings.astro";
+import Methodology from "../../components/editorial/Methodology.astro";
+import Limitations from "../../components/editorial/Limitations.astro";
+import NextSteps from "../../components/editorial/NextSteps.astro";
+---
+
+<BaseLayout
+	title="The Noise Problem"
+	description="Most of the variance in your metric has nothing to do with your treatment. A live simulation of CUPED, the technique that removes it, without touching your false-positive rate."
+>
+	<HeroSection />
+	<FoundationsSection />
+	<CoreIdeaSection />
+	<LiveExperimentSection />
+	<StudySection />
+
+	<KeyFindings
+		lede="Short version: subtracting each visitor's own predictable, pre-experiment baseline shrinks a metric's variance by exactly (1 − correlation²), doesn't touch the false-positive rate at all, and lets a real effect become visible in meaningfully fewer days, the benefit scaling directly with how predictive the pre-period data actually is."
+		groups={[
+			{
+				heading: "The mechanic",
+				description: "Does this actually behave the way the theory says, and does it cheat anywhere?",
+				findings: [
+					{
+						label: "CUPED doesn't inflate false positives",
+						bars: [
+							{ label: "Raw", value: 4.3 },
+							{ label: "CUPED-adjusted", value: 4.85 },
+						],
+						detail:
+							"Across 2,000 simulated null-true experiments (no real difference between A and B), the raw metric's final-day false-positive rate was 4.3%, the CUPED-adjusted metric's was 4.85%, both close to the textbook 5%. Subtracting the same rule from every visitor, regardless of arm, can't manufacture a difference that wasn't there.",
+					},
+					{
+						label: "Variance reduction follows one exact formula, not a rule of thumb",
+						detail:
+							"Directly from Var(Y_cuped) = Var(Y)·(1 − correlation²): at a pre/post correlation of 0.3, only 9% of variance is removed. At 0.5, 25%. At 0.7, 49%. At 0.85, 72.2%. At 0.9, 81%. The formula isn't approximate, it's exact, confirmed here by direct Monte Carlo simulation, not just asserted (see Methodology).",
+					},
+				],
+			},
+			{
+				heading: "How much faster, really",
+				description: "The same real effect, the same traffic and time budget, measured with and without the adjustment.",
+				findings: [
+					{
+						label: "At a strong correlation, the practical difference is dramatic",
+						bars: [
+							{ label: "Raw", value: 68.9 },
+							{ label: "CUPED-adjusted", value: 99.5 },
+						],
+						detail:
+							"At a 0.85 correlation, 30 visitors/day/arm, and a modest genuine lift, checking once at a fixed day 10: the raw metric detects it 68.9% of the time, the CUPED-adjusted metric 99.5% of the time. Same visitors, same treatment, same single pre-planned look, a very different chance of actually seeing the effect that's really there.",
+					},
+					{
+						label: "The benefit scales with correlation, it isn't a fixed bonus",
+						bars: [
+							{ label: "ρ=0.3", value: 74.6 },
+							{ label: "ρ=0.6", value: 86.8 },
+							{ label: "ρ=0.85", value: 99.5 },
+						],
+						detail:
+							"Same day-10 fixed-look comparison, varying only the pre/post correlation: at ρ=0.3 CUPED barely helps (69.9% raw vs. 74.6% adjusted, both similar). At ρ=0.6 the gap opens up (69.5% vs. 86.8%). At ρ=0.85 it's dramatic (68.9% vs. 99.5%). A weak covariate is nearly free but nearly useless; a strong one is transformative. There's no such thing as \"turning CUPED on\", only how predictive the pre-period data actually is.",
+					},
+					{
+						label: "Given enough time, both get there, CUPED just gets there sooner",
+						bars: [
+							{ label: "Raw median day", value: 5 },
+							{ label: "CUPED median day", value: 2 },
+						],
+						detail:
+							"Extend the window to 30 days at the same 0.85 correlation: both methods eventually detect the real effect in almost every trial (99.0% raw, 100% CUPED). The difference shows up in speed, not in whether the effect is eventually found: the median day of first detection is day 5 for the raw metric, day 2 for the CUPED-adjusted one.",
+					},
+				],
+			},
+		]}
+	/>
+
+	<Methodology
+		id="methodology"
+		intro="This section is the full construction and citations behind everything above. If you just want the intuition and the two analogies, see Why does removing noise help? earlier on this page, each section below also opens with a one-line plain-English summary."
+		sections={[
+			{
+				heading: "The two engines, run in parallel",
+				tldr: "Every simulated day, the exact same accumulated data gets tested twice: once as-is, once with each visitor's pre-period value subtracted out.",
+				body: "Each simulated day, every visitor is generated as a correlated (pre-period, post-period) pair, the post-period value is the only one treatment ever touches. A two-sample z-test on means (the same twoSampleZTestOnMeans used by the revenue-metric mode in The Peeking Problem) runs on the raw post-period values, and separately on the CUPED-adjusted values, both reading off the identical underlying simulated visitors, so any difference between the two lines is attributable to the adjustment alone, not to different data.",
+			},
+			{
+				heading: "How theta gets estimated",
+				tldr: "The one number the adjustment needs, theta, is re-estimated each day from all the data collected so far, pooled across both arms.",
+				body: "θ = Cov(X, Y) / Var(X) is recomputed each day from every visitor observed so far in both arms combined, on the reasoning that the pre/post relationship is a property of the metric itself, not something the treatment is assumed to change. A production implementation more commonly fits θ once, from a genuinely separate historical pre-experiment window, rather than re-estimating it in-experiment as done here, a deliberate simplification noted again in Limitations.",
+			},
+			{
+				heading: "Why this doesn't inflate false positives",
+				tldr: "The adjustment subtracts the same rule from every visitor regardless of arm, so it can't manufacture or hide a real difference.",
+				body: "CUPED's adjustment, Y − θ(X − mean(X)), applies the identical rule to every visitor in both arms. Subtracting a quantity that doesn't depend on which arm a visitor was assigned to shifts both arms' means by the same expected amount (zero, in expectation), it cannot introduce a systematic difference between arms that wasn't already there. What it removes is variance correlated with X, which is exactly why the false-positive rate stays at its nominal level (see Key Findings) while the effect becomes easier to detect.",
+			},
+			{
+				heading: "The repeated-trials speed study measures two different things on purpose",
+				tldr: "\"Did a fixed final look detect it\" and \"how many days did it take to first cross significance\" are kept separate, one is safe to interpret as a false-positive rate, the other isn't.",
+				body: "This page reports a final-day-only detection rate (a single, pre-committed look, exactly like The Peeking Problem's \"checked once\" bar) for the false-positive-rate claim, and, separately, a first-crossing day for the speed story. Conflating the two would silently reintroduce The Peeking Problem's own peeking inflation into a page that isn't about peeking at all, first-crossing search is itself a form of continuous monitoring. That distinction wasn't obvious until this page's own test suite caught it: an early version of the repeated-trials engine used first-crossing to compute the null false-positive rate too, and it came back at 25%, not 5%, exactly the kind of inflation the sibling project describes. The fix keeps the two questions, and the two decision rules behind them, separate.",
+			},
+			{
+				heading: "What the published research says",
+				tldr: "This is a real, widely-used technique, not a novel construction, first published by Microsoft's experimentation team.",
+				body: "CUPED (Controlled-experiment Using Pre-Experiment Data) was introduced by Deng, Xu, Kohavi, and Walker in \"Improving the Sensitivity of Online Controlled Experiments by Utilizing Pre-Experiment Data\" (WSDM 2013), and is in production use across major online experimentation platforms. The variance-reduction identity and the unbiasedness argument used throughout this page follow that paper's construction directly.",
+			},
+		]}
+	/>
+
+	<Limitations
+		items={[
+			"This simulates a single continuous metric with a genuinely linear pre/post relationship at a known, fixed correlation. Real metrics can have a non-linear or heteroskedastic relationship to their pre-period value, where a linear CUPED adjustment captures less of the available variance reduction than the clean correlation number here implies.",
+			"θ is re-estimated in-experiment, pooled across both arms, each simulated day, rather than fit once from a genuinely separate historical pre-experiment window, the more common production pattern. Re-estimating in-experiment is a reasonable simplification for this demo, not a difference that should matter much in practice, but it's a real design choice, not the only correct one.",
+			"The core mechanic requires a real pre-treatment covariate to exist for every visitor. New visitors with no pre-period history (a very common case in practice) get little or no benefit from this specific technique; other variance-reduction methods exist for exactly that situation and aren't simulated here.",
+			"This engine generates each simulated visitor individually rather than using the aggregate-sampling shortcuts The Peeking Problem's revenue mode needed for 500,000 visitors/day. Traffic here is capped in the low hundreds per day, plenty to see the real effect, not optimized for that scale.",
+		]}
+	/>
+
+	<NextSteps
+		surprisingLabel="What was surprising"
+		hardestLabel="Hardest part to get right"
+		unresolvedLabel="What a proper fix would take"
+		reflection={{
+			surprising:
+				"How directly The Peeking Problem's own lesson reappeared here, uninvited. An early version of the repeated-trials study used a first-crossing search to compute the null false-positive rate, and it came back at 25%, not 5%. Continuous monitoring inflates false positives whether or not the page in front of you is about peeking.",
+			hardest:
+				"Keeping \"did a fixed final look detect it\" and \"how many days until first crossing\" as two genuinely separate measurements, computed from the same simulated data but never blended into one number. It would have been easy to report a single, more impressive-sounding \"days to detect\" statistic that quietly smuggled in an adaptive stopping rule.",
+			unresolved:
+				"θ is estimated from in-experiment, pooled data here rather than a genuinely separate historical pre-period, and the covariate is assumed linear and always available. A natural follow-up would fit θ from real historical data before the experiment starts, and explore what happens to the benefit when a meaningful fraction of visitors have no pre-period history at all.",
+		}}
+	/>
+</BaseLayout>

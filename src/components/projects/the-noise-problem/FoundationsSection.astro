@@ -1,0 +1,60 @@
+---
+interface Term {
+	name: string;
+	plain: string;
+	technical: string;
+}
+
+const terms: Term[] = [
+	{
+		name: "Covariate",
+		plain: "A number you already know about someone before the experiment starts that tends to predict their outcome, like how much they spent last month predicting how much they'll spend this month.",
+		technical:
+			"A pre-treatment variable correlated with the outcome. CUPED uses each visitor's own pre-period value of the same metric as its covariate, so it captures exactly the individual variation the experiment doesn't need to re-explain.",
+	},
+	{
+		name: "Variance reduction",
+		plain: "Making a noisy measurement less noisy, so a real difference is easier to spot against the randomness that was already there.",
+		technical:
+			"Shrinking Var(Y) using information that predicts Y but isn't affected by treatment. CUPED's specific reduction is exactly (1 − correlation²), see Methodology.",
+	},
+	{
+		name: "Statistical power",
+		plain: "The chance a test actually detects a real effect, when there truly is one. Low power means real improvements often go unnoticed, not because they weren't real, just because the test wasn't sensitive enough to catch them yet.",
+		technical:
+			"P(reject the null | the alternative is true), for a given effect size, sample size, and significance threshold. Reducing variance raises power at the same sample size, or reaches the same power with less data.",
+	},
+	{
+		name: "Pre-period data",
+		plain: "Whatever you already knew about each visitor before the experiment began, like their activity in the weeks before they were randomly assigned to A or B.",
+		technical:
+			"Data collected strictly before treatment assignment. This is what makes a covariate safe to use: since treatment can't have influenced something measured before it happened, adjusting for it can't introduce bias, only remove predictable noise.",
+	},
+];
+---
+
+<section class="mx-auto max-w-7xl px-6 py-16 md:px-12 md:py-20">
+	<h2 class="font-display text-2xl font-semibold tracking-tight md:text-3xl">Before we start: four terms this page leans on</h2>
+	<p class="mt-3 max-w-[65ch] text-base leading-relaxed text-ink-soft">
+		Each one gets a plain-language sentence first, that's the whole idea if you only want the whole idea, and a more
+		precise technical line underneath it for anyone who wants the exact definition.
+	</p>
+	<dl class="mt-8 grid grid-cols-1 gap-6 md:grid-cols-2">
+		{
+			terms.map((term) => (
+				<div class="border border-line p-6">
+					<dt class="font-display text-lg font-semibold">{term.name}</dt>
+					<dd class="mt-2 text-sm leading-relaxed font-semibold text-ink">{term.plain}</dd>
+					<div class="mt-3 border-t border-line pt-3">
+						<p class="font-mono text-xs uppercase tracking-wide text-accent-blue">More precisely</p>
+						<dd class="mt-1 text-xs leading-relaxed text-ink-soft">{term.technical}</dd>
+					</div>
+				</div>
+			))
+		}
+	</dl>
+	<p class="mt-6 max-w-[65ch] text-sm leading-relaxed text-ink-soft">
+		The rest of this page is about what happens when you use pre-period data to strip predictable noise out of a
+		metric, and how much faster a real effect becomes visible when you do.
+	</p>
+</section>

@@ -1,0 +1,12 @@
+---
+import ProjectHeader from "../../editorial/ProjectHeader.astro";
+---
+
+<ProjectHeader
+	eyebrow="[ Statistics, Illustrated ]"
+	title="The Dashboard Problem"
+	subtitle="Test twenty metrics at once, and something will look like a winner by chance, even when nothing real changed."
+	summary="Checking one metric at a fixed 5% false-positive rate feels safe. Checking twenty at once, even at that same safe rate each, isn't, the chance that at least one of them cries wolf climbs fast. This project simulates a real dashboard of metrics, some genuinely moved, most genuinely not, and measures exactly how often naive thresholds get fooled, and how much two real corrections, Bonferroni and Benjamini-Hochberg, actually fix it."
+	primaryCta={{ label: "Run the experiment", href: "#live-experiment" }}
+	secondaryCta={{ label: "See the metric-count study", href: "#metric-study" }}
+/>

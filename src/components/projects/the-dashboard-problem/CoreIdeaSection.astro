@@ -1,0 +1,99 @@
+---
+// Static, illustrative diagrams. D1 is a schematic sketch (not simulated data); D2's bar heights
+// are a real, computed binomial(10, 0.5) distribution, verified before writing (2^10 = 1024), just
+// laid out by hand rather than rendered through the charting library used by the live tools below.
+const clusterDots = [
+	[205, 55], [215, 62], [198, 68],
+];
+const scatteredDots = [
+	[40, 90], [70, 140], [100, 50], [130, 110], [160, 30], [60, 40], [90, 160], [120, 70],
+	[150, 150], [180, 100], [240, 120], [260, 60], [230, 160], [45, 130], [270, 90],
+];
+
+const coinFlipBars = [
+	{ k: 0, height: 2 }, { k: 1, height: 5 }, { k: 2, height: 23 }, { k: 3, height: 62 },
+	{ k: 4, height: 108 }, { k: 5, height: 130 }, { k: 6, height: 108 }, { k: 7, height: 62 },
+	{ k: 8, height: 23 }, { k: 9, height: 5 }, { k: 10, height: 2 },
+];
+const barWidth = 20;
+const barPitch = 25;
+const baselineY = 170;
+---
+
+<section id="core-idea" class="mx-auto max-w-7xl px-6 py-16 md:px-12 md:py-20">
+	<h2 class="font-display text-2xl font-semibold tracking-tight md:text-3xl">Why does testing more metrics find more "winners"?</h2>
+	<p class="mt-3 max-w-[65ch] text-base leading-relaxed text-ink">
+		The <strong>Texas sharpshooter</strong> fallacy is named for a (probably apocryphal) marksman who fires a bunch
+		of shots at the side of a barn, finds wherever a few of them happened to cluster, then paints a bullseye around
+		that cluster afterward and calls himself a sharpshooter. Fire enough shots, and some cluster is guaranteed to
+		show up somewhere, that's not skill, it's arithmetic. Testing twenty metrics at once and reporting whichever one
+		came back significant is the same move: the "bullseye" gets painted after you already know where the arrows
+		landed.
+	</p>
+	<p class="mt-3 max-w-[65ch] text-base leading-relaxed text-ink-soft">
+		Here's a way to make that concrete: ask 1,000 people to each call ten coin flips in a row, out loud, in advance.
+		By pure chance alone, about one of them will get all ten right. That person isn't psychic, you just asked enough
+		people. Testing enough metrics at once has exactly the same arithmetic hiding inside it.
+	</p>
+
+	<div class="mt-10 grid grid-cols-1 gap-10 lg:grid-cols-2">
+		<figure>
+			<figcaption class="font-display text-lg font-semibold">Fire enough shots, something clusters</figcaption>
+			<svg viewBox="0 0 300 190" class="mt-3 w-full" role="img" aria-label="A scatter of arrow hits on a wall, with a bullseye circle drawn around a cluster of three that happened to land close together.">
+				<rect x="10" y="10" width="280" height="170" fill="none" stroke="var(--color-line)" stroke-width="1" />
+				<g fill="var(--color-ink-soft)">
+					{scatteredDots.map(([x, y]) => <circle cx={x} cy={y} r="3" opacity="0.75" />)}
+				</g>
+				<g fill="var(--color-ink)">
+					{clusterDots.map(([x, y]) => <circle cx={x} cy={y} r="3" />)}
+				</g>
+				<circle cx="206" cy="62" r="20" fill="none" stroke="var(--color-accent-yellow)" stroke-width="2" />
+				<line x1="226" y1="62" x2="255" y2="45" stroke="var(--color-ink-soft)" stroke-width="1" stroke-dasharray="2 3" />
+				<text x="257" y="42" class="font-mono" font-size="10" fill="var(--color-ink)">bullseye painted</text>
+				<text x="257" y="54" class="font-mono" font-size="10" fill="var(--color-ink)">after the fact</text>
+			</svg>
+			<p class="mt-3 text-sm leading-relaxed text-ink-soft">
+				All 18 shots were fired the same way, at random. Three of them happened to land near each other, purely by
+				chance. The bullseye only exists because it was drawn around that cluster afterward, it wasn't aimed at.
+			</p>
+		</figure>
+
+		<figure>
+			<figcaption class="font-display text-lg font-semibold">1,000 people call ten coin flips each</figcaption>
+			<svg viewBox="0 0 300 190" class="mt-3 w-full" role="img" aria-label="A bell-shaped bar chart of how many of ten coin flips 1000 people called correctly, most near five, a tiny sliver at all ten correct.">
+				<line x1="10" y1={baselineY} x2="290" y2={baselineY} stroke="var(--color-line)" stroke-width="1" />
+				{
+					coinFlipBars.map((bar) => (
+						<rect
+							x={15 + bar.k * barPitch}
+							y={baselineY - bar.height}
+							width={barWidth}
+							height={bar.height}
+							fill={bar.k === 10 ? "var(--color-accent-yellow)" : "var(--color-accent-blue)"}
+							opacity={bar.k === 10 ? 1 : 0.75}
+						/>
+					))
+				}
+				<text x="150" y="185" text-anchor="middle" class="font-mono" font-size="10" fill="var(--color-ink-soft)">number of flips called correctly, out of 10</text>
+				<line x1="275" y1={baselineY - 15} x2="290" y2={baselineY - 40} stroke="var(--color-ink-soft)" stroke-width="1" stroke-dasharray="2 3" />
+				<text x="292" y="45" class="font-mono" font-size="9" fill="var(--color-ink)">~1 person, by chance</text>
+			</svg>
+			<p class="mt-3 text-sm leading-relaxed text-ink-soft">
+				A real binomial(10, 0.5) distribution, not a stylized sketch: most people land near 5 of 10, and getting
+				all 10 right happens for about 1 in 1,024 people, purely from guessing. Ask enough people (or test enough
+				metrics), and that rare tail stops being rare in absolute terms, it becomes a near-certainty that
+				someone, or something, lands there.
+			</p>
+		</figure>
+	</div>
+
+	<div class="mt-10 border border-line p-6">
+		<p class="font-mono text-xs uppercase tracking-wide text-accent-blue">The fix isn't "test fewer metrics"</p>
+		<p class="mt-2 max-w-[65ch] text-sm leading-relaxed text-ink-soft">
+			The honest fix isn't to stop measuring things, it's to adjust the bar for calling something a winner based on
+			how many things you're checking at once. Bonferroni does that bluntly (divide the threshold by the number of
+			tests); Benjamini-Hochberg does it more cleverly (control the proportion of winners that are likely fake,
+			rather than the chance of any fake winner at all). Both are simulated for real below, not asserted.
+		</p>
+	</div>
+</section>

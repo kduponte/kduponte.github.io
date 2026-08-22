@@ -81,5 +81,39 @@
 		That's the exact tug-of-war the prior-strength slider in the panels below controls.
 	</p>
 
+	<h3 class="mt-12 font-display text-xl font-semibold tracking-tight">A second, different knob</h3>
+	<p class="mt-3 max-w-[65ch] text-base leading-relaxed text-ink-soft">
+		Everything above answers one question: how hard is it to change your mind. The always-valid test, this page's
+		third engine, has a setting that looks similar on paper, a bell curve centered on "no difference", but it's
+		actually answering a completely different question: what size of effect is this specifically tuned to notice
+		fastest.
+	</p>
+	<p class="mt-3 max-w-[65ch] text-base leading-relaxed text-ink-soft">
+		Think of a camera's zoom. Zoomed in tight, you spot a small, nearby detail fast and clearly, but a large object
+		won't fit the frame, you'll still notice something's there, just less efficiently. Zoomed out wide, you take in
+		the big picture easily, but small details blur into the background. Neither zoom level is more trustworthy than
+		the other, a wide shot isn't "less confident" than a close-up, they're just built to notice different sized
+		things well.
+	</p>
+	<p class="mt-3 max-w-[65ch] text-base leading-relaxed text-ink-soft">
+		τ (tau) works the same way: narrow is tuned for small effects, wide is tuned for large ones. Widening or
+		narrowing it doesn't make the test more or less safe under peeking, that guarantee holds either way (see "Can
+		you actually peek safely?" above), it only changes how fast the test notices an effect of a given size.
+	</p>
+
+	<p class="mt-6 max-w-[65ch] text-base leading-relaxed text-ink">
+		Try it: drag τ and watch which size of observed effect the test gets faster at noticing. The two fainter lines
+		are fixed examples, a narrow and a wide τ, so you can always see the trade-off, not just wherever the slider
+		currently sits.
+	</p>
+	<div class="mt-4 max-w-xl border border-line p-6">
+		<label class="flex flex-col gap-1 text-sm">
+			<span class="font-mono text-xs uppercase tracking-wide text-ink-soft">τ: narrow &rarr; wide</span>
+			<input id="pp-tau-slider" type="range" min="0.25" max="3" step="0.05" class="accent-accent-blue w-full" />
+			<span id="pp-tau-value" class="font-mono text-xs text-ink-soft"></span>
+		</label>
+	</div>
+	<div id="pp-tau-chart" class="mt-4"></div>
+
 	<script src="../../../scripts/peeking-problem/prior-playground.ts"></script>
 </section>

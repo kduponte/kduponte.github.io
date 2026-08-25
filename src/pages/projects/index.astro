@@ -7,12 +7,12 @@ import ProjectCard from "../../components/ProjectCard.astro";
 const projects = (await getCollection("projects")).sort((a, b) => a.data.order - b.data.order);
 ---
 
-<BaseLayout title="Projects" description="Portfolio projects from Kyle DuPonte, coming soon.">
+<BaseLayout title="Projects" description="Portfolio projects from Kyle DuPonte: real, data-driven write-ups on experimentation, causal inference, and more.">
 	<div class="mx-auto max-w-7xl px-6 py-20 md:px-12 md:py-28">
-		<SectionHeading eyebrow="[ Coming soon ]" title="Projects" />
+		<SectionHeading title="Projects" />
 		<p class="mt-6 max-w-[65ch] text-base leading-relaxed text-ink-soft md:text-lg">
-			This page will hold personal projects I'm building on my own time, including a generalized experimentation
-			library and some notes as I explore various causal inference use cases. Real write-ups are on the way.
+			Personal projects I build on my own time: real, data-driven write-ups on experimentation and causal
+			inference, plus a couple of notes still in progress.
 		</p>
 
 		<div class="mt-12 grid grid-cols-1 gap-6 md:grid-cols-2">

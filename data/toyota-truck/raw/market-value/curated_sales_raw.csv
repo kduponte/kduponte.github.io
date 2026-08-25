@@ -1,0 +1,7 @@
+source_id,description,year,price_usd,mileage,sale_date,platform,detail_url,verified_directly
+cars_and_bids,"1986 Toyota pickup, heavily modified, disclosed accident history",1986,4800,,,Cars & Bids,,true
+cars_and_bids,"1994 Toyota pickup, low mileage, two owners from new",1994,19025,,,Cars & Bids,,true
+bring_a_trailer,"1985 Toyota SR5 pickup, built as a Back to the Future replica",1985,58000,,2020,Bring a Trailer,,true
+cars_and_bids,"1990 Toyota Pickup Deluxe 4x4, 1-owner, 5-speed, Oregon",1990,13000,188700,2022-06-20,Cars & Bids,https://carsandbids.com/auctions/rxYY4XRW/1990-toyota-pickup-deluxe-4x4,true
+cars_and_bids,"1991 Toyota Pickup, 22R-E, 5-speed, mileage shown not verified",1991,4700,53900,2025-10-06,Cars & Bids,https://carsandbids.com/auctions/KV1wG50L/1991-toyota-pickup,true
+cars_and_bids,"1992 Toyota Pickup, 22R-E, 5-speed, California-owned since new",1992,11200,73200,2026-07-02,Cars & Bids,https://carsandbids.com/auctions/rj4pPNBY/1992-toyota-pickup,true

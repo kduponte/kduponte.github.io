@@ -14,7 +14,12 @@
     "surf-volume:collect": "tsx scripts/surf-volume/collect/run-all.ts",
     "surf-volume:normalize": "tsx scripts/surf-volume/normalize/normalize.ts",
     "surf-volume:analyze": "tsx scripts/surf-volume/analyze/run-all.ts",
-    "surf-volume:build-data": "tsx scripts/surf-volume/build-public-data.ts"
+    "surf-volume:build-data": "tsx scripts/surf-volume/build-public-data.ts",
+    "toyota-truck:collect-yotatech": "tsx scripts/toyota-truck/collect/collect-yotatech.ts",
+    "toyota-truck:collect-ih8mud": "tsx scripts/toyota-truck/collect/collect-ih8mud.ts",
+    "toyota-truck:collect-tacomaworld": "tsx scripts/toyota-truck/collect/collect-tacomaworld.ts",
+    "toyota-truck:normalize": "tsx scripts/toyota-truck/normalize/categorize.ts",
+    "toyota-truck:build-data": "tsx scripts/toyota-truck/build-public-data.ts"
   },
   "dependencies": {
     "@astrojs/sitemap": "^3.7.3",

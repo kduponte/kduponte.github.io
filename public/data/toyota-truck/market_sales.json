@@ -1,0 +1,164 @@
+[
+  {
+    "year": 1984,
+    "price_usd": 53025,
+    "mileage": 333000,
+    "sale_date": "Jul 31, 2026",
+    "platform": "Bring a Trailer",
+    "description": "1984 Toyota 4Runner Base",
+    "detail_url": "https://www.hagerty.com/valuation-tools/past-sales/1984-toyota-4runner/JT3RN65W5E5033163/a4916a2c-0549-49a3-95b4-478ad70f5942"
+  },
+  {
+    "year": 1984,
+    "price_usd": 26775,
+    "mileage": 139800,
+    "sale_date": "Jun 3, 2026",
+    "platform": "Cars & Bids",
+    "description": "1984 Toyota 4Runner Base",
+    "detail_url": "https://www.hagerty.com/valuation-tools/past-sales/1984-toyota-4runner/JT3RN65WXE5026306/0c652504-7c7b-47bf-b576-491e17770603"
+  },
+  {
+    "year": 1985,
+    "price_usd": 63525,
+    "mileage": 42000,
+    "sale_date": "Aug 19, 2026",
+    "platform": "Bring a Trailer",
+    "description": "1985 Toyota 4Runner Base",
+    "detail_url": "https://www.hagerty.com/valuation-tools/past-sales/1985-toyota-4runner/JT3RN65W7F5099909/03ebf438-678f-49c0-8841-398e42fcf352"
+  },
+  {
+    "year": 1985,
+    "price_usd": 58000,
+    "mileage": null,
+    "sale_date": "2020",
+    "platform": "Bring a Trailer",
+    "description": "1985 Toyota SR5 pickup, built as a Back to the Future replica",
+    "detail_url": ""
+  },
+  {
+    "year": 1986,
+    "price_usd": 24150,
+    "mileage": 98000,
+    "sale_date": "Jul 21, 2026",
+    "platform": "Bring a Trailer",
+    "description": "1986 Toyota Pickup Deluxe",
+    "detail_url": "https://www.hagerty.com/valuation-tools/past-sales/1986-toyota-pickup/JT4RN67D8G5039713/3a059141-310b-4130-8ba8-d7d41de4bd1c"
+  },
+  {
+    "year": 1986,
+    "price_usd": 4800,
+    "mileage": null,
+    "sale_date": null,
+    "platform": "Cars & Bids",
+    "description": "1986 Toyota pickup, heavily modified, disclosed accident history",
+    "detail_url": ""
+  },
+  {
+    "year": 1987,
+    "price_usd": 13125,
+    "mileage": 287000,
+    "sale_date": "Aug 4, 2026",
+    "platform": "Bring a Trailer",
+    "description": "1987 Toyota Pickup SR5",
+    "detail_url": "https://www.hagerty.com/valuation-tools/past-sales/1987-toyota-pickup/JT4RN67G2H5059256/0e439ecf-0ec3-426e-9668-039f7f29af35"
+  },
+  {
+    "year": 1987,
+    "price_usd": 9555,
+    "mileage": 94300,
+    "sale_date": "Aug 4, 2026",
+    "platform": "Cars & Bids",
+    "description": "1987 Toyota Pickup 1/2 Ton",
+    "detail_url": "https://www.hagerty.com/valuation-tools/past-sales/1987-toyota-pickup/JT4RN50R2H0313115/8c387617-2220-409d-9d02-cbd3c313157d"
+  },
+  {
+    "year": 1987,
+    "price_usd": 34650,
+    "mileage": 180000,
+    "sale_date": "Jul 25, 2026",
+    "platform": "Bring a Trailer",
+    "description": "1987 Toyota Pickup SR5",
+    "detail_url": "https://www.hagerty.com/valuation-tools/past-sales/1987-toyota-pickup/JT4RN67S7H5065249/0f69b03f-d817-4efb-9793-eb3ceff968a0"
+  },
+  {
+    "year": 1987,
+    "price_usd": 17850,
+    "mileage": 123000,
+    "sale_date": "Jul 24, 2026",
+    "platform": "Bring a Trailer",
+    "description": "1987 Toyota Pickup SR5",
+    "detail_url": "https://www.hagerty.com/valuation-tools/past-sales/1987-toyota-pickup/JT4RN56G0H0252529/271ea78d-ad62-459b-8848-39e2910c4a8b"
+  },
+  {
+    "year": 1987,
+    "price_usd": 22066,
+    "mileage": null,
+    "sale_date": "Jun 24, 2026",
+    "platform": "Collecting Cars",
+    "description": "1987 Toyota 4Runner Base",
+    "detail_url": "https://www.hagerty.com/valuation-tools/past-sales/1987-toyota-4runner/LN610009774/c8a7463a-8fc4-4726-bcee-2acd7e606103"
+  },
+  {
+    "year": 1988,
+    "price_usd": 17588,
+    "mileage": 119000,
+    "sale_date": "Aug 5, 2026",
+    "platform": "Bring a Trailer",
+    "description": "1988 Toyota Pickup SR5",
+    "detail_url": "https://www.hagerty.com/valuation-tools/past-sales/1988-toyota-pickup/JT4VN63M9J0007460/af51863f-102e-4a76-adb2-2a109a8b05d0"
+  },
+  {
+    "year": 1988,
+    "price_usd": 16018,
+    "mileage": 185000,
+    "sale_date": "Jul 22, 2026",
+    "platform": "Bring a Trailer",
+    "description": "1988 Toyota 4Runner SR5",
+    "detail_url": "https://www.hagerty.com/valuation-tools/past-sales/1988-toyota-4runner/JT3VN66W5J0005903/eb2d2818-251d-4a99-be3d-3fd7a39674d7"
+  },
+  {
+    "year": 1988,
+    "price_usd": 10080,
+    "mileage": 163000,
+    "sale_date": "Jun 12, 2026",
+    "platform": "Bring a Trailer",
+    "description": "1988 Toyota 4Runner SR5",
+    "detail_url": "https://www.hagerty.com/valuation-tools/past-sales/1988-toyota-4runner/JT3VN66W3J0014051/bafd47a8-ab6b-4872-be73-712e279f9569"
+  },
+  {
+    "year": 1990,
+    "price_usd": 13000,
+    "mileage": 188700,
+    "sale_date": "2022-06-20",
+    "platform": "Cars & Bids",
+    "description": "1990 Toyota Pickup Deluxe 4x4, 1-owner, 5-speed, Oregon",
+    "detail_url": "https://carsandbids.com/auctions/rxYY4XRW/1990-toyota-pickup-deluxe-4x4"
+  },
+  {
+    "year": 1991,
+    "price_usd": 4700,
+    "mileage": 53900,
+    "sale_date": "2025-10-06",
+    "platform": "Cars & Bids",
+    "description": "1991 Toyota Pickup, 22R-E, 5-speed, mileage shown not verified",
+    "detail_url": "https://carsandbids.com/auctions/KV1wG50L/1991-toyota-pickup"
+  },
+  {
+    "year": 1992,
+    "price_usd": 11200,
+    "mileage": 73200,
+    "sale_date": "2026-07-02",
+    "platform": "Cars & Bids",
+    "description": "1992 Toyota Pickup, 22R-E, 5-speed, California-owned since new",
+    "detail_url": "https://carsandbids.com/auctions/rj4pPNBY/1992-toyota-pickup"
+  },
+  {
+    "year": 1994,
+    "price_usd": 19025,
+    "mileage": null,
+    "sale_date": null,
+    "platform": "Cars & Bids",
+    "description": "1994 Toyota pickup, low mileage, two owners from new",
+    "detail_url": ""
+  }
+]

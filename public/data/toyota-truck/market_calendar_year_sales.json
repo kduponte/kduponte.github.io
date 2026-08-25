@@ -1,0 +1,114 @@
+[
+  {
+    "calendar_year": 2020,
+    "price_usd": 58000,
+    "model_year": 1985,
+    "platform": "Bring a Trailer",
+    "description": "1985 Toyota SR5 pickup, built as a Back to the Future replica"
+  },
+  {
+    "calendar_year": 2022,
+    "price_usd": 13000,
+    "model_year": 1990,
+    "platform": "Cars & Bids",
+    "description": "1990 Toyota Pickup Deluxe 4x4, 1-owner, 5-speed, Oregon"
+  },
+  {
+    "calendar_year": 2025,
+    "price_usd": 4700,
+    "model_year": 1991,
+    "platform": "Cars & Bids",
+    "description": "1991 Toyota Pickup, 22R-E, 5-speed, mileage shown not verified"
+  },
+  {
+    "calendar_year": 2026,
+    "price_usd": 53025,
+    "model_year": 1984,
+    "platform": "Bring a Trailer",
+    "description": "1984 Toyota 4Runner Base"
+  },
+  {
+    "calendar_year": 2026,
+    "price_usd": 26775,
+    "model_year": 1984,
+    "platform": "Cars & Bids",
+    "description": "1984 Toyota 4Runner Base"
+  },
+  {
+    "calendar_year": 2026,
+    "price_usd": 63525,
+    "model_year": 1985,
+    "platform": "Bring a Trailer",
+    "description": "1985 Toyota 4Runner Base"
+  },
+  {
+    "calendar_year": 2026,
+    "price_usd": 24150,
+    "model_year": 1986,
+    "platform": "Bring a Trailer",
+    "description": "1986 Toyota Pickup Deluxe"
+  },
+  {
+    "calendar_year": 2026,
+    "price_usd": 13125,
+    "model_year": 1987,
+    "platform": "Bring a Trailer",
+    "description": "1987 Toyota Pickup SR5"
+  },
+  {
+    "calendar_year": 2026,
+    "price_usd": 9555,
+    "model_year": 1987,
+    "platform": "Cars & Bids",
+    "description": "1987 Toyota Pickup 1/2 Ton"
+  },
+  {
+    "calendar_year": 2026,
+    "price_usd": 34650,
+    "model_year": 1987,
+    "platform": "Bring a Trailer",
+    "description": "1987 Toyota Pickup SR5"
+  },
+  {
+    "calendar_year": 2026,
+    "price_usd": 17850,
+    "model_year": 1987,
+    "platform": "Bring a Trailer",
+    "description": "1987 Toyota Pickup SR5"
+  },
+  {
+    "calendar_year": 2026,
+    "price_usd": 22066,
+    "model_year": 1987,
+    "platform": "Collecting Cars",
+    "description": "1987 Toyota 4Runner Base"
+  },
+  {
+    "calendar_year": 2026,
+    "price_usd": 17588,
+    "model_year": 1988,
+    "platform": "Bring a Trailer",
+    "description": "1988 Toyota Pickup SR5"
+  },
+  {
+    "calendar_year": 2026,
+    "price_usd": 16018,
+    "model_year": 1988,
+    "platform": "Bring a Trailer",
+    "description": "1988 Toyota 4Runner SR5"
+  },
+  {
+    "calendar_year": 2026,
+    "price_usd": 10080,
+    "model_year": 1988,
+    "platform": "Bring a Trailer",
+    "description": "1988 Toyota 4Runner SR5"
+  },
+  {
+    "calendar_year": 2026,
+    "price_usd": 11200,
+    "model_year": 1992,
+    "platform": "Cars & Bids",
+    "description": "1992 Toyota Pickup, 22R-E, 5-speed, California-owned since new"
+  }
+]

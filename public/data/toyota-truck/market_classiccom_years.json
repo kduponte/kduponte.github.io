@@ -1,0 +1,173 @@
+[
+  {
+    "year": 1976,
+    "median": 8500,
+    "p25": null,
+    "p75": null,
+    "min": null,
+    "max": null,
+    "note": "single/thin sample, no visible range"
+  },
+  {
+    "year": 1977,
+    "median": 11000,
+    "p25": null,
+    "p75": null,
+    "min": null,
+    "max": null,
+    "note": "single/thin sample, no visible range"
+  },
+  {
+    "year": 1978,
+    "median": 16000,
+    "p25": null,
+    "p75": null,
+    "min": null,
+    "max": null,
+    "note": "single/thin sample, no visible range"
+  },
+  {
+    "year": 1979,
+    "median": 8000,
+    "p25": null,
+    "p75": null,
+    "min": 3000,
+    "max": 11000,
+    "note": ""
+  },
+  {
+    "year": 1980,
+    "median": 15500,
+    "p25": null,
+    "p75": null,
+    "min": 3500,
+    "max": 60500,
+    "note": ""
+  },
+  {
+    "year": 1981,
+    "median": 18000,
+    "p25": 16000,
+    "p75": 24000,
+    "min": 10000,
+    "max": 37000,
+    "note": ""
+  },
+  {
+    "year": 1982,
+    "median": 22000,
+    "p25": 18000,
+    "p75": 27500,
+    "min": 15500,
+    "max": 52000,
+    "note": ""
+  },
+  {
+    "year": 1983,
+    "median": 14000,
+    "p25": 10000,
+    "p75": 19000,
+    "min": 7000,
+    "max": 24500,
+    "note": ""
+  },
+  {
+    "year": 1984,
+    "median": 13000,
+    "p25": 11000,
+    "p75": 16000,
+    "min": 5000,
+    "max": 26500,
+    "note": ""
+  },
+  {
+    "year": 1985,
+    "median": 16500,
+    "p25": 14000,
+    "p75": 23000,
+    "min": 5500,
+    "max": 70000,
+    "note": ""
+  },
+  {
+    "year": 1986,
+    "median": 16500,
+    "p25": 14000,
+    "p75": 23000,
+    "min": 5000,
+    "max": 45000,
+    "note": ""
+  },
+  {
+    "year": 1987,
+    "median": 17000,
+    "p25": 16000,
+    "p75": 32000,
+    "min": 5000,
+    "max": 62000,
+    "note": ""
+  },
+  {
+    "year": 1988,
+    "median": 14000,
+    "p25": 10000,
+    "p75": 20000,
+    "min": 5500,
+    "max": 55500,
+    "note": ""
+  },
+  {
+    "year": 1989,
+    "median": 13000,
+    "p25": 10000,
+    "p75": 16000,
+    "min": 3000,
+    "max": 28000,
+    "note": ""
+  },
+  {
+    "year": 1990,
+    "median": 14000,
+    "p25": 12000,
+    "p75": 18000,
+    "min": 8000,
+    "max": 38000,
+    "note": ""
+  },
+  {
+    "year": 1991,
+    "median": 16000,
+    "p25": 13000,
+    "p75": 21000,
+    "min": 8500,
+    "max": 54000,
+    "note": ""
+  },
+  {
+    "year": 1992,
+    "median": 19000,
+    "p25": 15000,
+    "p75": 24000,
+    "min": 9000,
+    "max": 37000,
+    "note": ""
+  },
+  {
+    "year": 1993,
+    "median": 20500,
+    "p25": 18000,
+    "p75": 24000,
+    "min": 9500,
+    "max": 38500,
+    "note": ""
+  },
+  {
+    "year": 1994,
+    "median": 18500,
+    "p25": 15000,
+    "p75": 22000,
+    "min": 8000,
+    "max": 35000,
+    "note": ""
+  }
+]

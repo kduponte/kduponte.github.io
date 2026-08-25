@@ -1,0 +1,209 @@
+[
+  {
+    "year": 2004,
+    "avg_22re": 56.5,
+    "avg_22r": 58.666666666666664,
+    "avg_vintage_toyota_pickup": 1.6666666666666667,
+    "avg_90s_toyota_truck": 0,
+    "months_counted": 12,
+    "partial_year": false
+  },
+  {
+    "year": 2005,
+    "avg_22re": 52.25,
+    "avg_22r": 51.75,
+    "avg_vintage_toyota_pickup": 0,
+    "avg_90s_toyota_truck": 0,
+    "months_counted": 12,
+    "partial_year": false
+  },
+  {
+    "year": 2006,
+    "avg_22re": 49.166666666666664,
+    "avg_22r": 46.916666666666664,
+    "avg_vintage_toyota_pickup": 0,
+    "avg_90s_toyota_truck": 0,
+    "months_counted": 12,
+    "partial_year": false
+  },
+  {
+    "year": 2007,
+    "avg_22re": 48.5,
+    "avg_22r": 45.5,
+    "avg_vintage_toyota_pickup": 0,
+    "avg_90s_toyota_truck": 0,
+    "months_counted": 12,
+    "partial_year": false
+  },
+  {
+    "year": 2008,
+    "avg_22re": 48.833333333333336,
+    "avg_22r": 44.333333333333336,
+    "avg_vintage_toyota_pickup": 0,
+    "avg_90s_toyota_truck": 0,
+    "months_counted": 12,
+    "partial_year": false
+  },
+  {
+    "year": 2009,
+    "avg_22re": 51.5,
+    "avg_22r": 44.083333333333336,
+    "avg_vintage_toyota_pickup": 0,
+    "avg_90s_toyota_truck": 0,
+    "months_counted": 12,
+    "partial_year": false
+  },
+  {
+    "year": 2010,
+    "avg_22re": 52.916666666666664,
+    "avg_22r": 43.333333333333336,
+    "avg_vintage_toyota_pickup": 0,
+    "avg_90s_toyota_truck": 0,
+    "months_counted": 12,
+    "partial_year": false
+  },
+  {
+    "year": 2011,
+    "avg_22re": 60.166666666666664,
+    "avg_22r": 48.166666666666664,
+    "avg_vintage_toyota_pickup": 0.16666666666666666,
+    "avg_90s_toyota_truck": 0,
+    "months_counted": 12,
+    "partial_year": false
+  },
+  {
+    "year": 2012,
+    "avg_22re": 63.166666666666664,
+    "avg_22r": 48.083333333333336,
+    "avg_vintage_toyota_pickup": 0,
+    "avg_90s_toyota_truck": 0,
+    "months_counted": 12,
+    "partial_year": false
+  },
+  {
+    "year": 2013,
+    "avg_22re": 66.25,
+    "avg_22r": 47.833333333333336,
+    "avg_vintage_toyota_pickup": 0,
+    "avg_90s_toyota_truck": 0,
+    "months_counted": 12,
+    "partial_year": false
+  },
+  {
+    "year": 2014,
+    "avg_22re": 70.08333333333333,
+    "avg_22r": 54.333333333333336,
+    "avg_vintage_toyota_pickup": 0,
+    "avg_90s_toyota_truck": 0,
+    "months_counted": 12,
+    "partial_year": false
+  },
+  {
+    "year": 2015,
+    "avg_22re": 73,
+    "avg_22r": 59.166666666666664,
+    "avg_vintage_toyota_pickup": 0.08333333333333333,
+    "avg_90s_toyota_truck": 0,
+    "months_counted": 12,
+    "partial_year": false
+  },
+  {
+    "year": 2016,
+    "avg_22re": 82.33333333333333,
+    "avg_22r": 65.08333333333333,
+    "avg_vintage_toyota_pickup": 0,
+    "avg_90s_toyota_truck": 0,
+    "months_counted": 12,
+    "partial_year": false
+  },
+  {
+    "year": 2017,
+    "avg_22re": 80,
+    "avg_22r": 66.25,
+    "avg_vintage_toyota_pickup": 0,
+    "avg_90s_toyota_truck": 0,
+    "months_counted": 12,
+    "partial_year": false
+  },
+  {
+    "year": 2018,
+    "avg_22re": 73.66666666666667,
+    "avg_22r": 67.41666666666667,
+    "avg_vintage_toyota_pickup": 0.08333333333333333,
+    "avg_90s_toyota_truck": 0,
+    "months_counted": 12,
+    "partial_year": false
+  },
+  {
+    "year": 2019,
+    "avg_22re": 67.66666666666667,
+    "avg_22r": 63,
+    "avg_vintage_toyota_pickup": 0.08333333333333333,
+    "avg_90s_toyota_truck": 0.08333333333333333,
+    "months_counted": 12,
+    "partial_year": false
+  },
+  {
+    "year": 2020,
+    "avg_22re": 63.25,
+    "avg_22r": 60.25,
+    "avg_vintage_toyota_pickup": 0.5,
+    "avg_90s_toyota_truck": 0.5833333333333334,
+    "months_counted": 12,
+    "partial_year": false
+  },
+  {
+    "year": 2021,
+    "avg_22re": 59,
+    "avg_22r": 56.666666666666664,
+    "avg_vintage_toyota_pickup": 0.3333333333333333,
+    "avg_90s_toyota_truck": 0.6666666666666666,
+    "months_counted": 12,
+    "partial_year": false
+  },
+  {
+    "year": 2022,
+    "avg_22re": 58.166666666666664,
+    "avg_22r": 58.416666666666664,
+    "avg_vintage_toyota_pickup": 0.4166666666666667,
+    "avg_90s_toyota_truck": 0.75,
+    "months_counted": 12,
+    "partial_year": false
+  },
+  {
+    "year": 2023,
+    "avg_22re": 52.166666666666664,
+    "avg_22r": 55.416666666666664,
+    "avg_vintage_toyota_pickup": 0.3333333333333333,
+    "avg_90s_toyota_truck": 1.0833333333333333,
+    "months_counted": 12,
+    "partial_year": false
+  },
+  {
+    "year": 2024,
+    "avg_22re": 50.75,
+    "avg_22r": 56.666666666666664,
+    "avg_vintage_toyota_pickup": 0.3333333333333333,
+    "avg_90s_toyota_truck": 1.4166666666666667,
+    "months_counted": 12,
+    "partial_year": false
+  },
+  {
+    "year": 2025,
+    "avg_22re": 48.166666666666664,
+    "avg_22r": 56.25,
+    "avg_vintage_toyota_pickup": 0.5,
+    "avg_90s_toyota_truck": 1.3333333333333333,
+    "months_counted": 12,
+    "partial_year": false
+  },
+  {
+    "year": 2026,
+    "avg_22re": 53.5,
+    "avg_22r": 65,
+    "avg_vintage_toyota_pickup": 3.25,
+    "avg_90s_toyota_truck": 1.875,
+    "months_counted": 8,
+    "partial_year": true
+  }
+]

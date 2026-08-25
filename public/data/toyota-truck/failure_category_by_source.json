@@ -1,0 +1,176 @@
+[
+  {
+    "category": "Other / uncategorized",
+    "source_id": "tacomaworld",
+    "source_name": "TacomaWorld",
+    "count": 31
+  },
+  {
+    "category": "Other / uncategorized",
+    "source_id": "ih8mud",
+    "source_name": "IH8MUD",
+    "count": 22
+  },
+  {
+    "category": "Other / uncategorized",
+    "source_id": "yotatech",
+    "source_name": "YotaTech",
+    "count": 14
+  },
+  {
+    "category": "Transmission / drivetrain",
+    "source_id": "yotatech",
+    "source_name": "YotaTech",
+    "count": 17
+  },
+  {
+    "category": "Transmission / drivetrain",
+    "source_id": "ih8mud",
+    "source_name": "IH8MUD",
+    "count": 13
+  },
+  {
+    "category": "Transmission / drivetrain",
+    "source_id": "tacomaworld",
+    "source_name": "TacomaWorld",
+    "count": 5
+  },
+  {
+    "category": "Electrical",
+    "source_id": "yotatech",
+    "source_name": "YotaTech",
+    "count": 12
+  },
+  {
+    "category": "Electrical",
+    "source_id": "tacomaworld",
+    "source_name": "TacomaWorld",
+    "count": 7
+  },
+  {
+    "category": "Electrical",
+    "source_id": "ih8mud",
+    "source_name": "IH8MUD",
+    "count": 6
+  },
+  {
+    "category": "Fuel / carburetor / EFI",
+    "source_id": "yotatech",
+    "source_name": "YotaTech",
+    "count": 14
+  },
+  {
+    "category": "Fuel / carburetor / EFI",
+    "source_id": "ih8mud",
+    "source_name": "IH8MUD",
+    "count": 6
+  },
+  {
+    "category": "Fuel / carburetor / EFI",
+    "source_id": "tacomaworld",
+    "source_name": "TacomaWorld",
+    "count": 4
+  },
+  {
+    "category": "Steering / brakes / suspension",
+    "source_id": "yotatech",
+    "source_name": "YotaTech",
+    "count": 10
+  },
+  {
+    "category": "Steering / brakes / suspension",
+    "source_id": "tacomaworld",
+    "source_name": "TacomaWorld",
+    "count": 7
+  },
+  {
+    "category": "Steering / brakes / suspension",
+    "source_id": "ih8mud",
+    "source_name": "IH8MUD",
+    "count": 5
+  },
+  {
+    "category": "Cooling / overheating",
+    "source_id": "yotatech",
+    "source_name": "YotaTech",
+    "count": 6
+  },
+  {
+    "category": "Cooling / overheating",
+    "source_id": "tacomaworld",
+    "source_name": "TacomaWorld",
+    "count": 5
+  },
+  {
+    "category": "Cooling / overheating",
+    "source_id": "ih8mud",
+    "source_name": "IH8MUD",
+    "count": 3
+  },
+  {
+    "category": "Rust / body",
+    "source_id": "ih8mud",
+    "source_name": "IH8MUD",
+    "count": 11
+  },
+  {
+    "category": "Rust / body",
+    "source_id": "tacomaworld",
+    "source_name": "TacomaWorld",
+    "count": 1
+  },
+  {
+    "category": "Rust / body",
+    "source_id": "yotatech",
+    "source_name": "YotaTech",
+    "count": 1
+  },
+  {
+    "category": "AC / climate control",
+    "source_id": "ih8mud",
+    "source_name": "IH8MUD",
+    "count": 5
+  },
+  {
+    "category": "AC / climate control",
+    "source_id": "tacomaworld",
+    "source_name": "TacomaWorld",
+    "count": 4
+  },
+  {
+    "category": "AC / climate control",
+    "source_id": "yotatech",
+    "source_name": "YotaTech",
+    "count": 3
+  },
+  {
+    "category": "Timing chain",
+    "source_id": "yotatech",
+    "source_name": "YotaTech",
+    "count": 4
+  },
+  {
+    "category": "Timing chain",
+    "source_id": "tacomaworld",
+    "source_name": "TacomaWorld",
+    "count": 1
+  },
+  {
+    "category": "Head gasket",
+    "source_id": "ih8mud",
+    "source_name": "IH8MUD",
+    "count": 2
+  },
+  {
+    "category": "Head gasket",
+    "source_id": "yotatech",
+    "source_name": "YotaTech",
+    "count": 2
+  },
+  {
+    "category": "Oil leaks",
+    "source_id": "yotatech",
+    "source_name": "YotaTech",
+    "count": 2
+  }
+]

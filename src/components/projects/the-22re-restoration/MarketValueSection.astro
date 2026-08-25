@@ -1,0 +1,107 @@
+---
+// Real data now: classic.com's own real market chart (median / 25th-75th percentile / range by
+// model year, 1976-1994, public/data/toyota-truck/market_classiccom_years.json), a one-time
+// hand-read of that real chart rather than a live scrape (classic.com sits behind Cloudflare's
+// bot-challenge for unauthenticated automated access, and the chart's own data loads over a live
+// connection after the page renders, not in the static HTML, so this isn't something a repeatable
+// collector script could pull, see src/lib/toyota-truck/market-value.ts). Alongside that: Hagerty's
+// own #3-Good condition guide values and 18 individually-traceable real sales pulled from Hagerty's
+// past-sales aggregation (itself sourced from Bring a Trailer, Cars & Bids, and Collecting Cars)
+// combined with a few sales verified directly. All built by
+// scripts/toyota-truck/build-market-value-data.ts from the raw collected/hand-captured CSVs.
+// A widely-repeated $60,500 1985 4Runner figure found in an early pass couldn't be traced back to
+// an actual sale anywhere and was left out rather than repeated on faith.
+---
+
+<section id="market-value" class="mx-auto max-w-7xl px-6 py-16 md:px-12 md:py-20">
+	<h2 class="font-display text-2xl font-semibold tracking-tight md:text-3xl">What the Toyota truck market looks like</h2>
+	<p class="mt-3 max-w-[65ch] text-base leading-relaxed text-ink-soft">
+		Real market data from classic.com covering nearly this truck's entire production run
+		(1976-1994), 18 individually-traceable real sales I traced by hand, and Hagerty's own
+		published guide values layered on top. Not a full census, but enough to see the real spread,
+		and how far individual sales can land from the broader market.
+	</p>
+
+	<div id="mv-value-summary" class="mt-6 border border-line p-4 font-mono text-sm"></div>
+	<div id="mv-value-chart" class="mt-4"></div>
+	<script src="../../../scripts/the-22re-restoration/market-value-chart.ts"></script>
+
+	<div class="mt-8 max-w-[65ch] space-y-4">
+		<p class="text-sm leading-relaxed text-ink-soft">
+			Condition and paperwork move the price more than the calendar does, and the data actually
+			backs that up: across the 14 sales with a real mileage figure attached, mileage and price
+			barely correlate at all (r = 0.16). A 1984 4Runner with 333,000 miles sold for nearly double
+			a 1984 4Runner with 139,800 miles, mileage alone doesn't explain that, documented history and
+			condition do. An accident-disclosed, heavily modified truck and a documented, low-mileage one
+			from the same era can still be worlds apart, mileage just isn't the variable doing the work.
+			A purpose-built replica, like the McFly tribute build I mentioned earlier, sits in its own
+			category entirely. It's valuable for what it recreates, not for being a clean example of the
+			base truck.
+		</p>
+	</div>
+
+	<h3 class="font-display mt-14 text-lg font-semibold">By model year, next to what it cost new</h3>
+	<p class="mt-2 max-w-[65ch] text-sm leading-relaxed text-ink-soft">
+		A 1984 Toyota Pickup started at $6,188 new, up to $10,338 loaded (SR5, 4WD, extended cab).
+		Below that: classic.com's own real market data, median price plus the 25th-75th percentile
+		band plus the full range, for every model year from 1976 to 1994, real coverage of almost this
+		truck's entire production run. The smaller blue dots are this page's own individually-traced
+		sales laid on top as a cross-check, two independent sources landing in the same neighborhood.
+	</p>
+	<div id="mv-model-year-chart" class="mt-4"></div>
+	<div id="mv-model-year-legend" class="mt-2 text-xs text-ink-soft"></div>
+	<script src="../../../scripts/the-22re-restoration/market-value-by-model-year-chart.ts"></script>
+
+	<div class="mt-6 max-w-[65ch] space-y-4">
+		<p class="text-sm leading-relaxed text-ink-soft">
+			The real top end: a 1991 Toyota Pickup 4x4, genuine 22R-E, 69,981 miles, listed by Vanguard
+			Motor Sales (a real Michigan dealership) at $69,900, close to a dollar a mile and more than a
+			new Tacoma TRD Pro. The Drive covered it and put a real number on how rare that is: "only two
+			examples of this generation of Toyota Pickup...have crested $50,000 at auction."
+		</p>
+	</div>
+
+	<h3 class="font-display mt-14 text-lg font-semibold">What it costs to just own one</h3>
+	<p class="mt-2 max-w-[65ch] text-sm leading-relaxed text-ink-soft">
+		The $70k trucks are the outliers. A Jalopnik writer bought a rust-free 1988 Toyota Pickup for
+		$3,100, put $1,190.82 into real repairs (the only itemized one: a $305 catalytic converter)
+		plus $543.83 in registration, tax, and insurance, and sold it eight months and roughly 90 labor
+		hours later for $8,000, a documented $3,165.35 profit. Worth being upfront: that particular
+		truck had the V6, not the 22R-E this page is about, but it's real, honest color for what
+		actually owning and working on one of these costs day to day, not just what the rare ones
+		fetch at auction.
+	</p>
+
+	<h3 class="font-display mt-14 text-lg font-semibold">By year sold, and an honest limit on what this shows</h3>
+	<p class="mt-2 max-w-[65ch] text-sm leading-relaxed text-ink-soft">
+		I wanted this to show a real price-over-time trend as these trucks get rarer. It mostly can't,
+		yet: 13 of the 16 dated sales here happened in the last few months of 2026, because Hagerty's
+		free tier only surfaces its most recent past sales, the other roughly 278 in its own archive
+		are paywalled behind a paid membership, and Bring a Trailer's own results archive isn't
+		something I could pull from directly either. What's below is the real, honest scatter, not a
+		smoothed trend line I don't have the data to support.
+	</p>
+	<div id="mv-calendar-year-chart" class="mt-4"></div>
+	<script src="../../../scripts/the-22re-restoration/market-value-by-calendar-year-chart.ts"></script>
+
+	<h3 class="font-display mt-14 text-lg font-semibold">Are these becoming a sought-after classic?</h3>
+	<p class="mt-2 max-w-[65ch] text-sm leading-relaxed text-ink-soft">
+		A different, real signal for that: Google search interest, 2004-2026, for two repair/maintenance
+		searches, "22re" and "22r" (someone with one of these trucks already), against two
+		collector-framing searches, "vintage toyota pickup" and "90s toyota truck" (someone shopping for
+		one as a classic). The pattern holds across both pairs, not just one term I happened to pick:
+		"22re" and "22r" climbed together for a decade, both peaked in 2016, and have been falling
+		together since, back to roughly where they started twenty years ago. "Vintage toyota pickup" and
+		"90s toyota truck" both barely registered before 2020, stayed low through 2025, then both jumped
+		in 2026 so far, a real pattern, though 2026 is only 8 months in and the absolute numbers here are
+		small enough to be genuinely noisy. One honest methodology note:
+		Google changed how Trends collects data on January 1, 2016, so the earlier and later halves of
+		this chart aren't a perfectly clean apples-to-apples comparison, the post-2016 decline in the
+		repair searches and the recent uptick in the collector-framing ones are the parts worth trusting,
+		not the exact shape of the whole 22-year line. This data was pulled once, by hand, from Google's
+		own Trends tool rather than scraped automatically, since Google's robots.txt asks crawlers not to
+		hit that page.
+	</p>
+	<div id="mv-search-interest-chart" class="mt-4"></div>
+	<script src="../../../scripts/the-22re-restoration/search-interest-chart.ts"></script>
+</section>

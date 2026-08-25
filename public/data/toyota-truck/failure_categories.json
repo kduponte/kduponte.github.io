@@ -1,0 +1,57 @@
+[
+  {
+    "category": "Other / uncategorized",
+    "count": 67,
+    "percentage": 30.04484304932735
+  },
+  {
+    "category": "Transmission / drivetrain",
+    "count": 35,
+    "percentage": 15.695067264573993
+  },
+  {
+    "category": "Electrical",
+    "count": 25,
+    "percentage": 11.210762331838566
+  },
+  {
+    "category": "Fuel / carburetor / EFI",
+    "count": 24,
+    "percentage": 10.762331838565023
+  },
+  {
+    "category": "Steering / brakes / suspension",
+    "count": 22,
+    "percentage": 9.865470852017937
+  },
+  {
+    "category": "Cooling / overheating",
+    "count": 14,
+    "percentage": 6.278026905829597
+  },
+  {
+    "category": "Rust / body",
+    "count": 13,
+    "percentage": 5.829596412556054
+  },
+  {
+    "category": "AC / climate control",
+    "count": 12,
+    "percentage": 5.381165919282512
+  },
+  {
+    "category": "Timing chain",
+    "count": 5,
+    "percentage": 2.242152466367713
+  },
+  {
+    "category": "Head gasket",
+    "count": 4,
+    "percentage": 1.7937219730941705
+  },
+  {
+    "category": "Oil leaks",
+    "count": 2,
+    "percentage": 0.8968609865470852
+  }
+]

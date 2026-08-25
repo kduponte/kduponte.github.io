@@ -16,4 +16,37 @@ const projects = defineCollection({
 	}),
 });
 
-export const collections = { projects };
+const TRUCK_LOG_SYSTEMS = [
+	"story",
+	"fuel",
+	"engine",
+	"cooling",
+	"electrical",
+	"brakes",
+	"suspension",
+	"transmission",
+	"body",
+	"interior",
+	"other",
+] as const;
+
+const truckLog = defineCollection({
+	loader: glob({ pattern: "**/*.md", base: "./src/content/truck-log" }),
+	schema: z.object({
+		date: z.date(),
+		title: z.string(),
+		system: z.enum(TRUCK_LOG_SYSTEMS),
+		parts: z
+			.array(
+				z.object({
+					name: z.string(),
+					cost: z.number(),
+				}),
+			)
+			.default([]),
+		hours: z.number().default(0),
+		people: z.array(z.string()).default([]),
+	}),
+});
+
+export const collections = { projects, truckLog };

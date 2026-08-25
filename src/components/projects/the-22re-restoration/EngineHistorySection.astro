@@ -1,0 +1,226 @@
+---
+// Every claim below is sourced and spot-checked against the cited page directly (not just an
+// agent's summary) before writing. Where research couldn't verify something, that gap is stated
+// plainly rather than filled with a plausible guess.
+
+// Model-year ranges verified directly against https://en.wikipedia.org/wiki/Toyota_R_engine.
+const TIMELINE = [
+	{ label: "20R", start: 1975, end: 1980, note: "carbureted, this family's predecessor" },
+	{ label: "22R", start: 1981, end: 1997, note: "carbureted" },
+	{ label: "22R-E", start: 1983, end: 1997, note: "fuel-injected" },
+	{ label: "22R-TE", start: 1985, end: 1988, note: "turbocharged" },
+] as const;
+const TIMELINE_MIN = 1975;
+const TIMELINE_MAX = 1997;
+const TIMELINE_SPAN = TIMELINE_MAX - TIMELINE_MIN;
+
+const QUICK_FACTS = [
+	{ label: "Block", value: "Cast iron" },
+	{ label: "Head", value: "Aluminum, SOHC" },
+	{ label: "Crank", value: "Forged steel" },
+	{ label: "Timing", value: "Chain, not belt" },
+	{ label: "Output", value: "~97-116 hp" },
+	{ label: "Well-maintained life", value: "250k-300k mi" },
+];
+
+const MANUALS = [
+	{
+		label: "Operation CHARM",
+		href: "https://charm.li/Toyota/1992/Pickup%202WD%20L4-144.4%202366cc%202.4L%20SOHC%20%2822R-E%29/",
+		note: "Free factory service manual, matched to this exact configuration: 1992, 2WD, 2.4L SOHC, 22R-E.",
+	},
+	{
+		label: "ether3al.com FSM mirror",
+		href: "https://www.ether3al.com/93fsm-mobile/index.html",
+		note: "Free, mobile-friendly, chapter-indexed factory service manual covering the broader 1989-1995 Pickup range.",
+	},
+	{
+		label: "Toyota Truck & Land Cruiser Owner's Bible",
+		href: "https://archive.org/details/toyotatrucklandc0000lude/page/n1/mode/2up",
+		note: "Moses Ludel, 1995. A well-regarded narrative reference, more readable than a factory manual. Borrow through the Internet Archive.",
+	},
+	{
+		label: "Chilton's Toyota Trucks, 1989-91 Repair Manual",
+		href: "https://archive.org/details/chiltonstoyotatr00john",
+		note: "Jim Taylor, 902 pages. Also an Internet Archive borrow.",
+	},
+	{
+		label: "1992 Toyota Pickup engine manual",
+		href: "https://www.scribd.com/document/411249668/ID67740f06b-1992-toyota-pickup-engine",
+		note: "A scanned copy on Scribd. Reading past the preview needs a Scribd account.",
+	},
+];
+---
+
+<section id="engine-history" class="mx-auto max-w-7xl px-6 py-16 md:px-12 md:py-20">
+	<h2 class="font-display text-2xl font-semibold tracking-tight md:text-3xl">The engine, and why it's a big deal</h2>
+	<p class="mt-3 max-w-[65ch] text-base leading-relaxed text-ink-soft">
+		"22R-E" gets said like a badge of honor in these forums. Here's what's actually behind that reputation, and
+		what isn't as well-documented as the folklore suggests.
+	</p>
+
+	<div class="mt-8 max-w-3xl">
+		<div class="font-mono text-[11px] uppercase tracking-wide text-ink-soft">Quick facts</div>
+		<div class="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-3">
+			{
+				QUICK_FACTS.map((fact) => (
+					<div class="border border-line p-3">
+						<div class="font-mono text-[11px] uppercase tracking-wide text-ink-soft">{fact.label}</div>
+						<div class="font-display mt-1 text-base font-semibold text-ink">{fact.value}</div>
+					</div>
+				))
+			}
+		</div>
+	</div>
+
+	<div class="mt-8 max-w-3xl">
+		<div class="font-mono text-[11px] uppercase tracking-wide text-ink-soft">Model-year timeline</div>
+		<div class="mt-3 space-y-3">
+			{
+				TIMELINE.map((era) => {
+					const leftPct = ((era.start - TIMELINE_MIN) / TIMELINE_SPAN) * 100;
+					const widthPct = ((era.end - era.start) / TIMELINE_SPAN) * 100;
+					return (
+						<div>
+							<div class="flex items-baseline justify-between text-xs text-ink-soft">
+								<span class="font-display font-semibold text-ink">{era.label}</span>
+								<span>{era.start}-{era.end} &middot; {era.note}</span>
+							</div>
+							<div class="mt-1 h-2.5 w-full bg-line/40">
+								<div class="h-full bg-accent-blue" style={`margin-left: ${leftPct}%; width: ${Math.max(widthPct, 2)}%;`} />
+							</div>
+						</div>
+					);
+				})
+			}
+		</div>
+	</div>
+
+	<div class="mt-8 max-w-[65ch] space-y-8">
+		<div>
+			<h3 class="font-display text-lg font-semibold">What makes it reliable</h3>
+			<p class="mt-2 text-sm leading-relaxed text-ink-soft">
+				A cast-iron block under an aluminum head is a design that tolerates overheating and repeated rebuilds far
+				better than an all-aluminum engine. Add a forged steel crankshaft and a genuinely low, conservative state
+				of tune, roughly 97-116 hp depending on year, and the bottom end never got stressed the way a high-output
+				engine's would. It's a timing chain, not a belt, so there's no scheduled replacement interval forcing the
+				issue. There's a real asterisk though: Toyota switched from a more durable double-row chain to a
+				single-row chain with plastic guides starting with the 1983 model year, and those guides are the engine's
+				actual known weak point.
+			</p>
+			<p class="mt-3 text-sm leading-relaxed text-ink-soft">
+				The "runs to 500,000 miles" story gets repeated across nearly every forum and blog about this engine.
+				It's real folklore: consistently repeated, technically plausible given the construction above, but not
+				independently documented anywhere with a verified individual case. The better-supported number across
+				sources is 250,000-300,000 miles for a well-maintained example. That's still excellent.
+			</p>
+			<p class="mt-3 text-sm leading-relaxed text-ink-soft">
+				There is one verified exception: a 1980 Toyota Pickup, same single owner for 43 years, has documented
+				over a million miles. Its original 20R engine carried the first 400,000 before being replaced with a
+				2.4-liter 22R pulled from a 1983 model, which has since put on 600,000 more. It's not a purebred
+				single-engine run, and one truck isn't a statistic, but it happened, and it's documented. Toyota has a
+				genuine practice of taking an interest in trucks like this, just not this specific engine: when a 2007
+				Tundra owner's original V8 passed a million miles in 2016, Toyota's chief truck engineer swapped him a
+				brand-new truck for the old one, specifically to tear it down and study how it held up. It's the same
+				buyback-for-research-and-bragging-rights instinct this engine's own reputation feeds off of, just
+				demonstrated on a newer, different engine.
+			</p>
+		</div>
+
+		<div>
+			<h3 class="font-display text-lg font-semibold">Where it showed up</h3>
+			<p class="mt-2 text-sm leading-relaxed text-ink-soft">
+				The carbureted 22R ran 1981-1997, the fuel-injected 22R-E from 1983 (fuel injection first appeared in
+				August 1982) through 1997 alongside it, across the Toyota Pickup/Hilux, the Celica, the Corona, and the
+				first two generations of 4Runner. A turbocharged 22R-TE existed too, 1985-1988, in the Hilux and 4Runner.
+				Toyota also sold a rebadged version of this same-era truck as the Volkswagen Taro in Europe, 1989-1997,
+				an unusual cross-brand arrangement. Per Toyota's own official history, 1981, the same year the 22R
+				arrived, was also when 4WD was first offered on this compact truck line, with a 2-speed transfer case.
+			</p>
+		</div>
+
+		<div>
+			<h3 class="font-display text-lg font-semibold">What it's called elsewhere</h3>
+			<p class="mt-2 text-sm leading-relaxed text-ink-soft">
+				In Japan, this truck has been sold continuously as the Hilux since 1969. North America dropped that name
+				entirely for this generation, marketing it simply as the Toyota Truck (commonly called the Toyota Pickup,
+				both names show up). When the SUV wagon variant launched in 1984, it kept the Hilux Surf name in Japan but
+				became the 4Runner everywhere else, the same vehicle, a different name depending on where you bought it.
+			</p>
+		</div>
+
+		<div>
+			<h3 class="font-display text-lg font-semibold">Keeping it fed</h3>
+			<p class="mt-2 text-sm leading-relaxed text-ink-soft">
+				<a href="https://www.lceperformance.com/" class="text-accent-blue underline underline-offset-2">LCE Performance</a>
+				 (LC Engineering) has specialized in Toyota-truck parts since 1985. <a href="https://22reperformance.com/" class="text-accent-blue underline underline-offset-2">22RE Performance</a>,
+				a Chico, California shop, focuses specifically on 22R/22R-E internals. For timing components specifically,
+				forum consensus points toward Cloyes and Tsubakimoto as the established quality timing-chain makers and OSK
+				as a well-regarded budget timing-kit brand, with experienced builders often recommending an OEM chain paired
+				with aftermarket metal (not plastic) guides bought separately, rather than a generic boxed kit. Aisin and
+				Denso come up repeatedly as the preferred OEM-equivalent brands for water pumps, starters, and similar
+				electrical wear parts.
+			</p>
+
+			<div class="mt-6">
+				<div class="font-mono text-[11px] uppercase tracking-wide text-ink-soft">Manuals worth checking first</div>
+				<div class="mt-2 divide-y divide-line border border-line">
+					{
+						MANUALS.map((manual) => (
+							<div class="p-3">
+								<a href={manual.href} class="font-display text-sm font-semibold text-accent-blue underline underline-offset-2">
+									{manual.label}
+								</a>
+								<p class="mt-1 text-xs leading-relaxed text-ink-soft">{manual.note}</p>
+							</div>
+						))
+					}
+				</div>
+			</div>
+		</div>
+
+		<div>
+			<h3 class="font-display text-lg font-semibold">Notable builds</h3>
+			<p class="mt-2 text-sm leading-relaxed text-ink-soft">
+				There isn't one single, universally-cited "famous" 22R/22R-E build the way some platforms have a legendary
+				reference car, this is more an active, ongoing community of many builds than one landmark project.
+				<a href="https://www.gregstoyotarestorations.com/highlights-to-fame/" class="text-accent-blue underline underline-offset-2">Greg's Toyota Restorations</a>,
+				a shop specializing in classic Toyota pickups and Land Cruisers, has placed in SEMA's Battle of the
+				Builders.
+			</p>
+			<p class="mt-3 text-sm leading-relaxed text-ink-soft">
+				A recurring, genuinely fun genre within that community: replica builds of Marty McFly's 1985 SR5 from
+				Back to the Future. Builder Alan, who posts as
+				<a href="https://www.instagram.com/alwaystoyota/" class="text-accent-blue underline underline-offset-2">@alwaystoyota</a>,
+				has built eight of these tribute trucks out of real 1985-1987 pickups. One, a full frame-off restoration
+				built for the off-road lighting company KC HiLiTES, appeared in a 2023 Toyota Tundra commercial and their
+				booth at an off-road expo, a small but real sign of how far this specific build genre has traveled. A
+				separate McFly-truck build sold for $58,000 on Bring a Trailer in 2020, at the time reported as the most
+				expensive Toyota pickup ever sold there.
+			</p>
+		</div>
+
+		<div>
+			<h3 class="font-display text-lg font-semibold">Where did they all go?</h3>
+			<p class="mt-2 text-sm leading-relaxed text-ink-soft">
+				If the engine is this durable, why aren't more of these trucks still on the road? The answer isn't the
+				engine. It's the frame. Toyota's box-frame design on these trucks traps road debris and moisture inside
+				the rails themselves. The rear crossmember, cab mounts, and shock crossmember rust from the inside out,
+				often badly, well before a properly maintained 22R/22R-E is anywhere near done. It's common enough that a
+				whole aftermarket product category exists just for it: companies like Rust Buster sell dedicated
+				rear-frame repair kits specifically for these years. That wouldn't be a real business if the problem
+				weren't real and common.
+			</p>
+			<p class="mt-3 text-sm leading-relaxed text-ink-soft">
+				Beyond the frame, this part is more my own reasoning than a cited statistic: these were inexpensive work
+				trucks for most of their lives, not collectibles. A truck with frame rust, an accident, or a botched DIY
+				lift kit usually got scrapped rather than properly repaired, because the truck itself was never worth
+				enough to justify the bill. A weekend lift kit or budget aftermarket parts, installed without the
+				fabrication a rusty frame or worn suspension mount actually needs, can shorten a truck's working life
+				considerably even while the engine underneath keeps running fine. The engine's reputation for outliving
+				everything around it is, in a real sense, survivorship bias. The trucks people kept babying are the ones
+				still around to be admired, and they're a small, self-selected slice of everything Toyota built.
+			</p>
+		</div>
+	</div>
+</section>

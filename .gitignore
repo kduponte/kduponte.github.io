@@ -22,3 +22,7 @@ pnpm-debug.log*
 
 # jetbrains setting folder
 .idea/
+
+# raw scraped HTML cache (large, and includes sources scraped despite a robots.txt disallow;
+# kept locally for reproducibility, not for public redistribution)
+data/toyota-truck/cache/

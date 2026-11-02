@@ -1,0 +1,1257 @@
+{
+	"generated_at": "2026-11-02T18:51:41.639Z",
+	"rule": {
+		"models": [
+			"ecmwf_wam",
+			"ncep_gfswave016",
+			"gwam"
+		],
+		"probe_window": [
+			"2026-06-01",
+			"2026-06-07"
+		],
+		"required_real_share": 0.95
+	},
+	"breaks": [
+		{
+			"id": "pipeline",
+			"name": "Pipeline",
+			"region": "hawaii",
+			"swell_window_centre_deg": 337.5,
+			"candidates_tried": 1,
+			"point": {
+				"latitude": 21.7065,
+				"longitude": -158.0715,
+				"distance_km": 5,
+				"bearing_deg": 337.5,
+				"deviation_deg": 0
+			},
+			"grid_cells": {
+				"ecmwf_wam": {
+					"latitude": 21.68717,
+					"longitude": -158.05327,
+					"km_from_break": 2.5
+				},
+				"ncep_gfswave016": {
+					"latitude": 21.666668,
+					"longitude": -158.16667,
+					"km_from_break": 11.7
+				},
+				"gwam": {
+					"latitude": 21.75,
+					"longitude": -158,
+					"km_from_break": 10.9
+				}
+			}
+		},
+		{
+			"id": "sunset_beach",
+			"name": "Sunset Beach",
+			"region": "hawaii",
+			"swell_window_centre_deg": 337.5,
+			"candidates_tried": 1,
+			"point": {
+				"latitude": 21.7205,
+				"longitude": -158.0595,
+				"distance_km": 5,
+				"bearing_deg": 337.5,
+				"deviation_deg": 0
+			},
+			"grid_cells": {
+				"ecmwf_wam": {
+					"latitude": 21.68717,
+					"longitude": -158.05327,
+					"km_from_break": 1.6
+				},
+				"ncep_gfswave016": {
+					"latitude": 21.666668,
+					"longitude": -158.16667,
+					"km_from_break": 13.1
+				},
+				"gwam": {
+					"latitude": 21.75,
+					"longitude": -158,
+					"km_from_break": 9
+				}
+			}
+		},
+		{
+			"id": "waimea",
+			"name": "Waimea Bay",
+			"region": "hawaii",
+			"swell_window_centre_deg": 337.5,
+			"candidates_tried": 1,
+			"point": {
+				"latitude": 21.6835,
+				"longitude": -158.0845,
+				"distance_km": 5,
+				"bearing_deg": 337.5,
+				"deviation_deg": 0
+			},
+			"grid_cells": {
+				"ecmwf_wam": {
+					"latitude": 21.68717,
+					"longitude": -158.05327,
+					"km_from_break": 5.2
+				},
+				"ncep_gfswave016": {
+					"latitude": 21.666668,
+					"longitude": -158.16667,
+					"km_from_break": 10.8
+				},
+				"gwam": {
+					"latitude": 21.75,
+					"longitude": -158,
+					"km_from_break": 13.8
+				}
+			}
+		},
+		{
+			"id": "haleiwa",
+			"name": "Haleiwa",
+			"region": "hawaii",
+			"swell_window_centre_deg": 337.5,
+			"candidates_tried": 1,
+			"point": {
+				"latitude": 21.6345,
+				"longitude": -158.1295,
+				"distance_km": 5,
+				"bearing_deg": 337.5,
+				"deviation_deg": 0
+			},
+			"grid_cells": {
+				"ecmwf_wam": {
+					"latitude": 21.61687,
+					"longitude": -158.16786,
+					"km_from_break": 6.4
+				},
+				"ncep_gfswave016": {
+					"latitude": 21.666668,
+					"longitude": -158.16667,
+					"km_from_break": 10
+				},
+				"gwam": {
+					"latitude": 21.75,
+					"longitude": -158.25,
+					"km_from_break": 22.6
+				}
+			}
+		},
+		{
+			"id": "ala_moana_bowls",
+			"name": "Ala Moana Bowls",
+			"region": "hawaii",
+			"swell_window_centre_deg": 202.5,
+			"candidates_tried": 1,
+			"point": {
+				"latitude": 21.2415,
+				"longitude": -157.8645,
+				"distance_km": 5,
+				"bearing_deg": 202.5,
+				"deviation_deg": 0
+			},
+			"grid_cells": {
+				"ecmwf_wam": {
+					"latitude": 21.265377,
+					"longitude": -157.82077,
+					"km_from_break": 3.3
+				},
+				"ncep_gfswave016": {
+					"latitude": 21.166668,
+					"longitude": -157.83333,
+					"km_from_break": 13
+				},
+				"gwam": {
+					"latitude": 21.25,
+					"longitude": -157.75,
+					"km_from_break": 10.6
+				}
+			}
+		},
+		{
+			"id": "waikiki",
+			"name": "Waikiki",
+			"region": "hawaii",
+			"swell_window_centre_deg": 202.5,
+			"candidates_tried": 1,
+			"point": {
+				"latitude": 21.2305,
+				"longitude": -157.8445,
+				"distance_km": 5,
+				"bearing_deg": 202.5,
+				"deviation_deg": 0
+			},
+			"grid_cells": {
+				"ecmwf_wam": {
+					"latitude": 21.195078,
+					"longitude": -157.84334,
+					"km_from_break": 8.7
+				},
+				"ncep_gfswave016": {
+					"latitude": 21.166668,
+					"longitude": -157.83333,
+					"km_from_break": 11.7
+				},
+				"gwam": {
+					"latitude": 21.25,
+					"longitude": -157.75,
+					"km_from_break": 8.2
+				}
+			}
+		},
+		{
+			"id": "diamond_head",
+			"name": "Diamond Head",
+			"region": "hawaii",
+			"swell_window_centre_deg": 157.5,
+			"candidates_tried": 1,
+			"point": {
+				"latitude": 21.2135,
+				"longitude": -157.7865,
+				"distance_km": 5,
+				"bearing_deg": 157.5,
+				"deviation_deg": 0
+			},
+			"grid_cells": {
+				"ecmwf_wam": {
+					"latitude": 21.195078,
+					"longitude": -157.75179,
+					"km_from_break": 8.6
+				},
+				"ncep_gfswave016": {
+					"latitude": 21.166668,
+					"longitude": -157.83333,
+					"km_from_break": 10.3
+				},
+				"gwam": {
+					"latitude": 21.25,
+					"longitude": -157.75,
+					"km_from_break": 5.7
+				}
+			}
+		},
+		{
+			"id": "ewa_beach",
+			"name": "Ewa Beach",
+			"region": "hawaii",
+			"swell_window_centre_deg": 202.5,
+			"candidates_tried": 1,
+			"point": {
+				"latitude": 21.2705,
+				"longitude": -158.0255,
+				"distance_km": 5,
+				"bearing_deg": 202.5,
+				"deviation_deg": 0
+			},
+			"grid_cells": {
+				"ecmwf_wam": {
+					"latitude": 21.265377,
+					"longitude": -158.00407,
+					"km_from_break": 5.2
+				},
+				"ncep_gfswave016": {
+					"latitude": 21.166668,
+					"longitude": -158,
+					"km_from_break": 16.2
+				},
+				"gwam": {
+					"latitude": 21.25,
+					"longitude": -158,
+					"km_from_break": 6.9
+				}
+			}
+		},
+		{
+			"id": "makapuu",
+			"name": "Makapu'u",
+			"region": "hawaii",
+			"swell_window_centre_deg": 112.5,
+			"candidates_tried": 1,
+			"point": {
+				"latitude": 21.2928,
+				"longitude": -157.6154,
+				"distance_km": 5,
+				"bearing_deg": 112.5,
+				"deviation_deg": 0
+			},
+			"grid_cells": {
+				"ecmwf_wam": {
+					"latitude": 21.265377,
+					"longitude": -157.63747,
+					"km_from_break": 5.5
+				},
+				"ncep_gfswave016": {
+					"latitude": 21.333336,
+					"longitude": -157.66667,
+					"km_from_break": 2.7
+				},
+				"gwam": {
+					"latitude": 21.25,
+					"longitude": -157.5,
+					"km_from_break": 17.9
+				}
+			}
+		},
+		{
+			"id": "hookipa",
+			"name": "Ho'okipa",
+			"region": "hawaii",
+			"swell_window_centre_deg": 0,
+			"candidates_tried": 1,
+			"point": {
+				"latitude": 20.979,
+				"longitude": -156.358,
+				"distance_km": 5,
+				"bearing_deg": 0,
+				"deviation_deg": 0
+			},
+			"grid_cells": {
+				"ecmwf_wam": {
+					"latitude": 20.984182,
+					"longitude": -156.35902,
+					"km_from_break": 5.6
+				},
+				"ncep_gfswave016": {
+					"latitude": 21,
+					"longitude": -156.33333,
+					"km_from_break": 7.8
+				},
+				"gwam": {
+					"latitude": 21,
+					"longitude": -156.25,
+					"km_from_break": 13.4
+				}
+			}
+		},
+		{
+			"id": "peahi",
+			"name": "Pe'ahi (Jaws)",
+			"region": "hawaii",
+			"swell_window_centre_deg": 337.5,
+			"candidates_tried": 1,
+			"point": {
+				"latitude": 20.9865,
+				"longitude": -156.3234,
+				"distance_km": 5,
+				"bearing_deg": 337.5,
+				"deviation_deg": 0
+			},
+			"grid_cells": {
+				"ecmwf_wam": {
+					"latitude": 20.984182,
+					"longitude": -156.35902,
+					"km_from_break": 7.1
+				},
+				"ncep_gfswave016": {
+					"latitude": 21,
+					"longitude": -156.33333,
+					"km_from_break": 6.8
+				},
+				"gwam": {
+					"latitude": 21,
+					"longitude": -156.25,
+					"km_from_break": 8.4
+				}
+			}
+		},
+		{
+			"id": "honolua",
+			"name": "Honolua Bay",
+			"region": "hawaii",
+			"swell_window_centre_deg": 337.5,
+			"candidates_tried": 1,
+			"point": {
+				"latitude": 21.0545,
+				"longitude": -156.6564,
+				"distance_km": 5,
+				"bearing_deg": 337.5,
+				"deviation_deg": 0
+			},
+			"grid_cells": {
+				"ecmwf_wam": {
+					"latitude": 21.05448,
+					"longitude": -156.7005,
+					"km_from_break": 8
+				},
+				"ncep_gfswave016": {
+					"latitude": 21,
+					"longitude": -156.66667,
+					"km_from_break": 3.3
+				},
+				"gwam": {
+					"latitude": 21,
+					"longitude": -156.75,
+					"km_from_break": 11.7
+				}
+			}
+		},
+		{
+			"id": "lahaina",
+			"name": "Lahaina Harbor",
+			"region": "hawaii",
+			"swell_window_centre_deg": 247.5,
+			"candidates_tried": 1,
+			"point": {
+				"latitude": 20.8538,
+				"longitude": -156.7215,
+				"distance_km": 5,
+				"bearing_deg": 247.5,
+				"deviation_deg": 0
+			},
+			"grid_cells": {
+				"ecmwf_wam": {
+					"latitude": 20.843584,
+					"longitude": -156.68016,
+					"km_from_break": 3.1
+				},
+				"ncep_gfswave016": {
+					"latitude": 20.833336,
+					"longitude": -156.66667,
+					"km_from_break": 4.3
+				},
+				"gwam": {
+					"latitude": 20.75,
+					"longitude": -156.75,
+					"km_from_break": 15.4
+				}
+			}
+		},
+		{
+			"id": "hanalei",
+			"name": "Hanalei Bay",
+			"region": "hawaii",
+			"swell_window_centre_deg": 337.5,
+			"candidates_tried": 1,
+			"point": {
+				"latitude": 22.2465,
+				"longitude": -159.5216,
+				"distance_km": 5,
+				"bearing_deg": 337.5,
+				"deviation_deg": 0
+			},
+			"grid_cells": {
+				"ecmwf_wam": {
+					"latitude": 22.24956,
+					"longitude": -159.54546,
+					"km_from_break": 6.6
+				},
+				"ncep_gfswave016": {
+					"latitude": 22.333336,
+					"longitude": -159.5,
+					"km_from_break": 14.3
+				},
+				"gwam": {
+					"latitude": 22.25,
+					"longitude": -159.5,
+					"km_from_break": 5
+				}
+			}
+		},
+		{
+			"id": "poipu",
+			"name": "Poipu",
+			"region": "hawaii",
+			"swell_window_centre_deg": 202.5,
+			"candidates_tried": 1,
+			"point": {
+				"latitude": 21.8325,
+				"longitude": -159.4745,
+				"distance_km": 5,
+				"bearing_deg": 202.5,
+				"deviation_deg": 0
+			},
+			"grid_cells": {
+				"ecmwf_wam": {
+					"latitude": 21.827766,
+					"longitude": -159.48665,
+					"km_from_break": 6
+				},
+				"ncep_gfswave016": {
+					"latitude": 21.833336,
+					"longitude": -159.5,
+					"km_from_break": 6.4
+				},
+				"gwam": {
+					"latitude": 21.75,
+					"longitude": -159.5,
+					"km_from_break": 14.5
+				}
+			}
+		},
+		{
+			"id": "honolii",
+			"name": "Honoli'i",
+			"region": "hawaii",
+			"swell_window_centre_deg": 67.5,
+			"candidates_tried": 1,
+			"point": {
+				"latitude": 19.7842,
+				"longitude": -155.0459,
+				"distance_km": 5,
+				"bearing_deg": 67.5,
+				"deviation_deg": 0
+			},
+			"grid_cells": {
+				"ecmwf_wam": {
+					"latitude": 19.789103,
+					"longitude": -155.05484,
+					"km_from_break": 4.4
+				},
+				"ncep_gfswave016": {
+					"latitude": 19.833336,
+					"longitude": -155,
+					"km_from_break": 12
+				},
+				"gwam": {
+					"latitude": 19.75,
+					"longitude": -155,
+					"km_from_break": 9.6
+				}
+			}
+		},
+		{
+			"id": "waipio",
+			"name": "Waipi'o Bay",
+			"region": "hawaii",
+			"swell_window_centre_deg": 22.5,
+			"candidates_tried": 1,
+			"point": {
+				"latitude": 20.1715,
+				"longitude": -155.5717,
+				"distance_km": 5,
+				"bearing_deg": 22.5,
+				"deviation_deg": 0
+			},
+			"grid_cells": {
+				"ecmwf_wam": {
+					"latitude": 20.140596,
+					"longitude": -155.56113,
+					"km_from_break": 3.2
+				},
+				"ncep_gfswave016": {
+					"latitude": 20.166668,
+					"longitude": -155.5,
+					"km_from_break": 10.2
+				},
+				"gwam": {
+					"latitude": 20.25,
+					"longitude": -155.5,
+					"km_from_break": 16.3
+				}
+			}
+		},
+		{
+			"id": "banyans",
+			"name": "Banyans",
+			"region": "hawaii",
+			"swell_window_centre_deg": 247.5,
+			"candidates_tried": 1,
+			"point": {
+				"latitude": 19.5888,
+				"longitude": -156.0201,
+				"distance_km": 5,
+				"bearing_deg": 247.5,
+				"deviation_deg": 0
+			},
+			"grid_cells": {
+				"ecmwf_wam": {
+					"latitude": 19.578207,
+					"longitude": -156.02386,
+					"km_from_break": 5.9
+				},
+				"ncep_gfswave016": {
+					"latitude": 19.5,
+					"longitude": -156,
+					"km_from_break": 12.1
+				},
+				"gwam": {
+					"latitude": 19.5,
+					"longitude": -156,
+					"km_from_break": 12.1
+				}
+			}
+		},
+		{
+			"id": "rodeo_beach",
+			"name": "Rodeo Beach",
+			"region": "norcal",
+			"swell_window_centre_deg": 292.5,
+			"candidates_tried": 1,
+			"point": {
+				"latitude": 37.8492,
+				"longitude": -122.5906,
+				"distance_km": 5,
+				"bearing_deg": 292.5,
+				"deviation_deg": 0
+			},
+			"grid_cells": {
+				"ecmwf_wam": {
+					"latitude": 37.785587,
+					"longitude": -122.65059,
+					"km_from_break": 11.2
+				},
+				"ncep_gfswave016": {
+					"latitude": 37.833336,
+					"longitude": -122.666664,
+					"km_from_break": 11.3
+				},
+				"gwam": {
+					"latitude": 37.75,
+					"longitude": -122.5,
+					"km_from_break": 9.7
+				}
+			}
+		},
+		{
+			"id": "ocean_beach_sf",
+			"name": "Ocean Beach",
+			"region": "norcal",
+			"swell_window_centre_deg": 292.5,
+			"candidates_tried": 1,
+			"point": {
+				"latitude": 37.7766,
+				"longitude": -122.5633,
+				"distance_km": 5,
+				"bearing_deg": 292.5,
+				"deviation_deg": 0
+			},
+			"grid_cells": {
+				"ecmwf_wam": {
+					"latitude": 37.785587,
+					"longitude": -122.53012,
+					"km_from_break": 3.4
+				},
+				"ncep_gfswave016": {
+					"latitude": 37.833336,
+					"longitude": -122.666664,
+					"km_from_break": 16
+				},
+				"gwam": {
+					"latitude": 37.75,
+					"longitude": -122.5,
+					"km_from_break": 1.4
+				}
+			}
+		},
+		{
+			"id": "linda_mar",
+			"name": "Linda Mar",
+			"region": "norcal",
+			"swell_window_centre_deg": 292.5,
+			"candidates_tried": 1,
+			"point": {
+				"latitude": 37.6112,
+				"longitude": -122.5584,
+				"distance_km": 5,
+				"bearing_deg": 292.5,
+				"deviation_deg": 0
+			},
+			"grid_cells": {
+				"ecmwf_wam": {
+					"latitude": 37.64499,
+					"longitude": -122.563416,
+					"km_from_break": 7.6
+				},
+				"ncep_gfswave016": {
+					"latitude": 37.666668,
+					"longitude": -122.666664,
+					"km_from_break": 16.3
+				},
+				"gwam": {
+					"latitude": 37.5,
+					"longitude": -122.5,
+					"km_from_break": 10.5
+				}
+			}
+		},
+		{
+			"id": "montara",
+			"name": "Montara",
+			"region": "norcal",
+			"swell_window_centre_deg": 292.5,
+			"candidates_tried": 1,
+			"point": {
+				"latitude": 37.5692,
+				"longitude": -122.5694,
+				"distance_km": 5,
+				"bearing_deg": 292.5,
+				"deviation_deg": 0
+			},
+			"grid_cells": {
+				"ecmwf_wam": {
+					"latitude": 37.57469,
+					"longitude": -122.520004,
+					"km_from_break": 2.5
+				},
+				"ncep_gfswave016": {
+					"latitude": 37.5,
+					"longitude": -122.5,
+					"km_from_break": 6
+				},
+				"gwam": {
+					"latitude": 37.5,
+					"longitude": -122.5,
+					"km_from_break": 6
+				}
+			}
+		},
+		{
+			"id": "mavericks",
+			"name": "Mavericks",
+			"region": "norcal",
+			"swell_window_centre_deg": 292.5,
+			"candidates_tried": 1,
+			"point": {
+				"latitude": 37.5122,
+				"longitude": -122.5524,
+				"distance_km": 5,
+				"bearing_deg": 292.5,
+				"deviation_deg": 0
+			},
+			"grid_cells": {
+				"ecmwf_wam": {
+					"latitude": 37.50439,
+					"longitude": -122.59654,
+					"km_from_break": 8.6
+				},
+				"ncep_gfswave016": {
+					"latitude": 37.5,
+					"longitude": -122.5,
+					"km_from_break": 0.6
+				},
+				"gwam": {
+					"latitude": 37.5,
+					"longitude": -122.5,
+					"km_from_break": 0.6
+				}
+			}
+		},
+		{
+			"id": "hmb_jetty",
+			"name": "Half Moon Bay Jetty",
+			"region": "norcal",
+			"swell_window_centre_deg": 292.5,
+			"candidates_tried": 1,
+			"point": {
+				"latitude": 37.5192,
+				"longitude": -122.5354,
+				"distance_km": 5,
+				"bearing_deg": 292.5,
+				"deviation_deg": 0
+			},
+			"grid_cells": {
+				"ecmwf_wam": {
+					"latitude": 37.57469,
+					"longitude": -122.520004,
+					"km_from_break": 8.7
+				},
+				"ncep_gfswave016": {
+					"latitude": 37.5,
+					"longitude": -122.5,
+					"km_from_break": 1.5
+				},
+				"gwam": {
+					"latitude": 37.5,
+					"longitude": -122.5,
+					"km_from_break": 1.5
+				}
+			}
+		},
+		{
+			"id": "waddell",
+			"name": "Waddell Creek",
+			"region": "norcal",
+			"swell_window_centre_deg": 292.5,
+			"candidates_tried": 1,
+			"point": {
+				"latitude": 37.1122,
+				"longitude": -122.3281,
+				"distance_km": 5,
+				"bearing_deg": 292.5,
+				"deviation_deg": 0
+			},
+			"grid_cells": {
+				"ecmwf_wam": {
+					"latitude": 37.0826,
+					"longitude": -122.338165,
+					"km_from_break": 5.7
+				},
+				"ncep_gfswave016": {
+					"latitude": 37,
+					"longitude": -122.33333,
+					"km_from_break": 11.7
+				},
+				"gwam": {
+					"latitude": 37,
+					"longitude": -122.25,
+					"km_from_break": 10.8
+				}
+			}
+		},
+		{
+			"id": "steamer_lane",
+			"name": "Steamer Lane",
+			"region": "norcal",
+			"swell_window_centre_deg": 292.5,
+			"candidates_tried": 1,
+			"point": {
+				"latitude": 36.9682,
+				"longitude": -122.078,
+				"distance_km": 5,
+				"bearing_deg": 292.5,
+				"deviation_deg": 0
+			},
+			"grid_cells": {
+				"ecmwf_wam": {
+					"latitude": 36.942,
+					"longitude": -122.134384,
+					"km_from_break": 9.7
+				},
+				"ncep_gfswave016": {
+					"latitude": 36.833336,
+					"longitude": -122,
+					"km_from_break": 13.3
+				},
+				"gwam": {
+					"latitude": 37,
+					"longitude": -122.25,
+					"km_from_break": 20.6
+				}
+			}
+		},
+		{
+			"id": "pleasure_point",
+			"name": "Pleasure Point",
+			"region": "norcal",
+			"swell_window_centre_deg": 202.5,
+			"candidates_tried": 1,
+			"point": {
+				"latitude": 36.9145,
+				"longitude": -121.9875,
+				"distance_km": 5,
+				"bearing_deg": 202.5,
+				"deviation_deg": 0
+			},
+			"grid_cells": {
+				"ecmwf_wam": {
+					"latitude": 36.942,
+					"longitude": -122.01581,
+					"km_from_break": 4.7
+				},
+				"ncep_gfswave016": {
+					"latitude": 36.833336,
+					"longitude": -122,
+					"km_from_break": 14
+				},
+				"gwam": {
+					"latitude": 36.75,
+					"longitude": -122,
+					"km_from_break": 23.1
+				}
+			}
+		},
+		{
+			"id": "zuma",
+			"name": "Zuma",
+			"region": "socal",
+			"swell_window_centre_deg": 225,
+			"candidates_tried": 1,
+			"point": {
+				"latitude": 33.9842,
+				"longitude": -118.8603,
+				"distance_km": 5,
+				"bearing_deg": 225,
+				"deviation_deg": 0
+			},
+			"grid_cells": {
+				"ecmwf_wam": {
+					"latitude": 33.989452,
+					"longitude": -118.8764,
+					"km_from_break": 5.8
+				},
+				"ncep_gfswave016": {
+					"latitude": 34,
+					"longitude": -118.83333,
+					"km_from_break": 2.1
+				},
+				"gwam": {
+					"latitude": 34,
+					"longitude": -118.75,
+					"km_from_break": 6.9
+				}
+			}
+		},
+		{
+			"id": "malibu",
+			"name": "Malibu",
+			"region": "socal",
+			"swell_window_centre_deg": 225,
+			"candidates_tried": 1,
+			"point": {
+				"latitude": 34.0052,
+				"longitude": -118.7164,
+				"distance_km": 5,
+				"bearing_deg": 225,
+				"deviation_deg": 0
+			},
+			"grid_cells": {
+				"ecmwf_wam": {
+					"latitude": 33.989452,
+					"longitude": -118.76404,
+					"km_from_break": 9.5
+				},
+				"ncep_gfswave016": {
+					"latitude": 34,
+					"longitude": -118.666664,
+					"km_from_break": 4.2
+				},
+				"gwam": {
+					"latitude": 34,
+					"longitude": -118.75,
+					"km_from_break": 7.8
+				}
+			}
+		},
+		{
+			"id": "venice",
+			"name": "Venice Breakwater",
+			"region": "socal",
+			"swell_window_centre_deg": 247.5,
+			"candidates_tried": 1,
+			"point": {
+				"latitude": 33.9678,
+				"longitude": -118.5231,
+				"distance_km": 5,
+				"bearing_deg": 247.5,
+				"deviation_deg": 0
+			},
+			"grid_cells": {
+				"ecmwf_wam": {
+					"latitude": 33.989452,
+					"longitude": -118.53932,
+					"km_from_break": 6.1
+				},
+				"ncep_gfswave016": {
+					"latitude": 33.833336,
+					"longitude": -118.5,
+					"km_from_break": 17
+				},
+				"gwam": {
+					"latitude": 33.75,
+					"longitude": -118.5,
+					"km_from_break": 26.2
+				}
+			}
+		},
+		{
+			"id": "el_porto",
+			"name": "El Porto",
+			"region": "socal",
+			"swell_window_centre_deg": 247.5,
+			"candidates_tried": 1,
+			"point": {
+				"latitude": 33.8848,
+				"longitude": -118.47,
+				"distance_km": 5,
+				"bearing_deg": 247.5,
+				"deviation_deg": 0
+			},
+			"grid_cells": {
+				"ecmwf_wam": {
+					"latitude": 33.848858,
+					"longitude": -118.46825,
+					"km_from_break": 7.4
+				},
+				"ncep_gfswave016": {
+					"latitude": 33.833336,
+					"longitude": -118.5,
+					"km_from_break": 10.6
+				},
+				"gwam": {
+					"latitude": 33.75,
+					"longitude": -118.5,
+					"km_from_break": 18.4
+				}
+			}
+		},
+		{
+			"id": "huntington",
+			"name": "Huntington Beach",
+			"region": "socal",
+			"swell_window_centre_deg": 225,
+			"candidates_tried": 1,
+			"point": {
+				"latitude": 33.6232,
+				"longitude": -118.0422,
+				"distance_km": 5,
+				"bearing_deg": 225,
+				"deviation_deg": 0
+			},
+			"grid_cells": {
+				"ecmwf_wam": {
+					"latitude": 33.63796,
+					"longitude": -118.0273,
+					"km_from_break": 2.9
+				},
+				"ncep_gfswave016": {
+					"latitude": 33.5,
+					"longitude": -118,
+					"km_from_break": 17.2
+				},
+				"gwam": {
+					"latitude": 33.5,
+					"longitude": -118,
+					"km_from_break": 17.2
+				}
+			}
+		},
+		{
+			"id": "trestles",
+			"name": "Lower Trestles",
+			"region": "socal",
+			"swell_window_centre_deg": 225,
+			"candidates_tried": 1,
+			"point": {
+				"latitude": 33.3532,
+				"longitude": -117.6311,
+				"distance_km": 5,
+				"bearing_deg": 225,
+				"deviation_deg": 0
+			},
+			"grid_cells": {
+				"ecmwf_wam": {
+					"latitude": 33.356766,
+					"longitude": -117.66667,
+					"km_from_break": 7.5
+				},
+				"ncep_gfswave016": {
+					"latitude": 33.333336,
+					"longitude": -117.666664,
+					"km_from_break": 8.9
+				},
+				"gwam": {
+					"latitude": 33.25,
+					"longitude": -117.75,
+					"km_from_break": 20.9
+				}
+			}
+		},
+		{
+			"id": "san_onofre",
+			"name": "San Onofre",
+			"region": "socal",
+			"swell_window_centre_deg": 247.5,
+			"candidates_tried": 1,
+			"point": {
+				"latitude": 33.3558,
+				"longitude": -117.6157,
+				"distance_km": 5,
+				"bearing_deg": 247.5,
+				"deviation_deg": 0
+			},
+			"grid_cells": {
+				"ecmwf_wam": {
+					"latitude": 33.356766,
+					"longitude": -117.66667,
+					"km_from_break": 9.5
+				},
+				"ncep_gfswave016": {
+					"latitude": 33.333336,
+					"longitude": -117.666664,
+					"km_from_break": 10.3
+				},
+				"gwam": {
+					"latitude": 33.25,
+					"longitude": -117.5,
+					"km_from_break": 15
+				}
+			}
+		},
+		{
+			"id": "swamis",
+			"name": "Swami's",
+			"region": "socal",
+			"swell_window_centre_deg": 247.5,
+			"candidates_tried": 1,
+			"point": {
+				"latitude": 33.0178,
+				"longitude": -117.3425,
+				"distance_km": 5,
+				"bearing_deg": 247.5,
+				"deviation_deg": 0
+			},
+			"grid_cells": {
+				"ecmwf_wam": {
+					"latitude": 33.005272,
+					"longitude": -117.38649,
+					"km_from_break": 9.3
+				},
+				"ncep_gfswave016": {
+					"latitude": 33,
+					"longitude": -117.33333,
+					"km_from_break": 5.4
+				},
+				"gwam": {
+					"latitude": 33,
+					"longitude": -117.5,
+					"km_from_break": 19.7
+				}
+			}
+		},
+		{
+			"id": "del_mar",
+			"name": "Del Mar",
+			"region": "socal",
+			"swell_window_centre_deg": 247.5,
+			"candidates_tried": 1,
+			"point": {
+				"latitude": 32.9418,
+				"longitude": -117.3195,
+				"distance_km": 5,
+				"bearing_deg": 247.5,
+				"deviation_deg": 0
+			},
+			"grid_cells": {
+				"ecmwf_wam": {
+					"latitude": 32.93497,
+					"longitude": -117.352936,
+					"km_from_break": 8.2
+				},
+				"ncep_gfswave016": {
+					"latitude": 33,
+					"longitude": -117.33333,
+					"km_from_break": 7.5
+				},
+				"gwam": {
+					"latitude": 33,
+					"longitude": -117.5,
+					"km_from_break": 21.9
+				}
+			}
+		},
+		{
+			"id": "blacks",
+			"name": "Blacks Beach",
+			"region": "socal",
+			"swell_window_centre_deg": 292.5,
+			"candidates_tried": 1,
+			"point": {
+				"latitude": 32.9062,
+				"longitude": -117.3015,
+				"distance_km": 5,
+				"bearing_deg": 292.5,
+				"deviation_deg": 0
+			},
+			"grid_cells": {
+				"ecmwf_wam": {
+					"latitude": 32.864674,
+					"longitude": -117.31946,
+					"km_from_break": 6.9
+				},
+				"ncep_gfswave016": {
+					"latitude": 32.833336,
+					"longitude": -117.33333,
+					"km_from_break": 9.8
+				},
+				"gwam": {
+					"latitude": 33,
+					"longitude": -117.5,
+					"km_from_break": 26.2
+				}
+			}
+		},
+		{
+			"id": "la_jolla_shores",
+			"name": "La Jolla Shores",
+			"region": "socal",
+			"swell_window_centre_deg": 247.5,
+			"candidates_tried": 1,
+			"point": {
+				"latitude": 32.8398,
+				"longitude": -117.3064,
+				"distance_km": 5,
+				"bearing_deg": 247.5,
+				"deviation_deg": 0
+			},
+			"grid_cells": {
+				"ecmwf_wam": {
+					"latitude": 32.864674,
+					"longitude": -117.31946,
+					"km_from_break": 5.9
+				},
+				"ncep_gfswave016": {
+					"latitude": 32.833336,
+					"longitude": -117.33333,
+					"km_from_break": 7.6
+				},
+				"gwam": {
+					"latitude": 32.75,
+					"longitude": -117.5,
+					"km_from_break": 25.6
+				}
+			}
+		},
+		{
+			"id": "windansea",
+			"name": "Windansea",
+			"region": "socal",
+			"swell_window_centre_deg": 247.5,
+			"candidates_tried": 1,
+			"point": {
+				"latitude": 32.8158,
+				"longitude": -117.3304,
+				"distance_km": 5,
+				"bearing_deg": 247.5,
+				"deviation_deg": 0
+			},
+			"grid_cells": {
+				"ecmwf_wam": {
+					"latitude": 32.794376,
+					"longitude": -117.28606,
+					"km_from_break": 4.3
+				},
+				"ncep_gfswave016": {
+					"latitude": 32.833336,
+					"longitude": -117.33333,
+					"km_from_break": 4.9
+				},
+				"gwam": {
+					"latitude": 32.75,
+					"longitude": -117.5,
+					"km_from_break": 22.5
+				}
+			}
+		},
+		{
+			"id": "tourmaline",
+			"name": "Tourmaline",
+			"region": "socal",
+			"swell_window_centre_deg": 247.5,
+			"candidates_tried": 1,
+			"point": {
+				"latitude": 32.7858,
+				"longitude": -117.3124,
+				"distance_km": 5,
+				"bearing_deg": 247.5,
+				"deviation_deg": 0
+			},
+			"grid_cells": {
+				"ecmwf_wam": {
+					"latitude": 32.794376,
+					"longitude": -117.28606,
+					"km_from_break": 2.4
+				},
+				"ncep_gfswave016": {
+					"latitude": 32.833336,
+					"longitude": -117.33333,
+					"km_from_break": 7.4
+				},
+				"gwam": {
+					"latitude": 32.75,
+					"longitude": -117.5,
+					"km_from_break": 22.9
+				}
+			}
+		}
+	]
+}

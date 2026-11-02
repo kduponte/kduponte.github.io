@@ -1,0 +1,62 @@
+---
+import disagreementData from "../../../../public/data/surf-forecast/disagreement.json";
+import { ft } from "../../../lib/surf-forecast/findings";
+
+const lead = disagreementData.rows.find((r) => r.lead_days === 3);
+if (!lead) throw new Error("no lead-3 disagreement row");
+const low = lead.bins[0];
+const high = lead.bins[lead.bins.length - 1];
+const ratio = (high.mae / low.mae).toFixed(1);
+// Is the bottom of the range flat? Compare the lowest two fifths.
+const bottomFlat = Math.abs(lead.bins[1].mae - lead.bins[0].mae) / lead.bins[0].mae < 0.05;
+const averagingWorse = lead.consensus_mae > lead.ecmwf_mae;
+// The caption claims the other leads share the shape; check it rather than assert it.
+const sameShapeElsewhere = disagreementData.rows
+	.filter((r) => r.lead_days !== 3)
+	.every((r) => r.bins[r.bins.length - 1].mae > 1.2 * r.bins[0].mae);
+---
+
+<section id="disagreement" class="mx-auto max-w-7xl px-6 py-16 md:px-12 md:py-20">
+	<h2 class="font-display text-2xl font-semibold tracking-tight md:text-3xl">When the forecasts disagree, trust them less</h2>
+	<div class="mt-3 max-w-[65ch] space-y-4 text-base leading-relaxed text-ink-soft">
+		<p>
+			Check three forecasts and they rarely agree. At the buoys, where the answer is known, that disagreement can be
+			tested: rank each buoy's days by how far apart the three systems were, and see whether the best one does worse on
+			the days they argued. It does. On a buoy's lowest-disagreement days ECMWF misses by {ft(low.mae)} ft three days
+			out; on its highest, by {ft(high.mae)} ft, {ratio} times as much.
+			{bottomFlat && <> The lowest two fifths are flat: the warning only switches on when the disagreement is unusual for that spot.</>}
+		</p>
+		<p>
+			The ranking is done within each buoy on purpose. A sheltered buoy has permanently high disagreement and
+			permanently high error for the same reason, and pooling every buoy together would make disagreement look
+			predictive even if, at any single spot, it told you nothing.
+		</p>
+	</div>
+
+	<div id="fg-disagreement" class="mt-8">
+		<div class="flex justify-end">
+			<button type="button" data-vg-table-toggle class="font-mono text-xs uppercase tracking-wide text-accent-blue" aria-pressed="false">
+				View as table
+			</button>
+		</div>
+		<div data-vg-chart class="mt-2 overflow-x-auto"></div>
+		<div data-vg-table class="mt-2 overflow-x-auto"></div>
+		<p class="mt-3 font-mono text-[0.7rem] leading-relaxed text-ink-soft">
+			Wave height, three days out. Disagreement is the range of the ECMWF, NOAA and DWD forecasts for the same hour,
+			ranked within each buoy.{sameShapeElsewhere && " One and five days out show the same shape; see the table."}
+		</p>
+	</div>
+
+	{
+		averagingWorse && (
+			<p class="mt-8 max-w-[65ch] text-base leading-relaxed text-ink-soft">
+				One tempting fix does not work: averaging the three. Three days out the plain average misses by
+				{" "}{ft(lead.consensus_mae)} ft against {ft(lead.ecmwf_mae)} ft for ECMWF alone, because DWD's large bias drags
+				the average with it. Averaging forecasts only helps when their errors are independent and unbiased, and these
+				are neither.
+			</p>
+		)
+	}
+
+	<script src="../../../scripts/surf-forecast/disagreement-chart.ts"></script>
+</section>

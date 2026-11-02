@@ -1,0 +1,148 @@
+---
+// Disagreement at every break, from offshore sample points. All figures and comparative claims
+// below are computed from breaks.json at build time.
+import breakData from "../../../../public/data/surf-forecast/breaks.json";
+import { METRES_TO_FEET, listJoin } from "../../../lib/surf-forecast/findings";
+import { REGION_LABEL, type Region } from "../../../lib/surf-forecast/spots";
+
+type Lead = (typeof breakData.rows)[number]["leads"][number];
+const rows = breakData.rows;
+const at = (r: (typeof rows)[number], lead = 3): Lead => {
+	const l = r.leads.find((x) => x.lead_days === lead);
+	if (!l || l.median_range === null) throw new Error(`no lead ${lead} for ${r.id}`);
+	return l;
+};
+const med = (xs: number[]) => {
+	const s = [...xs].sort((a, b) => a - b);
+	const m = (s.length - 1) / 2;
+	return (s[Math.floor(m)] + s[Math.ceil(m)]) / 2;
+};
+const f = (m: number, d = 1) => (m * METRES_TO_FEET).toFixed(d);
+
+// One sample per set of breaks the models resolve to identical grid cells.
+const groups = new Map<number, (typeof rows)[number][]>();
+for (const r of rows) groups.set(r.cell_group, [...(groups.get(r.cell_group) ?? []), r]);
+const samples = [...groups.values()].map((m) => m[0]);
+const shared = [...groups.values()].filter((m) => m.length > 1).map((m) => m.map((r) => r.name));
+const biggestShared = shared.reduce((a, b) => (b.length > a.length ? b : a), [] as string[]);
+
+const typical = med(samples.map((s) => at(s).median_range as number));
+const pair = med(samples.map((s) => at(s).ecmwf_noaa_median as number));
+const daily = med(samples.map((s) => at(s).daily_median as number));
+const persistentShare = med(samples.map((s) => (at(s).systematic as number) / (at(s).median_range as number)));
+const outlierCounts = samples.reduce<Record<string, number>>((acc, s) => {
+	const o = at(s).outlier as string;
+	acc[o] = (acc[o] ?? 0) + 1;
+	return acc;
+}, {});
+const dwdOutlier = outlierCounts.gwam ?? 0;
+const lead1 = med(samples.map((s) => at(s, 1).median_range as number));
+const lead5 = med(samples.map((s) => at(s, 5).median_range as number));
+
+const REGIONS: Region[] = ["hawaii", "norcal", "socal"];
+const regional = REGIONS.map((region) => {
+	const rs = samples.filter((s) => s.region === region);
+	return {
+		region,
+		label: REGION_LABEL[region],
+		typical: med(rs.map((s) => at(s).median_range as number)),
+		relative: med(rs.map((s) => (at(s).median_range as number) / (at(s).mean_forecast as number))),
+	};
+});
+const mostAgree = [...regional].sort((a, b) => a.relative - b.relative)[0];
+const leastAgree = [...regional].sort((a, b) => b.relative - a.relative)[0];
+
+const lindaMar = rows.find((r) => r.id === "linda_mar");
+if (!lindaMar) throw new Error("no Linda Mar row");
+const lmRange = at(lindaMar).median_range as number;
+const lindaMarLowest = samples.every((s) => (at(s).median_range as number) >= lmRange);
+const lmSystematic = at(lindaMar).systematic as number;
+
+const validated = rows.filter((r) => r.buoy_spread_correlation !== null).map((r) => r.buoy_spread_correlation as number);
+const rMedian = med(validated);
+const rMin = Math.min(...validated);
+---
+
+<section id="break-disagreement" class="mx-auto max-w-7xl px-6 py-16 md:px-12 md:py-20">
+	<h2 class="font-display text-2xl font-semibold tracking-tight md:text-3xl">How much the forecasts disagree at each break</h2>
+	<div class="mt-3 max-w-[65ch] space-y-4 text-base leading-relaxed text-ink-soft">
+		<p>
+			Disagreement needs no buoy, so unlike accuracy it can be measured at every break, including the ones no buoy can
+			speak for. Each break is sampled from a point 5 km out along the middle of its swell window, upstream of the swell
+			that reaches it, because at the shoreline a coarse model's nearest cell is often land.
+		</p>
+		<p>
+			Three days out, the three systems' forecasts typically span {f(typical)} ft at a break. Leave DWD out and ECMWF and
+			NOAA differ by {f(pair)} ft. DWD is the outlier at {dwdOutlier} of the {samples.length} places sampled, so most of
+			the disagreement a surfer would see comparing all three comes from one system.
+		</p>
+		<p>
+			{
+				persistentShare >= 0.9 && (
+					<>
+						Almost none of it is about the day. At the typical break the gap between the systems' long-run averages is as
+						large as the whole disagreement, while the day-to-day part, once each system's average is removed, is only
+						{" "}{f(daily)} ft. The systems are not arguing about when a swell arrives; they are arguing about how much of it
+						reaches the spot, which is the same failure the buoys showed at sheltered water.
+					</>
+				)
+			}
+			{" "}It also barely grows with lead time: {f(lead1)} ft one day out, {f(lead5)} ft five days out.
+		</p>
+	</div>
+
+	<div id="fg-break-disagreement" class="mt-8">
+		<div class="flex flex-wrap items-center justify-between gap-3">
+			<div data-fg-legend class="flex flex-wrap gap-x-5 gap-y-2 text-sm text-ink"></div>
+			<button type="button" data-vg-table-toggle class="font-mono text-xs uppercase tracking-wide text-accent-blue" aria-pressed="false">
+				View as table
+			</button>
+		</div>
+		<div data-vg-chart class="mt-4 overflow-x-auto"></div>
+		<div data-vg-table class="mt-2 overflow-x-auto"></div>
+		<p class="mt-3 font-mono text-[0.7rem] leading-relaxed text-ink-soft">
+			Wave height, three days out. Breaks the models resolve to the same grid cells share a row, since they share
+			identical forecasts.
+		</p>
+	</div>
+
+	<div class="mt-8 max-w-[65ch] space-y-4 text-base leading-relaxed text-ink-soft">
+		<p>
+			{mostAgree.label} agrees most: a typical spread of {f(mostAgree.typical)} ft, about {Math.round(mostAgree.relative * 100)}%
+			of the forecast itself. {leastAgree.label} agrees least relative to its surf, with forecasts that typically span
+			{" "}{Math.round(leastAgree.relative * 100)}% of the forecast height.
+			{
+				mostAgree.region === "norcal" && (
+					<> The coast where forecasts are hardest to check against a buoy is the one where they most agree with each other.</>
+				)
+			}
+		</p>
+		<p>
+			{rows.length} breaks come down to {samples.length} distinct places at these models' resolution.
+			{
+				biggestShared.length > 1 && (
+					<>
+						{" "}{listJoin(biggestShared)} come out of the same three grid cells, so all three systems give them identical
+						forecasts; any difference between those breaks has to come from somewhere other than these models.
+					</>
+				)
+			}
+		</p>
+		<p>
+			Where a break has a buoy, disagreement at its sample point moves closely with disagreement at the buoy: a median
+			correlation of {rMedian.toFixed(2)} across {validated.length} breaks, the lowest {rMin.toFixed(2)}. Since high
+			disagreement predicted larger misses at the buoys, it is a reasonable warning light at the breaks too, though at a
+			break with no buoy that last step is an inference rather than a measurement.
+		</p>
+		{
+			lindaMarLowest && (
+				<p>
+					And the home break: Linda Mar has the least disagreement of any break here, {f(lmRange)} ft on a typical day, with the
+					three systems' averages within {f(lmSystematic)} ft of each other.
+				</p>
+			)
+		}
+	</div>
+
+	<script src="../../../scripts/surf-forecast/break-disagreement-chart.ts"></script>
+</section>

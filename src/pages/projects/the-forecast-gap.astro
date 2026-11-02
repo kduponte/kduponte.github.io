@@ -1,0 +1,240 @@
+---
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import HeroSection from "../../components/projects/the-forecast-gap/HeroSection.astro";
+import LiveToySection from "../../components/projects/the-forecast-gap/LiveToySection.astro";
+import FramingSection from "../../components/projects/the-forecast-gap/FramingSection.astro";
+import CoverageSection from "../../components/projects/the-forecast-gap/CoverageSection.astro";
+import SkillDecaySection from "../../components/projects/the-forecast-gap/SkillDecaySection.astro";
+import BiasSection from "../../components/projects/the-forecast-gap/BiasSection.astro";
+import DisagreementSection from "../../components/projects/the-forecast-gap/DisagreementSection.astro";
+import BreakDisagreementSection from "../../components/projects/the-forecast-gap/BreakDisagreementSection.astro";
+import PeriodSection from "../../components/projects/the-forecast-gap/PeriodSection.astro";
+import IndependenceSection from "../../components/projects/the-forecast-gap/IndependenceSection.astro";
+import RegistrySection from "../../components/projects/the-forecast-gap/RegistrySection.astro";
+import KeyFindings from "../../components/editorial/KeyFindings.astro";
+import Methodology from "../../components/editorial/Methodology.astro";
+import Limitations from "../../components/editorial/Limitations.astro";
+import NextSteps from "../../components/editorial/NextSteps.astro";
+import SourceList from "../../components/editorial/SourceList.astro";
+import decayData from "../../../public/data/surf-forecast/skill_decay.json";
+import stationData from "../../../public/data/surf-forecast/stations.json";
+import comparisonData from "../../../public/data/surf-forecast/comparisons.json";
+import disagreementData from "../../../public/data/surf-forecast/disagreement.json";
+import metadata from "../../../public/data/surf-forecast/metadata.json";
+import breakData from "../../../public/data/surf-forecast/breaks.json";
+import { ft, need, pct, pick, signed, signedFt } from "../../lib/surf-forecast/findings";
+
+// Every figure in the findings, methodology and limitations below is read from the frozen data.
+const H = "wave_height";
+const d = (source: string, lead: number, field: "mae" | "bias" | "skill" | "share_within", variable = H, scope = "all") =>
+	need(pick(decayData.rows, scope, source, variable, lead)[field], `${scope}/${source}/${variable}/${lead}/${field}`);
+const st = (station: string, source: string) => need(pick(stationData.rows, station, source, H, 3).bias, `${station}/${source}`);
+
+const e1 = d("ecmwf_wam", 1, "mae");
+const e7 = d("ecmwf_wam", 7, "mae");
+const growth = Math.round((e7 / e1 - 1) * 100);
+const within = { e: d("ecmwf_wam", 3, "share_within"), n: d("ncep_gfswave016", 3, "share_within"), w: d("gwam", 3, "share_within") };
+const noaa1 = d("ncep_gfswave016", 1, "skill");
+const noaaBias = d("ncep_gfswave016", 3, "bias");
+const dwdBias = d("gwam", 3, "bias");
+const ecmwfBias = d("ecmwf_wam", 3, "bias");
+const phDwd = st("51211", "gwam");
+const dis3 = disagreementData.rows.find((r) => r.lead_days === 3);
+if (!dis3) throw new Error("no disagreement row");
+const disRatio = (dis3.bins[dis3.bins.length - 1].mae / dis3.bins[0].mae).toFixed(1);
+const head = comparisonData.rows.find((r) => r.question === "ECMWF against NOAA" && r.variable === H && r.lead_days === 3);
+if (!head) throw new Error("no headline comparison");
+const noaaPeriod = metadata.period_definition.ncep_gfswave016;
+if (!noaaPeriod) throw new Error("no period check");
+const snaps = metadata.grid_snapping.filter((s) => s.snap_km !== null).map((s) => s.snap_km as number);
+const masked = metadata.models.find((m) => m.id === "ncep_gfswave025")?.masked_stations ?? [];
+// Break-level disagreement, one sample per set of breaks sharing grid cells.
+const breakSamples = [...new Map(breakData.rows.map((r) => [r.cell_group, r])).values()];
+const b3 = (r: (typeof breakData.rows)[number]) => {
+	const l = r.leads.find((x) => x.lead_days === 3);
+	if (!l) throw new Error(`no lead 3 for ${r.id}`);
+	return l;
+};
+const medianOf = (xs: number[]) => {
+	const v = [...xs].sort((a, b) => a - b);
+	const m = (v.length - 1) / 2;
+	return (v[Math.floor(m)] + v[Math.ceil(m)]) / 2;
+};
+const breakTypical = medianOf(breakSamples.map((r) => b3(r).median_range as number));
+const breakPair = medianOf(breakSamples.map((r) => b3(r).ecmwf_noaa_median as number));
+const dwdOutlierCount = breakSamples.filter((r) => b3(r).outlier === "gwam").length;
+const cellKmMax = (m: string) => Math.max(...breakData.rows.map((r) => (r.grid_km_from_break as Record<string, number | null>)[m] ?? 0));
+const sfFine = st("46237", "ncep_gfswave016");
+const sfCoarse = st("46237", "ncep_gfswave025");
+---
+
+<BaseLayout
+	title="The Forecast Gap"
+	description="How accurate are surf forecasts, and how fast does that accuracy decay? Nine months of model forecasts from three forecasting systems, checked against what twelve NOAA buoys recorded."
+>
+	<HeroSection />
+	<LiveToySection />
+	<FramingSection />
+	<CoverageSection />
+	<SkillDecaySection />
+	<BiasSection />
+	<DisagreementSection />
+	<BreakDisagreementSection />
+	<PeriodSection />
+	<IndependenceSection />
+
+	<KeyFindings
+		lede={`Short version: the best forecast is within a foot of the buoy ${pct(within.e)} of the time three days out, and it barely degrades over a week. The systems differ far more in where they start than in how fast they decay, and most of their error comes from geography a global model cannot see.`}
+		groups={[
+			{
+				heading: "Accuracy",
+				findings: [
+					{
+						label: "Error barely grows with lead time",
+						detail: `ECMWF misses by ${ft(e1)} ft one day out and ${ft(e7)} ft seven days out, only ${growth}% worse. Most of every system's error is already there in its latest run.`,
+					},
+					{
+						label: "One system is clearly ahead",
+						detail: `Three days out, ECMWF is within a foot of the buoy ${pct(within.e)} of the time, NOAA ${pct(within.n)} and DWD ${pct(within.w)}.`,
+					},
+					{
+						label: "Day one barely beats persistence",
+						detail: `Assuming tomorrow looks like today is a hard benchmark one day out: NOAA's skill against it is ${signed(noaa1)}. Forecasts earn their keep two to five days out.`,
+					},
+				],
+			},
+			{
+				heading: "Bias",
+				findings: [
+					{
+						label: "The systems lean in different directions",
+						detail: `Three days out NOAA averages ${signedFt(noaaBias)} ft (too small), DWD ${signedFt(dwdBias)} ft (too big), ECMWF ${signedFt(ecmwfBias)} ft.`,
+					},
+					{
+						label: "Sheltered buoys break the models",
+						detail: `At Pearl Harbor, shadowed by Oahu from north swell, every system overforecasts; DWD by ${signedFt(phDwd)} ft. Coarse grids cannot see the island doing the sheltering.`,
+					},
+				],
+			},
+			{
+				heading: "Using forecasts",
+				findings: [
+					{
+						label: "Disagreement is a warning light",
+						detail: `On a buoy's highest-disagreement days the best system misses by ${disRatio} times as much as on its lowest, measured within each buoy so sheltered spots cannot fake the pattern.`,
+					},
+					{
+						label: "One system drives most of the disagreement",
+						detail: `At the breaks, the three systems typically span ${ft(breakTypical)} ft three days out; ECMWF and NOAA alone differ by ${ft(breakPair)} ft. DWD is the outlier at ${dwdOutlierCount} of ${breakSamples.length} places.`,
+					},
+					{
+						label: "Averaging the three makes it worse",
+						detail: `The plain average misses by ${ft(dis3.consensus_mae)} ft three days out, against ${ft(dis3.ecmwf_mae)} ft for ECMWF alone, because one system's bias drags it.`,
+					},
+					{
+						label: "Period cannot be scored at all",
+						detail: `NOAA's "mean period" runs at ${noaaPeriod.ratio_to_apd.toFixed(2)} times the buoy's average period and tracks its dominant period instead. The three systems mean different things by the word.`,
+					},
+				],
+			},
+		]}
+	/>
+
+	<RegistrySection />
+
+	<Methodology
+		id="methodology"
+		intro="The construction behind every number above. Each section opens with a one-line summary."
+		sections={[
+			{
+				heading: "Forecasts: an archive of what was predicted",
+				tldr: `Open-Meteo's marine archive, ${metadata.window.start} to ${metadata.window.end}, leads 0 to 7 days.`,
+				body: `Open-Meteo serves, for any past hour, what each wave model predicted one to seven days before it, through _previous_dayN variables on its marine API. This capability is undocumented for marine data, so it was checked empirically before any number was trusted: a live forecast was saved on 2026-09-15, and a day and two days later the archive was queried for the same hours. The saved one-day forecast matched previous_day1 most closely (mean difference 0.0125 m, against 0.0333 m for the next-best lead) and the saved two-day forecast matched previous_day2 (0.0133 m). The archive holds lead-time forecasts from January 2026 onward and nothing earlier on any host, so the window is the nine complete months available. Lead 0 is the latest run before the valid hour. Forecasts are sampled at each buoy's coordinates, on a grid of 00, 06, 12 and 18 UTC: adjacent hours carry almost identical errors, so hourly pairs would add rows without adding information.`,
+			},
+			{
+				heading: "Three systems, five outputs",
+				tldr: "Two outputs of one model agreeing is not corroboration, so the systems are compared as three.",
+				body: `The archive carries NOAA's WAVEWATCH III at 0.16 and 0.25 degrees, ECMWF's WAM at native resolution and at 0.25 degrees, and DWD's GWAM. Each system's finer output represents it in every chart; the coarse outputs appear only in the resolution comparison, where holding the physics fixed isolates what the grid is worth. A sixth candidate, meteofrance_wam, is not a model the API serves. NOAA's 0.25 degree output answers with exactly 0.0 for height, period and direction at ${masked.length} buoys whose nearest cell is land-masked; a null check reads that as complete coverage, so those buoy and model combinations are excluded outright. DWD's archive stops at six days.`,
+			},
+			{
+				heading: "Ground truth and matching",
+				tldr: "NOAA buoys via ERDDAP, nearest reading within 30 minutes, never averaged.",
+				body: `Observations come from NOAA's ERDDAP mirror of the NDBC archive, which serves arbitrary date ranges with missing values as NaN rather than sentinel numbers. Each variable is filtered on its own column, because some stations interleave sensors (Monterey reports wind every ten minutes and waves on roughly every third row). Each forecast is paired with the single nearest reading within 30 minutes of its valid hour, or dropped. Readings are never averaged across the hour, which would smooth away the peaks a forecast is judged on. Height is NDBC's significant wave height against the models' significant wave height, the one variable both sides define the same way.`,
+			},
+			{
+				heading: "Where each model takes its sample",
+				tldr: `Each model answers from its own nearest grid cell, ${Math.min(...snaps).toFixed(1)} to ${Math.max(...snaps).toFixed(1)} km from the buoy.`,
+				body: `Asked for a buoy's coordinates, the API answers from the nearest cell of each model's own grid, so every error number includes the distance between the buoy and the point the model actually describes. The distance differs by model and by buoy, and it is not a nuisance to average away: at the San Francisco Bar, three days out, NOAA's fine grid averages ${signedFt(sfFine)} ft and its coarse grid ${signedFt(sfCoarse)} ft, from the same model. The grid point for every buoy and model is recorded in the published metadata.`,
+			},
+			{
+				heading: "Disagreement at the breaks",
+				tldr: "Each break sampled 5 km out along its swell window; breaks sharing grid cells are reported as one.",
+				body: `A break sits at the shoreline, where a coarse model's nearest cell is often land, so each one is sampled from a point offshore along the middle of its swell window. The rule tries 5 to 30 km out, and 30 degrees either side of the window's centre, nearest first, and takes the first point where all three systems return real heights for 95% of a probe week. Every break passed at the first candidate, 5 km out, because these three models answer a coastal request from their nearest sea cell rather than with zeros, so the check that actually matters is where each answer came from: ECMWF's cell sits within ${cellKmMax("ecmwf_wam").toFixed(0)} km of every break, NOAA's within ${cellKmMax("ncep_gfswave016").toFixed(0)} km and DWD's within ${cellKmMax("gwam").toFixed(0)} km. Breaks whose points resolve to the same cells in all three systems get identical forecasts (verified, not assumed) and are reported as one place. Disagreement is the range of the three forecasts for each synoptic hour, split into the gap between the systems' long-run averages at that spot and the day-to-day range left after removing them.`,
+			},
+			{
+				heading: "Skill against persistence",
+				tldr: "1 minus the model's squared error over persistence's, scored only on hours both have.",
+				body: "Persistence forecasts that the sea N days from now will look exactly like the buoy reading now. It is built from the buoys alone, on the same grid and leads. Skill is 1 - MSE_model / MSE_persistence: positive beats persistence, zero ties it, negative loses. Both errors are computed on exactly the same targets (buoy, hour, variable and lead), since scoring a model and the baseline on different hours compares the weather rather than the forecasts.",
+			},
+			{
+				heading: "Bias against scatter",
+				tldr: "RMSE squared splits exactly into bias squared plus the scatter around it.",
+				body: "Mean signed error is the bias: the constant lean you could correct for. The standard deviation of the errors is the scatter left after removing it. Their squares sum exactly to the squared RMSE, which the tests pin, so the share of a system's error that is a correctable offset is a measured quantity rather than an impression from a chart.",
+			},
+			{
+				heading: "Direction, and why it is an upper bound",
+				tldr: "Circular statistics throughout, and a definitional gap that inflates direction error in mixed seas.",
+				body: "Direction errors are wrapped the short way round (350 degrees against 10 is 20 degrees off) and averaged as circular means, so errors of +170 and -170 average to 180 rather than to a false zero. NDBC defines its mean wave direction as the direction from which the waves at the dominant period are coming, while the models report a direction for the whole sea. When a groundswell and a local windswell arrive together, those genuinely differ, so part of every direction error here is definitional and the figures overstate true forecast error.",
+			},
+			{
+				heading: "Period, and why it is not scored",
+				tldr: "The models' mean period and the buoy's periods are different quantities.",
+				body: `NDBC's average period is a zero-crossing period; its dominant period sits at the spectral peak. Each system computes its single mean period differently: NOAA's runs ${noaaPeriod.ratio_to_apd.toFixed(2)} times the buoy average and correlates ${noaaPeriod.corr_dpd?.toFixed(2)} with the dominant period but only ${noaaPeriod.corr_apd?.toFixed(2)} with the average. Rather than publish errors that measure the definitions, the period section reports the relationship itself.`,
+			},
+			{
+				heading: "Error bars that respect clustering",
+				tldr: "A moving-block bootstrap over five-day runs, reported next to the naive interval.",
+				body: `Every source comparison is a paired difference in absolute error on shared targets, grouped by calendar day with every buoy's pairs for a day in one group. Resampling five-day blocks (2,000 resamples, fixed seed) keeps the clustering a swell event produces. The naive interval is reported beside it, and the ratio implies an effective sample size: ${head.n_values.toLocaleString()} ECMWF against NOAA pairs are worth about ${head.effective_n.toLocaleString()} independent ones.`,
+			},
+			{
+				heading: "The one live component",
+				tldr: "The Linda Mar toy fetches the current forecast in your browser; everything else is frozen.",
+				body: "Every chart reads JSON frozen when the data was built. The toy at the top is the single exception, because a should-I-surf answer from the last deploy would be wrong by definition. It fails closed: any timeout, error or missing value shows no call rather than an invented one. Its playlists were each confirmed to exist through Spotify's public oEmbed endpoint and load only when asked.",
+			},
+		]}
+	/>
+
+	<Limitations
+		items={[
+			"A buoy is not a break. Every accuracy figure describes open water near a buoy, and applies to a break only as far as the registry above says it does. Refraction, bathymetry and tide at the break itself are not measured anywhere public.",
+			`Nine months, ${metadata.window.start} to ${metadata.window.end}, is all the archive holds. It covers one North Shore season's tail and one summer, but not the start of the next winter, and seasonal differences cannot be separated from the particular swells that happened to arrive.`,
+			"Buoy gaps fall unevenly. The San Francisco Bar buoy, behind every Northern California break with a close buoy, went quiet in August and September; Waimea was dark through March and April; Monterey reported no waves until April. Those buoys' results describe the months they were present, not the whole window.",
+			"Grid snapping is entangled with model skill. A model whose grid point lands in more exposed or more sheltered water than the buoy will look worse for reasons that are partly geometry, and this design cannot fully separate the two.",
+			"Direction error includes a definitional component, so it is an upper bound. Period is not scored at all.",
+			"Wind is not evaluated. Only one of the twelve buoys, Monterey, carries an anemometer, and it serves only breaks too far away for accuracy work.",
+			"Only the global models Open-Meteo archives are tested. Surfer-facing products such as Surfline sit behind a paywall and a robots.txt that disallows collection, and their own forecasts are not archived publicly, so they are not here.",
+			"Disagreement at a break is measured at an offshore sample point, not in the surf zone. It describes how much the systems disagree about the swell arriving at the break, and at the models' resolution several breaks are indistinguishable. Treating high disagreement as a warning at breaks without a buoy rests on the buoy result carrying over, which the close tracking between break and buoy disagreement supports but cannot prove.",
+		]}
+	/>
+
+	<NextSteps
+		surprisingLabel="What was surprising"
+		hardestLabel="Hardest part to get right"
+		unresolvedLabel="What a proper fix would take"
+		reflection={{
+			surprising: `How little the forecasts decay. The expectation going in was a curve climbing steadily with lead time; instead every system's line is nearly flat, and ECMWF's week-ahead forecast is only ${growth}% worse than its one-day forecast. The interesting differences are in where each system starts, and those come mostly from what each model's grid can and cannot see.`,
+			hardest: "Making sure the comparisons compared like with like. Three separate traps produced plausible numbers that were wrong: a land-masked grid cell answering with zeros that a null check counted as perfect coverage, a period variable that means a different spectral quantity in each system, and a buoy direction that describes only the dominant wave train. Each would have survived a casual look at the charts.",
+			unresolved: "Forecasts at the break rather than the buoy. That needs either a nearshore transformation model (California has one in CDIP's MOP system; Hawaii does not have an equivalent public archive) or observed surf heights at breaks, which is the data that sits behind paywalls. A per-buoy bias correction is the cheaper next step, since a quarter to a third of two systems' error turned out to be a consistent offset.",
+		}}
+	/>
+
+	<SourceList
+		sources={[
+			{ name: "Open-Meteo Marine API (archived forecasts)", url: "https://open-meteo.com/en/docs/marine-weather-api", collectedAt: "2026-10-26", method: "public_api" },
+			{ name: "NOAA ERDDAP, NDBC standard meteorological data (cwwcNDBCMet)", url: "https://coastwatch.pfeg.noaa.gov/erddap/tabledap/cwwcNDBCMet.html", collectedAt: "2026-10-26", method: "public_api" },
+			{ name: "NDBC measurement descriptions and units", url: "https://www.ndbc.noaa.gov/faq/measdes.shtml", collectedAt: "2026-10-26", method: "table_extraction" },
+			{ name: "NDBC station pages (buoy positions)", url: "https://www.ndbc.noaa.gov/", collectedAt: "2026-10-08", method: "table_extraction" },
+			{ name: "Spotify oEmbed (playlist verification)", url: "https://developer.spotify.com/documentation/embeds", collectedAt: "2026-10-08", method: "public_api" },
+		]}
+	/>
+</BaseLayout>

@@ -1,0 +1,100 @@
+---
+// Which breaks each buoy's accuracy results can speak for. Placed after the results so the reader
+// meets the findings first, then the honest limits of where they apply.
+import {
+	breaksInRegion,
+	buoyFor,
+	REGION_LABEL,
+	SURF_BREAKS,
+	tierCounts,
+	type Region,
+} from "../../../lib/surf-forecast/spots";
+
+const TIER_LABEL: Record<string, string> = {
+	close: "Results apply",
+	marginal: "Apply, distance noted",
+	disagreement_only: "No accuracy claim",
+};
+const REGIONS: Region[] = ["hawaii", "norcal", "socal"];
+const byRegion = Object.fromEntries(REGIONS.map((r) => [r, tierCounts(r)])) as Record<Region, ReturnType<typeof tierCounts>>;
+---
+
+<section id="breaks" class="mx-auto max-w-7xl px-6 py-16 md:px-12 md:py-20">
+	<h2 class="font-display text-2xl font-semibold tracking-tight md:text-3xl">Which breaks each buoy speaks for</h2>
+	<p class="mt-3 max-w-[65ch] text-base leading-relaxed text-ink-soft">
+		Swell is a large-scale field, so within about 15 km a buoy's open-water reading is substantially what reaches the
+		break, and the accuracy results above apply to it. Between 15 and 30 km they apply with the distance stated
+		alongside. Beyond that, or where the nearest buoy faces a different ocean, no accuracy claim is made for the break
+		at all. Forecast disagreement, which needs no buoy, is measured at every one of the {SURF_BREAKS.length} breaks in the
+		section above.
+	</p>
+
+	{
+		REGIONS.map((region) => (
+			<div class="mt-10">
+				<h3 class="font-display text-lg font-semibold">{REGION_LABEL[region]}</h3>
+				<div class="mt-3 overflow-x-auto">
+					<table class="w-full min-w-[820px] border-collapse text-sm">
+						<thead>
+							<tr class="border-b border-line text-left font-mono text-xs uppercase tracking-wide text-ink-soft">
+								<th class="py-2 pr-4">Break</th>
+								<th class="py-2 pr-4">Swell window</th>
+								<th class="py-2 pr-4">Nearest buoy</th>
+								<th class="py-2 pr-4">Distance</th>
+								<th class="py-2">Accuracy results</th>
+							</tr>
+						</thead>
+						<tbody>
+							{breaksInRegion(region).map((b) => {
+								const buoy = buoyFor(b);
+								return (
+									<tr class="border-b border-line/60 align-top">
+										<td class="py-3 pr-4 font-medium text-ink">
+											{b.name}
+											<span class="block text-xs text-ink-soft">{b.locality}</span>
+										</td>
+										<td class="py-3 pr-4 text-ink-soft">{b.facing}</td>
+										<td class="py-3 pr-4 text-ink-soft">
+											{buoy ? (
+												<>
+													{buoy.name}
+													<span class="block font-mono text-xs">{buoy.station}</span>
+												</>
+											) : (
+												<span class="text-ink-soft/70">none usable</span>
+											)}
+										</td>
+										<td class="py-3 pr-4 font-mono text-ink-soft">
+											{b.buoy_distance_km === null ? "—" : `${b.buoy_distance_km} km`}
+										</td>
+										<td class="py-3 text-ink-soft">{TIER_LABEL[b.proxy_tier]}</td>
+									</tr>
+								);
+							})}
+						</tbody>
+					</table>
+				</div>
+			</div>
+		))
+	}
+
+	<div class="mt-8 max-w-[65ch] space-y-4 text-sm leading-relaxed text-ink-soft">
+		<p>
+			How close a buoy sits varies enormously by region, and that is a finding in itself. Hawaii is the best instrumented
+			coastline here: {byRegion.hawaii.close} of its {breaksInRegion("hawaii").length} breaks sit within 15 km of a
+			station. Southern California has {byRegion.socal.close} close pairings, almost all in San Diego, while Los Angeles
+			sits uniformly around 20 km out.
+		</p>
+		<p>
+			Northern California is the gap, with {byRegion.norcal.close} close pairings out of
+			{" "}{breaksInRegion("norcal").length}. Mavericks is 35 km from the nearest buoy, Half Moon Bay 34, Waddell Creek 36,
+			Steamer Lane 39. The stretch of coast with the most famous big-wave spot in the country is the stretch where
+			forecasts are hardest to check, and nothing about the break selection caused that. It is where NOAA put the buoys.
+		</p>
+		<p>
+			Neither the Kona coast nor the Hamakua coast of the Big Island has a buoy facing the right ocean, and Poipu on
+			Kauai's south shore is served only by a buoy on the north shore. Those breaks carry no pairing rather than a
+			misleading one.
+		</p>
+	</div>
+</section>

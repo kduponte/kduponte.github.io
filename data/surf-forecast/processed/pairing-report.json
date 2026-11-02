@@ -1,0 +1,359 @@
+{
+	"window": {
+		"start": "2026-01-01",
+		"end": "2026-09-30"
+	},
+	"generated_at": "2026-10-27T06:26:30.487Z",
+	"total_pairs": 1548971,
+	"period_definition": {
+		"ncep_gfswave016": {
+			"n": 11949,
+			"mean_forecast": 11.885781236923549,
+			"mean_apd": 6.643700728094416,
+			"mean_dpd": 11.177231567495165,
+			"ratio_to_apd": 1.8474778823104323,
+			"ratio_to_dpd": 1.1245511154695689,
+			"corr_apd": 0.27720145717256345,
+			"corr_dpd": 0.5883068380243642,
+			"tracks": "dpd"
+		},
+		"ncep_gfswave025": {
+			"n": 8030,
+			"mean_forecast": 12.16340597758404,
+			"mean_apd": 6.7231668742216995,
+			"mean_dpd": 11.851682440846751,
+			"ratio_to_apd": 1.8642924009493458,
+			"ratio_to_dpd": 1.0766085384919706,
+			"corr_apd": 0.33612037262225963,
+			"corr_dpd": 0.640700557079995,
+			"tracks": "dpd"
+		},
+		"ecmwf_wam": {
+			"n": 11949,
+			"mean_forecast": 9.370482885597136,
+			"mean_apd": 6.643700728094416,
+			"mean_dpd": 11.177231567495165,
+			"ratio_to_apd": 1.4387612649939485,
+			"ratio_to_dpd": 0.8912956621587235,
+			"corr_apd": 0.6418348493295521,
+			"corr_dpd": 0.6360280914118116,
+			"tracks": "undetermined"
+		},
+		"ecmwf_wam025": {
+			"n": 11949,
+			"mean_forecast": 9.37352498117001,
+			"mean_apd": 6.643700728094416,
+			"mean_dpd": 11.177231567495165,
+			"ratio_to_apd": 1.4400798083249744,
+			"ratio_to_dpd": 0.8918568430155928,
+			"corr_apd": 0.6306043166257107,
+			"corr_dpd": 0.6329595995495426,
+			"tracks": "undetermined"
+		},
+		"gwam": {
+			"n": 11949,
+			"mean_forecast": 9.60220102100595,
+			"mean_apd": 6.643700728094416,
+			"mean_dpd": 11.177231567495165,
+			"ratio_to_apd": 1.4909226721970332,
+			"ratio_to_dpd": 0.9306357797411956,
+			"corr_apd": 0.5430346907758977,
+			"corr_dpd": 0.5177673420579534,
+			"tracks": "undetermined"
+		}
+	},
+	"stations": [
+		{
+			"station": "46042",
+			"months_with_forecasts": 9,
+			"months_with_observations": 6,
+			"analysis_hours": 1092,
+			"hours_with_height_obs": 673,
+			"height_obs_coverage": 0.6163003663003663,
+			"models_used": [
+				"ncep_gfswave016",
+				"ncep_gfswave025",
+				"ecmwf_wam",
+				"ecmwf_wam025",
+				"gwam"
+			],
+			"models_excluded_as_masked": [],
+			"forecast_counts": {
+				"forecasts_considered": 127764,
+				"paired": 78735,
+				"no_observation": 48963,
+				"masked_value": 66
+			},
+			"persistence_pairs": 13737,
+			"total_pairs": 92472
+		},
+		{
+			"station": "46221",
+			"months_with_forecasts": 9,
+			"months_with_observations": 9,
+			"analysis_hours": 1092,
+			"hours_with_height_obs": 1056,
+			"height_obs_coverage": 0.967032967032967,
+			"models_used": [
+				"ncep_gfswave016",
+				"ncep_gfswave025",
+				"ecmwf_wam",
+				"ecmwf_wam025",
+				"gwam"
+			],
+			"models_excluded_as_masked": [],
+			"forecast_counts": {
+				"forecasts_considered": 127764,
+				"paired": 123486,
+				"no_observation": 4212,
+				"masked_value": 66
+			},
+			"persistence_pairs": 21153,
+			"total_pairs": 144639
+		},
+		{
+			"station": "46222",
+			"months_with_forecasts": 9,
+			"months_with_observations": 9,
+			"analysis_hours": 1092,
+			"hours_with_height_obs": 1092,
+			"height_obs_coverage": 1,
+			"models_used": [
+				"ncep_gfswave016",
+				"ncep_gfswave025",
+				"ecmwf_wam",
+				"ecmwf_wam025",
+				"gwam"
+			],
+			"models_excluded_as_masked": [],
+			"forecast_counts": {
+				"forecasts_considered": 127764,
+				"paired": 127698,
+				"no_observation": 0,
+				"masked_value": 66
+			},
+			"persistence_pairs": 22596,
+			"total_pairs": 150294
+		},
+		{
+			"station": "46224",
+			"months_with_forecasts": 9,
+			"months_with_observations": 9,
+			"analysis_hours": 1092,
+			"hours_with_height_obs": 1077,
+			"height_obs_coverage": 0.9862637362637363,
+			"models_used": [
+				"ncep_gfswave016",
+				"ncep_gfswave025",
+				"ecmwf_wam",
+				"ecmwf_wam025",
+				"gwam"
+			],
+			"models_excluded_as_masked": [],
+			"forecast_counts": {
+				"forecasts_considered": 127764,
+				"paired": 125943,
+				"no_observation": 1755,
+				"masked_value": 66
+			},
+			"persistence_pairs": 22029,
+			"total_pairs": 147972
+		},
+		{
+			"station": "46237",
+			"months_with_forecasts": 9,
+			"months_with_observations": 8,
+			"analysis_hours": 1092,
+			"hours_with_height_obs": 857,
+			"height_obs_coverage": 0.7847985347985348,
+			"models_used": [
+				"ncep_gfswave016",
+				"ncep_gfswave025",
+				"ecmwf_wam",
+				"ecmwf_wam025",
+				"gwam"
+			],
+			"models_excluded_as_masked": [],
+			"forecast_counts": {
+				"forecasts_considered": 127764,
+				"paired": 100203,
+				"no_observation": 27495,
+				"masked_value": 66
+			},
+			"persistence_pairs": 17640,
+			"total_pairs": 117843
+		},
+		{
+			"station": "46254",
+			"months_with_forecasts": 9,
+			"months_with_observations": 9,
+			"analysis_hours": 1092,
+			"hours_with_height_obs": 1092,
+			"height_obs_coverage": 1,
+			"models_used": [
+				"ncep_gfswave016",
+				"ecmwf_wam",
+				"ecmwf_wam025",
+				"gwam"
+			],
+			"models_excluded_as_masked": [
+				"ncep_gfswave025"
+			],
+			"forecast_counts": {
+				"forecasts_considered": 101556,
+				"paired": 101366,
+				"no_observation": 124,
+				"masked_value": 66
+			},
+			"persistence_pairs": 22554,
+			"total_pairs": 123920
+		},
+		{
+			"station": "51201",
+			"months_with_forecasts": 9,
+			"months_with_observations": 7,
+			"analysis_hours": 1092,
+			"hours_with_height_obs": 809,
+			"height_obs_coverage": 0.7408424908424909,
+			"models_used": [
+				"ncep_gfswave016",
+				"ecmwf_wam",
+				"ecmwf_wam025",
+				"gwam"
+			],
+			"models_excluded_as_masked": [
+				"ncep_gfswave025"
+			],
+			"forecast_counts": {
+				"forecasts_considered": 101556,
+				"paired": 75171,
+				"no_observation": 26319,
+				"masked_value": 66
+			},
+			"persistence_pairs": 16233,
+			"total_pairs": 91404
+		},
+		{
+			"station": "51202",
+			"months_with_forecasts": 9,
+			"months_with_observations": 9,
+			"analysis_hours": 1092,
+			"hours_with_height_obs": 1092,
+			"height_obs_coverage": 1,
+			"models_used": [
+				"ncep_gfswave016",
+				"ncep_gfswave025",
+				"ecmwf_wam",
+				"ecmwf_wam025",
+				"gwam"
+			],
+			"models_excluded_as_masked": [],
+			"forecast_counts": {
+				"forecasts_considered": 127764,
+				"paired": 127698,
+				"no_observation": 0,
+				"masked_value": 66
+			},
+			"persistence_pairs": 22596,
+			"total_pairs": 150294
+		},
+		{
+			"station": "51205",
+			"months_with_forecasts": 9,
+			"months_with_observations": 9,
+			"analysis_hours": 1092,
+			"hours_with_height_obs": 1092,
+			"height_obs_coverage": 1,
+			"models_used": [
+				"ncep_gfswave016",
+				"ncep_gfswave025",
+				"ecmwf_wam",
+				"ecmwf_wam025",
+				"gwam"
+			],
+			"models_excluded_as_masked": [],
+			"forecast_counts": {
+				"forecasts_considered": 127764,
+				"paired": 127698,
+				"no_observation": 0,
+				"masked_value": 66
+			},
+			"persistence_pairs": 22596,
+			"total_pairs": 150294
+		},
+		{
+			"station": "51206",
+			"months_with_forecasts": 9,
+			"months_with_observations": 9,
+			"analysis_hours": 1092,
+			"hours_with_height_obs": 1092,
+			"height_obs_coverage": 1,
+			"models_used": [
+				"ncep_gfswave016",
+				"ecmwf_wam",
+				"ecmwf_wam025",
+				"gwam"
+			],
+			"models_excluded_as_masked": [
+				"ncep_gfswave025"
+			],
+			"forecast_counts": {
+				"forecasts_considered": 101556,
+				"paired": 101490,
+				"no_observation": 0,
+				"masked_value": 66
+			},
+			"persistence_pairs": 22596,
+			"total_pairs": 124086
+		},
+		{
+			"station": "51208",
+			"months_with_forecasts": 9,
+			"months_with_observations": 9,
+			"analysis_hours": 1092,
+			"hours_with_height_obs": 930,
+			"height_obs_coverage": 0.8516483516483516,
+			"models_used": [
+				"ncep_gfswave016",
+				"ecmwf_wam",
+				"ecmwf_wam025",
+				"gwam"
+			],
+			"models_excluded_as_masked": [
+				"ncep_gfswave025"
+			],
+			"forecast_counts": {
+				"forecasts_considered": 101556,
+				"paired": 86424,
+				"no_observation": 15066,
+				"masked_value": 66
+			},
+			"persistence_pairs": 19194,
+			"total_pairs": 105618
+		},
+		{
+			"station": "51211",
+			"months_with_forecasts": 9,
+			"months_with_observations": 9,
+			"analysis_hours": 1092,
+			"hours_with_height_obs": 1091,
+			"height_obs_coverage": 0.9990842490842491,
+			"models_used": [
+				"ncep_gfswave016",
+				"ncep_gfswave025",
+				"ecmwf_wam",
+				"ecmwf_wam025",
+				"gwam"
+			],
+			"models_excluded_as_masked": [],
+			"forecast_counts": {
+				"forecasts_considered": 127764,
+				"paired": 127581,
+				"no_observation": 117,
+				"masked_value": 66
+			},
+			"persistence_pairs": 22554,
+			"total_pairs": 150135
+		}
+	]
+}

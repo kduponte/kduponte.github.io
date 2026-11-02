@@ -1,0 +1,106 @@
+---
+// The headline result. Every number and every data-dependent claim below is computed from the
+// frozen skill_decay.json at build time.
+import decayData from "../../../../public/data/surf-forecast/skill_decay.json";
+import { ft, listJoin, need, pick, signed } from "../../../lib/surf-forecast/findings";
+import { REGION_LABEL, type Region } from "../../../lib/surf-forecast/spots";
+
+const rows = decayData.rows;
+const H = "wave_height";
+const REGIONS: Region[] = ["hawaii", "norcal", "socal"];
+const mae = (scope: string, source: string, lead: number, variable = H) => need(pick(rows, scope, source, variable, lead).mae, "mae");
+const skill = (scope: string, source: string, lead: number, variable = H) => need(pick(rows, scope, source, variable, lead).skill, "skill");
+
+const e1 = mae("all", "ecmwf_wam", 1);
+const e3 = mae("all", "ecmwf_wam", 3);
+const e7 = mae("all", "ecmwf_wam", 7);
+const growth = Math.round((e7 / e1 - 1) * 100);
+const n0 = mae("all", "ncep_gfswave016", 0);
+const d0 = mae("all", "gwam", 0);
+
+// Where does ECMWF a week out beat NOAA's latest run? Decided by the data, not written by hand.
+const weekBeatsSameDay = REGIONS.filter((r) => mae(r, "ecmwf_wam", 7) < mae(r, "ncep_gfswave016", 0)).map((r) => REGION_LABEL[r]);
+const weekLoses = REGIONS.filter((r) => mae(r, "ecmwf_wam", 7) >= mae(r, "ncep_gfswave016", 0)).map((r) => REGION_LABEL[r]);
+
+const noaa1 = skill("all", "ncep_gfswave016", 1);
+const socalEcmwf1 = skill("socal", "ecmwf_wam", 1);
+const leads = [1, 2, 3, 4, 5, 6, 7];
+const neverBelow = ["ecmwf_wam", "ncep_gfswave016"].every((m) => leads.every((l) => skill("all", m, l) > 0) || leads.slice(1).every((l) => skill("all", m, l) > 0));
+const dwdBelowEverywhere = REGIONS.filter((r) => [1, 2, 3, 4, 5, 6].every((l) => skill(r, "gwam", l) < 0)).map((r) => REGION_LABEL[r]);
+const dwdAbove = REGIONS.filter((r) => [1, 2, 3, 4, 5, 6].every((l) => skill(r, "gwam", l) > 0)).map((r) => REGION_LABEL[r]);
+
+const dirE1 = mae("all", "ecmwf_wam", 1, "wave_direction");
+const dirN1 = mae("all", "ncep_gfswave016", 1, "wave_direction");
+const dirD1 = mae("all", "gwam", 1, "wave_direction");
+const ecmwfDirFirstSkill = leads.find((l) => skill("all", "ecmwf_wam", l, "wave_direction") > 0);
+const noaaDirEverPositive = leads.some((l) => skill("all", "ncep_gfswave016", l, "wave_direction") > 0);
+---
+
+<section id="skill-decay" class="mx-auto max-w-7xl px-6 py-16 md:px-12 md:py-20">
+	<h2 class="font-display text-2xl font-semibold tracking-tight md:text-3xl">How fast does a forecast go stale?</h2>
+	<div class="mt-3 max-w-[65ch] space-y-4 text-base leading-relaxed text-ink-soft">
+		<p>
+			Slower than you would think. ECMWF's wave height forecast for three days out misses the buoy by {ft(e3)} ft on
+			average; its forecast for a week out misses by {ft(e7)} ft. Six extra days of lead time make it only {growth}%
+			worse than its one-day forecast. All three systems follow the same nearly flat line.
+		</p>
+		<p>
+			What separates them is where the line starts. Before any forecasting horizon is involved, NOAA's latest run
+			already misses by {ft(n0)} ft and DWD's by {ft(d0)} ft. Most of a forecast's error is present on day zero.
+			{
+				weekBeatsSameDay.length > 0 && (
+					<>
+						{" "}In {listJoin(weekBeatsSameDay)}, ECMWF's week-ahead forecast is closer to what the buoy recorded than NOAA's
+						same-day run.
+					</>
+				)
+			}
+			{weekLoses.length > 0 && <> In {listJoin(weekLoses)}, NOAA's latest run is still the better of the two.</>}
+		</p>
+	</div>
+
+	<div id="fg-skill-decay" class="mt-8">
+		<div class="flex flex-wrap items-center justify-between gap-3">
+			<div class="flex gap-2" role="group" aria-label="Variable">
+				<button type="button" data-fg-variable="wave_height" aria-pressed="true" class="border border-line px-3 py-1.5 font-mono text-xs uppercase tracking-wide aria-pressed:border-ink aria-pressed:bg-ink aria-pressed:text-paper">
+					Height
+				</button>
+				<button type="button" data-fg-variable="wave_direction" aria-pressed="false" class="border border-line px-3 py-1.5 font-mono text-xs uppercase tracking-wide aria-pressed:border-ink aria-pressed:bg-ink aria-pressed:text-paper">
+					Direction
+				</button>
+			</div>
+			<button type="button" data-vg-table-toggle class="font-mono text-xs uppercase tracking-wide text-accent-blue" aria-pressed="false">
+				View as table
+			</button>
+		</div>
+		<div data-fg-legend class="mt-4 flex flex-wrap gap-x-5 gap-y-2 text-sm text-ink"></div>
+		<div data-vg-chart class="mt-2">
+			<p class="mt-4 font-mono text-xs uppercase tracking-wide text-ink-soft">Average miss, in <span data-fg-unit-note>feet</span></p>
+			<div data-fg-mae class="overflow-x-auto"></div>
+			<p class="mt-10 font-mono text-xs uppercase tracking-wide text-ink-soft">Skill against persistence</p>
+			<div data-fg-skill class="overflow-x-auto"></div>
+		</div>
+		<div data-vg-table class="mt-2 overflow-x-auto"></div>
+	</div>
+
+	<div class="mt-8 max-w-[65ch] space-y-4 text-base leading-relaxed text-ink-soft">
+		<p>
+			The second chart asks the harder question: does the forecast beat assuming the surf a few days from now will look
+			exactly like it does today? That is the meteorologist's definition of skill, and it changes the story. One day
+			out, persistence is hard to beat. NOAA's day-one skill across all twelve buoys is {signed(noaa1)}, a dead heat,
+			and in Southern California even ECMWF manages only {signed(socalEcmwf1)}. The forecasts earn their keep two to
+			five days out, once the sea has had time to change and persistence falls apart.
+			{neverBelow && <> Within a week, ECMWF and NOAA never fall back below persistence.</>}
+			{dwdBelowEverywhere.length > 0 && <> DWD stays below it at every lead in {listJoin(dwdBelowEverywhere)}</>}{dwdAbove.length > 0 && dwdBelowEverywhere.length > 0 ? <>, and above it in {listJoin(dwdAbove)}.</> : dwdBelowEverywhere.length > 0 ? <>.</> : null}
+		</p>
+		<p>
+			Switch to direction and the systems separate the same way: one day out ECMWF is {dirE1.toFixed(0)}° off on
+			average, NOAA {dirN1.toFixed(0)}° and DWD {dirD1.toFixed(0)}°.
+			{ecmwfDirFirstSkill !== undefined && <> ECMWF only overtakes persistence from {ecmwfDirFirstSkill} days out</>}{noaaDirEverPositive ? <>.</> : <>, and NOAA never does.</>}{" "}
+			Part of that is definitional rather than a forecasting failure, as the methodology explains: the buoy reports the
+			direction of the dominant wave train, the models a blend of everything in the water.
+		</p>
+	</div>
+
+	<script src="../../../scripts/surf-forecast/skill-decay-chart.ts"></script>
+</section>

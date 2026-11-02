@@ -1,0 +1,75 @@
+---
+import comparisonData from "../../../../public/data/surf-forecast/comparisons.json";
+import metadata from "../../../../public/data/surf-forecast/metadata.json";
+
+const rows = comparisonData.rows;
+const headline = rows.find((r) => r.question === "ECMWF against NOAA" && r.variable === "wave_height" && r.lead_days === 3);
+if (!headline) throw new Error("no headline comparison");
+const ratios = rows.map((r) => r.se_block / r.se_naive);
+const lo = Math.min(...ratios).toFixed(1);
+const hi = Math.max(...ratios).toFixed(1);
+const flips = rows.filter((r) => r.naively_distinguishable && !r.distinguishable);
+// Group flipped rows by comparison and variable, so one comparison flipping at two leads reads as
+// one comparison, not two.
+const VAR_WORD: Record<string, string> = { wave_height: "height", wave_period: "period", wave_direction: "direction" };
+const UNIT: Record<string, string> = { wave_height: "m", wave_period: "s", wave_direction: "°" };
+const flipGroups = [...new Set(flips.map((f) => `${f.question}|${f.variable}`))].map((k) => {
+	const [question, variable] = k.split("|");
+	const members = flips.filter((f) => f.question === question && f.variable === variable);
+	const leads = members.map((m) => m.lead_days).sort((a, b) => a - b);
+	const size = Math.max(...members.map((m) => Math.abs(m.mean_abs_error_difference)));
+	return { question, variable, leads, size };
+});
+const leadWords = (leads: number[]) => (leads.length === 1 ? `${leads[0]} days out` : `${leads.slice(0, -1).join(", ")} and ${leads[leads.length - 1]} days out`);
+const perDay = (headline.effective_n / headline.n_days).toFixed(0);
+---
+
+<section id="evidence" class="mx-auto max-w-7xl px-6 py-16 md:px-12 md:py-20">
+	<h2 class="font-display text-2xl font-semibold tracking-tight md:text-3xl">How much evidence is in {(metadata.total_pairs / 1e6).toFixed(1)} million pairs?</h2>
+	<div class="mt-3 max-w-[65ch] space-y-4 text-base leading-relaxed text-ink-soft">
+		<p>
+			Less than the count suggests. Forecast errors are not independent: a model that misreads a swell misreads it at
+			every synoptic hour while the swell lasts, and at every neighbouring buoy it reaches. Treat each pair as a fresh
+			draw and the error bars come out far too narrow, so differences look decisive when the data cannot settle them.
+		</p>
+		<p>
+			A block bootstrap resamples whole five-day runs instead of single pairs, which keeps that clustering intact. By its
+			count, the {headline.n_values.toLocaleString()} pairs comparing ECMWF with NOAA three days out carry about as much
+			information as {headline.effective_n.toLocaleString()} independent ones: roughly {perDay} a day across all twelve
+			buoys. Across every comparison here, the honest error bars are {lo} to {hi} times wider than a naive test would
+			draw.
+		</p>
+		<p>
+			The headline differences survive anyway, because they are large.
+			{
+				flipGroups.length > 0 ? (
+					<>
+						{" "}{flipGroups.length === 1 ? "One comparison does not" : `${flipGroups.length} comparisons do not`}:{" "}
+						{`${flipGroups
+							.map((g) => `${g.question}, on ${VAR_WORD[g.variable]} at ${leadWords(g.leads)}, a difference of at most ${g.size.toFixed(2)} ${UNIT[g.variable]}`)
+							.join("; ")}.`}{" "}
+						The naive test calls it real and the honest one does not. That is the case this method exists for.
+					</>
+				) : (
+					<> None of the verdicts change.</>
+				)
+			}
+		</p>
+	</div>
+
+	<div id="fg-independence" class="mt-8">
+		<div class="flex justify-end">
+			<button type="button" data-vg-table-toggle class="font-mono text-xs uppercase tracking-wide text-accent-blue" aria-pressed="false">
+				View as table
+			</button>
+		</div>
+		<div data-vg-chart class="mt-2 overflow-x-auto"></div>
+		<div data-vg-table class="mt-2 overflow-x-auto"></div>
+		<p class="mt-3 font-mono text-[0.7rem] leading-relaxed text-ink-soft">
+			Light bar: forecast pairs compared. Dark bar: the number of independent pairs they are worth, from the ratio of the
+			naive to the bootstrap standard error. The table lists every comparison three days out with both intervals.
+		</p>
+	</div>
+
+	<script src="../../../scripts/surf-forecast/independence-chart.ts"></script>
+</section>

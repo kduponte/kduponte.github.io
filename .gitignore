@@ -26,3 +26,16 @@ pnpm-debug.log*
 # raw scraped HTML cache (large, and includes sources scraped despite a robots.txt disallow;
 # kept locally for reproducibility, not for public redistribution)
 data/toyota-truck/cache/
+
+# surf forecast API responses (about 50 MB of Open-Meteo JSON and 25 MB of ERDDAP CSV). Every file
+# is a verbatim cached response that the collectors re-fetch deterministically from a fixed window,
+# so committing them adds size without adding reproducibility. The paired dataset built from them
+# is regenerated the same way; the committed record is the aggregated output in public/data.
+#
+# cache/spikes/ is deliberately NOT ignored. It holds the semantics-gate snapshot, a live forecast
+# captured on 2026-09-15 that can never be fetched again, and it is the only evidence that the
+# archive's lead times mean what the whole analysis assumes they mean.
+data/surf-forecast/cache/open-meteo/
+data/surf-forecast/cache/erddap/
+data/surf-forecast/cache/open-meteo-breaks/
+data/surf-forecast/processed/pairs.csv

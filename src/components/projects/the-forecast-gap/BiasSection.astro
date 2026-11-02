@@ -1,0 +1,97 @@
+---
+// Where the models go wrong: signed error per buoy, and the share of each system's error that is a
+// constant, correctable offset. All quoted figures come from the frozen data at build time.
+import decayData from "../../../../public/data/surf-forecast/skill_decay.json";
+import stationData from "../../../../public/data/surf-forecast/stations.json";
+import { need, pick, signedFt } from "../../../lib/surf-forecast/findings";
+import { BUOYS } from "../../../lib/surf-forecast/spots";
+
+const H = "wave_height";
+const LEAD = 3;
+const all = (source: string) => pick(decayData.rows, "all", source, H, LEAD);
+const at = (station: string, source: string) => need(pick(stationData.rows, station, source, H, LEAD).bias, `bias ${station} ${source}`);
+
+const systems = [
+	{ id: "ecmwf_wam", name: "ECMWF" },
+	{ id: "ncep_gfswave016", name: "NOAA" },
+	{ id: "gwam", name: "DWD" },
+];
+const split = systems.map((s) => {
+	const r = all(s.id);
+	const bias = need(r.bias, "bias");
+	const scatter = need(r.centered_rmse, "scatter");
+	return { ...s, bias, offsetShare: (bias * bias) / (bias * bias + scatter * scatter) };
+});
+const byName = Object.fromEntries(split.map((s) => [s.name, s]));
+const closestToZero = [...split].sort((a, b) => Math.abs(a.bias) - Math.abs(b.bias))[0].name;
+
+const stations = Object.keys(BUOYS);
+const noaaLowCount = stations.filter((s) => at(s, "ncep_gfswave016") < 0).length;
+const pauwela = at("51205", "ncep_gfswave016");
+const ph = { e: at("51211", "ecmwf_wam"), n: at("51211", "ncep_gfswave016"), d: at("51211", "gwam") };
+const scrippsAllHigh = ["ecmwf_wam", "ncep_gfswave016", "gwam"].every((m) => at("46254", m) > 0);
+const scrippsDwd = at("46254", "gwam");
+const sfFine = at("46237", "ncep_gfswave016");
+const sfCoarse = at("46237", "ncep_gfswave025");
+const pctOf = (x: number) => `${Math.round(x * 100)}%`;
+---
+
+<section id="bias" class="mx-auto max-w-7xl px-6 py-16 md:px-12 md:py-20">
+	<h2 class="font-display text-2xl font-semibold tracking-tight md:text-3xl">Where the models go wrong</h2>
+	<div class="mt-3 max-w-[65ch] space-y-4 text-base leading-relaxed text-ink-soft">
+		<p>
+			Any error can be split exactly into a constant offset and the scatter around it. The offset is the part you can
+			correct for once you know it ("this one always reads a foot small"); the scatter is the part nobody can. Split
+			that way, the three systems are not just differently accurate. They are wrong in different directions.
+		</p>
+		<p>
+			NOAA forecasts too small: {signedFt(byName.NOAA.bias)} ft on average three days out, too small at {noaaLowCount} of
+			{stations.length} buoys, and {signedFt(pauwela)} ft at Pauwela on Maui's north shore. DWD forecasts too big, by
+			{" "}{signedFt(byName.DWD.bias)} ft. {closestToZero} sits closest to zero, at {signedFt(byName[closestToZero].bias)}
+			ft. For NOAA the constant offset is {pctOf(byName.NOAA.offsetShare)} of its squared error and for DWD
+			{" "}{pctOf(byName.DWD.offsetShare)}: a real share of what makes them look worse is a consistent lean you could
+			learn to read through. For ECMWF it is {pctOf(byName.ECMWF.offsetShare)}.
+		</p>
+	</div>
+
+	<div id="fg-bias" class="mt-8">
+		<div class="flex flex-wrap items-center justify-between gap-3">
+			<div data-fg-legend class="flex flex-wrap gap-x-5 gap-y-2 text-sm text-ink"></div>
+			<button type="button" data-vg-table-toggle class="font-mono text-xs uppercase tracking-wide text-accent-blue" aria-pressed="false">
+				View as table
+			</button>
+		</div>
+		<div data-vg-chart class="mt-4 overflow-x-auto"></div>
+		<div data-vg-table class="mt-2 overflow-x-auto"></div>
+		<p class="mt-3 font-mono text-[0.7rem] leading-relaxed text-ink-soft">
+			Average signed error in wave height, three days out. Each buoy is sorted by its systems' mean error, largest
+			overforecast first. The grey bar is how far apart the systems are at that buoy.
+		</p>
+	</div>
+
+	<div class="mt-8 max-w-[65ch] space-y-4 text-base leading-relaxed text-ink-soft">
+		<p>
+			The buoys where every system overshoots are the sheltered ones. Pearl Harbor sits on Oahu's south shore, behind
+			the island from the north swells that dominate the winter. ECMWF overforecasts it by {signedFt(ph.e)} ft, NOAA by
+			{" "}{signedFt(ph.n)} ft and DWD, the coarsest, by {signedFt(ph.d)} ft.
+			{
+				scrippsAllHigh && (
+					<>
+						{" "}Scripps Nearshore, tucked into La Jolla, shows the same pattern, with DWD {signedFt(scrippsDwd)} ft too big.
+					</>
+				)
+			}{" "}
+			A global model on a grid tens of kilometres wide cannot see the island or headland doing the sheltering, so it
+			delivers open-ocean swell to a buoy that never receives it. That was the island-shadowing hypothesis this project
+			set out to test, and the buoys support it.
+		</p>
+		<p>
+			A finer grid is not automatically the cure. At the San Francisco Bar, NOAA's finer output takes its sample near
+			the Golden Gate, at a point the model itself treats as sheltered, and reads {signedFt(sfFine)} ft. Its coarser
+			output samples farther offshore and reads {signedFt(sfCoarse)} ft. Where a model takes its sample matters as much
+			as how good the model is.
+		</p>
+	</div>
+
+	<script src="../../../scripts/surf-forecast/bias-chart.ts"></script>
+</section>

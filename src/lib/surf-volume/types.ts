@@ -14,7 +14,8 @@ export type CollectionMethod =
 	| "manual_entry"
 	| "derived_from_published_ratio"
 	| "derived_from_published_formula"
-	| "community_heuristic";
+	| "community_heuristic"
+	| "public_api";
 
 export type RecommendationStatus = "observed" | "derived" | "interpolated" | "community_heuristic" | "unavailable";
 

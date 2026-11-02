@@ -1,0 +1,202 @@
+---
+// The toy: reads the live forecast for Linda Mar, makes a call, and shows the reading it made the
+// call from.
+//
+// Structure note. An earlier version rendered four hand-drawn states and revealed one, which meant
+// the picture was identical on a two-foot day and a fifteen-foot day and the actual forecast
+// numbers were computed and then thrown away. This version renders one layout and draws it from
+// the data, so the shape of the swell on screen is the shape of the swell in the forecast.
+//
+// The only live third-party fetch on this site. Everything else reads JSON frozen at collection
+// time; a "should I surf right now" widget showing conditions from the last deploy would be worse
+// than useless, so this one exception is called out in the Methodology.
+import playlistData from "../../../../public/data/surf-forecast/playlists.json";
+import { LINDA_MAR } from "../../../lib/surf-forecast/spots";
+
+const playlists = playlistData.playlists;
+---
+
+<section id="linda-mar" class="mx-auto max-w-7xl px-6 py-16 md:px-12 md:py-20">
+	<h2 class="font-display text-2xl font-semibold tracking-tight md:text-3xl">Should I go surf right now?</h2>
+	<div class="mt-3 max-w-[65ch] space-y-4">
+		<p class="text-base leading-relaxed text-ink-soft">
+			My home break is Linda Mar, in Pacifica. It is an exposed beach break that is small most of the time and
+			blown out a good deal of the rest, so the honest answer to "should I paddle out" is usually no. This reads
+			the live forecast for the beach, makes the call, and then shows the reading it made the call from, because a
+			verdict you cannot check is just an opinion.
+		</p>
+		<p class="text-base leading-relaxed text-ink-soft">
+			The strip at the bottom is the forecast drawn to scale, not decoration. Crest spacing is the real
+			deep-water wavelength, so a short-period windswell draws packed chatter and a long-period groundswell draws
+			one slow wall. The crests advance at the actual wave period. Onshore wind roughens the surface and offshore
+			wind blows spray back off the top, which is the detail that matters most here: at this beach the wind
+			decides more than the size does.
+		</p>
+	</div>
+
+	<div id="toy-root" class="mt-8 border border-line" data-tier="loading">
+		<div class="flex flex-wrap items-baseline justify-between gap-x-6 gap-y-1 border-b border-line px-6 py-4">
+			<p class="font-mono text-xs uppercase tracking-wide" data-toy-eyebrow>Reading the forecast</p>
+			<p class="font-mono text-xs text-ink-soft" data-toy-stamp>{LINDA_MAR.name}</p>
+		</div>
+
+		<div class="md:grid md:grid-cols-[1fr_19rem]">
+			<div class="p-6 md:p-8">
+				<p class="font-display text-2xl font-semibold md:text-3xl" data-toy-headline>Checking the water</p>
+				<ul class="mt-4 space-y-2 text-sm leading-relaxed text-ink-soft" data-toy-reasons>
+					<li class="h-4 w-3/4 animate-pulse bg-line/40"></li>
+					<li class="h-4 w-1/2 animate-pulse bg-line/30"></li>
+				</ul>
+				<p class="mt-6 text-sm leading-relaxed text-ink" data-toy-joke></p>
+			</div>
+
+			<div class="border-t border-line p-6 md:border-l md:border-t-0" data-toy-readout>
+				<dl class="grid grid-cols-2 gap-x-4 gap-y-3 md:grid-cols-1" data-toy-numbers></dl>
+				<div class="mt-5" data-toy-compass></div>
+			</div>
+		</div>
+
+		<figure class="border-t border-line">
+			<div class="bg-line/10" data-toy-diagram></div>
+			<figcaption class="px-6 py-3 font-mono text-[0.7rem] leading-relaxed text-ink-soft" data-toy-caption>
+				One frame spans about 400 m of open water.
+			</figcaption>
+		</figure>
+
+		{
+			playlists.map((p) => (
+				<div class="hidden border-t border-line p-6" data-toy-playlist={p.tier}>
+					<p class="font-mono text-xs uppercase tracking-wide text-ink-soft">Soundtrack</p>
+					<div class="mt-2 flex flex-wrap items-baseline justify-between gap-x-6 gap-y-2">
+						<div class="max-w-[48ch]">
+							<p class="font-display text-lg font-semibold">{p.name}</p>
+							<p class="mt-1 text-sm leading-relaxed text-ink-soft">{p.rationale}</p>
+						</div>
+						<button
+							type="button"
+							class="shrink-0 border border-line px-4 py-2 font-mono text-xs uppercase tracking-wide transition-colors hover:border-ink hover:text-ink"
+							data-toy-load-player={p.embed_url}
+							data-playlist-name={p.name}
+						>
+							Load player
+						</button>
+					</div>
+					<p class="mt-3 font-mono text-[0.7rem] text-ink-soft">
+						Loads from Spotify only when you press the button, so the page makes no third-party requests
+						until you ask it to.
+					</p>
+					<div data-toy-player-slot />
+				</div>
+			))
+		}
+	</div>
+
+	<noscript>
+		<p class="mt-4 max-w-[65ch] text-sm leading-relaxed text-ink-soft">
+			This one needs JavaScript, because it reads the forecast when you open the page rather than when the site
+			was built. The
+			<a
+				href="https://www.ndbc.noaa.gov/station_page.php?station=46237"
+				class="text-accent-blue underline underline-offset-2">San Francisco Bar buoy</a
+			> is the nearest real measurement.
+		</p>
+	</noscript>
+
+	<p class="mt-4 max-w-[65ch] font-mono text-xs leading-relaxed text-ink-soft">
+		Live from Open-Meteo's marine and weather models, sampled at {LINDA_MAR.latitude}, {LINDA_MAR.longitude} and
+		re-read each hour. This is a model forecast rather than a measurement: the nearest wave buoy is the San
+		Francisco Bar station, 24 km north, which is why Linda Mar sits in the marginal tier in the table below rather
+		than the close one.
+	</p>
+</section>
+
+<style>
+	/* Scoped rules, for elements that exist in this template and therefore carry Astro's scope
+	   attribute. Anything the script creates at runtime is styled in the global block below. */
+	#toy-root {
+		--toy-accent: var(--color-ink-soft);
+	}
+	#toy-root[data-tier="junk"] {
+		--toy-accent: var(--color-accent-yellow);
+	}
+	#toy-root[data-tier="fun"] {
+		--toy-accent: var(--color-accent-green);
+	}
+	#toy-root[data-tier="firing"] {
+		--toy-accent: var(--color-accent-blue);
+	}
+
+	[data-toy-eyebrow] {
+		color: var(--toy-accent);
+	}
+
+	[data-toy-diagram] {
+		line-height: 0;
+	}
+</style>
+
+<style is:global>
+	/* The diagram, compass and Spotify frame are built by the script after hydration, so they never
+	   receive Astro's scope attribute and scoped selectors silently fail to match them. Found the
+	   hard way: the drift animation resolved to `none` and the waves sat frozen while every other
+	   style looked fine. Every selector here is namespaced under #toy-root, which is unique to this
+	   page, so going global costs nothing in isolation. */
+	#toy-root [data-toy-diagram] svg {
+		display: block;
+		width: 100%;
+		height: auto;
+	}
+
+	/* Each layer advances exactly one crest spacing per wave period, which is what a real crest
+	   does, so the motion carries the same information the spacing does. */
+	@keyframes toy-drift {
+		from {
+			transform: translateX(0);
+		}
+		to {
+			transform: translateX(var(--drift-px, 120px));
+		}
+	}
+
+	#toy-root .toy-drift {
+		animation: toy-drift var(--drift-duration, 12s) linear infinite;
+		will-change: transform;
+	}
+
+	/* Colour drift only, and only when it is worth going. The geometry never changes with it, so
+	   the reading stays truthful while the mood does not. */
+	@keyframes toy-hue {
+		from {
+			filter: hue-rotate(0deg) saturate(1);
+		}
+		50% {
+			filter: hue-rotate(28deg) saturate(1.25);
+		}
+		to {
+			filter: hue-rotate(0deg) saturate(1);
+		}
+	}
+
+	#toy-root[data-tier="fun"] [data-toy-diagram] svg {
+		animation: toy-hue 32s ease-in-out infinite;
+	}
+	#toy-root[data-tier="firing"] [data-toy-diagram] svg {
+		animation: toy-hue 14s ease-in-out infinite;
+	}
+
+	@media (prefers-reduced-motion: reduce) {
+		#toy-root .toy-drift,
+		#toy-root [data-toy-diagram] svg {
+			animation: none !important;
+		}
+	}
+
+	#toy-root [data-toy-player-slot] iframe {
+		margin-top: 1rem;
+		width: 100%;
+		border: 0;
+		border-radius: 0;
+	}
+</style>
+
+<script src="../../../scripts/surf-forecast/live-conditions-toy.ts"></script>

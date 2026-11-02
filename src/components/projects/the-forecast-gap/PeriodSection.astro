@@ -1,0 +1,73 @@
+---
+// Period is reported as a definitional finding rather than an accuracy ranking. The table is the
+// right form here: five models by four numbers, no trend to show.
+import metadata from "../../../../public/data/surf-forecast/metadata.json";
+import { MODELS, SYSTEM_LABEL, type ModelId } from "../../../lib/surf-forecast/models";
+
+type Check = { n: number; ratio_to_apd: number; ratio_to_dpd: number; corr_apd: number | null; corr_dpd: number | null; tracks: string };
+const pd = metadata.period_definition as Record<string, Check | null>;
+const order: ModelId[] = ["ncep_gfswave016", "ncep_gfswave025", "ecmwf_wam", "ecmwf_wam025", "gwam"];
+const rows = order.map((id) => ({ id, label: MODELS[id].label, system: SYSTEM_LABEL[MODELS[id].system], c: pd[id] })).filter((r) => r.c !== null) as {
+	id: ModelId;
+	label: string;
+	system: string;
+	c: Check;
+}[];
+const noaa = pd.ncep_gfswave016;
+const ecmwf = pd.ecmwf_wam;
+if (!noaa || !ecmwf) throw new Error("period definition check missing");
+const r2 = (x: number | null) => (x === null ? "—" : x.toFixed(2));
+const trackLabel: Record<string, string> = { apd: "Average period", dpd: "Dominant period", undetermined: "Neither clearly" };
+---
+
+<section id="period" class="mx-auto max-w-7xl px-6 py-16 md:px-12 md:py-20">
+	<h2 class="font-display text-2xl font-semibold tracking-tight md:text-3xl">The variable that means three different things</h2>
+	<div class="mt-3 max-w-[65ch] space-y-4 text-base leading-relaxed text-ink-soft">
+		<p>
+			Period was meant to be the third variable scored here. It turned out not to be comparable at all. A buoy reports
+			two periods: the dominant period, where the most wave energy sits, and the average period of all the waves it
+			measured. Each wave model reports one "mean period", and the three systems compute it differently.
+		</p>
+		<p>
+			NOAA's runs at {noaa.ratio_to_apd.toFixed(2)} times the buoy's average period and follows the dominant period more
+			closely (correlation {r2(noaa.corr_dpd)}, against {r2(noaa.corr_apd)} for the average). ECMWF's runs at
+			{" "}{ecmwf.ratio_to_apd.toFixed(2)} times the average and tracks both equally. Scored against the buoy's average
+			period, every model would appear to overforecast by seconds and lose to "same as today" by an enormous margin, and
+			none of it would be a forecasting error. So period appears here as this finding, not as a ranking.
+		</p>
+	</div>
+	<div class="mt-8 overflow-x-auto">
+		<table class="w-full min-w-[680px] max-w-4xl border-collapse text-sm">
+			<caption class="pb-2 text-left text-xs text-ink-soft">
+				Each model's latest-run mean period against both buoy periods, at the same hours. Ratios are averaged pair by pair.
+			</caption>
+			<thead>
+				<tr class="border-b border-line text-left font-mono text-xs uppercase tracking-wide text-ink-soft">
+					<th class="py-2 pr-4">Model output</th>
+					<th class="py-2 pr-4">× average period</th>
+					<th class="py-2 pr-4">× dominant period</th>
+					<th class="py-2 pr-4">r, average</th>
+					<th class="py-2 pr-4">r, dominant</th>
+					<th class="py-2">Follows</th>
+				</tr>
+			</thead>
+			<tbody>
+				{
+					rows.map((r) => (
+						<tr class="border-b border-line/60">
+							<td class="py-2 pr-4">
+								{r.label}
+								{r.system !== r.label && <span class="block text-xs text-ink-soft">{r.system}</span>}
+							</td>
+							<td class="py-2 pr-4 font-mono">{r.c.ratio_to_apd.toFixed(2)}</td>
+							<td class="py-2 pr-4 font-mono">{r.c.ratio_to_dpd.toFixed(2)}</td>
+							<td class="py-2 pr-4 font-mono">{r2(r.c.corr_apd)}</td>
+							<td class="py-2 pr-4 font-mono">{r2(r.c.corr_dpd)}</td>
+							<td class="py-2 text-ink-soft">{trackLabel[r.c.tracks]}</td>
+						</tr>
+					))
+				}
+			</tbody>
+		</table>
+	</div>
+</section>

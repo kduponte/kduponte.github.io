@@ -16,6 +16,7 @@ export async function getStaticPaths() {
 		"the-noise-problem",
 		"the-dashboard-problem",
 		"the-22re-restoration",
+		"the-forecast-gap",
 	]);
 	const projects = (await getCollection("projects")).filter((project) => !dedicatedRouteSlugs.has(project.id));
 	return projects.map((project) => ({

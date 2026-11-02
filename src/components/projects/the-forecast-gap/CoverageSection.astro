@@ -1,0 +1,48 @@
+---
+import coverageData from "../../../../public/data/surf-forecast/coverage.json";
+
+const cov = (station: string, month: string) => {
+	const row = coverageData.rows.find((r) => r.station === station && r.month === month);
+	if (!row) throw new Error(`no coverage row for ${station} ${month}`);
+	return row.share;
+};
+const asPct = (x: number) => `${Math.round(x * 100)}%`;
+const sfAug = asPct(cov("46237", "2026-08"));
+const sfSep = asPct(cov("46237", "2026-09"));
+const waimeaMar = asPct(cov("51201", "2026-03"));
+const waimeaApr = asPct(cov("51201", "2026-04"));
+const montereyApr = asPct(cov("46042", "2026-04"));
+---
+
+<section id="coverage" class="mx-auto max-w-7xl px-6 py-16 md:px-12 md:py-20">
+	<h2 class="font-display text-2xl font-semibold tracking-tight md:text-3xl">What the buoys actually recorded</h2>
+	<div class="mt-3 max-w-[65ch] space-y-4 text-base leading-relaxed text-ink-soft">
+		<p>
+			Every accuracy number below depends on a buoy reporting at the hour a forecast was for. Most did, most of the
+			time. The exceptions fall in awkward places. The San Francisco Bar buoy, which every Northern California break
+			with a close buoy depends on, reported {sfAug} of August and {sfSep} of September. Waimea, the North Shore
+			buoy behind Pipeline, Sunset and Haleiwa, was dark for March ({waimeaMar}) and April ({waimeaApr}), the tail of
+			the big-wave season. Monterey reported no waves at all until April, and only {montereyApr} of that.
+		</p>
+		<p>
+			Nothing is filled in across a gap. No reading within 30 minutes of the forecast hour means no pair, so a
+			buoy's results come only from the months it was actually there.
+		</p>
+	</div>
+
+	<div id="fg-coverage" class="mt-8">
+		<div class="flex justify-end">
+			<button type="button" data-vg-table-toggle class="font-mono text-xs uppercase tracking-wide text-accent-blue" aria-pressed="false">
+				View as table
+			</button>
+		</div>
+		<div data-vg-chart class="mt-2 overflow-x-auto"></div>
+		<div data-vg-table class="mt-2 overflow-x-auto"></div>
+		<p class="mt-3 font-mono text-[0.7rem] leading-relaxed text-ink-soft">
+			Share of the four synoptic hours a day (00, 06, 12 and 18 UTC) with a wave-height reading. Months under 95% are
+			labelled.
+		</p>
+	</div>
+
+	<script src="../../../scripts/surf-forecast/coverage-chart.ts"></script>
+</section>

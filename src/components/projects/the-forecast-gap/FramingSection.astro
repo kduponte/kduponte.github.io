@@ -1,0 +1,28 @@
+---
+// Short framing before any result: what a buoy can and cannot tell you about a surf break.
+import metadata from "../../../../public/data/surf-forecast/metadata.json";
+import { SURF_BREAKS, uniqueBuoyStations } from "../../../lib/surf-forecast/spots";
+
+const months = metadata.window.months;
+const pairs = metadata.model_pairs.toLocaleString();
+---
+
+<section id="approach" class="mx-auto max-w-7xl px-6 py-16 md:px-12 md:py-20">
+	<h2 class="font-display text-2xl font-semibold tracking-tight md:text-3xl">A buoy is not a surf break</h2>
+	<div class="mt-3 max-w-[65ch] space-y-4 text-base leading-relaxed text-ink-soft">
+		<p>
+			This is the limitation worth stating before any result, not after. A buoy floats in deep water kilometres
+			offshore and measures open-ocean swell. What you actually ride depends on refraction, bathymetry, shadowing
+			and tide, and no buoy measures any of that. There is no free, public, archived record of observed surf height
+			at a break anywhere, so this checks forecasts against the {uniqueBuoyStations().length} buoys that sit closest
+			to {SURF_BREAKS.length} breaks across Hawaii, Northern California and Southern California, and says plainly
+			which breaks each buoy can speak for.
+		</p>
+		<p>
+			The forecasts come from Open-Meteo's archive of what each wave model predicted one to seven days before every
+			hour of the last {months} months. That archive is what makes this possible: instead of collecting forecasts
+			for a few weeks and waiting, it gives {pairs} forecasts scored against a buoy reading taken within 30 minutes
+			of the hour they were for.
+		</p>
+	</div>
+</section>

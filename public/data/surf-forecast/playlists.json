@@ -1,0 +1,30 @@
+{
+	"verified_at": "2026-10-09T05:10:36.622Z",
+	"note": "Titles captured at verification time via Spotify's public oEmbed endpoint. These are third-party playlists that can be renamed, made private or deleted at any time, so the page loads each player only on click and must survive an embed that never loads.",
+	"playlists": [
+		{
+			"tier": "junk",
+			"id": "37i9dQZF1DX76Wlfdnj7AP",
+			"name": "Beast Mode",
+			"url": "https://open.spotify.com/playlist/37i9dQZF1DX76Wlfdnj7AP",
+			"embed_url": "https://open.spotify.com/embed/playlist/37i9dQZF1DX76Wlfdnj7AP",
+			"rationale": "The ocean is not giving you a workout today, so go get one somewhere else."
+		},
+		{
+			"tier": "fun",
+			"id": "37i9dQZF1DXbSbnqxMTGx9",
+			"name": "Reggae Classics",
+			"url": "https://open.spotify.com/playlist/37i9dQZF1DXbSbnqxMTGx9",
+			"embed_url": "https://open.spotify.com/embed/playlist/37i9dQZF1DXbSbnqxMTGx9",
+			"rationale": "Chest high and clean is reggae weather. This is not negotiable."
+		},
+		{
+			"tier": "firing",
+			"id": "37i9dQZF1DWWJOmJ7nRx0C",
+			"name": "VOLUME",
+			"url": "https://open.spotify.com/playlist/37i9dQZF1DWWJOmJ7nRx0C",
+			"embed_url": "https://open.spotify.com/embed/playlist/37i9dQZF1DWWJOmJ7nRx0C",
+			"rationale": "For the drive over, while you talk yourself into it."
+		}
+	]
+}

@@ -1,0 +1,7 @@
+URL: https://coastwatch.pfeg.noaa.gov/erddap/tabledap/cwwcNDBCMet.csv?time,wvht,dpd,apd,mwd&station=%2246042%22&time%3E=2025-06-01T00:00:00Z&time%3C=2025-06-01T06:00:00Z
+STATUS: 400
+
+Error {
+    code=400;
+    message="Bad Request: Query error: Unrecognized variable=\"wvht\".";
+}

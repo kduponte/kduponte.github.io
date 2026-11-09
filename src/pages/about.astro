@@ -1,6 +1,7 @@
 ---
 import BaseLayout from "../layouts/BaseLayout.astro";
-import TagPill from "../components/TagPill.astro";
+import Chip from "../components/Chip.astro";
+import Sticker from "../components/Sticker.astro";
 
 const tags = ["FinTech", "Experimentation Platforms", "Strategic Analysis", "Data Engineering"];
 
@@ -16,20 +17,27 @@ const stack = [
 
 <BaseLayout
 	title="About"
+	theme="bubblegum"
 	description="Staff Data Scientist background in FinTech experimentation and full-stack data science, now growing into causal inference."
 >
-	<div class="mx-auto max-w-7xl px-6 py-20 md:px-12 md:py-28">
-		<p class="font-mono text-xs uppercase tracking-widest text-accent-blue">About</p>
-		<h1 class="font-display mt-2 max-w-2xl text-4xl font-semibold tracking-tight md:text-6xl">
-			Full-stack data scientist, FinTech background.
-		</h1>
+	<div class="relative overflow-hidden border-y-[3px] border-black">
+		<div class="halftone absolute inset-0 opacity-20" style="--dot: #2438ff; --cell: 14px" aria-hidden="true"></div>
+		<div class="relative mx-auto max-w-7xl px-6 pb-12 pt-10 md:px-12 md:pb-16">
+			<h1 class="max-w-5xl text-[clamp(3.5rem,12vw,10rem)]">
+				Full-stack data scientist, <span class="chip-serif">FinTech</span> background.
+			</h1>
+			<Sticker tone="lime" rotate={-8} class="absolute right-6 top-6 hidden w-28 text-sm md:grid">About<br />me</Sticker>
+		</div>
+	</div>
 
-		<div class="mt-16 grid grid-cols-1 gap-12 md:grid-cols-[220px_1fr] md:gap-16">
+	<div class="mx-auto max-w-7xl px-6 py-16 md:px-12 md:py-24">
+
+		<div class="grid grid-cols-1 gap-12 md:grid-cols-[220px_1fr] md:gap-16">
 			<div class="flex flex-row flex-wrap gap-2 md:sticky md:top-28 md:flex-col md:items-start md:self-start">
-				{tags.map((tag) => <TagPill tone="blue">{tag}</TagPill>)}
+				{tags.map((tag) => <Chip tone="cream">{tag}</Chip>)}
 			</div>
 
-			<div class="max-w-[70ch] space-y-6 text-base leading-relaxed text-ink md:text-lg">
+			<div class="max-w-[70ch] space-y-6 text-base font-medium leading-relaxed md:text-lg">
 				<p>
 					I'm a Staff Data Scientist at Intuit, working within Credit Karma, where I've spent my career at the
 					intersection of consumer FinTech and rigorous measurement, figuring out not just what's happening in the
@@ -48,16 +56,16 @@ const stack = [
 					business still needs a real answer.
 				</p>
 
-				<div class="border-y border-line py-8">
-					<p class="font-mono text-xs uppercase tracking-widest text-ink-soft">What I actually do</p>
+				<div class="raw-box shadow-hard-lg rounded-2xl bg-cream p-6 text-black md:p-8">
+					<p class="font-mono inline-block -rotate-1 bg-black px-2.5 py-1 text-[11px] uppercase text-lime">What I actually do</p>
 					<ul class="mt-6 space-y-5">
 						{
 							stack.map((item) => (
 								<li class="flex gap-4">
-									<span class="font-mono text-xs text-accent-blue">{item.step}</span>
+									<span class="font-mono text-xs text-cobalt">{item.step}</span>
 									<div>
-										<p class="font-medium">{item.label}</p>
-										<p class="text-sm text-ink-soft">{item.detail}</p>
+										<p class="font-extrabold">{item.label}</p>
+										<p class="text-sm font-normal text-ink-soft">{item.detail}</p>
 									</div>
 								</li>
 							))

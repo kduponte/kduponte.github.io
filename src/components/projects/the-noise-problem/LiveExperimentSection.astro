@@ -3,14 +3,14 @@
 ---
 
 <section id="live-experiment" class="mx-auto max-w-7xl px-6 py-16 md:px-12 md:py-20">
-	<h2 class="font-display text-2xl font-semibold tracking-tight md:text-3xl">One experiment, watched two ways</h2>
+	<h2 class="font-anton text-4xl md:text-5xl">One experiment, watched two ways</h2>
 	<p class="mt-3 max-w-[65ch] text-base leading-relaxed text-ink-soft">
 		A simulated A/B test on a continuous metric (think revenue or engagement per visitor), run twice on the exact
 		same simulated data: once on the raw metric, once adjusted with CUPED using each visitor's own pre-period value.
 		Both always land on the same real answer, watch which one gets there faster.
 	</p>
 
-	<form id="pp-controls" class="mt-8 grid grid-cols-2 gap-4 border border-line p-6 md:grid-cols-5">
+	<form id="pp-controls" class="mt-8 grid grid-cols-2 gap-4 raw-box rounded-xl bg-cream p-6 md:grid-cols-5">
 		<label class="flex flex-col gap-1 text-sm">
 			<span class="font-mono text-xs uppercase tracking-wide text-ink-soft">Pre/post correlation</span>
 			<input id="pp-correlation" type="range" min="0" max="0.95" step="0.05" class="accent-accent-blue w-full" />
@@ -18,22 +18,22 @@
 		</label>
 		<label class="flex flex-col gap-1 text-sm">
 			<span class="font-mono text-xs uppercase tracking-wide text-ink-soft">Scenario</span>
-			<select id="pp-scenario" class="border border-line bg-paper px-3 py-2 text-ink">
+			<select id="pp-scenario" class="border-2 border-black bg-paper px-3 py-2 text-ink">
 				<option value="none">No real difference</option>
 				<option value="lift">Real difference exists</option>
 			</select>
 		</label>
 		<label class="flex flex-col gap-1 text-sm">
 			<span class="font-mono text-xs uppercase tracking-wide text-ink-soft">B's lift (points)</span>
-			<input id="pp-lift" type="number" min="0" max="20" step="0.5" class="border border-line bg-paper px-3 py-2 text-ink disabled:opacity-40" />
+			<input id="pp-lift" type="number" min="0" max="20" step="0.5" class="border-2 border-black bg-paper px-3 py-2 text-ink disabled:opacity-40" />
 		</label>
 		<label class="flex flex-col gap-1 text-sm">
-			<span class="font-mono text-xs uppercase tracking-wide text-ink-soft">Visitors/day/arm</span>
-			<input id="pp-visitors" type="number" min="5" max="500" step="5" class="border border-line bg-paper px-3 py-2 text-ink" />
+			<span class="font-mono text-xs uppercase tracking-wide text-ink-soft">Visitors per day per arm</span>
+			<input id="pp-visitors" type="number" min="5" max="500" step="5" class="border-2 border-black bg-paper px-3 py-2 text-ink" />
 		</label>
 		<label class="flex flex-col gap-1 text-sm">
 			<span class="font-mono text-xs uppercase tracking-wide text-ink-soft">Days to run</span>
-			<input id="pp-days" type="number" min="5" max="60" step="1" class="border border-line bg-paper px-3 py-2 text-ink" />
+			<input id="pp-days" type="number" min="5" max="60" step="1" class="border-2 border-black bg-paper px-3 py-2 text-ink" />
 		</label>
 		<div class="col-span-2 flex items-end md:col-span-5">
 			<button
@@ -47,7 +47,7 @@
 	</form>
 
 	<div id="pp-live-experiment" class="mt-6">
-		<div data-vg-summary class="border border-line p-4 font-mono text-sm"></div>
+		<div data-vg-summary class="raw-box rounded-xl bg-cream p-4 font-mono text-sm"></div>
 		<div class="mt-4 flex justify-end">
 			<button type="button" data-vg-table-toggle class="font-mono text-xs uppercase tracking-wide text-accent-blue" aria-pressed="false">
 				View as table

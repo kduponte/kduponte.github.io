@@ -1,26 +1,88 @@
 @import "tailwindcss";
 
 @theme {
-	/* Base palette — warm paper/ink, Popeye-cover-inspired accent system */
-	--color-paper: #f4f0e6;
-	--color-ink: #17140f;
-	--color-ink-soft: #5c5647;
-	--color-line: #dad2c0;
+	/* Raw palette: flat, saturated, no gradients */
+	--color-cream: #f6f1e4;
+	--color-black: #111111;
+	--color-cobalt: #2438ff;
+	--color-tomato: #ff5a1f;
+	--color-lime: #c8ff3d;
+	--color-bubblegum: #ff7ac8;
+	--color-sky: #8fd0ff;
+	--color-sun: #ffd400;
 
-	/* Accents — each has one job. Don't mix them freely. */
-	--color-accent-blue: #2e4a87; /* primary: CTAs, links, logo, primary tags */
-	--color-accent-green: #4a7d4e; /* secondary: status indicators */
-	--color-accent-yellow: #e3ac3d; /* tertiary: sparing, hover/stamp moments only */
+	/* Legacy names kept as aliases so existing project pages keep working
+	   until Phase 3 migrates them. Prefer the names above in new code. */
+	--color-paper: var(--color-cream);
+	--color-ink: var(--color-black);
+	--color-ink-soft: #4a463b;
+	--color-line: #111111;
+	--color-accent-blue: var(--color-cobalt);
+	--color-accent-green: #137a3a;
+	--color-accent-yellow: #f2a100;
 
-	--font-display: "Fraunces Variable", "Fraunces", ui-serif, Georgia, serif;
-	--font-sans: "Inter Variable", "Inter", ui-sans-serif, system-ui, sans-serif;
-	--font-mono: "JetBrains Mono", ui-monospace, "SFMono-Regular", monospace;
+	--font-anton: "Anton", "Impact", "Haettenschweiler", sans-serif;
+	--font-display: "Bricolage Grotesque Variable", "Bricolage Grotesque", ui-sans-serif, system-ui, sans-serif;
+	--font-sans: "Bricolage Grotesque Variable", "Bricolage Grotesque", ui-sans-serif, system-ui, sans-serif;
+	--font-serif-accent: "Instrument Serif", ui-serif, Georgia, serif;
+	--font-mono: "Silkscreen", ui-monospace, "SFMono-Regular", monospace;
+
+	--shadow-hard: 5px 5px 0 var(--color-black);
+	--shadow-hard-lg: 8px 8px 0 var(--color-black);
+	--shadow-hard-sm: 3px 3px 0 var(--color-black);
+}
+
+/* Themed page field. `inline` keeps the var() reference in the utility so
+   <body data-theme="..."> overrides take effect instead of resolving at :root. */
+@theme inline {
+	--color-field: var(--page-field);
+	--color-field-ink: var(--page-ink);
+	--color-spot: var(--page-spot);
+}
+
+:root {
+	--page-field: var(--color-cream);
+	--page-ink: var(--color-black);
+	--page-spot: var(--color-cobalt);
+}
+
+/* Per-page palettes. Each page picks one with <BaseLayout theme="...">.
+   Rule of thumb: at most three colors on screen at once. */
+[data-theme="paper"] {
+	--page-field: var(--color-cream);
+	--page-ink: var(--color-black);
+	--page-spot: var(--color-cobalt);
+}
+[data-theme="cobalt"] {
+	--page-field: var(--color-cobalt);
+	--page-ink: var(--color-cream);
+	--page-spot: var(--color-lime);
+}
+[data-theme="tomato"] {
+	--page-field: var(--color-tomato);
+	--page-ink: var(--color-black);
+	--page-spot: var(--color-sky);
+}
+[data-theme="sun"] {
+	--page-field: var(--color-sun);
+	--page-ink: var(--color-black);
+	--page-spot: var(--color-cobalt);
+}
+[data-theme="bubblegum"] {
+	--page-field: var(--color-bubblegum);
+	--page-ink: var(--color-black);
+	--page-spot: var(--color-cobalt);
+}
+[data-theme="lime"] {
+	--page-field: var(--color-lime);
+	--page-ink: var(--color-black);
+	--page-spot: var(--color-cobalt);
 }
 
 @layer base {
 	html {
-		background-color: var(--color-paper);
-		color: var(--color-ink);
+		background-color: var(--color-cream);
+		color: var(--color-black);
 		font-family: var(--font-sans);
 		-webkit-font-smoothing: antialiased;
 	}
@@ -29,22 +91,93 @@
 		min-height: 100dvh;
 	}
 
-	h1,
+	/* Poster headline: condensed, uppercase, tight. */
+	h1 {
+		font-family: var(--font-anton);
+		font-weight: 400;
+		font-synthesis: none;
+		text-transform: uppercase;
+		line-height: 0.92;
+		letter-spacing: 0.005em;
+	}
+
 	h2,
 	h3,
 	.font-display {
 		font-family: var(--font-display);
-		letter-spacing: -0.01em;
+		font-weight: 800;
+		letter-spacing: -0.02em;
+		line-height: 1.05;
+	}
+
+	.font-anton {
+		font-family: var(--font-anton);
+		font-weight: 400;
+		font-synthesis: none;
+		text-transform: uppercase;
 	}
 
 	.font-mono,
 	.tag-pill {
 		font-family: var(--font-mono);
-		letter-spacing: 0.02em;
+		font-synthesis: none;
+		letter-spacing: 0.04em;
+	}
+
+	/* The one serif moment: an italic word set in a chip inside a headline. */
+	.chip-serif {
+		font-family: var(--font-serif-accent);
+		font-style: italic;
+		font-weight: 400;
+		text-transform: none;
+		background: var(--color-cream);
+		color: var(--color-black);
+		padding: 0 0.15em;
+		border-radius: 0.12em;
 	}
 
 	::selection {
-		background-color: var(--color-accent-yellow);
-		color: var(--color-ink);
+		background-color: var(--color-lime);
+		color: var(--color-black);
+	}
+
+	:focus-visible {
+		outline: 3px solid var(--color-black);
+		outline-offset: 3px;
+		box-shadow: 0 0 0 6px var(--color-lime);
+	}
+}
+
+@layer components {
+	/* Raw / brutalist surface: heavy outline, hard shadow, flat fill. */
+	.raw-box {
+		border: 3px solid var(--color-black);
+		box-shadow: var(--shadow-hard);
+	}
+
+	.raw-press {
+		transition:
+			transform 80ms linear,
+			box-shadow 80ms linear;
+	}
+	.raw-press:hover {
+		transform: translate(-2px, -2px);
+		box-shadow: 7px 7px 0 var(--color-black);
+	}
+	.raw-press:active {
+		transform: translate(4px, 4px);
+		box-shadow: 1px 1px 0 var(--color-black);
+	}
+
+	/* Halftone dot screen. Set --dot (dot color) and --cell (grid size) on the element. */
+	.halftone {
+		background-image: radial-gradient(circle, var(--dot, var(--color-black)) 32%, transparent 34%);
+		background-size: var(--cell, 10px) var(--cell, 10px);
+	}
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.raw-press {
+		transition: none;
 	}
 }

@@ -20,7 +20,7 @@ function formatPValue(p: number): string {
 
 function flagCell(flagged: boolean, isFalsePositive: boolean): string {
 	if (!flagged) return `<span class="text-ink-soft">&mdash;</span>`;
-	const cls = isFalsePositive ? "text-accent-yellow font-semibold" : "text-accent-blue font-semibold";
+	const cls = isFalsePositive ? "text-[#b83a0a] font-semibold" : "text-accent-blue font-semibold";
 	const label = isFalsePositive ? "flagged (false)" : "flagged";
 	return `<span class="${cls}">${label}</span>`;
 }

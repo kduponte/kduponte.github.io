@@ -1,0 +1,34 @@
+---
+interface Props {
+	as?: "span" | "a" | "button";
+	tone?: "cream" | "lime" | "black" | "tomato" | "sky" | "bubblegum" | "sun" | "cobalt";
+	interactive?: boolean;
+	class?: string;
+	[attr: string]: unknown;
+}
+
+const { as: Tag = "span", tone = "cream", interactive = false, class: className = "", ...attrs } = Astro.props;
+
+const tones: Record<string, string> = {
+	cream: "bg-cream text-black",
+	lime: "bg-lime text-black",
+	black: "bg-black text-lime",
+	tomato: "bg-tomato text-black",
+	sky: "bg-sky text-black",
+	bubblegum: "bg-bubblegum text-black",
+	sun: "bg-sun text-black",
+	cobalt: "bg-cobalt text-cream",
+};
+---
+
+<Tag
+	class:list={[
+		"font-mono raw-box shadow-hard-sm inline-flex items-center gap-1 rounded-full px-3.5 py-1.5 text-[11px] uppercase",
+		tones[tone],
+		interactive && "raw-press",
+		className,
+	]}
+	{...attrs}
+>
+	<slot />
+</Tag>

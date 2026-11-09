@@ -1,0 +1,25 @@
+---
+interface Props {
+	/** Small pixel-font label, e.g. "Now restoring". */
+	label: string;
+	tone?: "cream" | "lime" | "sky" | "sun" | "bubblegum";
+	class?: string;
+}
+
+const { label, tone = "cream", class: className = "" } = Astro.props;
+
+const tones: Record<string, string> = {
+	cream: "bg-cream",
+	lime: "bg-lime",
+	sky: "bg-sky",
+	sun: "bg-sun",
+	bubblegum: "bg-bubblegum",
+};
+---
+
+<aside class:list={["raw-box shadow-hard relative rounded-2xl p-5 pt-8 text-black", tones[tone], className]}>
+	<span class="font-mono absolute -top-px right-4 rounded-b-lg bg-black px-2.5 py-1 text-[10px] uppercase text-lime">
+		{label}
+	</span>
+	<slot />
+</aside>

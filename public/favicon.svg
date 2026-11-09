@@ -1,5 +1,7 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
-  <circle cx="50" cy="50" r="45" fill="#17140f" />
-  <polygon points="50,20 80,80 20,80" fill="#2e4a87" />
-  <rect x="0" y="45" width="100" height="10" fill="#f4f0e6" style="mix-blend-mode:difference" />
+  <rect x="5" y="5" width="90" height="90" rx="18" fill="#c8ff3d" stroke="#111" stroke-width="8" />
+  <g fill="none" stroke="#111" stroke-width="10" stroke-linejoin="miter" stroke-linecap="butt">
+    <path d="M24 26 V74 M44 26 L24 50 L44 74" />
+    <path d="M56 26 V74 H64 A24 24 0 0 0 64 26 Z" />
+  </g>
 </svg>

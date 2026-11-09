@@ -1,0 +1,55 @@
+---
+import { getCollection } from "astro:content";
+
+const projects = (await getCollection("projects")).sort((a, b) => a.data.order - b.data.order);
+const log = (await getCollection("truckLog")).sort((a, b) => b.data.date.valueOf() - a.data.date.valueOf());
+
+const items: string[] = [];
+if (log[0]) {
+	const d = log[0].data.date.toISOString().slice(0, 10);
+	items.push(`Truck log ${d}: ${log[0].data.title}`);
+}
+for (const p of projects.filter((p) => p.data.status === "live").slice(0, 4)) {
+	items.push(`Project: ${p.data.title}`);
+}
+const line = items.join("  ★  ");
+---
+
+<div class="ticker overflow-hidden border-b-[3px] border-black bg-black py-2 text-lime" role="marquee" aria-label="Latest updates">
+	<div class="ticker-track font-mono flex w-max whitespace-nowrap text-[11px] uppercase">
+		<span class="px-6" data-ticker-line>{line}  ★  <span data-local-time>—</span></span>
+		<span class="px-6" aria-hidden="true">{line}  ★  <span data-local-time>—</span></span>
+	</div>
+</div>
+
+<script>
+	// Live local times for the two places this site is written from.
+	const zones: [string, string][] = [
+		["Hilo", "Pacific/Honolulu"],
+		["Bay Area", "America/Los_Angeles"],
+	];
+	const fmt = (tz: string) =>
+		new Intl.DateTimeFormat("en-US", { hour: "numeric", minute: "2-digit", timeZone: tz }).format(new Date());
+	const update = () => {
+		const text = zones.map(([name, tz]) => `${name} ${fmt(tz)}`).join(" / ");
+		document.querySelectorAll("[data-local-time]").forEach((el) => (el.textContent = text));
+	};
+	update();
+	setInterval(update, 30_000);
+</script>
+
+<style>
+	.ticker-track {
+		animation: ticker 40s linear infinite;
+	}
+	@keyframes ticker {
+		to {
+			transform: translateX(-50%);
+		}
+	}
+	@media (prefers-reduced-motion: reduce) {
+		.ticker-track {
+			animation: none;
+		}
+	}
+</style>

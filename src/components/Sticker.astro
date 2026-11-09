@@ -1,0 +1,32 @@
+---
+interface Props {
+	tone?: "lime" | "bubblegum" | "sun" | "sky" | "tomato" | "cream";
+	/** Degrees of tilt. */
+	rotate?: number;
+	shape?: "circle" | "rect";
+	class?: string;
+}
+
+const { tone = "bubblegum", rotate = 8, shape = "circle", class: className = "" } = Astro.props;
+
+const tones: Record<string, string> = {
+	lime: "bg-lime",
+	bubblegum: "bg-bubblegum",
+	sun: "bg-sun",
+	sky: "bg-sky",
+	tomato: "bg-tomato",
+	cream: "bg-cream",
+};
+---
+
+<div
+	class:list={[
+		"raw-box shadow-hard grid place-items-center text-center font-extrabold leading-tight text-black",
+		tones[tone],
+		shape === "circle" ? "aspect-square rounded-full p-4" : "rounded-lg px-4 py-2",
+		className,
+	]}
+	style={`transform: rotate(${rotate}deg)`}
+>
+	<span><slot /></span>
+</div>

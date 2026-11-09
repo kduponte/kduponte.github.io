@@ -1,4 +1,7 @@
 ---
+import Chip from "../Chip.astro";
+import { projectTheme } from "../../lib/project-theme";
+
 interface Props {
 	eyebrow?: string;
 	title: string;
@@ -9,33 +12,55 @@ interface Props {
 }
 
 const { eyebrow, title, subtitle, summary, primaryCta, secondaryCta } = Astro.props;
+
+// Each project owns one tone (see lib/project-theme.ts), derived from its URL slug.
+const slug = Astro.url.pathname.split("/").filter(Boolean).pop() ?? "";
+const theme = projectTheme(slug);
+// Strip the legacy "[ ... ]" wrapping from eyebrow strings.
+const eyebrowText = eyebrow?.replace(/^\[\s*|\s*\]$/g, "");
 ---
 
-<header class="mx-auto max-w-4xl px-6 py-20 text-center md:px-12 md:py-28">
-	{eyebrow && <p class="font-mono text-xs uppercase tracking-widest text-accent-blue">{eyebrow}</p>}
-	<h1 class="font-display mt-4 text-4xl font-semibold tracking-tight md:text-6xl">{title}</h1>
-	{subtitle && <p class="font-display mt-4 text-xl text-ink-soft md:text-2xl">{subtitle}</p>}
-	<p class="mx-auto mt-6 max-w-[60ch] text-base leading-relaxed text-ink-soft md:text-lg">{summary}</p>
-	{
-		(primaryCta || secondaryCta) && (
-			<div class="mt-8 flex flex-wrap items-center justify-center gap-4">
-				{primaryCta && (
-					<a
-						href={primaryCta.href}
-						class="border border-ink bg-ink px-5 py-2.5 font-mono text-xs uppercase tracking-wide text-paper transition-colors hover:bg-accent-blue hover:border-accent-blue"
-					>
-						{primaryCta.label}
-					</a>
-				)}
-				{secondaryCta && (
-					<a
-						href={secondaryCta.href}
-						class="border border-line px-5 py-2.5 font-mono text-xs uppercase tracking-wide text-ink transition-colors hover:border-accent-blue hover:text-accent-blue"
-					>
-						{secondaryCta.label}
-					</a>
-				)}
+<header
+	class:list={["relative overflow-hidden border-y-[3px] border-black", theme.fill]}
+	style={`--dot: ${theme.dot}; --cell: 14px;`}
+>
+	<div class="halftone absolute inset-0 opacity-20" aria-hidden="true"></div>
+	<div class="relative mx-auto grid max-w-7xl grid-cols-1 gap-8 px-6 pb-14 pt-10 md:grid-cols-12 md:px-12 md:pb-20 md:pt-14">
+		<div class="md:col-span-12">
+			{
+				eyebrowText && (
+					<p class="font-mono inline-block -rotate-1 bg-black px-2.5 py-1 text-[11px] uppercase text-lime">
+						{eyebrowText}
+					</p>
+				)
+			}
+			<h1 class="mt-4 text-[clamp(3.5rem,13vw,11rem)] [text-wrap:balance]">{title}</h1>
+		</div>
+		<div class="md:col-span-7">
+			{subtitle && <p class="text-2xl font-extrabold leading-tight md:text-3xl">{subtitle}</p>}
+			<div class="raw-box shadow-hard-lg mt-6 rounded-2xl bg-cream p-6 text-black">
+				<p class="text-base font-medium leading-relaxed md:text-lg">{summary}</p>
 			</div>
-		)
-	}
+			{
+				(primaryCta || secondaryCta) && (
+					<div class="mt-8 flex flex-wrap items-center gap-4">
+						{primaryCta && (
+							<Chip as="a" href={primaryCta.href} tone="black" interactive class="px-5 py-2.5 text-xs">
+								{primaryCta.label}
+							</Chip>
+						)}
+						{secondaryCta && (
+							<Chip as="a" href={secondaryCta.href} tone="cream" interactive class="px-5 py-2.5 text-xs">
+								{secondaryCta.label}
+							</Chip>
+						)}
+					</div>
+				)
+			}
+		</div>
+		<!-- Reserved for a visual (e.g. the 3D truck) on the right half. -->
+		<div class="md:col-span-5">
+			<slot />
+		</div>
+	</div>
 </header>

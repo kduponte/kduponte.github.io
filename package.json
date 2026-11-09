@@ -27,21 +27,25 @@
     "surf-forecast:verify-playlists": "tsx scripts/surf-forecast/collect/verify-playlists.ts",
     "surf-forecast:choose-break-points": "tsx scripts/surf-forecast/collect/choose-break-points.ts",
     "surf-forecast:collect-break-forecasts": "tsx scripts/surf-forecast/collect/collect-break-forecasts.ts",
-    "surf-forecast:build-break-data": "tsx scripts/surf-forecast/build-break-data.ts"
+    "surf-forecast:build-break-data": "tsx scripts/surf-forecast/build-break-data.ts",
+    "the-noise-problem:build-outlier-findings": "tsx scripts/the-noise-problem/build-outlier-findings.ts"
   },
   "dependencies": {
     "@astrojs/sitemap": "^3.7.3",
-    "@fontsource-variable/fraunces": "^5.3.0",
-    "@fontsource-variable/inter": "^5.3.0",
-    "@fontsource/jetbrains-mono": "^5.3.0",
+    "@fontsource-variable/bricolage-grotesque": "^5.3.0",
+    "@fontsource/anton": "^5.3.0",
+    "@fontsource/instrument-serif": "^5.3.0",
+    "@fontsource/silkscreen": "^5.3.0",
     "@observablehq/plot": "^0.6.17",
     "@tailwindcss/vite": "^4.3.3",
     "astro": "^7.1.6",
-    "tailwindcss": "^4.3.3"
+    "tailwindcss": "^4.3.3",
+    "three": "^0.187.0"
   },
   "devDependencies": {
     "@astrojs/check": "^0.9.10",
     "@types/node": "^26.1.2",
+    "@types/three": "^0.187.0",
     "cheerio": "^1.2.0",
     "jsdom": "^30.0.1",
     "playwright": "^1.62.1",

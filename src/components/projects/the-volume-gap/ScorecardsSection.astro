@@ -21,7 +21,7 @@ const SCORE_ROWS: { key: keyof Omit<SourceScores, "source_id">; label: string; s
 ---
 
 <section id="scorecards" class="mx-auto max-w-7xl px-6 py-16 md:px-12 md:py-20">
-	<h2 class="font-display text-2xl font-semibold tracking-tight md:text-3xl">Recommendation-system profiles</h2>
+	<h2 class="font-anton text-4xl md:text-5xl">Recommendation-system profiles</h2>
 	<p class="mt-3 max-w-[65ch] text-base leading-relaxed text-ink-soft">
 		These scores characterize how each system behaves, not how good it is. A high complexity score isn't a flaw and
 		a high transparency score isn't a guarantee of accuracy. Where a score reads "not measurable," that means we
@@ -33,7 +33,7 @@ const SCORE_ROWS: { key: keyof Omit<SourceScores, "source_id">; label: string; s
 				const source = sourceById.get(score.source_id);
 				if (!source) return null;
 				return (
-					<div class="border border-line p-6">
+					<div class="raw-box rounded-xl bg-cream p-6">
 						<p class="font-display text-lg font-semibold">{source.source_name}</p>
 						<div class="mt-4 space-y-3">
 							{SCORE_ROWS.map((row) => {
@@ -46,7 +46,7 @@ const SCORE_ROWS: { key: keyof Omit<SourceScores, "source_id">; label: string; s
 											<span>{row.label}</span>
 											<span>{value === null ? "not measurable" : isSigned ? `${value >= 0 ? "+" : ""}${(value * 100).toFixed(0)}%` : value.toFixed(2)}</span>
 										</div>
-										<div class="mt-1 h-2 w-full border border-line bg-paper">
+										<div class="mt-1 h-2 w-full border-2 border-black bg-paper">
 											{value === null ? (
 												<div class="h-full w-full bg-[repeating-linear-gradient(45deg,var(--color-line),var(--color-line)_4px,transparent_4px,transparent_8px)]" />
 											) : (

@@ -17,7 +17,7 @@ const playlists = playlistData.playlists;
 ---
 
 <section id="linda-mar" class="mx-auto max-w-7xl px-6 py-16 md:px-12 md:py-20">
-	<h2 class="font-display text-2xl font-semibold tracking-tight md:text-3xl">Should I go surf right now?</h2>
+	<h2 class="font-anton text-4xl md:text-5xl">Should I go surf right now?</h2>
 	<div class="mt-3 max-w-[65ch] space-y-4">
 		<p class="text-base leading-relaxed text-ink-soft">
 			My home break is Linda Mar, in Pacifica. It is an exposed beach break that is small most of the time and
@@ -34,7 +34,7 @@ const playlists = playlistData.playlists;
 		</p>
 	</div>
 
-	<div id="toy-root" class="mt-8 border border-line" data-tier="loading">
+	<div id="toy-root" class="mt-8 raw-box rounded-xl bg-cream" data-tier="loading">
 		<div class="flex flex-wrap items-baseline justify-between gap-x-6 gap-y-1 border-b border-line px-6 py-4">
 			<p class="font-mono text-xs uppercase tracking-wide" data-toy-eyebrow>Reading the forecast</p>
 			<p class="font-mono text-xs text-ink-soft" data-toy-stamp>{LINDA_MAR.name}</p>
@@ -74,7 +74,7 @@ const playlists = playlistData.playlists;
 						</div>
 						<button
 							type="button"
-							class="shrink-0 border border-line px-4 py-2 font-mono text-xs uppercase tracking-wide transition-colors hover:border-ink hover:text-ink"
+							class="shrink-0 border-2 border-black px-4 py-2 font-mono text-xs uppercase tracking-wide transition-colors hover:bg-lime"
 							data-toy-load-player={p.embed_url}
 							data-playlist-name={p.name}
 						>

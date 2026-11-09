@@ -1,78 +1,113 @@
 ---
 import { getCollection } from "astro:content";
 import BaseLayout from "../layouts/BaseLayout.astro";
-import Logo from "../components/Logo.astro";
+import Sticker from "../components/Sticker.astro";
+import Widget from "../components/Widget.astro";
+import Chip from "../components/Chip.astro";
 import SectionHeading from "../components/SectionHeading.astro";
 import ProjectCard from "../components/ProjectCard.astro";
 
-const projects = (await getCollection("projects")).sort((a, b) => a.data.order - b.data.order).slice(0, 2);
+const projects = (await getCollection("projects"))
+	.filter((p) => p.data.status !== "coming-soon")
+	.sort((a, b) => a.data.order - b.data.order)
+	.slice(0, 4);
+
+const log = (await getCollection("truckLog")).sort((a, b) => b.data.date.valueOf() - a.data.date.valueOf());
+const latest = log[0];
+const latestDate = latest?.data.date.toISOString().slice(0, 10);
+
+// Asymmetric collage: span (of 12 cols), tilt, and vertical offset per card.
+const layout = [
+	{ cls: "md:col-span-7", rotate: -0.8 },
+	{ cls: "md:col-span-5 md:mt-12", rotate: 1 },
+	{ cls: "md:col-span-5", rotate: 0.8 },
+	{ cls: "md:col-span-7 md:mt-8", rotate: -0.5 },
+];
 ---
 
 <BaseLayout
 	title="Home"
+	theme="cobalt"
 	description="Kyle DuPonte, Staff Data Scientist. 10+ years in FinTech, working across full-stack analytics and experimentation."
 >
-	<section class="border-b border-line bg-ink text-paper">
-		<div class="mx-auto flex min-h-[calc(100dvh-73px)] max-w-7xl flex-col justify-center px-6 py-24 md:px-12">
-			<Logo variant="full" class="mb-12" />
+	<section class="relative overflow-hidden border-y-[3px] border-black">
+		<div class="halftone absolute inset-0 opacity-40" style="--dot: #ff5a1f; --cell: 16px" aria-hidden="true"></div>
+		<div class="relative mx-auto max-w-7xl px-6 pb-16 pt-10 md:px-12 md:pb-24 md:pt-14">
+			<h1
+				class="text-[clamp(5.5rem,26vw,22rem)] text-lime"
+				style="text-shadow: 6px 6px 0 #111; -webkit-text-stroke: 2px #111"
+			>
+				Kyle<br />DuPonte
+			</h1>
 
-			<h1 class="font-display max-w-3xl text-5xl font-semibold tracking-tight md:text-8xl">Kyle DuPonte</h1>
-			<p class="mt-6 max-w-2xl text-lg text-paper/80 md:text-2xl">
-				Staff Data Scientist at Intuit. 10+ years in FinTech, working across full-stack analytics and
-				experimentation.
-			</p>
+			<div class="mt-8 grid grid-cols-1 items-start gap-8 md:grid-cols-12">
+				<div class="raw-box shadow-hard-lg rounded-2xl bg-cream p-6 text-black md:col-span-6">
+					<p class="text-xl font-bold leading-snug md:text-2xl">
+						Staff Data Scientist at Intuit. 10+ years in FinTech, working across full-stack analytics and
+						<span class="chip-serif">experimentation</span>.
+					</p>
+					<div class="mt-5 flex flex-wrap gap-3">
+						<Chip tone="lime">SF Bay Area</Chip>
+						<Chip tone="sky">Experimentation</Chip>
+						<Chip as="a" href="/experience" tone="black" interactive>Experience →</Chip>
+					</div>
+				</div>
 
-			<ul class="mt-8 flex flex-wrap gap-3 font-mono text-xs uppercase tracking-wide text-paper/70">
-				<li class="rounded-full border border-paper/30 px-3 py-1">[ SF Bay Area ]</li>
-				<li class="rounded-full border border-paper/30 px-3 py-1">[ Experimentation ]</li>
-			</ul>
+				{
+					latest && (
+						<Widget label="Now restoring" tone="sun" class="md:col-span-4 md:col-start-8">
+							<p class="font-mono text-[11px] uppercase">Truck log · {latestDate}</p>
+							<p class="mt-2 text-lg font-extrabold leading-tight">{latest.data.title}</p>
+							<a
+								href="/projects/the-22re-restoration"
+								class="font-mono mt-3 inline-block text-xs uppercase underline decoration-2 underline-offset-4"
+							>
+								Follow the build →
+							</a>
+						</Widget>
+					)
+				}
+			</div>
 
-			<div class="mt-10 flex flex-wrap gap-4">
-				<a
-					href="/experience"
-					class="rounded-full border border-paper px-6 py-3 text-sm font-medium transition-colors hover:bg-paper hover:text-ink"
-				>
-					View Experience
-				</a>
-				<a
-					href="#contact-heading"
-					class="rounded-full border border-paper/40 px-6 py-3 text-sm font-medium text-paper/90 transition-colors hover:border-paper"
-				>
-					Get in Touch
-				</a>
+			<Sticker tone="bubblegum" rotate={12} class="absolute right-4 top-6 hidden w-28 text-sm md:grid lg:right-16 lg:w-36 lg:text-base">
+				10+<br />years<br />in<br />FinTech
+			</Sticker>
+		</div>
+	</section>
+
+	<section class="border-b-[3px] border-black bg-cream text-black">
+		<div class="mx-auto grid max-w-7xl grid-cols-1 gap-8 px-6 py-20 md:grid-cols-12 md:px-12 md:py-28">
+			<div class="md:col-span-5">
+				<SectionHeading eyebrow="About" title="Experimentation is the throughline." />
+			</div>
+			<div class="md:col-span-6 md:col-start-7">
+				<p class="text-lg font-medium leading-relaxed md:text-xl">
+					I'm the person teams come to for experimentation platform expertise: building the tooling, defining the
+					guardrails, and helping teams make sense of a messy result. Lately I've been picking up causal
+					inference too, for the questions a randomized test can't answer.
+				</p>
+				<Chip as="a" href="/about" tone="lime" interactive class="mt-6">Read the full story →</Chip>
 			</div>
 		</div>
 	</section>
 
-	<section class="border-b border-line">
-		<div class="mx-auto max-w-7xl px-6 py-20 md:px-12 md:py-28">
-			<SectionHeading eyebrow="About" title="Experimentation is the throughline." />
-			<p class="mt-6 max-w-[65ch] text-base leading-relaxed text-ink-soft md:text-lg">
-				I'm the person teams come to for experimentation platform expertise: building the tooling, defining the
-				guardrails, and helping teams make sense of a messy result. Lately I've been picking up causal inference
-				too, for the questions a randomized test can't answer.
-			</p>
-			<a href="/about" class="mt-6 inline-block font-mono text-xs uppercase tracking-wide text-accent-blue"
-				>Read the full story →</a
-			>
-		</div>
-	</section>
-
-	<section class="border-b border-line">
+	<section class="border-b-[3px] border-black bg-sky text-black">
 		<div class="mx-auto max-w-7xl px-6 py-20 md:px-12 md:py-28">
 			<div class="flex flex-wrap items-end justify-between gap-4">
 				<SectionHeading eyebrow="Projects" title="Portfolio, in progress." />
-				<a href="/projects" class="font-mono text-xs uppercase tracking-wide text-accent-blue">View all →</a>
+				<Chip as="a" href="/projects" tone="black" interactive>View all →</Chip>
 			</div>
-			<div class="mt-10 grid grid-cols-1 gap-6 md:grid-cols-2">
+			<div class="mt-12 grid grid-cols-1 gap-8 md:grid-cols-12">
 				{
-					projects.map((project) => (
+					projects.map((project, i) => (
 						<ProjectCard
 							slug={project.id}
 							title={project.data.title}
 							summary={project.data.summary}
 							status={project.data.status}
 							tags={project.data.tags}
+							rotate={layout[i % layout.length].rotate}
+							class={layout[i % layout.length].cls}
 						/>
 					))
 				}

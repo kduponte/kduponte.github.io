@@ -1,5 +1,6 @@
 ---
 import ProjectHeader from "../../editorial/ProjectHeader.astro";
+import TruckViewer from "../../three/TruckViewer.astro";
 ---
 
 <ProjectHeader
@@ -9,4 +10,6 @@ import ProjectHeader from "../../editorial/ProjectHeader.astro";
 	summary="This truck already has an incredible story attached to it, but I get to write its next chapter. I'll be restoring it with my five-year-old son, Noah, starting with a rusted-through gas tank. In addition to sharing the buildout, I'll be looking at real data along the way to answer questions like: why this engine became so iconic, where it actually tends to fail, and why it matters in Hawaii."
 	primaryCta={{ label: "See what breaks", href: "#failure-points" }}
 	secondaryCta={{ label: "See what it's worth", href: "#market-value" }}
-/>
+>
+	<TruckViewer class="md:-mt-8" />
+</ProjectHeader>

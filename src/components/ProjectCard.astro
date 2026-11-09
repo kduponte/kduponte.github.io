@@ -1,5 +1,6 @@
 ---
-import TagPill from "./TagPill.astro";
+import { projectTheme } from "../lib/project-theme";
+import TruckViewer from "./three/TruckViewer.astro";
 
 interface Props {
 	slug: string;
@@ -7,9 +8,12 @@ interface Props {
 	summary: string;
 	status: "coming-soon" | "in-progress" | "live";
 	tags: string[];
+	/** Degrees of tilt, for the collage feel. */
+	rotate?: number;
+	class?: string;
 }
 
-const { slug, title, summary, status, tags } = Astro.props;
+const { slug, title, summary, status, tags, rotate = 0, class: className = "" } = Astro.props;
 
 const statusLabel: Record<Props["status"], string> = {
 	"coming-soon": "Coming soon",
@@ -17,27 +21,33 @@ const statusLabel: Record<Props["status"], string> = {
 	live: "Live",
 };
 
-const statusTone: Record<Props["status"], "blue" | "green" | "yellow"> = {
-	"coming-soon": "yellow",
-	"in-progress": "blue",
-	live: "green",
-};
-
 const isLinkable = status !== "coming-soon";
+const theme = projectTheme(slug);
 ---
 
-<article class="group relative flex flex-col gap-4 border border-line p-6 transition-colors hover:border-accent-blue">
-	<div class="flex items-start justify-between gap-4">
-		<h3 class="font-display text-xl font-semibold">{title}</h3>
-		<TagPill tone={statusTone[status]}>{statusLabel[status]}</TagPill>
-	</div>
-	<p class="text-sm text-ink-soft">{summary}</p>
+<article
+	class:list={[
+		"group raw-box shadow-hard-lg relative flex min-h-[18rem] flex-col gap-4 overflow-hidden rounded-3xl p-6 pt-9",
+		theme.fill,
+		isLinkable && "raw-press",
+		!isLinkable && "opacity-80",
+		className,
+	]}
+	style={`transform: rotate(${rotate}deg); --dot: ${theme.dot}; --cell: 9px;`}
+>
+	<div class="halftone pointer-events-none absolute inset-0 opacity-20" aria-hidden="true"></div>
+	<span class="font-mono absolute -top-px right-5 rounded-b-lg bg-black px-2.5 py-1 text-[10px] uppercase text-lime">
+		{statusLabel[status]}
+	</span>
+	{slug === "the-22re-restoration" && <TruckViewer class="pointer-events-auto absolute -bottom-4 -right-4 z-10 hidden w-[55%] sm:block" />}
+	<h3 class="font-anton relative text-4xl leading-[0.95] md:text-5xl">{title}</h3>
+	<p class="relative max-w-[42ch] text-[15px] font-medium leading-snug">{summary}</p>
 	{
 		tags.length > 0 && (
-			<ul class="flex flex-wrap gap-2">
+			<ul class="relative flex flex-wrap gap-2">
 				{tags.map((tag) => (
-					<li>
-						<TagPill>{tag}</TagPill>
+					<li class="font-mono rounded-full border-2 border-black bg-cream/90 px-2.5 py-0.5 text-[10px] uppercase text-black">
+						{tag}
 					</li>
 				))}
 			</ul>
@@ -45,12 +55,12 @@ const isLinkable = status !== "coming-soon";
 	}
 	{
 		isLinkable ? (
-			<a href={`/projects/${slug}`} class="mt-auto font-mono text-xs uppercase tracking-wide text-accent-blue">
+			<a href={`/projects/${slug}`} class="font-mono relative mt-auto text-xs uppercase underline decoration-2 underline-offset-4">
 				View project →
-				<span class="absolute inset-0" aria-hidden="true" />
+				<span class="absolute inset-0 -m-6 -mt-9" aria-hidden="true" />
 			</a>
 		) : (
-			<span class="mt-auto font-mono text-xs uppercase tracking-wide text-ink-soft/60" aria-hidden="true">
+			<span class="font-mono relative mt-auto text-xs uppercase" aria-hidden="true">
 				Write-up coming soon
 			</span>
 		)

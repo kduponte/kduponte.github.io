@@ -3,7 +3,7 @@ import SensitivityExplorer from "./SensitivityExplorer.astro";
 ---
 
 <section id="recommendation-curves" class="mx-auto max-w-7xl px-6 py-16 md:px-12 md:py-20">
-	<h2 class="font-display text-2xl font-semibold tracking-tight md:text-3xl">How recommendations change with weight and skill</h2>
+	<h2 class="font-anton text-4xl md:text-5xl">How recommendations change with weight and skill</h2>
 	<p class="mt-3 max-w-[65ch] text-base leading-relaxed text-ink-soft">
 		Each line traces one system's recommendation across the core weight range for a given skill level, against the
 		dashed cross-system consensus curve. Toggle sources on or off to isolate one at a time.
@@ -13,7 +13,7 @@ import SensitivityExplorer from "./SensitivityExplorer.astro";
 		<div class="flex flex-wrap items-center justify-between gap-4">
 			<label class="flex items-center gap-2 text-sm">
 				<span class="font-mono text-xs uppercase tracking-wide text-ink-soft">Skill</span>
-				<select data-vg-skill-select class="border border-line bg-paper px-3 py-1.5 text-ink">
+				<select data-vg-skill-select class="border-2 border-black bg-paper px-3 py-1.5 text-ink">
 					<option value="beginner">Beginner</option>
 					<option value="intermediate" selected>Intermediate</option>
 					<option value="advanced">Advanced</option>

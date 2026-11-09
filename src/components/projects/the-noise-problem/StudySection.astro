@@ -3,14 +3,14 @@
 ---
 
 <section id="speed-study" class="mx-auto max-w-7xl px-6 py-16 md:px-12 md:py-20">
-	<h2 class="font-display text-2xl font-semibold tracking-tight md:text-3xl">How much faster, really?</h2>
+	<h2 class="font-anton text-4xl md:text-5xl">How much faster, really?</h2>
 	<p class="mt-3 max-w-[65ch] text-base leading-relaxed text-ink-soft">
 		Simulate hundreds of independent experiments at a given correlation and traffic level, and measure two separate
 		things: whether a fixed, pre-planned final look finds a real effect (only meaningful when one exists), and, when
 		it does, how many days it took to first become visible.
 	</p>
 
-	<form id="pp-study-controls" class="mt-8 grid grid-cols-2 gap-4 border border-line p-6 md:grid-cols-5">
+	<form id="pp-study-controls" class="mt-8 grid grid-cols-2 gap-4 raw-box rounded-xl bg-cream p-6 md:grid-cols-5">
 		<label class="flex flex-col gap-1 text-sm">
 			<span class="font-mono text-xs uppercase tracking-wide text-ink-soft">Pre/post correlation</span>
 			<input id="pp-study-correlation" type="range" min="0" max="0.95" step="0.05" class="accent-accent-blue w-full" />
@@ -18,15 +18,15 @@
 		</label>
 		<label class="flex flex-col gap-1 text-sm">
 			<span class="font-mono text-xs uppercase tracking-wide text-ink-soft">B's lift (points)</span>
-			<input id="pp-study-lift" type="number" min="0" max="20" step="0.5" class="border border-line bg-paper px-3 py-2 text-ink" />
+			<input id="pp-study-lift" type="number" min="0" max="20" step="0.5" class="border-2 border-black bg-paper px-3 py-2 text-ink" />
 		</label>
 		<label class="flex flex-col gap-1 text-sm">
-			<span class="font-mono text-xs uppercase tracking-wide text-ink-soft">Visitors/day/arm</span>
-			<input id="pp-study-visitors" type="number" min="5" max="500" step="5" class="border border-line bg-paper px-3 py-2 text-ink" />
+			<span class="font-mono text-xs uppercase tracking-wide text-ink-soft">Visitors per day per arm</span>
+			<input id="pp-study-visitors" type="number" min="5" max="500" step="5" class="border-2 border-black bg-paper px-3 py-2 text-ink" />
 		</label>
 		<label class="flex flex-col gap-1 text-sm">
 			<span class="font-mono text-xs uppercase tracking-wide text-ink-soft">Days per experiment</span>
-			<input id="pp-study-days" type="number" min="5" max="60" step="1" class="border border-line bg-paper px-3 py-2 text-ink" />
+			<input id="pp-study-days" type="number" min="5" max="60" step="1" class="border-2 border-black bg-paper px-3 py-2 text-ink" />
 		</label>
 		<div class="flex items-end">
 			<button
@@ -40,7 +40,7 @@
 	</form>
 
 	<div id="pp-speed-study" class="mt-6">
-		<div data-vg-summary class="border border-line p-4 font-mono text-sm"></div>
+		<div data-vg-summary class="raw-box rounded-xl bg-cream p-4 font-mono text-sm"></div>
 		<div class="mt-4 flex justify-end">
 			<button type="button" data-vg-table-toggle class="font-mono text-xs uppercase tracking-wide text-accent-blue" aria-pressed="false">
 				View as table

@@ -70,7 +70,7 @@ export async function initSensitivityExplorer(root: HTMLElement) {
 
 		resultEl.innerHTML = `<div class="flex flex-wrap gap-4">${points
 			.map(
-				(p) => `<div class="border border-line px-4 py-3">
+				(p) => `<div class="border-2 border-black px-4 py-3">
 				<p class="font-mono text-[11px] uppercase tracking-wide text-ink-soft">${p.label}</p>
 				<p class="mt-1 font-display text-lg">${formatL(p.value)}</p>
 			</div>`,

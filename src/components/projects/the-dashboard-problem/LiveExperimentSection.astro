@@ -3,14 +3,14 @@
 ---
 
 <section id="live-experiment" class="mx-auto max-w-7xl px-6 py-16 md:px-12 md:py-20">
-	<h2 class="font-display text-2xl font-semibold tracking-tight md:text-3xl">One dashboard, three decision rules</h2>
+	<h2 class="font-anton text-4xl md:text-5xl">One dashboard, three decision rules</h2>
 	<p class="mt-3 max-w-[65ch] text-base leading-relaxed text-ink-soft">
 		A simulated dashboard of N metrics from a single experiment, most genuinely unchanged, a few genuinely lifted,
 		each with its own real p-value from real simulated data. Watch which ones each of the three rules, no
 		correction, Bonferroni, and Benjamini-Hochberg, would flag as a winner.
 	</p>
 
-	<form id="pp-controls" class="mt-8 grid grid-cols-2 gap-4 border border-line p-6 md:grid-cols-5">
+	<form id="pp-controls" class="mt-8 grid grid-cols-2 gap-4 raw-box rounded-xl bg-cream p-6 md:grid-cols-5">
 		<label class="flex flex-col gap-1 text-sm">
 			<span class="font-mono text-xs uppercase tracking-wide text-ink-soft">Number of metrics</span>
 			<input id="pp-num-metrics" type="range" min="2" max="50" step="1" class="accent-accent-blue w-full" />
@@ -23,15 +23,15 @@
 		</label>
 		<label class="flex flex-col gap-1 text-sm">
 			<span class="font-mono text-xs uppercase tracking-wide text-ink-soft">Baseline rate (%)</span>
-			<input id="pp-baseline-rate" type="number" min="1" max="50" step="1" class="border border-line bg-paper px-3 py-2 text-ink" />
+			<input id="pp-baseline-rate" type="number" min="1" max="50" step="1" class="border-2 border-black bg-paper px-3 py-2 text-ink" />
 		</label>
 		<label class="flex flex-col gap-1 text-sm">
 			<span class="font-mono text-xs uppercase tracking-wide text-ink-soft">Lift on real effects (%)</span>
-			<input id="pp-relative-lift" type="number" min="5" max="100" step="5" class="border border-line bg-paper px-3 py-2 text-ink" />
+			<input id="pp-relative-lift" type="number" min="5" max="100" step="5" class="border-2 border-black bg-paper px-3 py-2 text-ink" />
 		</label>
 		<label class="flex flex-col gap-1 text-sm">
 			<span class="font-mono text-xs uppercase tracking-wide text-ink-soft">Visitors/arm</span>
-			<input id="pp-visitors" type="number" min="50" max="5000" step="50" class="border border-line bg-paper px-3 py-2 text-ink" />
+			<input id="pp-visitors" type="number" min="50" max="5000" step="50" class="border-2 border-black bg-paper px-3 py-2 text-ink" />
 		</label>
 		<div class="col-span-2 flex items-end md:col-span-5">
 			<button
@@ -45,7 +45,7 @@
 	</form>
 
 	<div id="pp-live-experiment" class="mt-6">
-		<div data-vg-summary class="border border-line p-4 font-mono text-sm"></div>
+		<div data-vg-summary class="raw-box rounded-xl bg-cream p-4 font-mono text-sm"></div>
 		<div data-vg-table class="mt-4 overflow-x-auto"></div>
 	</div>
 

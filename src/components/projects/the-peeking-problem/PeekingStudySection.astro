@@ -3,7 +3,7 @@
 ---
 
 <section id="peeking-study" class="mx-auto max-w-7xl px-6 py-16 md:px-12 md:py-20">
-	<h2 class="font-display text-2xl font-semibold tracking-tight md:text-3xl">What peeking actually costs you, and doesn't</h2>
+	<h2 class="font-anton text-4xl md:text-5xl">What peeking actually costs you, and doesn't</h2>
 	<p class="mt-3 max-w-[65ch] text-base leading-relaxed text-ink-soft">
 		Simulate hundreds of independent experiments where there is truly no difference between A and B, and count how
 		often each of the three methods would have declared a winner: checking once at a fixed end date, versus checking
@@ -12,25 +12,25 @@
 		hundreds of times over.
 	</p>
 
-	<form id="pp-study-controls" class="mt-8 grid grid-cols-2 gap-4 border border-line p-6 md:grid-cols-5">
+	<form id="pp-study-controls" class="mt-8 grid grid-cols-2 gap-4 raw-box rounded-xl bg-cream p-6 md:grid-cols-5">
 		<label class="flex flex-col gap-1 text-sm">
 			<span class="font-mono text-xs uppercase tracking-wide text-ink-soft">Metric</span>
-			<select id="pp-study-metric-type" class="border border-line bg-paper px-3 py-2 text-ink">
+			<select id="pp-study-metric-type" class="border-2 border-black bg-paper px-3 py-2 text-ink">
 				<option value="revenue" selected>Revenue per user</option>
 				<option value="conversion">Conversion rate</option>
 			</select>
 		</label>
 		<label class="flex flex-col gap-1 text-sm">
 			<span class="font-mono text-xs uppercase tracking-wide text-ink-soft" data-pp-study-baseline-label>Spend rate (%)</span>
-			<input id="pp-study-baseline-rate" type="number" min="0.1" max="50" step="0.1" class="border border-line bg-paper px-3 py-2 text-ink" />
+			<input id="pp-study-baseline-rate" type="number" min="0.1" max="50" step="0.1" class="border-2 border-black bg-paper px-3 py-2 text-ink" />
 		</label>
 		<label id="pp-study-avg-revenue-field" class="flex flex-col gap-1 text-sm">
 			<span class="font-mono text-xs uppercase tracking-wide text-ink-soft">Avg. revenue/spender ($)</span>
-			<input id="pp-study-avg-revenue" type="number" min="1" max="10000" step="1" class="border border-line bg-paper px-3 py-2 text-ink" />
+			<input id="pp-study-avg-revenue" type="number" min="1" max="10000" step="1" class="border-2 border-black bg-paper px-3 py-2 text-ink" />
 		</label>
 		<label class="flex flex-col gap-1 text-sm">
 			<span class="font-mono text-xs uppercase tracking-wide text-ink-soft">Visitors/day/arm</span>
-			<input id="pp-study-visitors" type="number" min="10" max="500000" step="10" class="border border-line bg-paper px-3 py-2 text-ink" />
+			<input id="pp-study-visitors" type="number" min="10" max="500000" step="10" class="border-2 border-black bg-paper px-3 py-2 text-ink" />
 		</label>
 		<label class="col-span-2 flex flex-col gap-1 text-sm">
 			<span class="font-mono text-xs uppercase tracking-wide text-ink-soft">Prior strength (Bayesian rule): weak &rarr; skeptical</span>
@@ -52,7 +52,7 @@
 	</p>
 
 	<div id="pp-peeking-study" class="mt-6">
-		<div data-vg-summary class="border border-line p-4 font-mono text-sm"></div>
+		<div data-vg-summary class="raw-box rounded-xl bg-cream p-4 font-mono text-sm"></div>
 		<div class="mt-4 flex justify-end">
 			<button type="button" data-vg-table-toggle class="font-mono text-xs uppercase tracking-wide text-accent-blue" aria-pressed="false">
 				View as table

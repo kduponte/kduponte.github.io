@@ -25,20 +25,20 @@ const {
 ---
 
 <section class="mx-auto max-w-7xl px-6 py-16 md:px-12 md:py-28">
-	<h2 class="font-display text-2xl font-semibold tracking-tight md:text-3xl">{title}</h2>
+	<h2 class="font-anton text-4xl md:text-5xl">{title}</h2>
 	{
 		reflection && (
 			<dl class="mt-8 grid max-w-[65ch] grid-cols-1 gap-6">
 				<div>
-					<dt class="font-mono text-xs uppercase tracking-wide text-accent-blue">{surprisingLabel}</dt>
+					<dt class="font-mono text-xs uppercase text-cobalt">{surprisingLabel}</dt>
 					<dd class="mt-1 text-sm leading-relaxed text-ink-soft">{reflection.surprising}</dd>
 				</div>
 				<div>
-					<dt class="font-mono text-xs uppercase tracking-wide text-accent-blue">{hardestLabel}</dt>
+					<dt class="font-mono text-xs uppercase text-cobalt">{hardestLabel}</dt>
 					<dd class="mt-1 text-sm leading-relaxed text-ink-soft">{reflection.hardest}</dd>
 				</div>
 				<div>
-					<dt class="font-mono text-xs uppercase tracking-wide text-accent-blue">{unresolvedLabel}</dt>
+					<dt class="font-mono text-xs uppercase text-cobalt">{unresolvedLabel}</dt>
 					<dd class="mt-1 text-sm leading-relaxed text-ink-soft">{reflection.unresolved}</dd>
 				</div>
 			</dl>

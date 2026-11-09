@@ -8,7 +8,11 @@ interface Props {
 const { eyebrow, title, class: className = "" } = Astro.props;
 ---
 
-<div class:list={["max-w-2xl", className]}>
-	{eyebrow && <p class="font-mono text-xs uppercase tracking-widest text-accent-blue">{eyebrow}</p>}
-	<h2 class="font-display mt-2 text-3xl font-semibold tracking-tight md:text-4xl">{title}</h2>
+<div class:list={["max-w-3xl", className]}>
+	{
+		eyebrow && (
+			<p class="font-mono inline-block -rotate-1 bg-black px-2.5 py-1 text-[11px] uppercase text-lime">{eyebrow}</p>
+		)
+	}
+	<h2 class="font-anton mt-3 text-4xl leading-[0.95] md:text-6xl">{title}</h2>
 </div>

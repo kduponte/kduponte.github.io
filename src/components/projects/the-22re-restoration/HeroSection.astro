@@ -11,5 +11,6 @@ import TruckViewer from "../../three/TruckViewer.astro";
 	primaryCta={{ label: "See what breaks", href: "#failure-points" }}
 	secondaryCta={{ label: "See what it's worth", href: "#market-value" }}
 >
-	<TruckViewer class="md:-mt-8" />
+	<!-- On desktop the truck floats over the right of the headline, Stab-style; on mobile it sits below the summary. -->
+	<TruckViewer aspect="aspect-[16/10] md:aspect-[16/9]" class="z-10 md:absolute md:right-12 md:top-24 md:w-[52%]" />
 </ProjectHeader>

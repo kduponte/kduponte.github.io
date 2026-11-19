@@ -34,6 +34,6 @@ const { class: className = "", body, aspect = "aspect-[4/3]" } = Astro.props;
 </div>
 
 <script>
-	import { mountTruckViewers } from "../../scripts/three/truck";
-	mountTruckViewers();
+	import { mountViewers } from "../../scripts/three/viewer";
+	mountViewers("[data-truck-viewer]", () => import("../../scripts/three/subjects/truck").then((m) => m.default));
 </script>

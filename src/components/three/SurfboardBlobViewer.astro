@@ -1,0 +1,235 @@
+---
+/**
+ * The Volume Gap's 3D hero: a Play-Doh blob that keeps reshaping into iconic surfboards, with
+ * an HTML readout of the board on screen against the calculators' range for the default surfer.
+ * Boards: public/data/surf-volume/iconic_boards.json. Range: profile_summary.json.
+ */
+import iconicData from "../../../public/data/surf-volume/iconic_boards.json";
+import summary from "../../../public/data/surf-volume/profile_summary.json";
+import { formatInches, formatLengthIn, resolveBoards, type IconicBoardData } from "../../lib/surf-volume/iconic-boards";
+import type { ComparisonResult } from "../../lib/surf-volume/types";
+import type { BlobViewerConfig } from "../../scripts/three/subjects/surfboard-blob";
+
+interface Props {
+	/** Classes for the whole figure (canvas plus readout). */
+	class?: string;
+	/** Classes for the canvas box alone, e.g. negative margins to float it over a headline. */
+	canvasClass?: string;
+	/** Tailwind aspect-ratio classes for the canvas box. */
+	aspect?: string;
+}
+
+const { class: className = "", canvasClass = "", aspect = "aspect-[16/10] md:aspect-[16/9]" } = Astro.props;
+
+const data = iconicData as unknown as IconicBoardData;
+const { consensus, rows, profile } = summary as unknown as ComparisonResult & { profile: { weight_lb: number; height_in?: number; skill: string } };
+const resolved = resolveBoards(data, consensus, rows);
+
+const config: BlobViewerConfig = {
+	blobColor: "#c8ff3d",
+	ink: "#111111",
+	boards: resolved.map((r) => ({
+		id: r.board.id,
+		name: r.board.name,
+		liters: r.size.volume_l,
+		shape: r.shape,
+		fins: r.board.shape.fin_layout,
+		graphic: r.board.graphic,
+		colors: r.board.colors,
+	})),
+};
+
+// Range bar: one liters axis wide enough for every calculator's pick and every board.
+const points = rows.map((r) => r.recommended_volume_point_l).filter((v): v is number => v !== null);
+const all = [...points, ...resolved.map((r) => r.size.volume_l)];
+const lo = Math.floor((Math.min(...all) - 3) / 10) * 10;
+const hi = Math.ceil((Math.max(...all) + 3) / 10) * 10;
+const BAR_W = 300;
+const X = (l: number) => ((l - lo) / (hi - lo)) * BAR_W;
+const ticks = Array.from({ length: (hi - lo) / 10 + 1 }, (_, i) => lo + i * 10);
+const n = points.length;
+const median = consensus.median as number;
+
+const readouts = resolved.map((r, i) => ({
+	eyebrow: `Board ${i + 1} of ${resolved.length} · ${r.board.style}`,
+	name: r.board.name,
+	maker: r.board.maker,
+	dims: `${r.size.length} × ${formatInches(r.size.width_in)} × ${formatInches(r.size.thickness_in)}`,
+	liters: r.size.volume_l,
+	status: r.size.volume_status,
+	sentence: r.placement.sentence,
+	source: r.source.label.split(",")[0],
+	url: r.source.url,
+}));
+const first = readouts[0];
+const heightLabel = profile.height_in ? `, ${formatLengthIn(profile.height_in)}` : "";
+const surfer = `${profile.weight_lb} lb${heightLabel}, ${profile.skill}`;
+const boardList = resolved.map((r) => `${r.board.name} (${r.size.length}, ${r.size.volume_l} L)`).join(", ");
+---
+
+<figure data-volume-blob data-readouts={JSON.stringify(readouts)} data-lo={lo} data-hi={hi} class:list={["relative w-full", className]}>
+	<div
+		data-volume-blob-viewer
+		data-config={JSON.stringify(config)}
+		role="img"
+		aria-label={`A lime Play-Doh blob bounces and reshapes into iconic surfboards at true relative size: ${boardList}. Drag to spin it; tap to skip ahead.`}
+		class:list={["relative z-10 w-full select-none", aspect, canvasClass]}
+	>
+		<!-- Static fallback: shown until WebGL mounts, and kept if it can't. -->
+		<svg data-fallback viewBox="0 0 560 300" class="absolute inset-0 h-full w-full" aria-hidden="true">
+			<g stroke="#111" stroke-width="6" stroke-linejoin="round">
+				<path d="M60 150 C 140 92, 420 92, 520 150 C 420 208, 140 208, 60 150 Z" fill="#ff8fcf" />
+				<path d="M60 150 L 520 150" stroke-width="3" />
+				<path d="M150 252 C 120 252, 112 212, 150 198 C 176 186, 222 192, 236 214 C 250 238, 214 256, 150 252 Z" fill="#c8ff3d" />
+			</g>
+		</svg>
+	</div>
+
+	<figcaption class="relative z-20 ml-auto mt-2 w-full max-w-[26rem] md:-mt-2">
+		<div class="raw-box rounded-2xl bg-cream p-4 text-black">
+			<div class="flex items-center justify-between gap-3">
+				<p class="font-mono text-[10px] uppercase leading-tight" data-r-eyebrow>{first.eyebrow}</p>
+				<button
+					type="button"
+					data-r-next
+					class="font-mono raw-box shadow-hard-sm raw-press shrink-0 rounded-full bg-lime px-3 py-1 text-[10px] uppercase"
+				>
+					Next board →
+				</button>
+			</div>
+			<div class="mt-2 flex items-end justify-between gap-3">
+				<div class="min-w-0">
+					<p class="font-anton text-[1.9rem] leading-none" data-r-name>{first.name}</p>
+					<p class="mt-1 truncate text-xs font-semibold" data-r-maker>{first.maker}</p>
+				</div>
+				<p class="font-anton shrink-0 text-[1.9rem] leading-none"><span data-r-liters>{first.liters.toFixed(1)}</span><span class="ml-1 text-base">L</span></p>
+			</div>
+			<p class="font-mono mt-2 flex justify-between gap-2 text-[10px] uppercase">
+				<span data-r-dims>{first.dims}</span>
+				<span data-r-status>{first.status} volume</span>
+			</p>
+
+			<svg viewBox={`-8 0 ${BAR_W + 16} 62`} class="mt-3 w-full overflow-visible" aria-hidden="true">
+				<!-- Calculators' spread for the default surfer: whiskers min-max, box q25-q75, median. -->
+				<line x1={X(consensus.min as number)} x2={X(consensus.max as number)} y1="22" y2="22" stroke="#111" stroke-width="2" />
+				<rect x={X(consensus.q25 as number)} y="13" width={X(consensus.q75 as number) - X(consensus.q25 as number)} height="18" fill="#c8ff3d" stroke="#111" stroke-width="2.5" />
+				<line x1={X(median)} x2={X(median)} y1="10" y2="34" stroke="#111" stroke-width="3" />
+				{points.map((p) => <circle cx={X(p)} cy="42" r="2.6" fill="#111" />)}
+				<line x1="0" x2={BAR_W} y1="50" y2="50" stroke="#111" stroke-width="1.5" />
+				{
+					ticks.map((t) => (
+						<g>
+							<line x1={X(t)} x2={X(t)} y1="50" y2="54" stroke="#111" stroke-width="1.5" />
+							<text x={X(t)} y="62" text-anchor="middle" font-size="8" font-family="Silkscreen, monospace">
+								{t}
+							</text>
+						</g>
+					))
+				}
+				<!-- The board (or blob) on screen. -->
+				<g data-r-marker transform={`translate(${X(first.liters)} 0)`}>
+					<line x1="0" x2="0" y1="6" y2="46" stroke="#ff5a1f" stroke-width="3" />
+					<path d="M-6 0 L6 0 L0 8 Z" fill="#ff5a1f" stroke="#111" stroke-width="1.5" stroke-linejoin="round" />
+				</g>
+			</svg>
+			<p class="font-mono mt-1 text-[9px] uppercase leading-snug text-black/70">
+				Dots: {n} calculators' picks for the default surfer ({surfer}). Box: middle half. Line: median {median.toFixed(1)} L.
+			</p>
+			<p class="mt-2 text-[13px] font-semibold leading-snug" data-r-sentence>{first.sentence}.</p>
+			<p class="font-mono mt-2 text-[9px] uppercase" data-r-source-line>
+				Specs: <a data-r-source href={first.url} class="underline decoration-2 underline-offset-2" rel="noopener" target="_blank">{first.source}</a>
+			</p>
+		</div>
+		<p class="mt-3 text-[11px] font-medium leading-snug">
+			<strong>To scale:</strong> every board's length, width, thickness and liters, on one shared scale, and the blob always holds exactly
+			the liters of the board it's becoming. Each model is shown in its stock size nearest the {median.toFixed(1)} L median.{" "}
+			<strong>Not to scale:</strong> the bounce and wobble are animation; outlines, rocker, rails and fins are estimated from typical designs
+			(only length, width, thickness and liters are published); graphics are stylized, not the real laminates.
+		</p>
+	</figcaption>
+</figure>
+
+<script>
+	import { mountViewers } from "../../scripts/three/viewer";
+	import type { BlobState } from "../../scripts/three/subjects/surfboard-blob";
+
+	interface Readout {
+		eyebrow: string;
+		name: string;
+		maker: string;
+		dims: string;
+		liters: number;
+		status: string;
+		sentence: string;
+		source: string;
+		url: string;
+	}
+
+	mountViewers("[data-volume-blob-viewer]", () => import("../../scripts/three/subjects/surfboard-blob").then((m) => m.default));
+
+	for (const fig of document.querySelectorAll<HTMLElement>("[data-volume-blob]")) {
+		const readouts = JSON.parse(fig.dataset.readouts ?? "[]") as Readout[];
+		const lo = Number(fig.dataset.lo);
+		const hi = Number(fig.dataset.hi);
+		const host = fig.querySelector<HTMLElement>("[data-volume-blob-viewer]");
+		const el = (key: string) => fig.querySelector<HTMLElement>(`[data-r-${key}]`);
+		const [eyebrow, name, maker, liters, dims, status, sentence, source, sourceLine, marker, next] = [
+			"eyebrow",
+			"name",
+			"maker",
+			"liters",
+			"dims",
+			"status",
+			"sentence",
+			"source",
+			"source-line",
+			"marker",
+			"next",
+		].map(el);
+		if (!host || !readouts.length) continue;
+
+		let shownKey = "";
+		const show = ({ phase, index, liters: l }: BlobState) => {
+			const r = readouts[index];
+			const isBlob = phase === "blob";
+			const key = `${isBlob}:${index}`;
+			if (key !== shownKey) {
+				shownKey = key;
+				if (isBlob) {
+					eyebrow!.textContent = `Play-Doh · becoming board ${index + 1} of ${readouts.length}`;
+					name!.textContent = "The blob";
+					maker!.textContent = `Holding the next board's liters`;
+					dims!.textContent = "No board yet";
+					status!.textContent = "";
+					sentence!.textContent = `Reshaping to ${r.liters.toFixed(1)} L for the ${r.name}.`;
+					sourceLine!.hidden = true;
+				} else {
+					eyebrow!.textContent = r.eyebrow;
+					name!.textContent = r.name;
+					maker!.textContent = r.maker;
+					dims!.textContent = r.dims;
+					status!.textContent = `${r.status} volume`;
+					sentence!.textContent = `${r.sentence}.`;
+					source!.textContent = r.source;
+					source!.setAttribute("href", r.url);
+					sourceLine!.hidden = false;
+				}
+			}
+			liters!.textContent = l.toFixed(1);
+			const x = (Math.max(lo, Math.min(hi, l)) - lo) / (hi - lo);
+			marker!.setAttribute("transform", `translate(${(x * 300).toFixed(1)} 0)`);
+		};
+
+		host.addEventListener("surfblob:state", (e) => show((e as CustomEvent<BlobState>).detail));
+		// Without WebGL nothing answers "surfblob:next", so the readout steps through the boards alone.
+		let fallbackIndex = 0;
+		next?.addEventListener("click", () => {
+			if (host.querySelector("canvas")) {
+				host.dispatchEvent(new CustomEvent("surfblob:next"));
+			} else {
+				fallbackIndex = (fallbackIndex + 1) % readouts.length;
+				show({ phase: "hold", index: fallbackIndex, liters: readouts[fallbackIndex].liters });
+			}
+		});
+	}
+</script>

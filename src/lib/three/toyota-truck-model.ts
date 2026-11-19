@@ -1,10 +1,7 @@
 import {
-	BackSide,
-	BufferGeometry,
 	CircleGeometry,
 	Color,
 	CylinderGeometry,
-	ExtrudeGeometry,
 	Group,
 	LatheGeometry,
 	Mesh,
@@ -13,10 +10,9 @@ import {
 	Shape,
 	TorusGeometry,
 	Vector2,
-	Vector3,
 	type Material,
 } from "three";
-import { mergeVertices } from "three/examples/jsm/utils/BufferGeometryUtils.js";
+import { OUTLINE, OUTLINE_SMALL, createPartKit, extrude, shade, slab, tint } from "./kit";
 
 /**
  * A stylized ~1991 Toyota regular-cab long-bed pickup (4th-gen Hilux), modeled in meters from
@@ -67,84 +63,6 @@ export interface TruckModel {
 	/** Materials with emissive channels, for flashing the lights. */
 	lights: { head: MeshStandardMaterial; tail: MeshStandardMaterial };
 	dispose: () => void;
-}
-
-const OUTLINE = 0.05; // big panels
-const OUTLINE_SMALL = 0.03; // trim, tires, small parts
-
-/** Inverted-hull outline: a copy pushed out along smooth normals, rendered back-faces only. */
-function outlineGeometry(geo: BufferGeometry, thickness: number): BufferGeometry {
-	const g = geo.clone();
-	g.deleteAttribute("normal");
-	g.deleteAttribute("uv");
-	g.clearGroups();
-	const merged = mergeVertices(g, 1e-4);
-	merged.computeVertexNormals();
-	const pos = merged.getAttribute("position");
-	const nor = merged.getAttribute("normal");
-	const v = new Vector3();
-	const n = new Vector3();
-	for (let i = 0; i < pos.count; i++) {
-		v.fromBufferAttribute(pos, i);
-		n.fromBufferAttribute(nor, i);
-		v.addScaledVector(n, thickness);
-		pos.setXYZ(i, v.x, v.y, v.z);
-	}
-	pos.needsUpdate = true;
-	return merged;
-}
-
-/** Rounded-rectangle outline in the XY plane, centered on the origin. */
-function roundedRect(w: number, h: number, r: number): Shape {
-	const rr = Math.min(r, w / 2 - 1e-3, h / 2 - 1e-3);
-	const x = -w / 2;
-	const y = -h / 2;
-	const s = new Shape();
-	s.moveTo(x + rr, y);
-	s.lineTo(x + w - rr, y);
-	s.quadraticCurveTo(x + w, y, x + w, y + rr);
-	s.lineTo(x + w, y + h - rr);
-	s.quadraticCurveTo(x + w, y + h, x + w - rr, y + h);
-	s.lineTo(x + rr, y + h);
-	s.quadraticCurveTo(x, y + h, x, y + h - rr);
-	s.lineTo(x, y + rr);
-	s.quadraticCurveTo(x, y, x + rr, y);
-	return s;
-}
-
-/**
- * Extrude a shape along Z with softened edges. By default the result is centered on the origin;
- * pass `center: false` for profiles drawn in truck coordinates (only Z is centered then).
- */
-function extrude(shape: Shape, depth: number, bevel: number, center = true): BufferGeometry {
-	const b = Math.min(bevel, depth / 2 - 1e-3);
-	const geo = new ExtrudeGeometry(shape, {
-		depth: Math.max(depth - 2 * b, 1e-3),
-		bevelEnabled: b > 0,
-		bevelThickness: b,
-		bevelSize: b,
-		bevelOffset: -b,
-		bevelSegments: 3,
-		curveSegments: 12,
-	});
-	if (center) {
-		geo.center();
-	} else {
-		geo.computeBoundingBox();
-		const box = geo.boundingBox!;
-		geo.translate(0, 0, -(box.min.z + box.max.z) / 2);
-	}
-	return geo;
-}
-
-/** A softened box: sx along X, sy along Y, sz along Z. */
-function slab(sx: number, sy: number, sz: number, radius = 0.04, bevel = 0.02): BufferGeometry {
-	return extrude(roundedRect(sx, sy, radius), sz, bevel);
-}
-
-/** Darken a hex color by mixing toward black. */
-function shade(hex: string, amount: number): string {
-	return `#${new Color(hex).multiplyScalar(1 - amount).getHexString()}`;
 }
 
 // Layout constants, in meters.
@@ -249,18 +167,11 @@ const GLYPHS: Record<string, [number, number, number, number][]> = {
 };
 
 export function buildToyotaTruck(colors: TruckColors = DEFAULT_TRUCK_COLORS): TruckModel {
-	const outlineMat = new MeshBasicMaterial({ color: colors.trim, side: BackSide });
-	const materials: Material[] = [outlineMat];
-	const geometries: BufferGeometry[] = [];
-
-	const std = (color: string, roughness: number, metalness = 0.05) => {
-		const m = new MeshStandardMaterial({ color, roughness, metalness });
-		materials.push(m);
-		return m;
-	};
+	const kit = createPartKit(colors.trim);
+	const { add, std } = kit;
 	const bodyMat = std(colors.body, 0.36, 0.35);
 	const bedFloorMat = std(shade(colors.body, 0.45), 0.5, 0.2);
-	const creaseMat = std(`#${new Color(colors.body).lerp(new Color("#ffffff"), 0.22).getHexString()}`, 0.3, 0.35);
+	const creaseMat = std(tint(colors.body, 0.22), 0.3, 0.35);
 	const trimMat = std(colors.trim, 0.8);
 	const bumperMat = std(colors.bumper, 0.7);
 	const dishMat = std(shade(colors.silver, 0.35), 0.5, 0.6);
@@ -269,57 +180,28 @@ export function buildToyotaTruck(colors: TruckColors = DEFAULT_TRUCK_COLORS): Tr
 	const amberMat = std(colors.amber, 0.4);
 	// Interior shades all derive from the one interior color (gray cloth in the reference truck).
 	const interiorMat = std(colors.interior, 0.85);
-	const seatMat = std(`#${new Color(colors.interior).lerp(new Color("#ffffff"), 0.12).getHexString()}`, 0.95);
+	const seatMat = std(tint(colors.interior, 0.12), 0.95);
 	const carpetMat = std(shade(colors.interior, 0.45), 1);
 	const dashMat = std(shade(colors.interior, 0.35), 0.75);
-	const headlinerMat = std(`#${new Color(colors.interior).lerp(new Color("#ffffff"), 0.5).getHexString()}`, 0.95);
+	const headlinerMat = std(tint(colors.interior, 0.5), 0.95);
 	const headMat = std(colors.light, 0.2);
 	headMat.emissive = new Color(colors.light);
 	headMat.emissiveIntensity = 0;
 	const tailMat = std(colors.tail, 0.35);
 	tailMat.emissive = new Color(colors.tail);
 	tailMat.emissiveIntensity = 0;
-	const glassMat = new MeshStandardMaterial({
+	const glassMat = kit.material(
+		new MeshStandardMaterial({
 		color: colors.glass,
 		roughness: 0.05,
 		metalness: 0.1,
 		transparent: true,
 		opacity: 0.26,
 		depthWrite: false,
-	});
-	materials.push(glassMat);
+		}),
+	);
 
 	const group = new Group();
-	const parts: Mesh[] = [];
-
-	/**
-	 * Add a mesh (and, optionally, an outline shell) to a parent. Geometry is disposed with the model.
-	 * `outline` is the outline thickness; 0 skips the shell.
-	 */
-	const add = (
-		parent: Group,
-		geo: BufferGeometry,
-		mat: Material,
-		pos: [number, number, number],
-		opts: { outline?: number; rot?: [number, number, number] } = {},
-	) => {
-		const { outline = OUTLINE_SMALL, rot } = opts;
-		geometries.push(geo);
-		const mesh = new Mesh(geo, mat);
-		mesh.position.set(...pos);
-		if (rot) mesh.rotation.set(...rot);
-		parent.add(mesh);
-		parts.push(mesh);
-		if (outline > 0) {
-			const shellGeo = outlineGeometry(geo, outline);
-			geometries.push(shellGeo);
-			const shell = new Mesh(shellGeo, outlineMat);
-			shell.position.copy(mesh.position);
-			shell.rotation.copy(mesh.rotation);
-			parent.add(shell);
-		}
-		return mesh;
-	};
 	/** Both sides of the truck: mirrors Z. */
 	const pair = (fn: (side: 1 | -1) => void) => {
 		fn(1);
@@ -635,8 +517,8 @@ export function buildToyotaTruck(colors: TruckColors = DEFAULT_TRUCK_COLORS): Tr
 	const shadowGeo = new CircleGeometry(1, 40);
 	shadowGeo.rotateX(-Math.PI / 2);
 	const shadowMat = new MeshBasicMaterial({ color: colors.trim, transparent: true, opacity: 0.3 });
-	materials.push(shadowMat);
-	geometries.push(shadowGeo);
+	kit.material(shadowMat);
+	kit.geometry(shadowGeo);
 	const shadow = new Mesh(shadowGeo, shadowMat);
 	shadow.scale.set(3.0, 1, 1.3);
 	shadow.position.set(-0.25, 0.005, 0);
@@ -645,11 +527,8 @@ export function buildToyotaTruck(colors: TruckColors = DEFAULT_TRUCK_COLORS): Tr
 	return {
 		group,
 		wheels,
-		parts,
+		parts: kit.parts,
 		lights: { head: headMat, tail: tailMat },
-		dispose: () => {
-			geometries.forEach((g) => g.dispose());
-			materials.forEach((m) => m.dispose());
-		},
+		dispose: kit.dispose,
 	};
 }

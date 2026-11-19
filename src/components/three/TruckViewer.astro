@@ -1,27 +1,29 @@
 ---
 interface Props {
 	class?: string;
-	/** Body color of the 3D truck (any CSS hex color). */
+	/** Body color override for the 3D truck (any CSS hex color). Defaults to the model's red. */
 	body?: string;
+	/** Tailwind aspect-ratio class for the canvas box. */
+	aspect?: string;
 }
 
-const { class: className = "", body } = Astro.props;
+const { class: className = "", body, aspect = "aspect-[4/3]" } = Astro.props;
 ---
 
 <div
 	data-truck-viewer
 	data-body={body}
 	role="img"
-	aria-label="A low-poly 1990s Toyota pickup truck slowly rotating. Drag to spin it."
-	class:list={["relative aspect-[4/3] w-full select-none", className]}
+	aria-label="A red 1991 Toyota pickup truck slowly rotating. Drag to spin it; tap to bounce it."
+	class:list={["relative w-full select-none", aspect, className]}
 >
 	<!-- Static fallback: shown until WebGL mounts, and kept if it can't. -->
 	<svg data-fallback viewBox="0 0 560 300" class="absolute inset-0 h-full w-full" aria-hidden="true">
 		<g stroke="#111" stroke-width="6" stroke-linejoin="round">
-			<rect x="30" y="150" width="300" height="70" fill="#f6f1e4" />
+			<rect x="30" y="150" width="300" height="70" fill="#c4262e" />
 			<polygon points="170,150 190,90 260,90 300,150" fill="#8fd0ff" />
-			<polygon points="170,150 330,150 330,110 520,125 535,215 170,215" fill="#f6f1e4" />
-			<rect x="30" y="130" width="140" height="22" fill="#f6f1e4" />
+			<polygon points="170,150 330,150 330,110 520,125 535,215 170,215" fill="#c4262e" />
+			<rect x="30" y="130" width="140" height="22" fill="#c4262e" />
 			<circle cx="130" cy="225" r="42" fill="#111" />
 			<circle cx="130" cy="225" r="17" fill="#c8ff3d" />
 			<circle cx="440" cy="225" r="42" fill="#111" />

@@ -139,11 +139,44 @@ describe("volume estimate for sizes with no published liters", () => {
 		}
 	});
 
-	it("recovers each model from the other models within 15% (the fallback when a model has no published sizes)", () => {
+	it("recovers each model from all the other models within 20% (the last-resort fallback)", () => {
+		// Worst case today is the Wavestorm soft-top (~19% low): foam boards fill their bounding box
+		// far more than hard boards. That gap is why an estimated model should name its design
+		// family in volume_reference_models instead of leaning on the whole catalog.
 		for (const row of published) {
 			const refs = published.filter((r) => r.model !== row.model);
 			const est = estimateVolumeL(row, refs);
+			expect(Math.abs(est - row.liters) / row.liters, `${row.model} ${row.lengthIn}"`).toBeLessThan(0.2);
+		}
+	});
+
+	it("does better than the last resort for hard boards: within 15% excluding the soft-top", () => {
+		for (const row of published.filter((r) => r.model !== "wavestorm-8-classic")) {
+			const refs = published.filter((r) => r.model !== row.model && r.model !== "wavestorm-8-classic");
+			const est = estimateVolumeL(row, refs);
 			expect(Math.abs(est - row.liters) / row.liters, `${row.model} ${row.lengthIn}"`).toBeLessThan(0.15);
+		}
+	});
+
+	it("estimates a model with no published sizes from its named design family", () => {
+		for (const board of data.boards.filter((b) => b.volume_reference_models?.length)) {
+			const family = published.filter((r) => board.volume_reference_models!.includes(r.model));
+			expect(family.length, board.id).toBeGreaterThan(0);
+			for (const size of withVolumes(board, data.boards)) {
+				if (board.sizes.find((s) => s.length === size.length)?.volume_status !== "estimated") continue;
+				const dims = { lengthIn: parseLengthIn(size.length), widthIn: size.width_in, thicknessIn: size.thickness_in };
+				expect(size.volume_status).toBe("estimated");
+				expect(size.volume_l).toBeCloseTo(estimateVolumeL(dims, family), 6);
+			}
+		}
+	});
+
+	it("recovers each model from its closest family member within 10% (the Sting and the Pipeliner's case)", () => {
+		// The '76 Sting's two sizes predict each other, the same family step the Pipeliner relies on.
+		const sting = published.filter((r) => r.model === "aipa-76-sting");
+		for (const row of sting) {
+			const est = estimateVolumeL(row, sting.filter((r) => r !== row));
+			expect(Math.abs(est - row.liters) / row.liters).toBeLessThan(0.1);
 		}
 	});
 

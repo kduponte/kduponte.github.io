@@ -1,7 +1,8 @@
 /**
  * Canvas-painted deck and bottom graphics for the Volume Gap boards. Stylized evocations of each
- * board's look (pink resin and pinlines, a 70s airbrushed rainbow, a retro fish laminate), never
- * a copy of a real logo. Painted in the board's own texture space (see surfboard-morph's uv):
+ * board's look (pink resin and pinlines, a 70s airbrushed rainbow, a retro fish laminate, wrapped
+ * rails, a rail spray, a carbon frame, tiger stripes, a soft-top starburst), never a copy of a
+ * real logo. Painted in the board's own texture space (see surfboard-morph's uv):
  * canvas x runs nose to tail, canvas y maps across the deck (top half) and bottom (lower half).
  *
  * New boards pick a painter by name in iconic_boards.json ("graphic") and pass colors.
@@ -215,6 +216,144 @@ const fishLaminate: Painter = (pen, c) => {
 	pen.circle("deck", lx - 1.25, 0.3, 0.22, ink);
 };
 
+/** Lopez-era Pipeliner: clear deck, resin-wrapped yellow rails and bottom, red pinstripes. */
+const pipelinerWrap: Painter = (pen, c) => {
+	const base = pick(c, "base", "#f6f1e4");
+	const wrap = pick(c, "wrap", "#ffd400");
+	const stripe = pick(c, "accent", "#d62828");
+	const wood = pick(c, "wood", "#e9c48f");
+	pen.ctx.fillStyle = base;
+	pen.ctx.fillRect(0, 0, TEX_W, TEX_H / 2);
+	pen.ctx.fillStyle = wrap;
+	pen.ctx.fillRect(0, TEX_H / 2, TEX_W, TEX_H / 2);
+	for (const sign of [1, -1]) {
+		// The bottom color laps over the rails onto the deck, edged with a double pinstripe.
+		pen.railBand("deck", sign * 0.74, sign * 1, wrap);
+		pen.railBand("deck", sign * 0.7, sign * 0.72, stripe, 1, pen.L - 1);
+		pen.railBand("deck", sign * 0.655, sign * 0.665, stripe, 2, pen.L - 2);
+	}
+	for (const side of ["deck", "bottom"] as const) pen.stringer(side, 0.3, wood);
+};
+
+/** Al Merrick-era thruster: white board, airbrushed rail spray, black pinline, sprayed bottom. */
+const flyerSpray: Painter = (pen, c) => {
+	const base = pick(c, "base", "#fbfaf5");
+	const spray = pick(c, "spray", "#2438ff");
+	const ink = pick(c, "accent", "#111111");
+	pen.ctx.fillStyle = base;
+	pen.ctx.fillRect(0, 0, TEX_W, TEX_H / 2);
+	pen.ctx.fillStyle = spray;
+	pen.ctx.fillRect(0, TEX_H / 2, TEX_W, TEX_H / 2);
+	pen.railFade("deck", [spray, fadeTo(spray, 0.55), fadeTo(spray, 0)], 0.62);
+	for (const sign of [1, -1]) pen.railBand("deck", sign * 0.6, sign * 0.615, ink, 3, pen.L - 2);
+	pen.stringer("deck", 0.18, adjust(base, 0.25));
+	pen.stringer("bottom", 0.18, base);
+};
+
+/** Haydenshapes FutureFlex: stringerless white board inside a dark carbon perimeter frame. */
+const futureflex: Painter = (pen, c) => {
+	const base = pick(c, "base", "#f4f4f0");
+	const carbon = pick(c, "carbon", "#2b2b2b");
+	pen.ctx.fillStyle = base;
+	pen.ctx.fillRect(0, 0, TEX_W, TEX_H);
+	for (const side of ["deck", "bottom"] as const) {
+		for (const sign of [1, -1]) {
+			pen.railBand(side, sign * 0.8, sign * 1, carbon);
+			// A faint twill so the band reads as woven carbon.
+			const y0 = pen.y(side, sign * 0.8);
+			const y1 = pen.y(side, sign);
+			pen.ctx.strokeStyle = adjust(carbon, -0.18);
+			pen.ctx.lineWidth = 1;
+			for (let x = -40; x < TEX_W; x += 7) {
+				pen.ctx.beginPath();
+				pen.ctx.moveTo(x, y0);
+				pen.ctx.lineTo(x + Math.abs(y1 - y0), y1);
+				pen.ctx.stroke();
+			}
+		}
+	}
+};
+
+/** Pyzel White Tiger: a white board with tiger stripes, a nod to the name (stylized, not stock art). */
+const tigerStripes: Painter = (pen, c) => {
+	const base = pick(c, "base", "#fbfaf5");
+	const ink = pick(c, "accent", "#111111");
+	pen.ctx.fillStyle = base;
+	pen.ctx.fillRect(0, 0, TEX_W, TEX_H);
+	for (const side of ["deck", "bottom"] as const) pen.stringer(side, 0.18, adjust(base, 0.3));
+	// Tapered wedges from each rail toward the stringer, lengths varied by a fixed sequence.
+	const reach = [0.55, 0.38, 0.62, 0.45, 0.33, 0.58, 0.42, 0.5];
+	const thick = [1.5, 1.1, 1.8, 1.3, 0.9, 1.6, 1.2, 1.4];
+	// A wavy stripe that tapers from a thick base to a point, sweeping toward the tail.
+	const stripe = (x: number, fromZ: number, toZ: number, width: number) => {
+		const pts: [number, number][] = [];
+		const steps = 8;
+		for (let i = 0; i <= steps; i++) {
+			const f = i / steps;
+			const z = fromZ + (toZ - fromZ) * f;
+			const sway = 0.9 * Math.sin(f * Math.PI * 1.4) + 1.8 * f;
+			pts.push([x + sway - (width / 2) * (1 - f), z]);
+		}
+		for (let i = steps; i >= 0; i--) {
+			const f = i / steps;
+			const z = fromZ + (toZ - fromZ) * f;
+			const sway = 0.9 * Math.sin(f * Math.PI * 1.4) + 1.8 * f;
+			pts.push([x + sway + (width / 2) * (1 - f), z]);
+		}
+		pen.poly("deck", pts, ink);
+	};
+	let k = 0;
+	for (let x = 6; x < pen.L - 5; x += 5.5) {
+		const hw = pen.halfWidth(x);
+		if (hw < 3) continue;
+		for (const sign of [1, -1]) {
+			// From the rail inward...
+			const r = reach[k % reach.length];
+			stripe(x, sign * hw * 1.05, sign * hw * (1 - r - 0.2), thick[k % thick.length]);
+			// ...and, offset half a step, from the stringer outward.
+			const r2 = reach[(k + 3) % reach.length];
+			stripe(x + 2.75, sign * 0.2, sign * hw * (0.25 + r2 * 0.5), thick[(k + 5) % thick.length] * 0.8);
+			k++;
+		}
+	}
+};
+
+/** Wavestorm-style soft-top: textured foam deck with a starburst, white slick bottom. */
+const softTop: Painter = (pen, c) => {
+	const base = pick(c, "base", "#8fd0ff");
+	const burst = pick(c, "burst", "#f6f1e4");
+	const bottom = pick(c, "bottom", "#f6f1e4");
+	pen.ctx.fillStyle = base;
+	pen.ctx.fillRect(0, 0, TEX_W, TEX_H / 2);
+	pen.ctx.fillStyle = bottom;
+	pen.ctx.fillRect(0, TEX_H / 2, TEX_W, TEX_H / 2);
+	// Starburst rays out from mid-deck to past the rails (clamped to the outline).
+	const cx = pen.L * 0.45;
+	for (let a = 0; a < 20; a++) {
+		const a0 = (a / 20) * Math.PI * 2;
+		const a1 = a0 + Math.PI / 40;
+		pen.poly("deck", [
+			[cx + 3 * Math.cos(a0), 3 * Math.sin(a0)],
+			[cx + 60 * Math.cos(a0), 60 * Math.sin(a0)],
+			[cx + 60 * Math.cos(a1), 60 * Math.sin(a1)],
+			[cx + 3 * Math.cos(a1), 3 * Math.sin(a1)],
+		], burst);
+	}
+	pen.circle("deck", cx, 0, 3.2, burst);
+	// Waffle texture of the foam deck.
+	pen.ctx.strokeStyle = "rgba(17, 17, 17, 0.12)";
+	pen.ctx.lineWidth = 1.5;
+	for (let x = -TEX_H; x < TEX_W; x += 14) {
+		for (const dir of [1, -1]) {
+			pen.ctx.beginPath();
+			pen.ctx.moveTo(x, 0);
+			pen.ctx.lineTo(x + dir * (TEX_H / 2), TEX_H / 2);
+			pen.ctx.stroke();
+		}
+	}
+	for (const sign of [1, -1]) pen.railBand("bottom", sign * 0.86, sign * 1, base);
+};
+
 /** Fallback for boards added without a painter: base color and a stringer. */
 const plain: Painter = (pen, c) => {
 	pen.ctx.fillStyle = pick(c, "base", "#f6f1e4");
@@ -227,6 +366,11 @@ const PAINTERS: Record<string, Painter> = {
 	"pink-resin": pinkResin,
 	"rainbow-airbrush": rainbowAirbrush,
 	"fish-laminate": fishLaminate,
+	"pipeliner-wrap": pipelinerWrap,
+	"flyer-spray": flyerSpray,
+	futureflex,
+	"tiger-stripes": tigerStripes,
+	"soft-top": softTop,
 };
 
 /** Paint a board's deck and bottom into a new canvas. */

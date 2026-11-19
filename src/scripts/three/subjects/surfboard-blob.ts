@@ -48,6 +48,7 @@ export interface BlobBoardConfig {
 	id: string;
 	name: string;
 	liters: number;
+	finish?: "gloss" | "matte";
 	shape: BoardShape;
 	fins: FinSpec[];
 	graphic: string;
@@ -84,6 +85,7 @@ const LAND_SQUASH = 0.28;
 const LAND_WOBBLE = 0.1;
 const BLOB_ROUGH = 0.82;
 const BOARD_ROUGH = 0.3;
+const MATTE_ROUGH = 0.9;
 
 const clamp01 = (v: number) => Math.max(0, Math.min(1, v));
 const smooth = (v: number) => {
@@ -113,6 +115,14 @@ function finShape(fin: FinSpec): Shape {
 	if (fin.template === "keel") {
 		s.quadraticCurveTo(b * 0.15, -h * 0.95, -b * 0.4, -h);
 		s.quadraticCurveTo(-b * 0.52, -h * 0.5, -b / 2, 0);
+	} else if (fin.template === "thruster") {
+		// Swept side and center fins.
+		s.quadraticCurveTo(b * 0.05, -h * 0.7, -b * 0.55, -h);
+		s.quadraticCurveTo(-b * 0.38, -h * 0.42, -b / 2, 0);
+	} else if (fin.template === "soft") {
+		// Stubby, rounded soft-top fins.
+		s.quadraticCurveTo(b * 0.45, -h * 0.95, -b * 0.15, -h);
+		s.quadraticCurveTo(-b * 0.55, -h * 0.85, -b / 2, 0);
 	} else if (fin.template === "longboard") {
 		s.quadraticCurveTo(-b * 0.05, -h * 0.6, -b * 0.62, -h);
 		s.quadraticCurveTo(-b * 0.5, -h * 0.45, -b / 2, 0);
@@ -187,6 +197,7 @@ const createSurfboardBlob: SubjectFactory = ({ host, reducedMotion, requestRende
 
 	interface BoardRuntime {
 		config: BlobBoardConfig;
+		roughness: number;
 		cal: CalibratedBoard;
 		/** Calibrated positions lifted to the hover height. */
 		pos: Float32Array;
@@ -212,7 +223,7 @@ const createSurfboardBlob: SubjectFactory = ({ host, reducedMotion, requestRende
 			spin.add(pivot);
 			return pivot;
 		});
-		return { config: b, cal, pos: lifted, texture, fins };
+		return { config: b, cal, pos: lifted, texture, fins, roughness: b.finish === "matte" ? MATTE_ROUGH : BOARD_ROUGH };
 	});
 	const maxHalfLength = Math.max(...boards.map((b) => b.cal.prepared.halfL * INCH));
 	// The viewer renders once before the first update, which compiles the shader: give it a map
@@ -304,7 +315,7 @@ const createSurfboardBlob: SubjectFactory = ({ host, reducedMotion, requestRende
 			blendPositions(blobBuf, board.pos, w, pos);
 			conserve(liters, clamp01(w));
 			mix.value = smooth((w - 0.45) / 0.45);
-			skin.roughness = lerp(BLOB_ROUGH, BOARD_ROUGH, mix.value);
+			skin.roughness = lerp(BLOB_ROUGH, board.roughness, mix.value);
 			setFins(board, phaseT > 0.55 ? spring(phaseT - 0.55, 14, 0.5) : 0);
 			emit(liters);
 			return;
@@ -312,7 +323,7 @@ const createSurfboardBlob: SubjectFactory = ({ host, reducedMotion, requestRende
 		if (phase === "hold") {
 			pos.set(board.pos);
 			mix.value = 1;
-			skin.roughness = BOARD_ROUGH;
+			skin.roughness = board.roughness;
 			setFins(board, 1);
 			emit(liters);
 			return;
@@ -332,7 +343,7 @@ const createSurfboardBlob: SubjectFactory = ({ host, reducedMotion, requestRende
 		blendPositions(blobBuf, sagBuf, w, pos);
 		conserve(liters, w);
 		mix.value = 1 - smooth(m / 0.45);
-		skin.roughness = lerp(BLOB_ROUGH, BOARD_ROUGH, mix.value);
+		skin.roughness = lerp(BLOB_ROUGH, board.roughness, mix.value);
 		setFins(board, 1 - smooth(m / 0.22));
 		emit(liters);
 	}

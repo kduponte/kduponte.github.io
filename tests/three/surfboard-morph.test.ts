@@ -116,8 +116,9 @@ describe.each(calibrated)("$r.board.name", ({ r, cal }) => {
 			// A swallow's notch pulls off-center tail points forward a fraction of an inch.
 			expect(Math.abs(x / INCH - (-cal.prepared.halfL + fin.from_tail_in))).toBeLessThan(0.25);
 			expect(z / INCH).toBeCloseTo(fin.off_center_in, 2);
+			// On the bottom: above the flat spot, below the deck (side fins sit near the rail).
 			expect(y).toBeGreaterThanOrEqual(-1e-6);
-			expect(y).toBeLessThan(r.shape.rocker.tailIn * INCH);
+			expect(y).toBeLessThan((r.shape.rocker.tailIn + r.shape.thicknessIn) * INCH);
 		}
 	});
 });

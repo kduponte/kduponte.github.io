@@ -32,7 +32,7 @@ export interface FinSpec {
 	off_center_in: number;
 	depth_in: number;
 	base_in: number;
-	template: "longboard" | "single" | "keel" | "thruster";
+	template: "longboard" | "single" | "keel" | "thruster" | "soft";
 }
 
 export interface ShapeSpec {
@@ -57,7 +57,14 @@ export interface IconicBoard {
 	fins: string;
 	/** Which painter draws its deck and bottom (see the hero's graphics module). */
 	graphic: string;
+	/** Surface finish; soft-tops are matte. Defaults to gloss. */
+	finish?: "gloss" | "matte";
 	colors: Record<string, string | string[]>;
+	/**
+	 * Models whose published box fill estimates this one's unpublished volumes, when it has no
+	 * published sizes of its own. Pick the closest design family; omit to use the whole catalog.
+	 */
+	volume_reference_models?: string[];
 	sizes: BoardSizeRow[];
 	sources: BoardSource[];
 	shape: ShapeSpec;
@@ -101,8 +108,9 @@ const CUBIC_INCH_L = 0.016387064;
  *   liters = length x width x thickness (cubic inches -> liters) x k
  *
  * where k is the median "box fill" (published liters / bounding-box liters) over the reference
- * rows: the same model's published sizes when it has any, otherwise every published size in the
- * catalog. Leave-one-model-out error over the current catalog is reported by the tests.
+ * rows: the same model's published sizes when it has any, otherwise the published sizes of the
+ * models it names in volume_reference_models (its closest design family), otherwise every
+ * published size in the catalog. The tests report the error of each fallback.
  */
 export function estimateVolumeL(dims: { lengthIn: number; widthIn: number; thicknessIn: number }, references: { lengthIn: number; widthIn: number; thicknessIn: number; liters: number }[]): number {
 	if (references.length === 0) throw new Error("No published volumes to estimate from");
@@ -170,15 +178,18 @@ export interface ResolvedBoard {
 /** Fill unpublished volumes with the documented estimate. */
 export function withVolumes(board: IconicBoard, catalog: IconicBoard[]): (BoardSizeRow & { volume_l: number })[] {
 	const toRef = (s: BoardSizeRow) => ({ lengthIn: parseLengthIn(s.length), widthIn: s.width_in, thicknessIn: s.thickness_in, liters: s.volume_l as number });
-	const own = board.sizes.filter((s) => s.volume_status === "published" && s.volume_l !== null).map(toRef);
-	const all = catalog.flatMap((b) => b.sizes).filter((s) => s.volume_status === "published" && s.volume_l !== null).map(toRef);
+	const published = (b: IconicBoard) => b.sizes.filter((s) => s.volume_status === "published" && s.volume_l !== null).map(toRef);
+	const own = published(board);
+	const family = catalog.filter((b) => board.volume_reference_models?.includes(b.id)).flatMap(published);
+	const all = catalog.flatMap(published);
+	const refs = own.length ? own : family.length ? family : all;
 	return board.sizes.map((s) =>
 		s.volume_l !== null && s.volume_status === "published"
 			? { ...s, volume_l: s.volume_l }
 			: {
 					...s,
 					volume_status: "estimated" as const,
-					volume_l: estimateVolumeL({ lengthIn: parseLengthIn(s.length), widthIn: s.width_in, thicknessIn: s.thickness_in }, own.length ? own : all),
+					volume_l: estimateVolumeL({ lengthIn: parseLengthIn(s.length), widthIn: s.width_in, thicknessIn: s.thickness_in }, refs),
 				},
 	);
 }

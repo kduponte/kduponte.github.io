@@ -5,6 +5,10 @@
 	},
 	"lead_days": 1,
 	"method": "Per buoy, the hour whose mean absolute height miss across ECMWF, NOAA and DWD is closest to that buoy's median; later hour on ties.",
+	"water_temp": {
+		"source": "NDBC standard meteorological data, WTMP (sea surface temperature), monthly files",
+		"rule": "Nearest reading within 30 minutes of the snapshot hour; null if none."
+	},
 	"snapshots": [
 		{
 			"station": "51201",
@@ -16,7 +20,8 @@
 			"observed": {
 				"wave_height_m": 1.25,
 				"dominant_period_s": 7.14,
-				"direction_deg": 37
+				"direction_deg": 37,
+				"water_temp_c": 26.7
 			},
 			"forecasts": [
 				{
@@ -48,7 +53,8 @@
 			"observed": {
 				"wave_height_m": 2.51,
 				"dominant_period_s": 10.53,
-				"direction_deg": 71
+				"direction_deg": 71,
+				"water_temp_c": 27.4
 			},
 			"forecasts": [
 				{
@@ -80,7 +86,8 @@
 			"observed": {
 				"wave_height_m": 2.21,
 				"dominant_period_s": 10.53,
-				"direction_deg": 72
+				"direction_deg": 72,
+				"water_temp_c": 26.4
 			},
 			"forecasts": [
 				{
@@ -112,7 +119,8 @@
 			"observed": {
 				"wave_height_m": 1.75,
 				"dominant_period_s": 7.14,
-				"direction_deg": 81
+				"direction_deg": 81,
+				"water_temp_c": 27.7
 			},
 			"forecasts": [
 				{
@@ -144,7 +152,8 @@
 			"observed": {
 				"wave_height_m": 1.68,
 				"dominant_period_s": 7.69,
-				"direction_deg": 58
+				"direction_deg": 58,
+				"water_temp_c": 26.6
 			},
 			"forecasts": [
 				{
@@ -176,7 +185,8 @@
 			"observed": {
 				"wave_height_m": 0.67,
 				"dominant_period_s": 13.33,
-				"direction_deg": 163
+				"direction_deg": 163,
+				"water_temp_c": 27.6
 			},
 			"forecasts": [
 				{
@@ -208,7 +218,8 @@
 			"observed": {
 				"wave_height_m": 1.9,
 				"dominant_period_s": 7.14,
-				"direction_deg": 315
+				"direction_deg": 315,
+				"water_temp_c": 18
 			},
 			"forecasts": [
 				{
@@ -240,7 +251,8 @@
 			"observed": {
 				"wave_height_m": 1.67,
 				"dominant_period_s": 8.33,
-				"direction_deg": 289
+				"direction_deg": 289,
+				"water_temp_c": 15.4
 			},
 			"forecasts": [
 				{
@@ -272,7 +284,8 @@
 			"observed": {
 				"wave_height_m": 0.95,
 				"dominant_period_s": 11.11,
-				"direction_deg": 204
+				"direction_deg": 204,
+				"water_temp_c": 23.2
 			},
 			"forecasts": [
 				{
@@ -304,7 +317,8 @@
 			"observed": {
 				"wave_height_m": 0.57,
 				"dominant_period_s": 11.76,
-				"direction_deg": 250
+				"direction_deg": 250,
+				"water_temp_c": 22.9
 			},
 			"forecasts": [
 				{
@@ -336,7 +350,8 @@
 			"observed": {
 				"wave_height_m": 0.94,
 				"dominant_period_s": 12.5,
-				"direction_deg": 206
+				"direction_deg": 206,
+				"water_temp_c": 23.5
 			},
 			"forecasts": [
 				{
@@ -368,7 +383,8 @@
 			"observed": {
 				"wave_height_m": 1.55,
 				"dominant_period_s": 8.33,
-				"direction_deg": 284
+				"direction_deg": 284,
+				"water_temp_c": 22.3
 			},
 			"forecasts": [
 				{

@@ -50,6 +50,14 @@ describe.each([
 		expect(partsOfKind(buoy, "antenna").length).toBeGreaterThanOrEqual(1);
 	});
 
+	it("hangs its mooring from an eye under the hull", () => {
+		const eye = bounds(partsOfKind(buoy, "mooring-eye"));
+		const hull = bounds(partsOfKind(buoy, "hull"));
+		expect(eye.max.y).toBeLessThanOrEqual(hull.min.y + 0.01);
+		expect(buoy.mooring_m).toBeLessThan(eye.max.y);
+		expect(buoy.mooring_m).toBeGreaterThan(eye.min.y - 0.05);
+	});
+
 	it("is round in plan", () => {
 		const s = size(bounds(partsOfKind(buoy, "hull")));
 		expect(s.x).toBeCloseTo(s.z, 2);

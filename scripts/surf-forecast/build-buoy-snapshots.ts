@@ -11,7 +11,9 @@ import { createInterface } from "node:readline";
 import {
 	SNAPSHOT_SYSTEMS,
 	chooseTypicalHour,
+	parseNdbcWaterTemp,
 	toSnapshot,
+	waterTempAt,
 	type BuoySnapshot,
 	type SnapshotCandidate,
 } from "../../src/lib/surf-forecast/buoy-snapshot";
@@ -20,6 +22,7 @@ import type { ForecastSystem, ModelId } from "../../src/lib/surf-forecast/models
 import { pairFromCsv } from "../../src/lib/surf-forecast/pairs";
 import { BUOYS, regionOfStation } from "../../src/lib/surf-forecast/spots";
 import { WINDOW_END, WINDOW_MONTHS, WINDOW_START } from "./collect/window";
+import { stdmetCachePath } from "./collect/wtmp-cache";
 
 const PAIRS = "data/surf-forecast/processed/pairs.csv";
 const OBS_DIR = "data/surf-forecast/cache/erddap";
@@ -98,6 +101,10 @@ async function main(): Promise<void> {
 			continue;
 		}
 		const snap = toSnapshot(station, LEAD_DAYS, typical);
+		// Sea temperature comes from a separate, per-hour fetch (collect-snapshot-water-temp.ts),
+		// which needs these hours first. Re-attach it when this hour is already cached.
+		const stdmet = stdmetCachePath(station, snap.valid_time);
+		if (existsSync(stdmet)) snap.observed.water_temp_c = waterTempAt(parseNdbcWaterTemp(readFileSync(stdmet, "utf8")), snap.valid_time);
 		snapshots.push(snap);
 		console.log(
 			`${station} ${snap.name.padEnd(22)} ${snap.valid_time}  obs ${snap.observed.wave_height_m} m ${snap.observed.dominant_period_s} s ${snap.observed.direction_deg}°  ` +
@@ -114,6 +121,10 @@ async function main(): Promise<void> {
 				window: { start: WINDOW_START, end: WINDOW_END },
 				lead_days: LEAD_DAYS,
 				method: "Per buoy, the hour whose mean absolute height miss across ECMWF, NOAA and DWD is closest to that buoy's median; later hour on ties.",
+				water_temp: {
+					source: "NDBC standard meteorological data, WTMP (sea surface temperature), monthly files",
+					rule: "Nearest reading within 30 minutes of the snapshot hour; null if none.",
+				},
 				snapshots,
 			},
 			null,

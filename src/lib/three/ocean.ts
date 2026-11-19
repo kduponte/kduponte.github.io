@@ -14,19 +14,25 @@
 //     the models' periods are not comparable to the buoy's (see period-definition.ts).
 //   - The base carries a north arrow and a 400 m scale bar in 100 m steps, so direction and
 //     distance can be read off the model itself. The block's depth is only a cut, not to scale.
+//   - The water is a translucent volume that bends light at seawater's refractive index, so what
+//     floats in it shows below the surface. Its color is set by the caller (the diorama colors it
+//     by the buoy's sea temperature; see water-color.ts).
 import {
+	BackSide,
 	BoxGeometry,
 	BufferAttribute,
 	BufferGeometry,
 	Group,
 	Mesh,
 	MeshBasicMaterial,
+	MeshPhysicalMaterial,
 	MeshStandardMaterial,
+	PlaneGeometry,
 	Shape,
 	type Material,
 } from "three";
 import { WINDOW_M, deepWaterWavelengthM } from "../surf-forecast/swell-viz";
-import { createPartKit, extrude, slab, type PartKit } from "./kit";
+import { createPartKit, extrude, shade, slab, tint, type PartKit } from "./kit";
 
 /** Side length of the water block, in scene units. It represents WINDOW_M metres of sea. */
 export const TILE = 6;
@@ -44,6 +50,8 @@ export interface SwellReading {
 	dominant_period_s: number;
 	/** Direction the swell comes from, degrees clockwise from true north (MWD). */
 	direction_deg: number;
+	/** Sea surface temperature, if the buoy logged one (not used by the swell itself). */
+	water_temp_c?: number | null;
 }
 
 export interface SwellField {
@@ -126,11 +134,17 @@ export function forecastTraces(observedM: number, forecasts: { wave_height_m: nu
 
 // ---------------------------------------------------------------- mesh
 
+/** Refractive index of seawater (about 1.34 for visible light at surface salinity and temperature). */
+export const SEAWATER_IOR = 1.34;
+/** The block's inside is the water's own color, a little darker toward the floor, so depth reads. */
+const INSIDE_SHADE = 0.12;
+const FLOOR_SHADE = 0.25;
+/** How much the surface's own tint is washed toward white, leaving the depth (attenuation) to color it. */
+const WATER_CLARITY = 0.35;
+
 export interface OceanColors {
-	/** Top of the water. */
-	surface: string;
-	/** The cut-away walls. Forecast lines carry a black edge, so they stay legible on any blue. */
-	side: string;
+	/** The water's tint. Forecast lines carry a black edge, so they stay legible on any water color. */
+	water: string;
 	base: string;
 	outline: string;
 	/** The light squares of the scale bar. */
@@ -138,8 +152,7 @@ export interface OceanColors {
 }
 
 export const DEFAULT_OCEAN_COLORS: OceanColors = {
-	surface: "#8fd0ff",
-	side: "#5fb6ef",
+	water: "#8fd0ff",
 	base: "#f6f1e4",
 	outline: "#111111",
 	paper: "#ffffff",
@@ -151,6 +164,8 @@ export interface OceanBlock {
 	update(t: number): void;
 	/** Swap in a new reading and traces without rebuilding the block. Call `update` after. */
 	setField(field: SwellField, traces: Trace[]): void;
+	/** Retint the water (any CSS hex color). */
+	setWaterColor(hex: string): void;
 	dispose(): void;
 }
 
@@ -228,26 +243,55 @@ export function buildOceanBlock(
 	}
 	topGeo.setIndex(idx);
 	topGeo.setAttribute("position", new BufferAttribute(topPos, 3));
-	const surfaceMat = kit.material(new MeshStandardMaterial({ color: colors.surface, roughness: 0.22, metalness: 0.05 }));
-	const top = new Mesh(topGeo, surfaceMat);
+
+	// The water: one translucent, glossy volume (the top and the four walls share a physically
+	// based transmissive material), so the buoy's hull and mooring show through it, bent at
+	// seawater's refractive index and tinted more the deeper you look. Behind every view into the
+	// water is the block's opaque inside (the far walls' inner faces and the floor), a darker shade
+	// of the same tint, so the volume reads as deep and never shows the page through it.
+	const waterMat = kit.material(
+		new MeshPhysicalMaterial({
+			color: tint(colors.water, WATER_CLARITY),
+			transmission: 1,
+			roughness: 0.12,
+			ior: SEAWATER_IOR,
+			thickness: 0.6,
+			attenuationColor: colors.water,
+			attenuationDistance: 2.5,
+			clearcoat: 1,
+			clearcoatRoughness: 0.04,
+		}),
+	);
+	const insideMat = kit.material(new MeshStandardMaterial({ color: shade(colors.water, INSIDE_SHADE), roughness: 0.9, side: BackSide }));
+	const floorMat = kit.material(new MeshStandardMaterial({ color: shade(colors.water, FLOOR_SHADE), roughness: 0.9 }));
+	const top = new Mesh(topGeo, waterMat);
 	top.userData.kind = "surface";
 	group.add(top);
+	const floorGeo = kit.geometry(new PlaneGeometry(TILE, TILE).rotateX(-Math.PI / 2));
+	const floor = new Mesh(floorGeo, floorMat);
+	floor.position.y = -BLOCK_DEPTH + 0.003;
+	floor.userData.kind = "floor";
+	group.add(floor);
 
-	// Side walls: a strip per face from the block floor up to the moving surface edge.
-	const sideMat = kit.material(
-		new MeshStandardMaterial({ color: colors.side, roughness: 0.85, metalness: 0 }),
-	);
+	// Side walls: a strip per face from the block floor up to the moving surface edge. The same
+	// strip, drawn from behind, is the opaque inside of the far walls.
 	const walls = FACES.map((face) => {
 		const { g, pos } = stripGeometry(face);
 		kit.geometry(g);
-		const m = new Mesh(g, sideMat);
+		const m = new Mesh(g, waterMat);
 		m.userData.kind = "wall";
 		group.add(m);
+		const inside = new Mesh(g, insideMat);
+		inside.userData.kind = "inside";
+		group.add(inside);
 		return { g, pos };
 	});
 
 	// Black corner posts finish the block's outline; each one stretches to its corner's surface height.
-	const outlineMat = kit.material(new MeshBasicMaterial({ color: colors.outline }));
+	// The black edges and the trace ribbons are flagged transparent (at full opacity) so three.js
+	// draws them after the water instead of into its refraction buffer; otherwise the water would
+	// show warped ghost copies of the lines sitting just in front of it.
+	const outlineMat = kit.material(new MeshBasicMaterial({ color: colors.outline, transparent: true }));
 	const postGeo = kit.geometry(new BoxGeometry(0.05, 1, 0.05).translate(0, 0.5, 0));
 	const corners = [
 		[HALF, HALF],
@@ -268,7 +312,7 @@ export function buildOceanBlock(
 	const traceMat = (color: string) => {
 		let m = traceMats.get(color);
 		if (!m) {
-			m = kit.material(new MeshBasicMaterial({ color }));
+			m = kit.material(new MeshBasicMaterial({ color, transparent: true }));
 			traceMats.set(color, m);
 		}
 		return m;
@@ -384,6 +428,12 @@ export function buildOceanBlock(
 		setField(next, nextTraces) {
 			field = next;
 			buildRibbons(nextTraces);
+		},
+		setWaterColor(hex) {
+			waterMat.color.set(tint(hex, WATER_CLARITY));
+			waterMat.attenuationColor.set(hex);
+			insideMat.color.set(shade(hex, INSIDE_SHADE));
+			floorMat.color.set(shade(hex, FLOOR_SHADE));
 		},
 		dispose() {
 			for (const r of ribbons) r.g.dispose();

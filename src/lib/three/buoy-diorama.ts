@@ -8,13 +8,17 @@
 //   - The buoys are drawn INSTRUMENT_ENLARGEMENT times larger than the sea's horizontal scale (a
 //     0.9 m Waverider at true scale would be a speck on a 400 m patch), all at the same scale, so
 //     the 3 m discus is drawn 3.3 times the Waverider's size, as it is.
+//   - The water's color is the sea surface temperature at the buoy that hour, on one scale shared
+//     by every station (water-color.ts). The water is translucent, so the hull's underside and
+//     the mooring, which runs from the eye under the hull to the block's floor, show through.
 //   - The buoy rides the drawn surface at the block's center and tilts with its slope. The drawn
 //     slope is exaggerated with the heights, so the tilt is softly capped: at MAX_TILT_RAD for the
 //     Waverider, and lower for the wide discus, whose deck edge would otherwise dip under.
-import { Group, Quaternion, Vector3 } from "three";
+import { CylinderGeometry, Group, Mesh, MeshStandardMaterial, Quaternion, Vector3 } from "three";
 import type { ForecastSystem } from "../surf-forecast/models";
 import type { BuoySnapshot, Instrument } from "../surf-forecast/buoy-snapshot";
-import { buildBuoy, type BuoyModel } from "./buoy-model";
+import { DEFAULT_BUOY_COLORS, buildBuoy, type BuoyModel } from "./buoy-model";
+import { temperatureDomain, waterColor } from "./water-color";
 import {
 	BASE_H,
 	BASE_MARGIN,
@@ -162,6 +166,10 @@ export interface BuoyDiorama {
 	update(t: number): void;
 	/** Lantern glow on the active buoy, 0 = dark. */
 	setLantern(intensity: number): void;
+	/** The water color drawn for a station (default: the current one). */
+	waterColorFor(i?: number): string;
+	/** The mooring line, from the block floor to the active buoy's eye, for tests. */
+	mooring: Mesh;
 	framing: { target: Vector3; turnRadius: number; halfHeight: number; viewDir: Vector3 };
 	/**
 	 * The uniform scale, about framing.target, that fits a station (default: the current one) in
@@ -181,9 +189,13 @@ export function buildBuoyDiorama(stations: DioramaStation[], startIndex = 0): Bu
 	const fieldFor = (s: DioramaStation) => swellField(s.observed);
 	const tracesFor = (s: DioramaStation) => forecastTraces(s.observed.wave_height_m, s.forecasts);
 
+	const domain = temperatureDomain(stations.map((s) => s.observed.water_temp_c));
+	const waterColors = stations.map((s) => waterColor(s.observed.water_temp_c, domain));
+
 	const group = new Group();
 	let field = fieldFor(stations[index]);
 	const ocean: OceanBlock = buildOceanBlock(field, tracesFor(stations[index]));
+	ocean.setWaterColor(waterColors[index]);
 	group.add(ocean.group);
 
 	const buoyRig = new Group();
@@ -202,12 +214,28 @@ export function buildBuoyDiorama(stations: DioramaStation[], startIndex = 0): Bu
 	let active = models.get(modelKey(stations[index]))!;
 	active.group.visible = true;
 
+	// The mooring: a black rubber line from the eye under the hull straight down to the block's
+	// floor (the cut; the real line runs on to the seabed). One unit tall, stretched each frame.
+	const mooringGeo = new CylinderGeometry(0.014, 0.014, 1, 8).translate(0, 0.5, 0);
+	const mooringMat = new MeshStandardMaterial({ color: DEFAULT_BUOY_COLORS.rubber, roughness: 0.9 });
+	const mooring = new Mesh(mooringGeo, mooringMat);
+	mooring.userData.kind = "mooring";
+	group.add(mooring);
+	const anchor = new Vector3(0, -BLOCK_DEPTH, 0);
+	const eye = new Vector3();
+	const up = new Vector3(0, 1, 0);
+
 	const q = new Quaternion();
 	const update = (t: number) => {
 		ocean.update(t);
 		buoyRig.position.set(0, surfaceHeight(field, 0, 0, t), 0);
 		const { axis, angle } = buoyTilt(surfaceSlope(field, 0, 0, t), active.maxTilt_rad);
 		buoyRig.quaternion.copy(q.setFromAxisAngle(axis, angle));
+		eye.set(0, active.mooring_m * INSTRUMENT_UNITS_PER_M, 0).applyQuaternion(buoyRig.quaternion).add(buoyRig.position);
+		const run = eye.clone().sub(anchor);
+		mooring.position.copy(anchor);
+		mooring.quaternion.setFromUnitVectors(up, run.clone().normalize());
+		mooring.scale.set(1, Math.max(1e-3, run.length()), 1);
 	};
 
 	// Frame the camera for the Waverider stations (eleven of the twelve). The extremes are the
@@ -249,6 +277,7 @@ export function buildBuoyDiorama(stations: DioramaStation[], startIndex = 0): Bu
 			index = next;
 			field = fieldFor(stations[index]);
 			ocean.setField(field, tracesFor(stations[index]));
+			ocean.setWaterColor(waterColors[index]);
 			active.group.visible = false;
 			active = models.get(modelKey(stations[index]))!;
 			active.group.visible = true;
@@ -258,12 +287,18 @@ export function buildBuoyDiorama(stations: DioramaStation[], startIndex = 0): Bu
 		setLantern(intensity) {
 			active.lantern.emissiveIntensity = intensity;
 		},
+		waterColorFor(i = index) {
+			return waterColors[wrap(i)];
+		},
+		mooring,
 		framing: { target: frame.target, turnRadius, halfHeight: frame.halfHeight, viewDir },
 		fitScale(i = index) {
 			return scales[wrap(i)];
 		},
 		dispose() {
 			ocean.dispose();
+			mooringGeo.dispose();
+			mooringMat.dispose();
 			for (const m of models.values()) m.dispose();
 		},
 	};

@@ -2,13 +2,14 @@ import { describe, expect, it } from "vitest";
 import { Vector3 } from "three";
 import data from "../../public/data/surf-forecast/buoy-snapshots.json";
 import { INSTRUMENT_ENLARGEMENT, INSTRUMENT_UNITS_PER_M, MAX_TILT_RAD, buildBuoyDiorama, buoyTilt, type DioramaStation } from "../../src/lib/three/buoy-diorama";
-import { UNITS_PER_M, surfaceHeight, surfaceSlope, swellField } from "../../src/lib/three/ocean";
+import { BLOCK_DEPTH, UNITS_PER_M, surfaceHeight, surfaceSlope, swellField } from "../../src/lib/three/ocean";
+import { hexToOklab, temperatureDomain, waterColor } from "../../src/lib/three/water-color";
 import type { Instrument } from "../../src/lib/surf-forecast/buoy-snapshot";
 
 const stations: DioramaStation[] = data.snapshots.map((s) => ({
 	station: s.station,
 	instrument: s.instrument as Instrument,
-	observed: s.observed,
+	observed: s.observed as DioramaStation["observed"],
 	forecasts: s.forecasts.map((f) => ({ system: f.system as DioramaStation["forecasts"][number]["system"], wave_height_m: f.wave_height_m, color: "#123456" })),
 }));
 
@@ -118,6 +119,25 @@ describe("buildBuoyDiorama", () => {
 		d.setStation(0);
 		expect(discusCap).toBeLessThan(d.active.maxTilt_rad);
 		expect(discusCap).toBeGreaterThan(0.05);
+	});
+
+	it("colors each station's water by its sea temperature, colder darker", () => {
+		const temps = stations.map((s) => s.observed.water_temp_c as number);
+		const coldest = temps.indexOf(Math.min(...temps));
+		const warmest = temps.indexOf(Math.max(...temps));
+		expect(d.waterColorFor(coldest)).toBe(waterColor(temps[coldest], temperatureDomain(temps)));
+		expect(hexToOklab(d.waterColorFor(coldest))[0]).toBeLessThan(hexToOklab(d.waterColorFor(warmest))[0]);
+	});
+
+	it("runs the mooring from the block floor to the eye under the hull", () => {
+		d.setStation(0);
+		d.update(3.3);
+		const m = d.mooring;
+		const start = m.position.clone();
+		const end = new Vector3(0, 1, 0).applyQuaternion(m.quaternion).multiplyScalar(m.scale.y).add(start);
+		expect(start.y).toBeCloseTo(-BLOCK_DEPTH);
+		const eye = new Vector3(0, d.active.mooring_m * INSTRUMENT_UNITS_PER_M, 0).applyQuaternion(d.buoyRig.quaternion).add(d.buoyRig.position);
+		expect(end.distanceTo(eye)).toBeLessThan(1e-6);
 	});
 
 	it("disposes without throwing", () => {

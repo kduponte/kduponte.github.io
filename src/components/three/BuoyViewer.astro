@@ -12,6 +12,7 @@ import { FALLBACK_VIEWBOX, fallbackSvgGroups } from "../../lib/three/buoy-fallba
 import { DISCUS_DIAMETER_M, WAVERIDER_DIAMETER_M } from "../../lib/three/buoy-model";
 import { SCALE_STEP_M, VERTICAL_EXAGGERATION } from "../../lib/three/ocean";
 import { WINDOW_M } from "../../lib/surf-forecast/swell-viz";
+import { temperatureDomain, temperatureFraction, waterColor, waterGradientStops } from "../../lib/three/water-color";
 import { SYSTEM_COLOR, SYSTEM_ORDER } from "../../scripts/surf-forecast/palette";
 
 interface Props {
@@ -34,12 +35,20 @@ const readouts = snapshots.map(snapshotReadout);
 const first = readouts[0];
 // Each readout row in the chart legend order, whatever order the JSON lists the forecasts in.
 const ordered = (r: (typeof readouts)[number]) => SYSTEM_ORDER.map((sys) => r.forecasts.find((f) => f.system === sys)?.text ?? "");
-const payload = JSON.stringify({ stations, readouts: readouts.map((r) => ({ ...r, forecasts: ordered(r) })) }).replace(/</g, "\\u003c");
+// Water color: each station's sea temperature on one scale spanning the coldest and warmest snapshot.
+const temps = snapshots.map((s) => s.observed.water_temp_c ?? null);
+const domain = temperatureDomain(temps);
+const water = temps.map((t) => ({ color: waterColor(t, domain), pos: temperatureFraction(t, domain) }));
+const gradient = `linear-gradient(to right, ${waterGradientStops(6).join(", ")})`;
+const payload = JSON.stringify({
+	stations,
+	readouts: readouts.map((r, i) => ({ ...r, forecasts: ordered(r), waterColor: water[i].color, waterPos: water[i].pos })),
+}).replace(/</g, "\\u003c");
 
 const discusName = snapshots.find((s) => s.instrument === "discus")?.name;
 const enlargement = Math.round(INSTRUMENT_ENLARGEMENT);
 const steps = Math.round(WINDOW_M / SCALE_STEP_M);
-const label = `A cut-away block of sea, ${WINDOW_M} m across, slowly turning, with a wave buoy riding the swell one buoy recorded. Lines on the block's sides show what each forecast said the swell would be. Drag to spin it; tap it for the next buoy.`;
+const label = `A cut-away block of see-through sea, ${WINDOW_M} m across, slowly turning, with a wave buoy riding the swell one buoy recorded. The water's color shows the sea temperature. Lines on the block's sides show what each forecast said the swell would be. Drag to spin it; tap it for the next buoy.`;
 ---
 
 <div data-buoy-root data-station="0" data-count={snapshots.length} class="contents">
@@ -91,6 +100,15 @@ const label = `A cut-away block of sea, ${WINDOW_M} m across, slowly turning, wi
 						<span aria-hidden="true" class="inline-block h-[5px] w-5 shrink-0 -translate-y-[3px] rounded-[2px] bg-black" />
 						<span data-buoy-observed>{first.observed}</span>
 					</li>
+					<li class="flex items-baseline gap-2.5">
+						<span
+							aria-hidden="true"
+							data-buoy-water-swatch
+							class="inline-block h-[9px] w-5 shrink-0 -translate-y-[1px] rounded-[2px] outline outline-[1.5px] outline-black"
+							style={`background:${water[0].color}`}
+						/>
+						<span data-buoy-water>{first.water ?? "No sea temperature logged that hour"}</span>
+					</li>
 					{SYSTEM_ORDER.map((sys, i) => (
 						<li class="flex items-baseline gap-2.5">
 							<span
@@ -102,13 +120,30 @@ const label = `A cut-away block of sea, ${WINDOW_M} m across, slowly turning, wi
 						</li>
 					))}
 				</ul>
+				{
+					domain && (
+						<div class="mt-3 flex items-center gap-2 font-mono text-[10px] uppercase" aria-hidden="true">
+							<span>{domain[0]} °C</span>
+							<span class="relative h-2.5 flex-1 rounded-[3px] outline outline-[1.5px] outline-black" style={`background:${gradient}`}>
+								<span
+									data-buoy-water-marker
+									class="absolute -top-1 h-[18px] w-[3px] -translate-x-1/2 rounded-full bg-black"
+									style={`left:${(water[0].pos ?? 0) * 100}%;${water[0].pos === null ? "display:none" : ""}`}
+								/>
+							</span>
+							<span>{domain[1]} °C</span>
+						</div>
+					)
+				}
 				<p class="mt-3 text-xs leading-relaxed" data-buoy-note>
 					{first.note}
 				</p>
 				<p class="font-mono mt-3 border-t-2 border-black pt-3 text-[10px] uppercase leading-relaxed">
 					To scale across: the block is {WINDOW_M} m of sea (bar on the base: {steps} × {SCALE_STEP_M} m). Heights
 					stretched {VERTICAL_EXAGGERATION}×. The swell is drawn as one regular wave at the buoy's height and
-					period; each forecast line is that wave at the forecast's height. Buoys drawn {enlargement}× life size, all
+					period; each forecast line is that wave at the forecast's height. Water color is the buoy's sea surface
+					temperature that hour{domain && `, ${domain[0]} °C (green) to ${domain[1]} °C (turquoise)`}; the water is
+					see-through so the hull and mooring below it show. Buoys drawn {enlargement}× life size, all
 					at one scale{discusName && `, so ${discusName}'s ${DISCUS_DIAMETER_M} m discus dwarfs the ${WAVERIDER_DIAMETER_M} m Waveriders (its whole scene is drawn zoomed out to fit its mast)`}.
 				</p>
 			</div>
@@ -130,6 +165,9 @@ const label = `A cut-away block of sea, ${WINDOW_M} m across, slowly turning, wi
 		title: string;
 		when: string;
 		observed: string;
+		water: string | null;
+		waterColor: string;
+		waterPos: number | null;
 		forecasts: string[];
 		note: string;
 	}
@@ -151,6 +189,13 @@ const label = `A cut-away block of sea, ${WINDOW_M} m across, slowly turning, wi
 			set("[data-buoy-title]", r.title);
 			set("[data-buoy-when]", r.when);
 			set("[data-buoy-observed]", r.observed);
+			set("[data-buoy-water]", r.water ?? "No sea temperature logged that hour");
+			root.querySelector<HTMLElement>("[data-buoy-water-swatch]")?.style.setProperty("background", r.waterColor);
+			const marker = root.querySelector<HTMLElement>("[data-buoy-water-marker]");
+			if (marker) {
+				marker.style.display = r.waterPos === null ? "none" : "";
+				marker.style.left = `${(r.waterPos ?? 0) * 100}%`;
+			}
 			r.forecasts.forEach((text, k) => set(`[data-buoy-forecast="${k}"]`, text));
 			set("[data-buoy-note]", r.note);
 			for (const g of root.querySelectorAll<SVGGElement>("[data-fallback-station]")) {

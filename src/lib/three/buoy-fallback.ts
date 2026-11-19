@@ -5,6 +5,7 @@
 // crest under the buoy at t = 0). One group per station; the readout script shows the active one.
 import { DISCUS_ANEMOMETER_HEIGHT_M, DISCUS_DIAMETER_M, WAVERIDER_DIAMETER_M } from "./buoy-model";
 import { INSTRUMENT_UNITS_PER_M, type DioramaStation } from "./buoy-diorama";
+import { temperatureDomain, waterColor } from "./water-color";
 import {
 	BASE_H,
 	BASE_MARGIN,
@@ -79,15 +80,15 @@ function buoySvg(s: DioramaStation, y: number): string {
 </g>`;
 }
 
-/** One station's group: plinth, water, forecast traces, the real swell's line, and the buoy. */
-export function fallbackStationSvg(s: DioramaStation): string {
+/** One station's group: plinth, water (in its temperature color), forecast traces, the real swell's line, and the buoy. */
+export function fallbackStationSvg(s: DioramaStation, waterFill: string = DEFAULT_OCEAN_COLORS.water): string {
 	const { points } = fallbackProfile(s);
 	const f = swellField(s.observed);
 	const left = CX - (TILE / 2) * P;
 	const right = CX + (TILE / 2) * P;
 	const floor = WATERLINE + BLOCK_DEPTH * P;
 	const base = `<rect x="${f1(left - BASE_MARGIN * P)}" y="${f1(floor)}" width="${f1((TILE + 2 * BASE_MARGIN) * P)}" height="${f1(BASE_H * P)}" rx="6" fill="${DEFAULT_OCEAN_COLORS.base}" stroke="${INK}" stroke-width="4"/>`;
-	const water = `<path d="${line(points)}L${f1(right)} ${f1(floor)}L${f1(left)} ${f1(floor)}Z" fill="${DEFAULT_OCEAN_COLORS.side}" stroke="${INK}" stroke-width="4" stroke-linejoin="round"/>`;
+	const water = `<path d="${line(points)}L${f1(right)} ${f1(floor)}L${f1(left)} ${f1(floor)}Z" fill="${waterFill}" stroke="${INK}" stroke-width="4" stroke-linejoin="round"/>`;
 	const traces = forecastTraces(s.observed.wave_height_m, s.forecasts)
 		.map((tr) => {
 			const pts = points.map(([x], i): [number, number] => [x, WATERLINE - (WATERLINE - points[i][1]) * tr.heightScale]);
@@ -101,7 +102,11 @@ export function fallbackStationSvg(s: DioramaStation): string {
 
 /** Every station's group, all hidden but `active`. */
 export function fallbackSvgGroups(stations: DioramaStation[], active = 0): string {
+	const domain = temperatureDomain(stations.map((s) => s.observed.water_temp_c));
 	return stations
-		.map((s, i) => `<g data-fallback-station="${i}"${i === active ? "" : ' display="none"'}>${fallbackStationSvg(s)}</g>`)
+		.map(
+			(s, i) =>
+				`<g data-fallback-station="${i}"${i === active ? "" : ' display="none"'}>${fallbackStationSvg(s, waterColor(s.observed.water_temp_c, domain))}</g>`,
+		)
 		.join("");
 }

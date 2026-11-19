@@ -9,8 +9,8 @@
 //   anemometers at a nominal 5 m above the waterline on these hulls, which sets the cross-arm.
 //
 // Both are built at true size, so drawn at one shared scale the discus dwarfs the Waveriders the
-// way it does in the water. Details below the waterline (keel, mooring eye) are omitted: the sea
-// block hides them.
+// way it does in the water. Below the waterline each has the eye its mooring hangs from; the
+// translucent sea shows it.
 import {
 	CylinderGeometry,
 	Euler,
@@ -72,6 +72,8 @@ export interface BuoyModel {
 	diameter_m: number;
 	/** Highest point above the waterline, metres. */
 	height_m: number;
+	/** Where the mooring attaches under the hull, metres (negative: below the waterline). */
+	mooring_m: number;
 	/**
 	 * Most the drawn buoy may tilt on the exaggerated sea, radians. A wide, low hull gets less, so
 	 * its deck edge never dips more than a third of its freeboard.
@@ -216,6 +218,11 @@ export function buildWaverider(colors: BuoyColors = DEFAULT_BUOY_COLORS): BuoyMo
 	const surfaceY = (r: number) => cy + Math.sqrt(Math.max(0, R * R - r * r));
 
 	kit.add(group, new SphereGeometry(R, 48, 32), m.hull, [0, cy, 0], { outline: BUOY_OUTLINE_M }).userData.kind = "hull";
+	// Stainless mooring eye at the bottom of the sphere.
+	const bottom = cy - R;
+	kit.add(group, new CylinderGeometry(0.03, 0.045, 0.05, 12), m.steel, [0, bottom - 0.015, 0], { outline: 0 });
+	kit.add(group, new TorusGeometry(0.035, 0.011, 8, 16), m.steel, [0, bottom - 0.07, 0], { outline: 0 }).userData.kind = "mooring-eye";
+	const waveriderMooring = bottom - 0.105;
 
 	// Black rubber fender around the equator, with a lighter molded seam on its crown.
 	const fender = new TorusGeometry(R + 0.025, 0.045, 14, 64);
@@ -275,6 +282,7 @@ export function buildWaverider(colors: BuoyColors = DEFAULT_BUOY_COLORS): BuoyMo
 		lantern: m.lens,
 		diameter_m: WAVERIDER_DIAMETER_M,
 		height_m: whipTop + 0.014,
+		mooring_m: waveriderMooring,
 		maxTilt_rad: 0.3,
 		dispose: kit.dispose,
 	};
@@ -300,6 +308,9 @@ export function buildDiscus(station = "46042", colors: BuoyColors = DEFAULT_BUOY
 		new Vector2(0.001, deckY + 0.05),
 	];
 	kit.add(group, new LatheGeometry(profile, 64), m.hull, [0, 0, 0], { outline: BUOY_OUTLINE_M }).userData.kind = "hull";
+	// Mooring padeye under the center of the hull.
+	kit.add(group, slab(0.16, 0.06, 0.05, 0.015, 0.005), m.steel, [0, -0.58, 0], { outline: 0 });
+	kit.add(group, new TorusGeometry(0.06, 0.018, 8, 16), m.steel, [0, -0.66, 0], { outline: 0 }).userData.kind = "mooring-eye";
 	// Rub rail around the deck edge.
 	const rail = new TorusGeometry(R + 0.01, 0.055, 12, 72);
 	rail.rotateX(Math.PI / 2);
@@ -438,6 +449,7 @@ export function buildDiscus(station = "46042", colors: BuoyColors = DEFAULT_BUOY
 		lantern: m.lens,
 		diameter_m: DISCUS_DIAMETER_M,
 		height_m: height,
+		mooring_m: -0.72,
 		maxTilt_rad: Math.asin((deckY / 3) / R),
 		dispose: kit.dispose,
 	};

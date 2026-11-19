@@ -1,0 +1,394 @@
+{
+	"window": {
+		"start": "2026-01-01",
+		"end": "2026-09-30"
+	},
+	"lead_days": 1,
+	"method": "Per buoy, the hour whose mean absolute height miss across ECMWF, NOAA and DWD is closest to that buoy's median; later hour on ties.",
+	"snapshots": [
+		{
+			"station": "51201",
+			"name": "Waimea Bay",
+			"region": "hawaii",
+			"instrument": "waverider",
+			"valid_time": "2026-09-18T18:00:00.000Z",
+			"lead_days": 1,
+			"observed": {
+				"wave_height_m": 1.25,
+				"dominant_period_s": 7.14,
+				"direction_deg": 37
+			},
+			"forecasts": [
+				{
+					"system": "ecmwf",
+					"wave_height_m": 1.58,
+					"miss_m": 0.33
+				},
+				{
+					"system": "noaa",
+					"wave_height_m": 1.14,
+					"miss_m": -0.11
+				},
+				{
+					"system": "dwd",
+					"wave_height_m": 2.14,
+					"miss_m": 0.89
+				}
+			],
+			"median_mean_abs_miss_m": 0.44,
+			"candidates_n": 809
+		},
+		{
+			"station": "51202",
+			"name": "Mokapu Point",
+			"region": "hawaii",
+			"instrument": "waverider",
+			"valid_time": "2026-09-23T18:00:00.000Z",
+			"lead_days": 1,
+			"observed": {
+				"wave_height_m": 2.51,
+				"dominant_period_s": 10.53,
+				"direction_deg": 71
+			},
+			"forecasts": [
+				{
+					"system": "ecmwf",
+					"wave_height_m": 2.34,
+					"miss_m": -0.17
+				},
+				{
+					"system": "noaa",
+					"wave_height_m": 1.86,
+					"miss_m": -0.65
+				},
+				{
+					"system": "dwd",
+					"wave_height_m": 2.48,
+					"miss_m": -0.03
+				}
+			],
+			"median_mean_abs_miss_m": 0.28,
+			"candidates_n": 1092
+		},
+		{
+			"station": "51205",
+			"name": "Pauwela, Maui",
+			"region": "hawaii",
+			"instrument": "waverider",
+			"valid_time": "2026-09-06T06:00:00.000Z",
+			"lead_days": 1,
+			"observed": {
+				"wave_height_m": 2.21,
+				"dominant_period_s": 10.53,
+				"direction_deg": 72
+			},
+			"forecasts": [
+				{
+					"system": "ecmwf",
+					"wave_height_m": 2.4,
+					"miss_m": 0.19
+				},
+				{
+					"system": "noaa",
+					"wave_height_m": 1.6,
+					"miss_m": -0.61
+				},
+				{
+					"system": "dwd",
+					"wave_height_m": 2.12,
+					"miss_m": -0.09
+				}
+			],
+			"median_mean_abs_miss_m": 0.3,
+			"candidates_n": 1092
+		},
+		{
+			"station": "51206",
+			"name": "Hilo",
+			"region": "hawaii",
+			"instrument": "waverider",
+			"valid_time": "2026-08-22T12:00:00.000Z",
+			"lead_days": 1,
+			"observed": {
+				"wave_height_m": 1.75,
+				"dominant_period_s": 7.14,
+				"direction_deg": 81
+			},
+			"forecasts": [
+				{
+					"system": "ecmwf",
+					"wave_height_m": 1.9,
+					"miss_m": 0.15
+				},
+				{
+					"system": "noaa",
+					"wave_height_m": 1.22,
+					"miss_m": -0.53
+				},
+				{
+					"system": "dwd",
+					"wave_height_m": 1.64,
+					"miss_m": -0.11
+				}
+			],
+			"median_mean_abs_miss_m": 0.26,
+			"candidates_n": 1092
+		},
+		{
+			"station": "51208",
+			"name": "Hanalei, Kauai",
+			"region": "hawaii",
+			"instrument": "waverider",
+			"valid_time": "2026-08-01T00:00:00.000Z",
+			"lead_days": 1,
+			"observed": {
+				"wave_height_m": 1.68,
+				"dominant_period_s": 7.69,
+				"direction_deg": 58
+			},
+			"forecasts": [
+				{
+					"system": "ecmwf",
+					"wave_height_m": 1.2,
+					"miss_m": -0.48
+				},
+				{
+					"system": "noaa",
+					"wave_height_m": 1.68,
+					"miss_m": 0
+				},
+				{
+					"system": "dwd",
+					"wave_height_m": 2.1,
+					"miss_m": 0.42
+				}
+			],
+			"median_mean_abs_miss_m": 0.3,
+			"candidates_n": 930
+		},
+		{
+			"station": "51211",
+			"name": "Pearl Harbor Entrance",
+			"region": "hawaii",
+			"instrument": "waverider",
+			"valid_time": "2026-08-04T00:00:00.000Z",
+			"lead_days": 1,
+			"observed": {
+				"wave_height_m": 0.67,
+				"dominant_period_s": 13.33,
+				"direction_deg": 163
+			},
+			"forecasts": [
+				{
+					"system": "ecmwf",
+					"wave_height_m": 0.86,
+					"miss_m": 0.19
+				},
+				{
+					"system": "noaa",
+					"wave_height_m": 1.08,
+					"miss_m": 0.41
+				},
+				{
+					"system": "dwd",
+					"wave_height_m": 1.88,
+					"miss_m": 1.21
+				}
+			],
+			"median_mean_abs_miss_m": 0.6,
+			"candidates_n": 1091
+		},
+		{
+			"station": "46042",
+			"name": "Monterey",
+			"region": "norcal",
+			"instrument": "discus",
+			"valid_time": "2026-09-14T06:00:00.000Z",
+			"lead_days": 1,
+			"observed": {
+				"wave_height_m": 1.9,
+				"dominant_period_s": 7.14,
+				"direction_deg": 315
+			},
+			"forecasts": [
+				{
+					"system": "ecmwf",
+					"wave_height_m": 2.14,
+					"miss_m": 0.24
+				},
+				{
+					"system": "noaa",
+					"wave_height_m": 1.92,
+					"miss_m": 0.02
+				},
+				{
+					"system": "dwd",
+					"wave_height_m": 2.16,
+					"miss_m": 0.26
+				}
+			],
+			"median_mean_abs_miss_m": 0.17,
+			"candidates_n": 673
+		},
+		{
+			"station": "46237",
+			"name": "San Francisco Bar",
+			"region": "norcal",
+			"instrument": "waverider",
+			"valid_time": "2026-08-02T06:00:00.000Z",
+			"lead_days": 1,
+			"observed": {
+				"wave_height_m": 1.67,
+				"dominant_period_s": 8.33,
+				"direction_deg": 289
+			},
+			"forecasts": [
+				{
+					"system": "ecmwf",
+					"wave_height_m": 2.12,
+					"miss_m": 0.45
+				},
+				{
+					"system": "noaa",
+					"wave_height_m": 1.52,
+					"miss_m": -0.15
+				},
+				{
+					"system": "dwd",
+					"wave_height_m": 1.84,
+					"miss_m": 0.17
+				}
+			],
+			"median_mean_abs_miss_m": 0.26,
+			"candidates_n": 857
+		},
+		{
+			"station": "46221",
+			"name": "Santa Monica Bay",
+			"region": "socal",
+			"instrument": "waverider",
+			"valid_time": "2026-09-27T00:00:00.000Z",
+			"lead_days": 1,
+			"observed": {
+				"wave_height_m": 0.95,
+				"dominant_period_s": 11.11,
+				"direction_deg": 204
+			},
+			"forecasts": [
+				{
+					"system": "ecmwf",
+					"wave_height_m": 1.14,
+					"miss_m": 0.19
+				},
+				{
+					"system": "noaa",
+					"wave_height_m": 0.76,
+					"miss_m": -0.19
+				},
+				{
+					"system": "dwd",
+					"wave_height_m": 1.5,
+					"miss_m": 0.55
+				}
+			],
+			"median_mean_abs_miss_m": 0.31,
+			"candidates_n": 1056
+		},
+		{
+			"station": "46222",
+			"name": "San Pedro",
+			"region": "socal",
+			"instrument": "waverider",
+			"valid_time": "2026-09-25T18:00:00.000Z",
+			"lead_days": 1,
+			"observed": {
+				"wave_height_m": 0.57,
+				"dominant_period_s": 11.76,
+				"direction_deg": 250
+			},
+			"forecasts": [
+				{
+					"system": "ecmwf",
+					"wave_height_m": 0.72,
+					"miss_m": 0.15
+				},
+				{
+					"system": "noaa",
+					"wave_height_m": 0.5,
+					"miss_m": -0.07
+				},
+				{
+					"system": "dwd",
+					"wave_height_m": 1.32,
+					"miss_m": 0.75
+				}
+			],
+			"median_mean_abs_miss_m": 0.32,
+			"candidates_n": 1092
+		},
+		{
+			"station": "46224",
+			"name": "Oceanside Offshore",
+			"region": "socal",
+			"instrument": "waverider",
+			"valid_time": "2026-09-27T00:00:00.000Z",
+			"lead_days": 1,
+			"observed": {
+				"wave_height_m": 0.94,
+				"dominant_period_s": 12.5,
+				"direction_deg": 206
+			},
+			"forecasts": [
+				{
+					"system": "ecmwf",
+					"wave_height_m": 1.18,
+					"miss_m": 0.24
+				},
+				{
+					"system": "noaa",
+					"wave_height_m": 1.02,
+					"miss_m": 0.08
+				},
+				{
+					"system": "dwd",
+					"wave_height_m": 1.3,
+					"miss_m": 0.36
+				}
+			],
+			"median_mean_abs_miss_m": 0.23,
+			"candidates_n": 1077
+		},
+		{
+			"station": "46254",
+			"name": "Scripps Nearshore",
+			"region": "socal",
+			"instrument": "waverider",
+			"valid_time": "2026-09-29T18:00:00.000Z",
+			"lead_days": 1,
+			"observed": {
+				"wave_height_m": 1.55,
+				"dominant_period_s": 8.33,
+				"direction_deg": 284
+			},
+			"forecasts": [
+				{
+					"system": "ecmwf",
+					"wave_height_m": 1.24,
+					"miss_m": -0.31
+				},
+				{
+					"system": "noaa",
+					"wave_height_m": 0.9,
+					"miss_m": -0.65
+				},
+				{
+					"system": "dwd",
+					"wave_height_m": 2,
+					"miss_m": 0.45
+				}
+			],
+			"median_mean_abs_miss_m": 0.47,
+			"candidates_n": 1088
+		}
+	]
+}

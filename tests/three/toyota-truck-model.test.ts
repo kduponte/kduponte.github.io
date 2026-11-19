@@ -19,7 +19,7 @@ describe("buildToyotaTruck", () => {
 
 	it("builds a plausible number of parts", () => {
 		expect(truck.parts.length).toBeGreaterThan(60);
-		expect(truck.parts.length).toBeLessThan(400);
+		expect(truck.parts.length).toBeLessThan(500);
 	});
 
 	it("is longest along X (front to back)", () => {

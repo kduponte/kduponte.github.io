@@ -152,23 +152,46 @@ const WHEEL_R = 0.33;
 const AXLE_Y = 0.33;
 const FRONT_AXLE_X = 1.35;
 const REAR_AXLE_X = -1.6;
-const ARCH_R = 0.4;
+const ARCH_RX = 0.43; // wheel arch half-width
+const ARCH_RY = 0.41; // wheel arch height above the axle
+const ARCH_SQUARENESS = 2.7; // superellipse exponent: 2 is a semicircle, higher is squarer
 const BODY_HALF_W = 0.82;
 const BELT_Y = 0.98;
 const NOSE_X = 2.18;
 const CAB_BACK_X = -0.62;
+const CAB_FRONT_X = 0.7; // cowl / firewall
+const CAB_FLOOR_Y = 0.5;
 const TAIL_X = -2.64;
 const BED_FLOOR_Y = 0.665;
 
-/** Side profile of hood + cab base, with the front wheel arch cut out of the bottom edge. */
-function cabBodyProfile(): Shape {
+/**
+ * Points along a squared-off wheel arch (the upper half of a superellipse), from the right foot
+ * over the top to the left foot. The 4th-gen pickup's arches are rounder than a box but flatter
+ * on top than a circle.
+ */
+function archPoints(cx: number, cy: number, rx: number, ry: number, segments = 28): Vector2[] {
+	const e = 2 / ARCH_SQUARENESS;
+	const pts: Vector2[] = [];
+	for (let i = 0; i <= segments; i++) {
+		const t = (i / segments) * Math.PI;
+		const c = Math.cos(t);
+		pts.push(new Vector2(cx + rx * Math.sign(c) * Math.abs(c) ** e, cy + ry * Math.sin(t) ** e));
+	}
+	return pts;
+}
+
+/** Continue a profile path over a wheel arch centered at `cx`. */
+function archTo(s: Shape, cx: number) {
+	for (const p of archPoints(cx, AXLE_Y, ARCH_RX, ARCH_RY)) s.lineTo(p.x, p.y);
+}
+
+/** Side profile of the front clip (hood and fenders), with the front wheel arch cut out. */
+function frontClipProfile(): Shape {
 	const s = new Shape();
 	s.moveTo(NOSE_X, AXLE_Y);
-	s.lineTo(FRONT_AXLE_X + ARCH_R, AXLE_Y);
-	s.absarc(FRONT_AXLE_X, AXLE_Y, ARCH_R, 0, Math.PI, false);
-	s.lineTo(CAB_BACK_X, AXLE_Y);
-	s.lineTo(CAB_BACK_X, BELT_Y);
-	s.lineTo(0.72, BELT_Y); // cowl
+	archTo(s, FRONT_AXLE_X);
+	s.lineTo(CAB_FRONT_X, AXLE_Y);
+	s.lineTo(CAB_FRONT_X, BELT_Y);
 	s.lineTo(NOSE_X, 0.9); // hood slopes down to the nose
 	s.lineTo(NOSE_X, AXLE_Y);
 	return s;
@@ -178,8 +201,7 @@ function cabBodyProfile(): Shape {
 function bedWallProfile(): Shape {
 	const s = new Shape();
 	s.moveTo(CAB_BACK_X, AXLE_Y);
-	s.lineTo(REAR_AXLE_X + ARCH_R, AXLE_Y);
-	s.absarc(REAR_AXLE_X, AXLE_Y, ARCH_R, 0, Math.PI, false);
+	archTo(s, REAR_AXLE_X);
 	s.lineTo(TAIL_X, AXLE_Y);
 	s.lineTo(TAIL_X, BELT_Y);
 	s.lineTo(CAB_BACK_X, BELT_Y);
@@ -187,13 +209,44 @@ function bedWallProfile(): Shape {
 	return s;
 }
 
-/** Semicircle that fills a wheel arch so it reads dark from the side. */
+/** Fills a wheel arch so it reads dark from the side. Local origin at the axle. */
 function archFill(): Shape {
-	const s = new Shape();
-	s.absarc(0, 0, ARCH_R - 0.02, 0, Math.PI, false);
-	s.lineTo(ARCH_R - 0.02, 0);
-	return s;
+	return new Shape(archPoints(0, 0, ARCH_RX - 0.02, ARCH_RY - 0.02));
 }
+
+/** The flared lip around an arch: a band between two arch outlines. Local origin at the axle. */
+function archLip(width: number): Shape {
+	const outer = archPoints(0, 0, ARCH_RX + width, ARCH_RY + width);
+	const inner = archPoints(0, 0, ARCH_RX - 0.005, ARCH_RY - 0.005).reverse();
+	return new Shape([...outer, ...inner]);
+}
+
+/**
+ * Raised block lettering, as stroke segments on a cell 0.75 wide and 1 tall. Only the letters
+ * in TOYOTA are needed.
+ */
+const GLYPHS: Record<string, [number, number, number, number][]> = {
+	T: [
+		[0, 1, 0.75, 1],
+		[0.375, 1, 0.375, 0],
+	],
+	O: [
+		[0, 0, 0.75, 0],
+		[0.75, 0, 0.75, 1],
+		[0.75, 1, 0, 1],
+		[0, 1, 0, 0],
+	],
+	Y: [
+		[0, 1, 0.375, 0.5],
+		[0.75, 1, 0.375, 0.5],
+		[0.375, 0.5, 0.375, 0],
+	],
+	A: [
+		[0, 0, 0.375, 1],
+		[0.75, 0, 0.375, 1],
+		[0.17, 0.36, 0.58, 0.36],
+	],
+};
 
 export function buildToyotaTruck(colors: TruckColors = DEFAULT_TRUCK_COLORS): TruckModel {
 	const outlineMat = new MeshBasicMaterial({ color: colors.trim, side: BackSide });
@@ -207,13 +260,19 @@ export function buildToyotaTruck(colors: TruckColors = DEFAULT_TRUCK_COLORS): Tr
 	};
 	const bodyMat = std(colors.body, 0.36, 0.35);
 	const bedFloorMat = std(shade(colors.body, 0.45), 0.5, 0.2);
+	const creaseMat = std(`#${new Color(colors.body).lerp(new Color("#ffffff"), 0.22).getHexString()}`, 0.3, 0.35);
 	const trimMat = std(colors.trim, 0.8);
 	const bumperMat = std(colors.bumper, 0.7);
 	const dishMat = std(shade(colors.silver, 0.35), 0.5, 0.6);
 	const silverMat = std(colors.silver, 0.28, 0.85);
 	const hubMat = std(colors.hub, 0.5);
 	const amberMat = std(colors.amber, 0.4);
+	// Interior shades all derive from the one interior color (gray cloth in the reference truck).
 	const interiorMat = std(colors.interior, 0.85);
+	const seatMat = std(`#${new Color(colors.interior).lerp(new Color("#ffffff"), 0.12).getHexString()}`, 0.95);
+	const carpetMat = std(shade(colors.interior, 0.45), 1);
+	const dashMat = std(shade(colors.interior, 0.35), 0.75);
+	const headlinerMat = std(`#${new Color(colors.interior).lerp(new Color("#ffffff"), 0.5).getHexString()}`, 0.95);
 	const headMat = std(colors.light, 0.2);
 	headMat.emissive = new Color(colors.light);
 	headMat.emissiveIntensity = 0;
@@ -266,13 +325,70 @@ export function buildToyotaTruck(colors: TruckColors = DEFAULT_TRUCK_COLORS): Tr
 		fn(1);
 		fn(-1);
 	};
+	/**
+	 * Raised block lettering on a face perpendicular to X, centered on `center`. `facing` is the
+	 * direction the face points (+1 front, -1 rear), which decides which way along Z reads left to right.
+	 */
+	const lettering = (text: string, center: [number, number, number], height: number, stroke: number, facing: 1 | -1, mat: Material) => {
+		const cellW = 0.75 * height;
+		const gap = 0.32 * height;
+		const total = text.length * cellW + (text.length - 1) * gap;
+		const dir = -facing; // seen from behind, the reader's right is +Z; from the front, -Z
+		[...text].forEach((ch, i) => {
+			const left = -total / 2 + i * (cellW + gap);
+			for (const [u0, v0, u1, v1] of GLYPHS[ch]) {
+				const du = (u1 - u0) * height;
+				const dv = (v1 - v0) * height;
+				const u = left + ((u0 + u1) / 2) * height;
+				const v = ((v0 + v1) / 2 - 0.5) * height;
+				const angle = Math.atan2(dv, dir * du);
+				add(group, slab(0.02, stroke, Math.hypot(du, dv) + stroke, stroke * 0.3, 0.004), mat, [center[0], center[1] + v, center[2] + dir * u], {
+					rot: [-angle, 0, 0],
+					outline: 0,
+				});
+			}
+		});
+	};
 
-	// --- Hood + cab base ---
-	add(group, extrude(cabBodyProfile(), BODY_HALF_W * 2, 0.07, false), bodyMat, [0, 0, 0], { outline: OUTLINE });
-	// Dark wheel well behind the front wheels.
-	add(group, extrude(archFill(), BODY_HALF_W * 2 - 0.2, 0), trimMat, [FRONT_AXLE_X, AXLE_Y + (ARCH_R - 0.02) / 2, 0], {
+	// --- Front clip: hood and fenders ---
+	add(group, extrude(frontClipProfile(), BODY_HALF_W * 2, 0.07, false), bodyMat, [0, 0, 0], { outline: OUTLINE });
+
+	// --- Cab shell: floor pan, door walls and back wall, hollow so the interior shows through the glass ---
+	const cabLen = CAB_FRONT_X - CAB_BACK_X;
+	const cabMidX = (CAB_FRONT_X + CAB_BACK_X) / 2;
+	const cabInnerW = BODY_HALF_W * 2 - 0.18;
+	add(group, slab(cabLen, CAB_FLOOR_Y - AXLE_Y, BODY_HALF_W * 2 - 0.1, 0.02, 0.01), trimMat, [cabMidX, (AXLE_Y + CAB_FLOOR_Y) / 2, 0], {
 		outline: 0,
 	});
+	pair((side) => {
+		add(group, slab(cabLen, BELT_Y - AXLE_Y, 0.08, 0.03, 0.02), bodyMat, [cabMidX, (AXLE_Y + BELT_Y) / 2, side * (BODY_HALF_W - 0.04)], {
+			outline: OUTLINE,
+		});
+		// Black belt molding along the window sill.
+		add(group, slab(cabLen, 0.025, 0.1, 0.01, 0.006), trimMat, [cabMidX, BELT_Y + 0.005, side * (BODY_HALF_W - 0.04)], { outline: 0 });
+	});
+	add(group, slab(0.06, BELT_Y - CAB_FLOOR_Y, BODY_HALF_W * 2 - 0.1, 0.02, 0.01), bodyMat, [CAB_BACK_X + 0.03, (CAB_FLOOR_Y + BELT_Y) / 2, 0]);
+	// Dark wheel well behind the front wheels.
+	add(group, extrude(archFill(), BODY_HALF_W * 2 - 0.2, 0, false), trimMat, [FRONT_AXLE_X, AXLE_Y, 0], { outline: 0 });
+
+	pair((side) => {
+		const skin = side * (BODY_HALF_W + 0.004);
+		// The body-side crease that runs from the front fender, through the door, along the bed.
+		const creaseFrom = TAIL_X + 0.04;
+		const creaseTo = NOSE_X - 0.08;
+		const creaseMid = (creaseFrom + creaseTo) / 2;
+		// A lit upper edge over a dark shadow line, like light catching a stamped crease.
+		add(group, slab(creaseTo - creaseFrom, 0.022, 0.014, 0.008, 0.005), creaseMat, [creaseMid, 0.805, skin], { outline: 0 });
+		add(group, slab(creaseTo - creaseFrom, 0.012, 0.008, 0.004, 0.002), trimMat, [creaseMid, 0.788, skin - side * 0.002], {
+			outline: 0,
+		});
+		// Seam between the cab and the bed.
+		add(group, slab(0.02, BELT_Y - AXLE_Y, 0.02, 0.006, 0.003), trimMat, [CAB_BACK_X - 0.005, (AXLE_Y + BELT_Y) / 2, side * (BODY_HALF_W + 0.008)], {
+			outline: 0,
+		});
+	});
+	// Fuel door on the driver's side of the bed, ahead of the rear wheel.
+	add(group, slab(0.15, 0.15, 0.012, 0.035, 0.004), bodyMat, [CAB_BACK_X - 0.3, 0.62, -(BODY_HALF_W + 0.004)], { outline: 0.008 });
 
 	// --- Bed: hollow, built from walls, a recessed floor, wheel wells, headboard and tailgate ---
 	const bedLen = CAB_BACK_X - TAIL_X;
@@ -281,10 +397,21 @@ export function buildToyotaTruck(colors: TruckColors = DEFAULT_TRUCK_COLORS): Tr
 		add(group, extrude(bedWallProfile(), 0.08, 0.02, false), bodyMat, [0, 0, side * (BODY_HALF_W - 0.04)], {
 			outline: OUTLINE,
 		});
-		// Rolled top rail along the wall.
+		// Rolled top rail along the wall, with stake pockets at the corners and over the wheel.
 		add(group, slab(bedLen, 0.05, 0.12, 0.02, 0.012), bodyMat, [bedMidX, BELT_Y, side * (BODY_HALF_W - 0.06)]);
+		for (const x of [CAB_BACK_X - 0.14, REAR_AXLE_X, TAIL_X + 0.14]) {
+			add(group, slab(0.07, 0.012, 0.04, 0.008, 0.003), trimMat, [x, BELT_Y + 0.026, side * (BODY_HALF_W - 0.06)], { outline: 0 });
+		}
 		// Wheel well intruding into the bed.
 		add(group, slab(0.95, 0.24, 0.22, 0.1, 0.03), bodyMat, [REAR_AXLE_X, BED_FLOOR_Y + 0.12, side * (BODY_HALF_W - 0.2)]);
+		// Inside the wall: stamped vertical ribs and tie-down hooks under the rail.
+		const innerZ = side * (BODY_HALF_W - 0.086);
+		for (const x of [CAB_BACK_X - 0.32, CAB_BACK_X - 0.44, TAIL_X + 0.3, TAIL_X + 0.42]) {
+			add(group, slab(0.04, 0.2, 0.012, 0.012, 0.004), bodyMat, [x, BED_FLOOR_Y + 0.15, innerZ], { outline: 0.008 });
+		}
+		for (const x of [CAB_BACK_X - 0.2, TAIL_X + 0.2]) {
+			add(group, new TorusGeometry(0.03, 0.007, 6, 12, Math.PI), silverMat, [x, BELT_Y - 0.1, innerZ - side * 0.01], { outline: 0 });
+		}
 	});
 	// Dark underbody so the gap below the floor reads as frame, not sky.
 	add(group, slab(bedLen, 0.3, BODY_HALF_W * 2 - 0.2, 0.02, 0.01), trimMat, [bedMidX, AXLE_Y + 0.15, 0], { outline: 0 });
@@ -297,19 +424,26 @@ export function buildToyotaTruck(colors: TruckColors = DEFAULT_TRUCK_COLORS): Tr
 			outline: 0,
 		});
 	}
-	// Headboard behind the cab, taller than the rails.
-	add(group, slab(0.07, 0.5, BODY_HALF_W * 2 - 0.1, 0.02, 0.015), bodyMat, [CAB_BACK_X - 0.05, BED_FLOOR_Y + 0.22, 0]);
-	// Tailgate, flush with the walls.
-	add(group, slab(0.07, 0.5, BODY_HALF_W * 2 - 0.08, 0.02, 0.015), bodyMat, [TAIL_X + 0.03, 0.75, 0], { outline: OUTLINE });
-	add(group, slab(0.02, 0.06, 0.62, 0.015, 0.006), trimMat, [TAIL_X - 0.015, 0.84, 0], { outline: 0 }); // lettering strip
-	add(group, slab(0.02, 0.1, 0.1, 0.02, 0.008), trimMat, [TAIL_X - 0.015, 0.93, 0], { outline: 0 }); // handle
+	// Bed front wall at rail height, so the rear window stays clear: rolled cap and stamped ribs.
+	const bedInnerW = BODY_HALF_W * 2 - 0.1;
+	add(group, slab(0.07, BELT_Y - BED_FLOOR_Y + 0.02, bedInnerW, 0.02, 0.015), bodyMat, [CAB_BACK_X - 0.05, (BED_FLOOR_Y + BELT_Y) / 2, 0]);
+	add(group, slab(0.12, 0.05, bedInnerW, 0.02, 0.012), bodyMat, [CAB_BACK_X - 0.06, BELT_Y, 0]);
+	for (const y of [BED_FLOOR_Y + 0.09, BED_FLOOR_Y + 0.19]) {
+		add(group, slab(0.015, 0.035, bedInnerW - 0.24, 0.01, 0.004), bodyMat, [CAB_BACK_X - 0.09, y, 0], { outline: 0.008 });
+	}
 
-	// --- Arch lips on every wheel opening ---
+	// Tailgate, flush with the walls: ribbed inside, raised TOYOTA letters and a latch handle outside.
+	add(group, slab(0.07, 0.5, BODY_HALF_W * 2 - 0.08, 0.02, 0.015), bodyMat, [TAIL_X + 0.03, 0.75, 0], { outline: OUTLINE });
+	for (const y of [0.62, 0.74, 0.86]) {
+		add(group, slab(0.012, 0.03, BODY_HALF_W * 2 - 0.3, 0.01, 0.004), bodyMat, [TAIL_X + 0.071, y, 0], { outline: 0.008 });
+	}
+	lettering("TOYOTA", [TAIL_X - 0.012, 0.75, 0], 0.13, 0.03, -1, silverMat);
+	add(group, slab(0.02, 0.05, 0.16, 0.015, 0.006), trimMat, [TAIL_X - 0.015, 0.93, 0], { outline: 0 });
+
+	// --- Flared lips on every wheel opening ---
 	pair((side) => {
 		for (const x of [FRONT_AXLE_X, REAR_AXLE_X]) {
-			add(group, new TorusGeometry(ARCH_R + 0.015, 0.035, 6, 24, Math.PI), trimMat, [x, AXLE_Y, side * (BODY_HALF_W + 0.01)], {
-				outline: 0,
-			});
+			add(group, extrude(archLip(0.035), 0.04, 0.008, false), trimMat, [x, AXLE_Y, side * (BODY_HALF_W + 0.012)], { outline: 0 });
 		}
 	});
 
@@ -322,6 +456,15 @@ export function buildToyotaTruck(colors: TruckColors = DEFAULT_TRUCK_COLORS): Tr
 	add(group, extrude(glassShape, 1.5, 0.02, false), glassMat, [0, 0, 0], { outline: 0 });
 	// Roof, slightly proud of the glass.
 	add(group, slab(0.8, 0.06, 1.62, 0.03, 0.02), bodyMat, [-0.19, 1.6, 0], { outline: OUTLINE });
+	// Sliding rear window: black frame along the raked rear glass, slider rails and a center latch.
+	const rearRake = -0.165;
+	const rearGlassX = (y: number) => -0.6 + ((y - BELT_Y) / (1.58 - BELT_Y)) * 0.1 - 0.012;
+	add(group, slab(0.025, 0.025, 1.42, 0.008, 0.004), trimMat, [rearGlassX(BELT_Y + 0.03), BELT_Y + 0.03, 0], { outline: 0 });
+	add(group, slab(0.025, 0.025, 1.42, 0.008, 0.004), trimMat, [rearGlassX(1.55), 1.55, 0], { outline: 0 });
+	for (const z of [-0.26, 0.26]) {
+		add(group, slab(0.025, 0.55, 0.025, 0.008, 0.004), trimMat, [rearGlassX(1.29), 1.29, z], { rot: [0, 0, rearRake], outline: 0 });
+	}
+	add(group, slab(0.02, 0.05, 0.05, 0.01, 0.004), silverMat, [rearGlassX(1.29) - 0.005, 1.29, 0], { rot: [0, 0, rearRake], outline: 0 });
 
 	pair((side) => {
 		// A pillar follows the windshield rake; C pillar leans back with the rear window.
@@ -341,12 +484,57 @@ export function buildToyotaTruck(colors: TruckColors = DEFAULT_TRUCK_COLORS): Tr
 		add(group, slab(0.07, 0.24, 0.12, 0.03, 0.012), trimMat, [0.74, 1.24, side * 0.99], { outline: 0.02 });
 	});
 
-	// Interior: dash, bench seat, headrests, and a steering wheel on the left (-Z, US market).
-	add(group, slab(0.34, 0.1, 1.44, 0.04, 0.02), interiorMat, [0.5, BELT_Y + 0.02, 0], { outline: 0 });
-	add(group, slab(0.16, 0.56, 1.38, 0.05, 0.03), interiorMat, [-0.36, 0.95, 0], { rot: [0, 0, 0.17], outline: 0 });
+	// --- Interior. The driver sits on the left (-Z), US market. ---
+	const inner = { outline: 0 };
+	// Carpet, kick panel at the firewall, and trim on the inside of the back wall.
+	add(group, slab(cabLen - 0.1, 0.03, cabInnerW, 0.01, 0.005), carpetMat, [cabMidX, CAB_FLOOR_Y + 0.015, 0], inner);
+	add(group, slab(0.04, BELT_Y - CAB_FLOOR_Y, cabInnerW, 0.01, 0.005), carpetMat, [CAB_FRONT_X - 0.03, (CAB_FLOOR_Y + BELT_Y) / 2, 0], inner);
+	add(group, slab(0.02, BELT_Y - CAB_FLOOR_Y - 0.04, cabInnerW, 0.01, 0.005), interiorMat, [CAB_BACK_X + 0.07, (CAB_FLOOR_Y + BELT_Y) / 2, 0], inner);
 	pair((side) => {
-		add(group, slab(0.1, 0.14, 0.3, 0.04, 0.02), interiorMat, [-0.41, 1.28, side * 0.37], { rot: [0, 0, 0.17], outline: 0 });
+		// Door panel with an armrest and an inside handle.
+		const panelZ = side * (BODY_HALF_W - 0.09);
+		add(group, slab(cabLen - 0.12, BELT_Y - CAB_FLOOR_Y - 0.04, 0.02, 0.02, 0.008), interiorMat, [cabMidX, (CAB_FLOOR_Y + BELT_Y) / 2, panelZ], inner);
+		add(group, slab(0.34, 0.05, 0.07, 0.02, 0.01), dashMat, [0.02, 0.8, side * (BODY_HALF_W - 0.13)], inner);
+		add(group, slab(0.08, 0.025, 0.02, 0.008, 0.004), silverMat, [0.42, 0.9, side * (BODY_HALF_W - 0.105)], inner);
+		// Sun visors, folded up against the headliner.
+		add(group, slab(0.16, 0.02, 0.5, 0.02, 0.008), headlinerMat, [0.06, 1.535, side * 0.38], { rot: [0, 0, 0.08], outline: 0 });
 	});
+
+	// Dash: main slab, instrument hood with a gauge face over the steering wheel, vents, glovebox seam.
+	add(group, slab(0.36, 0.16, cabInnerW, 0.05, 0.02), dashMat, [0.5, BELT_Y - 0.01, 0], inner);
+	add(group, slab(0.14, 0.08, 0.5, 0.03, 0.012), trimMat, [0.44, BELT_Y + 0.1, -0.38], inner);
+	add(group, slab(0.01, 0.055, 0.4, 0.02, 0.004), headlinerMat, [0.37, BELT_Y + 0.08, -0.38], inner);
+	for (const z of [-0.06, 0.06]) {
+		add(group, slab(0.01, 0.05, 0.09, 0.012, 0.004), trimMat, [0.315, BELT_Y + 0.02, z], inner);
+	}
+	add(group, slab(0.01, 0.012, 0.36, 0.004, 0.002), trimMat, [0.315, BELT_Y - 0.05, 0.38], inner);
+
+	// Bench seat: cushion, reclined back with stitched pleats, and two headrests.
+	add(group, slab(0.5, 0.15, cabInnerW - 0.06, 0.06, 0.03), seatMat, [-0.15, CAB_FLOOR_Y + 0.21, 0], inner);
+	const seatBack = new Group();
+	seatBack.position.set(-0.38, 0.97, 0);
+	seatBack.rotation.z = 0.17; // reclined
+	add(seatBack, slab(0.16, 0.56, cabInnerW - 0.06, 0.06, 0.03), seatMat, [0, 0, 0], inner);
+	for (const y of [-0.12, 0.04, 0.2]) {
+		add(seatBack, slab(0.01, 0.012, cabInnerW - 0.12, 0.004, 0.002), interiorMat, [0.081, y, 0], inner);
+	}
+	pair((side) => {
+		add(seatBack, slab(0.1, 0.15, 0.3, 0.05, 0.02), seatMat, [-0.03, 0.34, side * 0.37], inner);
+	});
+	group.add(seatBack);
+
+	// Floor shifter for the 5-speed: boot, stick, knob.
+	add(group, slab(0.12, 0.04, 0.12, 0.04, 0.015), trimMat, [0.26, CAB_FLOOR_Y + 0.05, 0], inner);
+	const stick = new CylinderGeometry(0.012, 0.012, 0.38, 8);
+	add(group, stick, silverMat, [0.24, CAB_FLOOR_Y + 0.24, 0], { rot: [0, 0, 0.12], outline: 0 });
+	const knob = new CylinderGeometry(0.035, 0.03, 0.06, 12);
+	add(group, knob, trimMat, [0.22, CAB_FLOOR_Y + 0.44, 0], inner);
+
+	// Headliner under the roof, and a rear-view mirror at the top of the windshield.
+	add(group, slab(0.64, 0.02, cabInnerW, 0.01, 0.005), headlinerMat, [-0.19, 1.555, 0], inner);
+	add(group, slab(0.02, 0.06, 0.03, 0.008, 0.004), trimMat, [0.14, 1.52, 0], inner);
+	add(group, slab(0.03, 0.06, 0.22, 0.02, 0.008), trimMat, [0.15, 1.47, 0], inner);
+
 	const steering = new Group();
 	steering.position.set(0.36, 1.14, -0.38);
 	steering.rotation.z = -0.4; // top tilts forward
@@ -357,25 +545,31 @@ export function buildToyotaTruck(colors: TruckColors = DEFAULT_TRUCK_COLORS): Tr
 	wheelHub.rotateZ(Math.PI / 2);
 	add(steering, wheelHub, trimMat, [0, 0, 0], { outline: 0 });
 	add(steering, slab(0.015, 0.02, 0.32, 0.005, 0.002), trimMat, [0, 0, 0], { outline: 0 });
+	// Column runs from the hub down into the dash, along the wheel's axis.
+	const column = new CylinderGeometry(0.03, 0.035, 0.3, 10);
+	column.rotateZ(Math.PI / 2);
+	add(steering, column, trimMat, [0.15, 0, 0], { outline: 0 });
 	group.add(steering);
 
 	// --- Front end ---
-	add(group, slab(0.24, 0.26, 1.78, 0.07, 0.03), bumperMat, [NOSE_X + 0.1, 0.5, 0]); // wide plastic bumper
-	add(group, slab(0.14, 0.16, 1.5, 0.05, 0.02), bumperMat, [NOSE_X + 0.02, 0.4, 0], { outline: 0.02 }); // air dam
-	add(group, slab(0.06, 0.2, 0.7, 0.03, 0.01), silverMat, [NOSE_X + 0.01, 0.78, 0], { outline: 0.02 }); // grille frame
-	for (let i = 0; i < 4; i++) {
-		add(group, slab(0.02, 0.022, 0.62, 0.008, 0.004), trimMat, [NOSE_X + 0.045, 0.71 + i * 0.05, 0], { outline: 0 });
+	// Wide plastic bumper, tucked in close to the nose, with an air dam below.
+	add(group, slab(0.18, 0.24, 1.7, 0.06, 0.03), bumperMat, [NOSE_X + 0.06, 0.5, 0]);
+	add(group, slab(0.12, 0.14, 1.46, 0.04, 0.02), bumperMat, [NOSE_X, 0.37, 0], { outline: 0.02 });
+	// Grille: silver frame, three dark slats, and TOYOTA lettered across the top.
+	add(group, slab(0.06, 0.2, 0.7, 0.03, 0.01), silverMat, [NOSE_X + 0.01, 0.78, 0], { outline: 0.02 });
+	for (let i = 0; i < 3; i++) {
+		add(group, slab(0.02, 0.022, 0.62, 0.008, 0.004), trimMat, [NOSE_X + 0.045, 0.71 + i * 0.04, 0], { outline: 0 });
 	}
-	add(group, slab(0.02, 0.04, 0.16, 0.012, 0.005), silverMat, [NOSE_X + 0.05, 0.84, 0], { outline: 0 }); // badge
+	lettering("TOYOTA", [NOSE_X + 0.05, 0.835, 0], 0.035, 0.009, 1, trimMat);
 	pair((side) => {
 		add(group, slab(0.07, 0.17, 0.34, 0.04, 0.015), headMat, [NOSE_X + 0.005, 0.76, side * 0.56], { outline: 0.02 });
 		add(group, slab(0.04, 0.05, 0.1, 0.02, 0.008), amberMat, [NOSE_X, 0.62, side * 0.78], { outline: 0 });
-		add(group, slab(0.06, 0.09, 0.2, 0.035, 0.012), amberMat, [NOSE_X + 0.2, 0.5, side * 0.72], { outline: 0 });
+		add(group, slab(0.04, 0.08, 0.18, 0.03, 0.01), amberMat, [NOSE_X + 0.145, 0.52, side * 0.68], { outline: 0 });
 	});
 
 	// --- Rear end ---
 	add(group, slab(0.17, 0.17, 1.74, 0.05, 0.02), silverMat, [TAIL_X - 0.11, 0.45, 0]); // step bumper
-	add(group, slab(0.02, 0.1, 0.22, 0.02, 0.008), silverMat, [TAIL_X - 0.02, 0.62, 0], { outline: 0 }); // plate
+	add(group, slab(0.02, 0.1, 0.22, 0.02, 0.008), headlinerMat, [TAIL_X - 0.2, 0.45, 0], { outline: 0.01 }); // plate
 	pair((side) => {
 		add(group, slab(0.04, 0.2, 0.14, 0.03, 0.01), tailMat, [TAIL_X - 0.005, 0.8, side * 0.74], { outline: 0.02 });
 		// Mudflaps behind the rear and front wheels.

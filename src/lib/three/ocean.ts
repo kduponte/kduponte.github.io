@@ -12,9 +12,21 @@
 //     Heights are stretched VERTICAL_EXAGGERATION times; horizontal distances are true.
 //   - The forecast traces differ from the real one in height only: height is what is scored, and
 //     the models' periods are not comparable to the buoy's (see period-definition.ts).
-import { BufferAttribute, BufferGeometry, DoubleSide, Group, Mesh, MeshStandardMaterial, type Material } from "three";
+//   - The base carries a north arrow and a 400 m scale bar in 100 m steps, so direction and
+//     distance can be read off the model itself. The block's depth is only a cut, not to scale.
+import {
+	BoxGeometry,
+	BufferAttribute,
+	BufferGeometry,
+	Group,
+	Mesh,
+	MeshBasicMaterial,
+	MeshStandardMaterial,
+	Shape,
+	type Material,
+} from "three";
 import { WINDOW_M, deepWaterWavelengthM } from "../surf-forecast/swell-viz";
-import { createPartKit, slab, type PartKit } from "./kit";
+import { createPartKit, extrude, slab, type PartKit } from "./kit";
 
 /** Side length of the water block, in scene units. It represents WINDOW_M metres of sea. */
 export const TILE = 6;
@@ -24,6 +36,8 @@ export const UNITS_PER_M = TILE / WINDOW_M;
 export const VERTICAL_EXAGGERATION = 16;
 /** Depth of the cut-away block below still water, in scene units (not to scale). */
 export const BLOCK_DEPTH = 1.1;
+/** Scale-bar step on the base, metres. */
+export const SCALE_STEP_M = 100;
 
 export interface SwellReading {
 	wave_height_m: number;
@@ -57,7 +71,8 @@ export function swellField(r: SwellReading): SwellField {
 	return {
 		wavelength_m,
 		period_s: r.dominant_period_s,
-		amplitude: (r.wave_height_m / 2) * UNITS_PER_M * VERTICAL_EXAGGERATION,
+		// Without a period there is no wave shape to draw, so the surface lies at still water.
+		amplitude: wavelength_m > 0 ? (Math.max(0, r.wave_height_m) / 2) * UNITS_PER_M * VERTICAL_EXAGGERATION : 0,
 		k: wavelengthUnits > 0 ? (2 * Math.PI) / wavelengthUnits : 0,
 		omega: r.dominant_period_s > 0 ? (2 * Math.PI) / r.dominant_period_s : 0,
 		// Swell travels toward the opposite of where it comes from.
@@ -70,7 +85,7 @@ export function surfaceHeight(f: SwellField, x: number, z: number, t: number, he
 	return f.amplitude * heightScale * Math.cos(f.k * (f.dir.x * x + f.dir.z * z) - f.omega * t);
 }
 
-/** Surface gradient (dh/dx, dh/dz) in scene units, for tilting whatever floats on it. */
+/** Surface gradient (dh/dx, dh/dz) of the drawn (exaggerated) surface, for tilting whatever floats on it. */
 export function surfaceSlope(f: SwellField, x: number, z: number, t: number): { dx: number; dz: number } {
 	const s = -f.amplitude * f.k * Math.sin(f.k * (f.dir.x * x + f.dir.z * z) - f.omega * t);
 	return { dx: s * f.dir.x, dz: s * f.dir.z };
@@ -81,7 +96,7 @@ export function crestSpeedMs(f: SwellField): number {
 	return f.period_s > 0 ? f.wavelength_m / f.period_s : 0;
 }
 
-// ---------------------------------------------------------------- mesh
+// ---------------------------------------------------------------- traces
 
 export interface Trace {
 	color: string;
@@ -91,11 +106,50 @@ export interface Trace {
 	width: number;
 }
 
+/** Forecast ribbons are this thick, inside a black edge; the real swell's black line is thicker. */
+export const FORECAST_TRACE_WIDTH = 0.036;
+export const OBSERVED_TRACE_WIDTH = 0.05;
+export const TRACE_EDGE = 0.009;
+
+/**
+ * One trace per forecast, in the order given. A forecast draws the buoy's own swell scaled to the
+ * forecast height, so a forecast 30% high rides 30% higher at every crest and 30% lower in every
+ * trough. With no observed height there is nothing to scale against, so the traces lie flat.
+ */
+export function forecastTraces(observedM: number, forecasts: { wave_height_m: number; color: string }[]): Trace[] {
+	return forecasts.map((f) => ({
+		color: f.color,
+		heightScale: observedM > 0 ? Math.max(0, f.wave_height_m) / observedM : 0,
+		width: FORECAST_TRACE_WIDTH,
+	}));
+}
+
+// ---------------------------------------------------------------- mesh
+
+export interface OceanColors {
+	/** Top of the water. */
+	surface: string;
+	/** The cut-away walls. Forecast lines carry a black edge, so they stay legible on any blue. */
+	side: string;
+	base: string;
+	outline: string;
+	/** The light squares of the scale bar. */
+	paper: string;
+}
+
+export const DEFAULT_OCEAN_COLORS: OceanColors = {
+	surface: "#8fd0ff",
+	side: "#5fb6ef",
+	base: "#f6f1e4",
+	outline: "#111111",
+	paper: "#ffffff",
+};
+
 export interface OceanBlock {
 	group: Group;
-	/** Recompute the surface, side walls and traces for time t (seconds). */
+	/** Recompute the surface, side walls, corners and traces for time t (seconds). */
 	update(t: number): void;
-	/** Swap in a new reading and traces without rebuilding the mesh. */
+	/** Swap in a new reading and traces without rebuilding the block. Call `update` after. */
 	setField(field: SwellField, traces: Trace[]): void;
 	dispose(): void;
 }
@@ -103,27 +157,65 @@ export interface OceanBlock {
 const GRID = 48;
 const SIDE_SAMPLES = 64;
 const HALF = TILE / 2;
+/** Plinth: margin beyond the water on each side, and thickness. */
+export const BASE_MARGIN = 0.36;
+export const BASE_H = 0.24;
 
-/** The four side faces: an axis to sample along, and the fixed coordinate and outward sign. */
+/**
+ * The four side faces: the axis sampled along, the fixed coordinate, and whether the strip's
+ * natural winding (top_i, bottom_i, top_i+1) has to flip so the face points outward.
+ */
 const FACES = [
-	{ along: "x", fixed: "z", at: HALF },
-	{ along: "x", fixed: "z", at: -HALF },
-	{ along: "z", fixed: "x", at: HALF },
-	{ along: "z", fixed: "x", at: -HALF },
+	{ along: "x", at: HALF, flip: false },
+	{ along: "x", at: -HALF, flip: true },
+	{ along: "z", at: HALF, flip: true },
+	{ along: "z", at: -HALF, flip: false },
 ] as const;
+type Face = (typeof FACES)[number];
+
+const faceCoord = (face: Face, s: number) => (face.along === "x" ? { x: s, z: face.at } : { x: face.at, z: s });
+/** Push a point on a face outward by `d`. */
+const faceOut = (face: Face, d: number) =>
+	face.along === "x" ? { x: 0, z: Math.sign(face.at) * d } : { x: Math.sign(face.at) * d, z: 0 };
+
+/** A strip of SIDE_SAMPLES quads with two vertices (top, bottom) per sample, facing outward. */
+function stripGeometry(face: Face): { g: BufferGeometry; pos: Float32Array } {
+	const g = new BufferGeometry();
+	const pos = new Float32Array((SIDE_SAMPLES + 1) * 2 * 3);
+	const idx: number[] = [];
+	for (let i = 0; i < SIDE_SAMPLES; i++) {
+		const a = i * 2;
+		if (face.flip) idx.push(a, a + 2, a + 1, a + 2, a + 3, a + 1);
+		else idx.push(a, a + 1, a + 2, a + 2, a + 1, a + 3);
+	}
+	g.setIndex(idx);
+	g.setAttribute("position", new BufferAttribute(pos, 3));
+	return { g, pos };
+}
+
+type Ribbon = {
+	face: Face;
+	g: BufferGeometry;
+	pos: Float32Array;
+	mesh: Mesh;
+	/** Distance outside the wall, so overlapping traces never z-fight. */
+	out: number;
+	heightScale: number;
+	width: number;
+};
 
 export function buildOceanBlock(
 	initial: SwellField,
 	initialTraces: Trace[],
-	colors: { surface: string; side: string; base: string; outline: string; north: string },
+	colors: OceanColors = DEFAULT_OCEAN_COLORS,
 	kitIn?: PartKit,
 ): OceanBlock {
 	const kit = kitIn ?? createPartKit(colors.outline);
 	const group = new Group();
 	let field = initial;
-	let traces = initialTraces;
 
-	// Top surface: a GRID x GRID quad grid, displaced each frame.
+	// Top surface: a GRID x GRID quad grid, displaced each frame and smooth shaded (flat facets on
+	// an oblique swell alias into stripes that aren't in the data).
 	const topGeo = kit.geometry(new BufferGeometry());
 	const n = GRID + 1;
 	const topPos = new Float32Array(n * n * 3);
@@ -136,80 +228,114 @@ export function buildOceanBlock(
 	}
 	topGeo.setIndex(idx);
 	topGeo.setAttribute("position", new BufferAttribute(topPos, 3));
-	const surfaceMat = kit.std(colors.surface, 0.18, 0.05);
+	const surfaceMat = kit.material(new MeshStandardMaterial({ color: colors.surface, roughness: 0.22, metalness: 0.05 }));
 	const top = new Mesh(topGeo, surfaceMat);
+	top.userData.kind = "surface";
 	group.add(top);
 
 	// Side walls: a strip per face from the block floor up to the moving surface edge.
-	const sideMat = kit.material(new MeshStandardMaterial({ color: colors.side, roughness: 0.4, side: DoubleSide }));
-	const walls = FACES.map(() => {
-		const g = kit.geometry(new BufferGeometry());
-		const pos = new Float32Array((SIDE_SAMPLES + 1) * 2 * 3);
-		const wi: number[] = [];
-		for (let i = 0; i < SIDE_SAMPLES; i++) {
-			const a = i * 2;
-			wi.push(a, a + 1, a + 2, a + 2, a + 1, a + 3);
-		}
-		g.setIndex(wi);
-		g.setAttribute("position", new BufferAttribute(pos, 3));
+	const sideMat = kit.material(
+		new MeshStandardMaterial({ color: colors.side, roughness: 0.85, metalness: 0 }),
+	);
+	const walls = FACES.map((face) => {
+		const { g, pos } = stripGeometry(face);
+		kit.geometry(g);
 		const m = new Mesh(g, sideMat);
+		m.userData.kind = "wall";
 		group.add(m);
 		return { g, pos };
 	});
 
-	// Traces: a flat ribbon just outside each face, one for the real swell (black) and one per forecast.
-	const ribbonMats = new Map<string, Material>();
-	const ribbonMat = (color: string) => {
-		let m = ribbonMats.get(color);
+	// Black corner posts finish the block's outline; each one stretches to its corner's surface height.
+	const outlineMat = kit.material(new MeshBasicMaterial({ color: colors.outline }));
+	const postGeo = kit.geometry(new BoxGeometry(0.05, 1, 0.05).translate(0, 0.5, 0));
+	const corners = [
+		[HALF, HALF],
+		[HALF, -HALF],
+		[-HALF, HALF],
+		[-HALF, -HALF],
+	].map(([x, z]) => {
+		const post = new Mesh(postGeo, outlineMat);
+		post.position.set(x + Math.sign(x) * 0.012, -BLOCK_DEPTH, z + Math.sign(z) * 0.012);
+		group.add(post);
+		return { post, x, z };
+	});
+
+	// Traces: flat unlit ribbons just outside each wall. The real swell is a thick black line;
+	// each forecast is a thinner line of its system's color inside a thin black edge, drawn on top,
+	// so a forecast that nails the reading sits inside the black line.
+	const traceMats = new Map<string, Material>();
+	const traceMat = (color: string) => {
+		let m = traceMats.get(color);
 		if (!m) {
-			m = kit.material(new MeshStandardMaterial({ color, roughness: 0.6, side: DoubleSide, polygonOffset: true, polygonOffsetFactor: -2 }));
-			ribbonMats.set(color, m);
+			m = kit.material(new MeshBasicMaterial({ color }));
+			traceMats.set(color, m);
 		}
 		return m;
 	};
-	type Ribbon = { g: BufferGeometry; pos: Float32Array; mesh: Mesh };
-	let ribbons: Ribbon[][] = [];
-	const buildRibbons = () => {
-		for (const set of ribbons) for (const r of set) group.remove(r.mesh);
-		ribbons = FACES.map((_, fi) =>
-			[{ color: colors.outline, heightScale: 1, width: 0.05 }, ...traces].map((tr, ti) => {
-				const g = kit.geometry(new BufferGeometry());
-				const pos = new Float32Array((SIDE_SAMPLES + 1) * 2 * 3);
-				const ri: number[] = [];
-				for (let i = 0; i < SIDE_SAMPLES; i++) {
-					const a = i * 2;
-					ri.push(a, a + 1, a + 2, a + 2, a + 1, a + 3);
-				}
-				g.setIndex(ri);
-				g.setAttribute("position", new BufferAttribute(pos, 3));
-				const mesh = new Mesh(g, ribbonMat(tr.color));
-				// Draw the real swell's line last so it sits on top where traces cross it.
-				mesh.renderOrder = ti === 0 ? 2 : 1;
-				mesh.userData = { face: fi, trace: tr };
-				group.add(mesh);
-				return { g, pos, mesh };
-			}),
-		);
+	let ribbons: Ribbon[] = [];
+	const ribbon = (face: Face, color: string, out: number, heightScale: number, width: number, data: Record<string, unknown>): Ribbon => {
+		const { g, pos } = stripGeometry(face);
+		const mesh = new Mesh(g, traceMat(color));
+		mesh.userData = { kind: "trace", face: FACES.indexOf(face), ...data };
+		group.add(mesh);
+		return { face, g, pos, mesh, out, heightScale, width };
 	};
-	buildRibbons();
+	const buildRibbons = (traces: Trace[]) => {
+		for (const r of ribbons) {
+			group.remove(r.mesh);
+			r.g.dispose();
+		}
+		ribbons = [];
+		for (const face of FACES) {
+			ribbons.push(ribbon(face, colors.outline, 0.008, 1, OBSERVED_TRACE_WIDTH, { trace: "observed", heightScale: 1 }));
+			traces.forEach((tr, i) => {
+				const out = 0.014 + i * 0.006;
+				ribbons.push(ribbon(face, colors.outline, out, tr.heightScale, tr.width + 2 * TRACE_EDGE, { trace: i, edge: true, heightScale: tr.heightScale }));
+				ribbons.push(ribbon(face, tr.color, out + 0.002, tr.heightScale, tr.width, { trace: i, heightScale: tr.heightScale }));
+			});
+		}
+	};
+	buildRibbons(initialTraces);
 
-	// Static diorama base under the block, with a north marker so the swell direction can be read.
-	const baseH = 0.22;
-	kit.add(group, slab(TILE + 0.24, baseH, TILE + 0.24, 0.06, 0.03), kit.std(colors.base, 0.6), [0, -BLOCK_DEPTH - baseH / 2, 0], {
-		outline: 0.04,
+	// Diorama base: a plinth with a north arrow and a scale bar on its rim.
+	const baseMat = kit.std(colors.base, 0.7);
+	const baseW = TILE + 2 * BASE_MARGIN;
+	kit.add(group, slab(baseW, BASE_H, baseW, 0.08, 0.03), baseMat, [0, -BLOCK_DEPTH - BASE_H / 2, 0], { outline: 0.05 });
+	const rimY = -BLOCK_DEPTH + 0.012;
+	// North arrow on the north rim (-Z), pointing north.
+	const arrow = new Shape();
+	arrow.moveTo(0, 0.13);
+	arrow.lineTo(0.1, -0.09);
+	arrow.lineTo(0, -0.04);
+	arrow.lineTo(-0.1, -0.09);
+	arrow.lineTo(0, 0.13);
+	const arrowGeo = extrude(arrow, 0.02, 0.004);
+	arrowGeo.rotateX(-Math.PI / 2); // shape +Y becomes scene -Z (north)
+	kit.add(group, arrowGeo, outlineMat, [-HALF + 0.3, rimY, -HALF - BASE_MARGIN / 2], { outline: 0 });
+	// A block "N" beside it, lying flat on the rim, readable from the south.
+	const nCell = { w: 0.12, h: 0.16, stroke: 0.03 };
+	const nX = -HALF + 0.52;
+	const nZ = -HALF - BASE_MARGIN / 2;
+	for (const dx of [-nCell.w / 2, nCell.w / 2]) {
+		kit.add(group, slab(nCell.stroke, 0.02, nCell.h, 0.008, 0.004), outlineMat, [nX + dx, rimY, nZ], { outline: 0 });
+	}
+	kit.add(group, slab(nCell.stroke, 0.02, Math.hypot(nCell.w, nCell.h), 0.008, 0.004), outlineMat, [nX, rimY, nZ], {
+		// Local +Z (the stroke's length) turned to run from the top-left (far) to the bottom-right (near).
+		rot: [0, Math.atan2(nCell.w, nCell.h), 0],
+		outline: 0,
 	});
-	const arrow = kit.geometry(new BufferGeometry());
-	arrow.setAttribute(
-		"position",
-		new BufferAttribute(new Float32Array([0, 0, -0.32, -0.16, 0, 0, 0.16, 0, 0]), 3),
-	);
-	arrow.computeVertexNormals();
-	const north = new Mesh(arrow, kit.material(new MeshStandardMaterial({ color: colors.north, side: DoubleSide })));
-	north.position.set(0, -BLOCK_DEPTH + 0.002, -HALF - 0.02);
-	group.add(north);
-
-	const coord = (face: (typeof FACES)[number], s: number) =>
-		face.along === "x" ? { x: s, z: face.at } : { x: face.at, z: s };
+	// Scale bar along the south rim (+Z): WINDOW_M of sea in SCALE_STEP_M steps, alternating ink and paper.
+	const steps = Math.round(WINDOW_M / SCALE_STEP_M);
+	const stepLen = SCALE_STEP_M * UNITS_PER_M;
+	const paperMat = kit.std(colors.paper, 0.8);
+	const barZ = HALF + BASE_MARGIN / 2;
+	kit.add(group, slab(TILE + 0.03, 0.02, 0.1, 0.006, 0.003), outlineMat, [0, rimY - 0.002, barZ], { outline: 0 });
+	for (let i = 0; i < steps; i++) {
+		const x = -HALF + stepLen * (i + 0.5);
+		kit.add(group, slab(stepLen - 0.02, 0.024, 0.07, 0.004, 0.002), i % 2 ? paperMat : outlineMat, [x, rimY + 0.004, barZ], { outline: 0 }).userData.kind =
+			"scale-step";
+	}
 
 	const update = (t: number) => {
 		for (let i = 0; i < n; i++) {
@@ -224,34 +350,31 @@ export function buildOceanBlock(
 		}
 		topGeo.attributes.position.needsUpdate = true;
 		topGeo.computeVertexNormals();
+		topGeo.computeBoundingSphere();
 
 		FACES.forEach((face, fi) => {
 			const { g, pos } = walls[fi];
 			for (let i = 0; i <= SIDE_SAMPLES; i++) {
-				const s = -HALF + (TILE * i) / SIDE_SAMPLES;
-				const { x, z } = coord(face, s);
-				const h = surfaceHeight(field, x, z, t);
-				const o = i * 6;
-				pos.set([x, h, z, x, -BLOCK_DEPTH, z], o);
+				const { x, z } = faceCoord(face, -HALF + (TILE * i) / SIDE_SAMPLES);
+				pos.set([x, surfaceHeight(field, x, z, t), z, x, -BLOCK_DEPTH, z], i * 6);
 			}
 			g.attributes.position.needsUpdate = true;
 			g.computeVertexNormals();
-
-			const out = 0.012;
-			for (const r of ribbons[fi]) {
-				const tr = r.mesh.userData.trace as Trace & { heightScale: number };
-				for (let i = 0; i <= SIDE_SAMPLES; i++) {
-					const s = -HALF + (TILE * i) / SIDE_SAMPLES;
-					const { x, z } = coord(face, s);
-					const h = surfaceHeight(field, x, z, t, tr.heightScale);
-					const ox = face.fixed === "x" ? Math.sign(face.at) * out : 0;
-					const oz = face.fixed === "z" ? Math.sign(face.at) * out : 0;
-					r.pos.set([x + ox, h + tr.width / 2, z + oz, x + ox, h - tr.width / 2, z + oz], i * 6);
-				}
-				r.g.attributes.position.needsUpdate = true;
-				r.g.computeVertexNormals();
-			}
+			g.computeBoundingSphere();
 		});
+
+		for (const r of ribbons) {
+			const o = faceOut(r.face, r.out);
+			for (let i = 0; i <= SIDE_SAMPLES; i++) {
+				const { x, z } = faceCoord(r.face, -HALF + (TILE * i) / SIDE_SAMPLES);
+				const h = surfaceHeight(field, x, z, t, r.heightScale);
+				r.pos.set([x + o.x, h + r.width / 2, z + o.z, x + o.x, h - r.width / 2, z + o.z], i * 6);
+			}
+			r.g.attributes.position.needsUpdate = true;
+			r.g.computeBoundingSphere();
+		}
+
+		for (const c of corners) c.post.scale.y = Math.max(1e-3, surfaceHeight(field, c.x, c.z, t) + BLOCK_DEPTH);
 	};
 
 	update(0);
@@ -260,9 +383,11 @@ export function buildOceanBlock(
 		update,
 		setField(next, nextTraces) {
 			field = next;
-			traces = nextTraces;
-			buildRibbons();
+			buildRibbons(nextTraces);
 		},
-		dispose: kit.dispose,
+		dispose() {
+			for (const r of ribbons) r.g.dispose();
+			kit.dispose();
+		},
 	};
 }

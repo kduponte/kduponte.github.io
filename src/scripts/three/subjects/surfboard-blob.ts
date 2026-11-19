@@ -19,14 +19,14 @@ import {
 	Group,
 	Mesh,
 	MeshBasicMaterial,
-	MeshStandardMaterial,
+	MeshPhysicalMaterial,
 	BackSide,
 	SRGBColorSpace,
 	Shape,
 	Vector3,
 } from "three";
 import { createPartKit, extrude } from "../../../lib/three/kit";
-import type { FinSpec } from "../../../lib/surf-volume/iconic-boards";
+import type { FinSpec, LabelSpec } from "../../../lib/surf-volume/iconic-boards";
 import {
 	INCH,
 	VERTEX_COUNT,
@@ -41,7 +41,7 @@ import {
 	type BoardShape,
 	type CalibratedBoard,
 } from "../../../lib/three/surfboard-morph";
-import { paintBoardCanvas, type BoardColors } from "./surfboard-graphics";
+import { loadLabelFonts, paintBoardCanvas, type BoardColors } from "./surfboard-graphics";
 import type { SubjectFactory } from "../viewer";
 
 export interface BlobBoardConfig {
@@ -53,6 +53,7 @@ export interface BlobBoardConfig {
 	fins: FinSpec[];
 	graphic: string;
 	colors: BoardColors;
+	labels?: LabelSpec[];
 }
 
 export interface BlobViewerConfig {
@@ -81,13 +82,28 @@ const HOVER = 0.3;
 /** Outline shell thickness, meters: the truck's 0.05 scaled to these smaller subjects. */
 const SHELL = 0.022;
 const SHELL_FIN = 0.011;
-const LAND_SQUASH = 0.28;
-const LAND_WOBBLE = 0.1;
-const BLOB_ROUGH = 0.82;
+const LAND_SQUASH = 0.3;
+const LAND_WOBBLE = 0.13;
+const IDLE_WOBBLE = 0.06;
+/** Flubber-ish goo: slick, glossy, see-through in the middle and denser at grazing angles. */
+const GOO_ROUGH = 0.12;
+const GOO_CORE_ALPHA = 0.56;
 const BOARD_ROUGH = 0.3;
+const BOARD_CLEARCOAT = 0.45;
 const MATTE_ROUGH = 0.9;
 
+/** Auto-spin, radians per second (handed to the viewer). */
+const AUTO_SPEED = 0.38;
+/**
+ * Heading at which a board reads best: nose to the right, turned a little toward the camera, so
+ * its labels are upright. The blob turns (invisibly, it's round) so each board passes through
+ * this heading halfway through its hold.
+ */
+const PRESENT_YAW = -0.3;
+
 const clamp01 = (v: number) => Math.max(0, Math.min(1, v));
+/** Angle wrapped to (-pi, pi]. */
+const wrapAngle = (a: number) => Math.atan2(Math.sin(a), Math.cos(a));
 const smooth = (v: number) => {
 	const c = clamp01(v);
 	return c * c * (3 - 2 * c);
@@ -134,7 +150,7 @@ function finShape(fin: FinSpec): Shape {
 	return s;
 }
 
-const createSurfboardBlob: SubjectFactory = ({ host, reducedMotion, requestRender }) => {
+const createSurfboardBlob: SubjectFactory = async ({ host, reducedMotion, requestRender }) => {
 	const config = JSON.parse(host.dataset.config ?? "{}") as BlobViewerConfig;
 	if (!config.boards?.length) throw new Error("No boards configured for the blob viewer");
 	const topo = createTopology();
@@ -144,6 +160,10 @@ const createSurfboardBlob: SubjectFactory = ({ host, reducedMotion, requestRende
 	spin.rotation.y = -0.55;
 	const root = new Group();
 	root.add(spin);
+	// Everything that morphs lives in `yaw`, so the shape can be turned within the spin.
+	const yaw = new Group();
+	spin.add(yaw);
+	if (reducedMotion) yaw.rotation.y = PRESENT_YAW - spin.rotation.y;
 
 	// One morphing mesh plus its inverted-hull outline, both rewritten whenever the shape moves.
 	const pos = new Float32Array(VERTEX_COUNT * 3);
@@ -164,51 +184,76 @@ const createSurfboardBlob: SubjectFactory = ({ host, reducedMotion, requestRende
 	shellGeo.setAttribute("position", shellAttr);
 	shellGeo.setIndex(index);
 
-	// One material that fades from flat Play-Doh to the board's painted graphics.
+	// One skin that turns from translucent goo into the board's opaque painted resin as `mix` goes
+	// 0 -> 1. The goo is see-through in the middle and denser where the surface turns away (the way
+	// a thick jelly looks), glossy under a clearcoat, with a faint inner glow.
 	const mix = { value: 0 };
 	const blobColor = { value: new Color(config.blobColor) };
-	const skin = kit.material(new MeshStandardMaterial({ color: "#ffffff", roughness: BLOB_ROUGH, metalness: 0 }));
+	const skin = kit.material(
+		new MeshPhysicalMaterial({ color: "#ffffff", roughness: GOO_ROUGH, metalness: 0, clearcoat: 1, clearcoatRoughness: 0.05, transparent: true }),
+	);
 	skin.onBeforeCompile = (shader) => {
 		shader.uniforms.uMix = mix;
 		shader.uniforms.uBlob = blobColor;
-		shader.fragmentShader = `uniform float uMix;\nuniform vec3 uBlob;\n${shader.fragmentShader.replace(
-			"#include <map_fragment>",
-			`#ifdef USE_MAP
+		shader.fragmentShader = `uniform float uMix;\nuniform vec3 uBlob;\n${shader.fragmentShader
+			.replace(
+				"#include <map_fragment>",
+				`#ifdef USE_MAP
 	diffuseColor.rgb = mix( uBlob, texture2D( map, vMapUv ).rgb, uMix );
 #else
 	diffuseColor.rgb = uBlob;
 #endif`,
-		)}`;
+			)
+			.replace(
+				"#include <emissivemap_fragment>",
+				`#include <emissivemap_fragment>
+	float gooRim = pow( 1.0 - abs( dot( normal, normalize( vViewPosition ) ) ), 2.0 );
+	diffuseColor.a = mix( mix( ${GOO_CORE_ALPHA.toFixed(2)}, 0.97, gooRim ), 1.0, uMix );
+	totalEmissiveRadiance += uBlob * ( 0.14 + 0.32 * gooRim ) * ( 1.0 - uMix );`,
+			)}`;
 	};
-	skin.customProgramCacheKey = () => "surfboard-blob-skin";
-	const shellMat = kit.material(new MeshBasicMaterial({ color: config.ink, side: BackSide }));
+	skin.customProgramCacheKey = () => "surfboard-blob-goo";
+	// The goo's far wall, seen through the near one: a deeper green that gives it thickness.
+	const innerMat = kit.material(
+		new MeshBasicMaterial({ color: new Color(config.blobColor).multiplyScalar(0.42), side: BackSide, transparent: true, opacity: 0.55 }),
+	);
+	// The outline is drawn after the (transparent) body, so it only shows outside the silhouette
+	// instead of darkening the goo from behind.
+	const shellMat = kit.material(new MeshBasicMaterial({ color: config.ink, side: BackSide, transparent: true }));
+	const inner = new Mesh(geo, innerMat);
 	const body = new Mesh(geo, skin);
 	const shell = new Mesh(shellGeo, shellMat);
-	body.frustumCulled = shell.frustumCulled = false;
-	spin.add(body, shell);
+	inner.renderOrder = 0;
+	body.renderOrder = 1;
+	shell.renderOrder = 2;
+	inner.frustumCulled = body.frustumCulled = shell.frustumCulled = false;
+	yaw.add(inner, body, shell);
 
 	// Hard flat ground shadow, sized to whatever shape is on screen.
 	const shadowGeo = kit.geometry(new CircleGeometry(1, 48));
 	shadowGeo.rotateX(-Math.PI / 2);
 	const shadowMat = kit.material(new MeshBasicMaterial({ color: config.ink, transparent: true, opacity: 0.25, depthWrite: false }));
 	const shadow = new Mesh(shadowGeo, shadowMat);
+	shadow.renderOrder = -1;
 	shadow.position.y = 0.002;
-	spin.add(shadow);
+	yaw.add(shadow);
 
 	interface BoardRuntime {
 		config: BlobBoardConfig;
 		roughness: number;
+		clearcoat: number;
 		cal: CalibratedBoard;
 		/** Calibrated positions lifted to the hover height. */
 		pos: Float32Array;
 		texture: CanvasTexture;
 		fins: Group[];
 	}
+	await loadLabelFonts();
 	const boards: BoardRuntime[] = config.boards.map((b) => {
 		const cal = calibrateBoard(b.shape, b.liters);
 		const lifted = cal.positions.slice();
 		for (let k = 1; k < lifted.length; k += 3) lifted[k] += HOVER;
-		const texture = new CanvasTexture(paintBoardCanvas(cal.prepared, b.graphic, b.colors));
+		const texture = new CanvasTexture(paintBoardCanvas(cal.prepared, b.graphic, b.colors, b.labels));
 		texture.colorSpace = SRGBColorSpace;
 		texture.flipY = false;
 		texture.anisotropy = 4;
@@ -220,10 +265,11 @@ const createSurfboardBlob: SubjectFactory = ({ host, reducedMotion, requestRende
 			kit.add(pivot, extrude(finShape(fin), 0.32 * INCH, 0.1 * INCH, false), finMat, [0, 0, 0], { outline: SHELL_FIN });
 			pivot.scale.setScalar(0);
 			pivot.visible = false;
-			spin.add(pivot);
+			yaw.add(pivot);
 			return pivot;
 		});
-		return { config: b, cal, pos: lifted, texture, fins, roughness: b.finish === "matte" ? MATTE_ROUGH : BOARD_ROUGH };
+		const matte = b.finish === "matte";
+		return { config: b, cal, pos: lifted, texture, fins, roughness: matte ? MATTE_ROUGH : BOARD_ROUGH, clearcoat: matte ? 0 : BOARD_CLEARCOAT };
 	});
 	const maxHalfLength = Math.max(...boards.map((b) => b.cal.prepared.halfL * INCH));
 	// The viewer renders once before the first update, which compiles the shader: give it a map
@@ -269,6 +315,7 @@ const createSurfboardBlob: SubjectFactory = ({ host, reducedMotion, requestRende
 	const skip = () => {
 		if (reducedMotion) {
 			idx = (idx + 1) % boards.length;
+			yaw.rotation.y = PRESENT_YAW - spin.rotation.y;
 			dirty = true;
 			requestRender();
 			return;
@@ -278,6 +325,15 @@ const createSurfboardBlob: SubjectFactory = ({ host, reducedMotion, requestRende
 		requestRender();
 	};
 	host.addEventListener("surfblob:next", skip);
+
+	/** 0 is goo, 1 is the board's finished resin (or foam), in between is the morph. */
+	const setSkin = (board: BoardRuntime, m: number) => {
+		mix.value = m;
+		skin.roughness = lerp(GOO_ROUGH, board.roughness, m);
+		skin.clearcoat = lerp(1, board.clearcoat, m);
+		innerMat.opacity = 0.55 * (1 - m);
+		inner.visible = m < 0.98;
+	};
 
 	/** Pull the current shape back to exactly `liters`, pivoting at the floor or the hover height. */
 	const conserve = (liters: number, lift: number) => scaleToLiters(pos, liters, [0, HOVER * lift, 0]);
@@ -298,12 +354,11 @@ const createSurfboardBlob: SubjectFactory = ({ host, reducedMotion, requestRende
 			writeBlobPositions(pos, {
 				liters: held,
 				time,
-				wobble: 0.045 + (LAND_WOBBLE - 0.045) * Math.exp(-((d / 0.08) ** 2)),
+				wobble: IDLE_WOBBLE + (LAND_WOBBLE - IDLE_WOBBLE) * Math.exp(-((d / 0.08) ** 2)),
 				squash: hopSquash(p),
 				offset: [lerp(HOP_X[k], HOP_X[k + 1], smooth(p)), HOP_HEIGHT[k] * 4 * p * (1 - p), 0],
 			});
-			mix.value = 0;
-			skin.roughness = BLOB_ROUGH;
+			setSkin(board, 0);
 			setFins(board, 0);
 			emit(held);
 			return;
@@ -314,16 +369,14 @@ const createSurfboardBlob: SubjectFactory = ({ host, reducedMotion, requestRende
 			writeBlobPositions(blobBuf, { liters, time, wobble: LAND_WOBBLE * (1 - clamp01(w)), squash: 1 - LAND_SQUASH * (1 - settle) });
 			blendPositions(blobBuf, board.pos, w, pos);
 			conserve(liters, clamp01(w));
-			mix.value = smooth((w - 0.45) / 0.45);
-			skin.roughness = lerp(BLOB_ROUGH, board.roughness, mix.value);
+			setSkin(board, smooth((w - 0.45) / 0.45));
 			setFins(board, phaseT > 0.55 ? spring(phaseT - 0.55, 14, 0.5) : 0);
 			emit(liters);
 			return;
 		}
 		if (phase === "hold") {
 			pos.set(board.pos);
-			mix.value = 1;
-			skin.roughness = board.roughness;
+			setSkin(board, 1);
 			setFins(board, 1);
 			emit(liters);
 			return;
@@ -342,8 +395,7 @@ const createSurfboardBlob: SubjectFactory = ({ host, reducedMotion, requestRende
 		writeBlobPositions(blobBuf, { liters, time, wobble: LAND_WOBBLE * m, squash: 1 - LAND_SQUASH * m ** 3 });
 		blendPositions(blobBuf, sagBuf, w, pos);
 		conserve(liters, w);
-		mix.value = 1 - smooth(m / 0.45);
-		skin.roughness = lerp(BLOB_ROUGH, board.roughness, mix.value);
+		setSkin(board, 1 - smooth(m / 0.45));
 		setFins(board, 1 - smooth(m / 0.22));
 		emit(liters);
 	}
@@ -382,7 +434,7 @@ const createSurfboardBlob: SubjectFactory = ({ host, reducedMotion, requestRende
 	return {
 		root,
 		spin,
-		autoSpeed: 0.38,
+		autoSpeed: AUTO_SPEED,
 		framing: {
 			target: new Vector3(0, 0.28, 0),
 			turnRadius: maxHalfLength * 1.04,
@@ -395,6 +447,12 @@ const createSurfboardBlob: SubjectFactory = ({ host, reducedMotion, requestRende
 				while (phaseT >= DUR[phase]) {
 					phaseT -= DUR[phase];
 					advance();
+				}
+				// While it's a blob, turn it so the coming board is readable mid-hold.
+				if (phase === "blob" || phase === "morph") {
+					const untilMidHold = (phase === "blob" ? DUR.blob - phaseT + DUR.morph : DUR.morph - phaseT) + DUR.hold / 2;
+					const want = PRESENT_YAW - (spin.rotation.y + AUTO_SPEED * untilMidHold);
+					yaw.rotation.y += wrapAngle(want - yaw.rotation.y) * Math.min(1, dt * (phase === "blob" ? 2.5 : 4));
 				}
 				// A gentle float while a board is held.
 				root.position.y = phase === "hold" ? 0.012 * Math.sin(t * 1.8) * smooth(phaseT / 0.4) : 0;

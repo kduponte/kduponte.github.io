@@ -55,6 +55,23 @@ describe("iconic_boards.json", () => {
 		}
 	});
 
+	it("places every label on its board, in one of the site's fonts", () => {
+		for (const { board, size } of resolveBoards(data, summary.consensus, summary.rows)) {
+			const L = parseLengthIn(size.length);
+			for (const label of board.labels ?? []) {
+				expect(label.text.trim().length, board.id).toBeGreaterThan(0);
+				expect(["display", "script", "sans", "mono"]).toContain(label.font);
+				expect(["deck", "bottom"]).toContain(label.side);
+				expect(["along", "across"]).toContain(label.orient);
+				expect(label.at_in, `${board.id} ${label.text}`).toBeGreaterThan(4);
+				expect(label.at_in, `${board.id} ${label.text}`).toBeLessThan(L - 4);
+				expect(Math.abs(label.z_in)).toBeLessThan(size.width_in / 2);
+				expect(label.height_in).toBeLessThan(size.width_in / 3);
+				expect(label.color).toMatch(/^#[0-9a-f]{6}$/i);
+			}
+		}
+	});
+
 	it("uses unique ids", () => {
 		const ids = data.boards.map((b) => b.id);
 		expect(new Set(ids).size).toBe(ids.length);

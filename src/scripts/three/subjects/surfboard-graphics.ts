@@ -2,11 +2,13 @@
  * Canvas-painted deck and bottom graphics for the Volume Gap boards. Stylized evocations of each
  * board's look (pink resin and pinlines, a 70s airbrushed rainbow, a retro fish laminate, wrapped
  * rails, a rail spray, a carbon frame, tiger stripes, a soft-top starburst), never a copy of a
- * real logo. Painted in the board's own texture space (see surfboard-morph's uv):
- * canvas x runs nose to tail, canvas y maps across the deck (top half) and bottom (lower half).
+ * real logo. Labels are the makers' brand and model names typeset in the site's own fonts.
+ * Painted in the board's own texture space (see surfboard-morph's uv): canvas x runs nose to
+ * tail, canvas y maps across the deck (top half) and bottom (lower half).
  *
- * New boards pick a painter by name in iconic_boards.json ("graphic") and pass colors.
+ * New boards pick a painter by name in iconic_boards.json ("graphic") and pass colors and labels.
  */
+import type { LabelSpec } from "../../../lib/surf-volume/iconic-boards";
 import { bottomV, deckV, halfWidthIn, type PreparedBoard } from "../../../lib/three/surfboard-morph";
 
 export const TEX_W = 2048;
@@ -193,27 +195,11 @@ const fishLaminate: Painter = (pen, c) => {
 		pen.stringer(side, 0.42, wood);
 	}
 	for (const sign of [1, -1]) pen.railBand("deck", sign * 0.85, sign * 0.865, ink, 3, pen.L);
-	// Laminate: ink ring, cream ring, color disc, and a plain fish (not any brand's mark).
+	// Round laminate disc: ink ring, cream ring, color disc. The brand name is a label on top.
 	const lx = 15;
 	pen.circle("deck", lx, 0, 4.1, ink);
 	pen.circle("deck", lx, 0, 3.75, wood);
 	pen.circle("deck", lx, 0, 3.3, lam);
-	const fish: [number, number][] = [];
-	for (let a = 0; a < 32; a++) {
-		const th = (a / 32) * Math.PI * 2;
-		fish.push([lx - 0.4 + 1.6 * Math.cos(th), 0.95 * Math.sin(th)]);
-	}
-	pen.poly("deck", fish, wood);
-	pen.poly(
-		"deck",
-		[
-			[lx + 0.9, 0],
-			[lx + 2.4, 1.05],
-			[lx + 2.4, -1.05],
-		],
-		wood,
-	);
-	pen.circle("deck", lx - 1.25, 0.3, 0.22, ink);
 };
 
 /** Lopez-era Pipeliner: clear deck, resin-wrapped yellow rails and bottom, red pinstripes. */
@@ -235,8 +221,8 @@ const pipelinerWrap: Painter = (pen, c) => {
 	for (const side of ["deck", "bottom"] as const) pen.stringer(side, 0.3, wood);
 };
 
-/** Al Merrick-era thruster: white board, airbrushed rail spray, black pinline, sprayed bottom. */
-const flyerSpray: Painter = (pen, c) => {
+/** Classic Channel Islands look: white board, airbrushed rail spray, black pinline, sprayed bottom. */
+const railSpray: Painter = (pen, c) => {
 	const base = pick(c, "base", "#fbfaf5");
 	const spray = pick(c, "spray", "#2438ff");
 	const ink = pick(c, "accent", "#111111");
@@ -367,19 +353,96 @@ const PAINTERS: Record<string, Painter> = {
 	"rainbow-airbrush": rainbowAirbrush,
 	"fish-laminate": fishLaminate,
 	"pipeliner-wrap": pipelinerWrap,
-	"flyer-spray": flyerSpray,
+	"rail-spray": railSpray,
 	futureflex,
 	"tiger-stripes": tigerStripes,
 	"soft-top": softTop,
 };
 
-/** Paint a board's deck and bottom into a new canvas. */
-export function paintBoardCanvas(prepared: PreparedBoard, graphic: string, colors: BoardColors): HTMLCanvasElement {
+const LABEL_FONTS: Record<LabelSpec["font"], (px: number) => string> = {
+	display: (px) => `400 ${px}px Anton, Impact, sans-serif`,
+	script: (px) => `italic 400 ${px}px "Instrument Serif", Georgia, serif`,
+	sans: (px) => `800 ${px}px "Bricolage Grotesque Variable", system-ui, sans-serif`,
+	mono: (px) => `400 ${px}px Silkscreen, monospace`,
+};
+
+/** Wait (briefly) for the site's fonts so labels are typeset in them, not a fallback. */
+export async function loadLabelFonts(): Promise<void> {
+	if (typeof document === "undefined" || !document.fonts) return;
+	const all = Promise.all(Object.values(LABEL_FONTS).map((f) => document.fonts.load(f(40), "AaPp'.").catch(() => [])));
+	await Promise.race([all, new Promise((r) => setTimeout(r, 2500))]);
+}
+
+/**
+ * Typeset a label in plan inches. The texture stretches differently along and across the board
+ * (and the across scale changes as the outline tapers), so text is drawn in inch space and mapped
+ * per glyph; it reads nose-right for "along" labels and nose-up for "across" ones, on deck and bottom.
+ */
+function drawLabel(pen: Pen, l: LabelSpec) {
+	const { ctx } = pen;
+	const BASE = 100;
+	ctx.font = LABEL_FONTS[l.font](BASE);
+	const cap = ctx.measureText("H").actualBoundingBoxAscent || 0.72 * BASE;
+	const k = l.height_in / cap; // inches per base-font pixel
+	const widths = [...l.text].map((ch) => ctx.measureText(ch).width * k);
+	const total = widths.reduce((a, b) => a + b, 0);
+	const sx = TEX_W / pen.L;
+	const sy = (at: number) => TEX_H / 4 / Math.max(pen.halfWidth(at), 0.5);
+	const glyph = (ch: string, at: number, z: number, rot: number) => {
+		const [cx, cy] = pen.pt(l.side, at, z);
+		ctx.save();
+		ctx.translate(cx, cy);
+		ctx.scale(sx, sy(at));
+		ctx.rotate(rot);
+		ctx.scale(k, k);
+		ctx.textAlign = "center";
+		ctx.textBaseline = "alphabetic";
+		ctx.fillStyle = l.color;
+		ctx.fillText(ch, 0, cap / 2);
+		ctx.restore();
+	};
+	const pad = l.height_in * 0.45;
+	if (l.orient === "across") {
+		if (l.patch) {
+			const rect = (grow: number): [number, number][] => [
+				[l.at_in - l.height_in * 0.85 - grow, l.z_in - total / 2 - pad - grow],
+				[l.at_in + l.height_in * 0.85 + grow, l.z_in - total / 2 - pad - grow],
+				[l.at_in + l.height_in * 0.85 + grow, l.z_in + total / 2 + pad + grow],
+				[l.at_in - l.height_in * 0.85 - grow, l.z_in + total / 2 + pad + grow],
+			];
+			pen.poly(l.side, rect(0.14), "#111111");
+			pen.poly(l.side, rect(0), l.patch);
+		}
+		glyph(l.text, l.at_in, l.z_in, -Math.PI / 2);
+		return;
+	}
+	if (l.patch) {
+		const rect = (grow: number): [number, number][] => [
+			[l.at_in - total / 2 - pad - grow, l.z_in - l.height_in * 0.85 - grow],
+			[l.at_in + total / 2 + pad + grow, l.z_in - l.height_in * 0.85 - grow],
+			[l.at_in + total / 2 + pad + grow, l.z_in + l.height_in * 0.85 + grow],
+			[l.at_in - total / 2 - pad - grow, l.z_in + l.height_in * 0.85 + grow],
+		];
+		pen.poly(l.side, rect(0.14), "#111111");
+		pen.poly(l.side, rect(0), l.patch);
+	}
+	// Reading toward the nose: the first glyph sits nearest the tail.
+	let run = 0;
+	[...l.text].forEach((ch, i) => {
+		glyph(ch, l.at_in + total / 2 - run - widths[i] / 2, l.z_in, Math.PI);
+		run += widths[i];
+	});
+}
+
+/** Paint a board's deck and bottom, then its labels, into a new canvas. */
+export function paintBoardCanvas(prepared: PreparedBoard, graphic: string, colors: BoardColors, labels: LabelSpec[] = []): HTMLCanvasElement {
 	const canvas = document.createElement("canvas");
 	canvas.width = TEX_W;
 	canvas.height = TEX_H;
 	const ctx = canvas.getContext("2d");
 	if (!ctx) return canvas;
-	(PAINTERS[graphic] ?? plain)(new Pen(ctx, prepared), colors);
+	const pen = new Pen(ctx, prepared);
+	(PAINTERS[graphic] ?? plain)(pen, colors);
+	for (const l of labels) drawLabel(pen, l);
 	return canvas;
 }

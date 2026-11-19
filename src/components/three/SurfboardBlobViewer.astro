@@ -26,7 +26,7 @@ const { consensus, rows, profile } = summary as unknown as ComparisonResult & { 
 const resolved = resolveBoards(data, consensus, rows);
 
 const config: BlobViewerConfig = {
-	blobColor: "#c8ff3d",
+	blobColor: "#b4f03a",
 	ink: "#111111",
 	boards: resolved.map((r) => ({
 		id: r.board.id,
@@ -37,6 +37,7 @@ const config: BlobViewerConfig = {
 		fins: r.board.shape.fin_layout,
 		graphic: r.board.graphic,
 		colors: r.board.colors,
+		labels: r.board.labels ?? [],
 	})),
 };
 
@@ -73,7 +74,7 @@ const boardList = resolved.map((r) => `${r.board.name} (${r.size.length}, ${r.si
 		data-volume-blob-viewer
 		data-config={JSON.stringify(config)}
 		role="img"
-		aria-label={`A lime Play-Doh blob bounces and reshapes into iconic surfboards at true relative size: ${boardList}. Drag to spin it; tap to skip ahead.`}
+		aria-label={`A translucent lime blob bounces and reshapes into iconic surfboards at true relative size: ${boardList}. Drag to spin it; tap to skip ahead.`}
 		class:list={["relative z-10 w-full select-none", aspect, canvasClass]}
 	>
 		<!-- Static fallback: shown until WebGL mounts, and kept if it can't. -->
@@ -144,8 +145,8 @@ const boardList = resolved.map((r) => `${r.board.name} (${r.size.length}, ${r.si
 		<p class="mt-3 text-[11px] font-medium leading-snug">
 			<strong>To scale:</strong> every board's length, width, thickness and liters, on one shared scale, and the blob always holds exactly
 			the liters of the board it's becoming. Each model is shown in its stock size nearest the {median.toFixed(1)} L median.{" "}
-			<strong>Not to scale:</strong> the bounce and wobble are animation; outlines, rocker, rails and fins are estimated from typical designs
-			(only length, width, thickness and liters are published); graphics are stylized, not the real laminates.
+			<strong>Not to scale:</strong> the bounce, wobble and goo are animation; outlines, rocker, rails and fins are estimated from typical designs
+			(only length, width, thickness and liters are published); graphics are stylized, and labels are the makers' names set in this site's type, not their logos.
 		</p>
 	</figcaption>
 </figure>

@@ -35,6 +35,23 @@ export interface FinSpec {
 	template: "longboard" | "single" | "keel" | "thruster" | "soft";
 }
 
+/** A laminate-style label: the maker's brand or model name, typeset in one of the site's fonts. */
+export interface LabelSpec {
+	text: string;
+	side: "deck" | "bottom";
+	/** Center of the label, inches back from the nose tip, and across from the stringer. */
+	at_in: number;
+	z_in: number;
+	/** Cap height, inches. */
+	height_in: number;
+	font: "display" | "script" | "sans" | "mono";
+	color: string;
+	/** "along" reads down the stringer; "across" reads rail to rail with the nose up. */
+	orient: "along" | "across";
+	/** Optional laminate patch behind the text. */
+	patch?: string;
+}
+
 export interface ShapeSpec {
 	wide_point_from_center_in: number;
 	nose_width_12_in: number;
@@ -60,6 +77,7 @@ export interface IconicBoard {
 	/** Surface finish; soft-tops are matte. Defaults to gloss. */
 	finish?: "gloss" | "matte";
 	colors: Record<string, string | string[]>;
+	labels?: LabelSpec[];
 	/**
 	 * Models whose published box fill estimates this one's unpublished volumes, when it has no
 	 * published sizes of its own. Pick the closest design family; omit to use the whole catalog.

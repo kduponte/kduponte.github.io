@@ -1,6 +1,6 @@
 /**
  * Canvas-painted deck and bottom graphics for the Volume Gap boards. Stylized evocations of each
- * board's look (pink resin and pinlines, a 70s airbrushed rainbow, a retro fish laminate, wrapped
+ * board's look (pink resin and pinlines, the '76 Sting's sprayed rails, a retro fish laminate, wrapped
  * rails, a rail spray, a carbon frame, tiger stripes, a soft-top starburst), never a copy of a
  * real logo. Labels are the makers' brand and model names typeset in the site's own fonts.
  * Painted in the board's own texture space (see surfboard-morph's uv): canvas x runs nose to
@@ -144,41 +144,32 @@ const pinkResin: Painter = (pen, c) => {
 	}
 };
 
-/** 70s single fin: cream deck with a rainbow airbrushed in from the rails and a tail-block sun. */
-const rainbowAirbrush: Painter = (pen, c) => {
-	const base = pick(c, "base", "#f6f1e4");
-	const bottom = pick(c, "bottom", "#8fd0ff");
-	const ink = pick(c, "accent", "#111111");
-	const bands = Array.isArray(c.bands) ? c.bands : ["#ff5a1f", "#ffd400", "#c8ff3d", "#8fd0ff", "#2438ff"];
+/**
+ * AIPA '76 Sting "Spray", after the real board: yellow deck, deep-blue sprayed rails that turn
+ * light blue behind the stinger step, and a short rainbow burst in the rail band mid-board.
+ */
+const stingSpray: Painter = (pen, c) => {
+	const base = pick(c, "base", "#ffd400");
+	const rail = pick(c, "rail", "#2438ff");
+	const railTail = pick(c, "rail_tail", "#8fd0ff");
+	const bands = Array.isArray(c.bands) ? c.bands : ["#d62828", "#ff5a1f", "#ff9f1c", "#8fd0ff"];
 	pen.ctx.fillStyle = base;
-	pen.ctx.fillRect(0, 0, TEX_W, TEX_H / 2);
-	pen.ctx.fillStyle = bottom;
-	pen.ctx.fillRect(0, TEX_H / 2, TEX_W, TEX_H / 2);
-
-	// Deck: the spectrum sprayed in from each rail, coolest at the rail, fading to the cream.
-	pen.railFade("deck", [...[...bands].reverse(), fadeTo(base, 0)], 0.3);
-	// A rising sun on the tail block, rays first.
-	const sunX = pen.L - 12;
-	for (let k = 0; k < 9; k++) {
-		const a = Math.PI * (0.5 + (k + 0.5) / 9);
-		const a0 = a - 0.07;
-		const a1 = a + 0.07;
-		pen.poly(
-			"deck",
-			[
-				[sunX + 3.4 * Math.cos(a0), 3.4 * Math.sin(a0)],
-				[sunX + 6.5 * Math.cos(a0), 6.5 * Math.sin(a0)],
-				[sunX + 6.5 * Math.cos(a1), 6.5 * Math.sin(a1)],
-				[sunX + 3.4 * Math.cos(a1), 3.4 * Math.sin(a1)],
-			],
-			bands[0],
-		);
+	pen.ctx.fillRect(0, 0, TEX_W, TEX_H);
+	// Where the outline steps in, measured from the nose (no step: three-quarters back).
+	const step = pen.p.xStep !== null ? pen.p.halfL - pen.p.xStep : pen.L * 0.75;
+	const burst0 = pen.L * 0.44;
+	const burst1 = pen.L * 0.53;
+	for (const side of ["deck", "bottom"] as const) {
+		for (const sign of [1, -1]) {
+			pen.railBand(side, sign * 0.84, sign, rail, 0, step);
+			pen.railBand(side, sign * 0.84, sign, railTail, step, pen.L);
+			bands.forEach((band, i) => {
+				const a = burst0 + ((burst1 - burst0) * i) / bands.length;
+				pen.railBand(side, sign * 0.78, sign, band, a, a + (burst1 - burst0) / bands.length);
+			});
+		}
+		pen.stringer(side, 0.18, adjust(base, -0.6));
 	}
-	pen.circle("deck", sunX, 0, 3, bands[1]);
-	// Bottom: the same spray, warm end at the rail.
-	pen.railFade("bottom", [...bands, fadeTo(bottom, 0)], 0.45);
-	for (const side of ["deck", "bottom"] as const) pen.stringer(side, 0.18, adjust(base, 0.35));
-	for (const sign of [1, -1]) pen.railBand("deck", sign * 0.27, sign * 0.285, ink, 4, pen.L - 4);
 };
 
 /** Retro fish: yellow resin tint, cream stringer, pinline, and a round fish laminate up front. */
@@ -350,7 +341,7 @@ const plain: Painter = (pen, c) => {
 
 const PAINTERS: Record<string, Painter> = {
 	"pink-resin": pinkResin,
-	"rainbow-airbrush": rainbowAirbrush,
+	"sting-spray": stingSpray,
 	"fish-laminate": fishLaminate,
 	"pipeliner-wrap": pipelinerWrap,
 	"rail-spray": railSpray,

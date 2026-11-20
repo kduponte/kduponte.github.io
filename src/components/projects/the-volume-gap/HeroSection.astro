@@ -1,5 +1,6 @@
 ---
 import ProjectHeader from "../../editorial/ProjectHeader.astro";
+import SurfboardBlobViewer from "../../three/SurfboardBlobViewer.astro";
 ---
 
 <ProjectHeader
@@ -9,4 +10,11 @@ import ProjectHeader from "../../editorial/ProjectHeader.astro";
 	summary="Surfboard volume calculators promise a simple answer: enter a few details and receive the number of liters you should ride. But different recommendation systems use different assumptions, variables, and definitions. This project compares how they behave and makes their disagreement visible."
 	primaryCta={{ label: "Compare my profile", href: "#personal-comparison" }}
 	secondaryCta={{ label: "Explore the methodology", href: "#methodology" }}
-/>
+>
+	<!--
+		On desktop the canvas floats up over the right of the headline at the 22RE truck's size, while
+		the readout stays in flow beside the summary so the header grows to fit it. Tablets keep it in
+		the right column (lifting it there covers the subtitle); on mobile both sit below the summary.
+	-->
+	<SurfboardBlobViewer canvasClass="md:-ml-[12%] md:w-[112%] lg:-ml-[40%] lg:-mt-40 lg:w-[140%] xl:-mt-48" />
+</ProjectHeader>

@@ -5,6 +5,7 @@
 // Scales, all stated on the page:
 //   - Horizontal distances on the sea are true: the block is WINDOW_M metres across.
 //   - Heights on the sea are stretched VERTICAL_EXAGGERATION times.
+//   - The camera is framed once for every station, so the block is always drawn the same size.
 //   - The buoys are drawn INSTRUMENT_ENLARGEMENT times larger than the sea's horizontal scale (a
 //     0.9 m Waverider at true scale would be a speck on a 400 m patch), all at the same scale, so
 //     the 3 m discus is drawn 3.3 times the Waverider's size, as it is.
@@ -156,27 +157,14 @@ export function frameVertically(extremes: Extreme[], elevation: number): Framing
 }
 
 /**
- * The largest uniform scale (at most 1), about the framing's target, at which every extreme still
- * fits the frame. Scaling the scene about the camera's target by s draws exactly what backing the
- * camera off to 1/s of its distance would, so this is a zoom, not a change of proportions.
+ * The box aspect ratio (width / height) at which a framing's width and height both just fit: the
+ * tallest box worth using, since any taller only adds empty space. Wider boxes than this draw the
+ * scene smaller (height-bound).
  */
-export function fitScale(extremes: Extreme[], frame: Framing, elevation: number): number {
-	const ty = frame.target.y;
-	const dist = distanceFor(frame.half);
-	const fits = (k: number) => {
-		const scaled = extremes.map(([y, away]): Extreme => [ty + k * (y - ty), k * away]);
-		// A hair of slack, so the stations that set the frame (which touch its edges) fit at 1.
-		return screenUps(scaled, elevation, ty, dist).every((u) => Math.abs(u) <= frame.half * 1.001);
-	};
-	if (fits(1)) return 1;
-	let lo = 0.05;
-	let hi = 1;
-	for (let i = 0; i < 30; i++) {
-		const mid = (lo + hi) / 2;
-		if (fits(mid)) lo = mid;
-		else hi = mid;
-	}
-	return lo;
+export function frameAspect(framing: { turnRadius: number; halfHeight: number }): number {
+	const dv = framing.halfHeight / Math.sin(HALF_FOV);
+	const halfH = Math.asin(Math.min(1, framing.turnRadius / dv));
+	return Math.tan(halfH) / TAN_HALF_FOV;
 }
 
 export interface BuoyDiorama {
@@ -199,11 +187,6 @@ export interface BuoyDiorama {
 	/** The shark shadow, for tests. */
 	shark: Mesh;
 	framing: { target: Vector3; turnRadius: number; halfHeight: number; viewDir: Vector3 };
-	/**
-	 * The uniform scale, about framing.target, that fits a station (default: the current one) in
-	 * the frame. 1 for every Waverider station; less for Monterey, whose mast needs the room.
-	 */
-	fitScale(i?: number): number;
 	dispose(): void;
 }
 
@@ -274,10 +257,11 @@ export function buildBuoyDiorama(stations: DioramaStation[], startIndex = 0): Bu
 		mooring.scale.set(1, Math.max(1e-3, run.length()), 1);
 	};
 
-	// Frame the camera for the Waverider stations (eleven of the twelve). The extremes are the
-	// buoy's top on the spin axis, the water's far corner rising behind it as the block turns, and
-	// the plinth's near corner dropping in front. A station that needs more room (Monterey's 5 m
-	// mast) is drawn smaller as a whole, via fitScale, so nothing ever clips.
+	// One frame for every station, so the sea block is drawn the same size whichever buoy is shown.
+	// It has to fit the tallest thing any station draws, which is Monterey's 5 m discus mast, not
+	// any wave. The extremes are the buoy's top on the spin axis, the water's far corner rising
+	// behind it as the block turns, and the plinth's near corner dropping in front. A box tall
+	// enough for the mast (see frameAspect) keeps the block as large as the box's width allows.
 	const viewDir = new Vector3(5.2, 3.4, 5.9).normalize();
 	const elevation = Math.asin(viewDir.y);
 	const turnRadius = (TILE / 2 + BASE_MARGIN) * Math.SQRT2;
@@ -291,9 +275,7 @@ export function buildBuoyDiorama(stations: DioramaStation[], startIndex = 0): Bu
 			[-BLOCK_DEPTH - BASE_H, -turnRadius],
 		];
 	};
-	const framed = stations.filter((s) => s.instrument === "waverider");
-	const frame = frameVertically((framed.length ? framed : stations).flatMap(extremesOf), elevation);
-	const scales = stations.map((s) => fitScale(extremesOf(s), frame, elevation));
+	const frame = frameVertically(stations.flatMap(extremesOf), elevation);
 
 	update(0);
 	return {
@@ -329,9 +311,6 @@ export function buildBuoyDiorama(stations: DioramaStation[], startIndex = 0): Bu
 		mooring,
 		shark: shark.mesh,
 		framing: { target: frame.target, turnRadius, halfHeight: frame.halfHeight, viewDir },
-		fitScale(i = index) {
-			return scales[wrap(i)];
-		},
 		dispose() {
 			ocean.dispose();
 			mooringGeo.dispose();

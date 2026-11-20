@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { Vector3 } from "three";
 import data from "../../public/data/surf-forecast/buoy-snapshots.json";
-import { INSTRUMENT_ENLARGEMENT, INSTRUMENT_UNITS_PER_M, MAX_TILT_RAD, sharkPlanFor, buildBuoyDiorama, buoyTilt, type DioramaStation } from "../../src/lib/three/buoy-diorama";
+import { INSTRUMENT_ENLARGEMENT, INSTRUMENT_UNITS_PER_M, MAX_TILT_RAD, frameAspect, sharkPlanFor, buildBuoyDiorama, buoyTilt, type DioramaStation } from "../../src/lib/three/buoy-diorama";
 import { BLOCK_DEPTH, UNITS_PER_M, surfaceHeight, surfaceSlope, swellField } from "../../src/lib/three/ocean";
 import { hexToOklab, temperatureDomain, waterColor } from "../../src/lib/three/water-color";
 import type { Instrument } from "../../src/lib/surf-forecast/buoy-snapshot";
@@ -89,23 +89,26 @@ describe("buildBuoyDiorama", () => {
 		expect(d.active.lantern.emissiveIntensity).toBe(1.2);
 	});
 
-	it("frames the Waverider stations at full size and draws Monterey smaller so its mast fits", () => {
-		const monterey = stations.findIndex((s) => s.station === "46042");
-		stations.forEach((s, i) => {
-			if (i === monterey) return;
-			expect(d.fitScale(i)).toBe(1);
-		});
-		const k = d.fitScale(monterey);
-		expect(k).toBeLessThan(0.9);
-		expect(k).toBeGreaterThan(0.4);
-		// The discus mast top, scaled about the target, stays under the frame's top edge (flat
-		// projection is enough here: the mast sits on the spin axis, at the target's depth).
-		const { target, halfHeight, viewDir } = d.framing;
+	it("frames every station at one size, with room for Monterey's mast", () => {
+		const { target, halfHeight, viewDir, turnRadius } = d.framing;
 		const cosE = Math.cos(Math.asin(viewDir.clone().normalize().y));
 		const half = halfHeight / Math.cos((14 * Math.PI) / 180);
+		// The discus mast top sits on the spin axis, at the target's depth, so a flat projection is exact.
 		const mastTop = 0.25 + 5.5 * INSTRUMENT_UNITS_PER_M;
-		expect((target.y + k * (mastTop - target.y) - target.y) * cosE).toBeLessThanOrEqual(half * 1.001);
-		expect(d.framing.turnRadius).toBeGreaterThan(4);
+		expect((mastTop - target.y) * cosE).toBeLessThanOrEqual(half * 1.001);
+		expect(turnRadius).toBeGreaterThan(4);
+		expect(d).not.toHaveProperty("fitScale");
+	});
+
+	it("names the box shape at which width and height both just fit", () => {
+		const a = frameAspect(d.framing);
+		// Monterey's mast makes it a taller box than a 16:9 hero, though still wider than tall.
+		expect(a).toBeGreaterThan(0.8);
+		expect(a).toBeLessThan(16 / 9);
+		// At that aspect the horizontal and vertical camera distances agree.
+		const halfV = (14 * Math.PI) / 180;
+		const halfH = Math.atan(Math.tan(halfV) * a);
+		expect(d.framing.turnRadius / Math.sin(halfH)).toBeCloseTo(d.framing.halfHeight / Math.sin(halfV), 6);
 	});
 
 	it("draws the buoys the stated number of times larger than the sea's horizontal scale", () => {
@@ -113,6 +116,7 @@ describe("buildBuoyDiorama", () => {
 	});
 
 	it("tilts the wide discus less than the Waverider", () => {
+		d.setStation(0);
 		const monterey = stations.findIndex((s) => s.station === "46042");
 		d.setStation(monterey);
 		const discusCap = d.active.maxTilt_rad;

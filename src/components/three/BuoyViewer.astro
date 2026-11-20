@@ -9,7 +9,7 @@ import data from "../../../public/data/surf-forecast/buoy-snapshots.json";
 import sharkData from "../../../public/data/surf-forecast/buoy-sharks.json";
 import { SHARK_BASE_INTERVAL_S, sharkReadout } from "../../lib/surf-forecast/sharks";
 import { snapshotReadout, type BuoySnapshot } from "../../lib/surf-forecast/buoy-snapshot";
-import { INSTRUMENT_ENLARGEMENT, toDioramaStation, type StationSharks } from "../../lib/three/buoy-diorama";
+import { INSTRUMENT_ENLARGEMENT, buildBuoyDiorama, frameAspect, toDioramaStation, type StationSharks } from "../../lib/three/buoy-diorama";
 import { FALLBACK_VIEWBOX, fallbackSvgGroups } from "../../lib/three/buoy-fallback";
 import { DISCUS_DIAMETER_M, WAVERIDER_DIAMETER_M } from "../../lib/three/buoy-model";
 import { SCALE_STEP_M, VERTICAL_EXAGGERATION } from "../../lib/three/ocean";
@@ -20,7 +20,11 @@ import { SYSTEM_COLOR, SYSTEM_ORDER } from "../../scripts/surf-forecast/palette"
 interface Props {
 	/** Classes for the canvas box (placement and width). */
 	class?: string;
-	/** Tailwind aspect-ratio class for the canvas box. */
+	/**
+	 * Tailwind aspect-ratio class for the canvas box. By default the box takes the shape the scene's
+	 * one framing needs (frameAspect): tall enough for Monterey's mast, so the sea block is drawn as
+	 * large as the box's width allows, and the same size for every station.
+	 */
 	aspect?: string;
 	/** Show the readout card with the station's numbers and the scale note. */
 	readout?: boolean;
@@ -28,12 +32,16 @@ interface Props {
 	cardClass?: string;
 }
 
-const { class: className = "", aspect = "aspect-[4/3]", readout = true, cardClass = "" } = Astro.props;
+const { class: className = "", aspect, readout = true, cardClass = "" } = Astro.props;
 
 const snapshots = data.snapshots as BuoySnapshot[];
 if (snapshots.length === 0) throw new Error("buoy-snapshots.json has no snapshots");
 const sharkStations = sharkData.stations as Record<string, StationSharks & { name: string }>;
 const stations = snapshots.map((s) => toDioramaStation(s, SYSTEM_COLOR, sharkStations[s.station] ?? null));
+// The box shape the framing needs, measured from the same diorama the browser builds.
+const probe = buildBuoyDiorama(stations);
+const boxAspect = Math.round(frameAspect(probe.framing) * 100) / 100;
+probe.dispose();
 const sharkLines = snapshots.map((s) => {
 	const k = sharkStations[s.station];
 	return k ? sharkReadout(k, sharkData.radius_km, sharkData.window) : null;
@@ -61,7 +69,13 @@ const sharkiest = Object.values(sharkStations).reduce((a, b) => (b.incidents_n >
 
 <div data-buoy-root data-station="0" data-count={snapshots.length} class="contents">
 	<script is:inline type="application/json" data-buoy-data set:html={payload} />
-	<div data-buoy-viewer role="img" aria-label={label} class:list={["relative w-full select-none", aspect, className]}>
+	<div
+		data-buoy-viewer
+		role="img"
+		aria-label={label}
+		class:list={["relative w-full select-none", aspect, className]}
+		style={aspect ? undefined : `aspect-ratio: ${boxAspect}`}
+	>
 		<!-- Static fallback: shown until WebGL mounts, and kept if it can't. Same numbers, cut side-on. -->
 		<svg data-fallback viewBox={FALLBACK_VIEWBOX} class="absolute inset-0 h-full w-full" aria-hidden="true">
 			<Fragment set:html={fallbackSvgGroups(stations)} />
@@ -163,7 +177,7 @@ const sharkiest = Object.values(sharkStations).reduce((a, b) => (b.incidents_n >
 					recorded within {sharkData.radius_km} km of the buoy ({sharkData.window.from.slice(0, 4)}–{sharkData.window.to.slice(0, 4)}; Hawaii DLNR and
 					California CDFW incident lists): every {SHARK_BASE_INTERVAL_S} s at {sharkiest.name}, the most, and in proportion elsewhere,
 					at the median length recorded and the species' cruising speed. Buoys and sharks drawn {enlargement}× life size, all
-					at one scale{discusName && `, so ${discusName}'s ${DISCUS_DIAMETER_M} m discus dwarfs the ${WAVERIDER_DIAMETER_M} m Waveriders (its whole scene is drawn zoomed out to fit its mast)`}.
+					at one scale{discusName && `, so ${discusName}'s ${DISCUS_DIAMETER_M} m discus dwarfs the ${WAVERIDER_DIAMETER_M} m Waveriders`}.
 				</p>
 			</div>
 		)

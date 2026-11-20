@@ -7,11 +7,10 @@
  * - Hover warms the lantern. A tap steps to the next station.
  * - Where sharks have been recorded near the buoy, a shark's shadow sometimes crosses under the
  *   surface, as often as the record says (lib/three/shark.ts).
- * - The camera is framed for the Waverider stations. Monterey's 5 m mast needs more room, so its
- *   whole scene eases to a smaller size about the camera's target: a zoom out, with every
- *   object still at one scale.
+ * - The camera is framed once for every station (room for Monterey's 5 m mast included), so the
+ *   block never changes size when the station does.
  * - Reduced motion: a still frame at t = 0 (a crest under the buoy), redrawn only when the
- *   station changes or the lantern glow settles; the size change snaps.
+ *   station changes or the lantern glow settles.
  *
  * Station data comes from the JSON the component embeds at build time; station changes arrive
  * as events on the shared root, so the HTML readout and this chunk never import each other.
@@ -24,8 +23,6 @@ import type { SubjectFactory } from "../viewer";
 const LANTERN_WARM = 1.8;
 /** How fast the glow eases in and out, per second. */
 const LANTERN_EASE = 6;
-/** How fast the scene eases to a station's fitted size, per second. */
-const FIT_EASE = 5;
 
 const createBuoy: SubjectFactory = ({ THREE, host, reducedMotion, requestRender }) => {
 	const root = host.closest<HTMLElement>("[data-buoy-root]") ?? host;
@@ -40,20 +37,9 @@ const createBuoy: SubjectFactory = ({ THREE, host, reducedMotion, requestRender 
 
 	let warm = 0;
 	let warmTarget = 0;
-	let fit = diorama.fitScale();
-	let fitTarget = fit;
-	const { target } = diorama.framing;
-	/** Scale the whole scene about the camera's target, which is the same as moving the camera. */
-	const applyFit = () => {
-		rig.scale.setScalar(fit);
-		rig.position.copy(target).multiplyScalar(1 - fit);
-	};
-	applyFit();
 
 	const onSelect = (e: Event) => {
 		diorama.setStation((e as CustomEvent<BuoySelectDetail>).detail.index);
-		fitTarget = diorama.fitScale();
-		if (reducedMotion) fit = fitTarget;
 		requestRender();
 	};
 	root.addEventListener(BUOY_SELECT, onSelect);
@@ -66,13 +52,10 @@ const createBuoy: SubjectFactory = ({ THREE, host, reducedMotion, requestRender 
 		update({ t, dt }) {
 			// Under reduced motion the frame is still, so the shark (pure motion) stays away.
 			diorama.update(reducedMotion ? 0 : t, { sharks: !reducedMotion });
-			fit += (fitTarget - fit) * Math.min(1, dt * FIT_EASE);
-			if (Math.abs(fitTarget - fit) < 1e-4) fit = fitTarget;
-			applyFit();
 			warm = reducedMotion ? warmTarget : warm + (warmTarget - warm) * Math.min(1, dt * LANTERN_EASE);
 			diorama.setLantern(warm * LANTERN_WARM);
 		},
-		busy: () => Math.abs(warm - warmTarget) >= 0.01 || fit !== fitTarget,
+		busy: () => Math.abs(warm - warmTarget) >= 0.01,
 		onTap() {
 			selectStation(root, diorama.index + 1);
 		},

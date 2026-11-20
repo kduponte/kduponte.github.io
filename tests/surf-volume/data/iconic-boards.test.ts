@@ -119,8 +119,15 @@ describe("size rule: closest to the calculators' median", () => {
 		expect(summary.consensus.median).toBeGreaterThan(30);
 	});
 
-	it("picks the stock size nearest the median for each model", () => {
-		for (const r of resolved) {
+	it("honors a size override only for a real size, with a reason", () => {
+		for (const r of resolved.filter((x) => x.board.size_override)) {
+			expect(r.size.length).toBe(r.board.size_override!.length);
+			expect(r.board.size_override!.reason.length, r.board.id).toBeGreaterThan(10);
+		}
+	});
+
+	it("picks the stock size nearest the median for each model without an override", () => {
+		for (const r of resolved.filter((x) => !x.board.size_override)) {
 			const median = summary.consensus.median!;
 			const sizes = withVolumes(r.board, data.boards);
 			for (const s of sizes) expect(Math.abs(r.size.volume_l - median)).toBeLessThanOrEqual(Math.abs(s.volume_l - median));

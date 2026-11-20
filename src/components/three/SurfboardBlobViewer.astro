@@ -53,6 +53,8 @@ const X = (l: number) => ((l - lo) / (hi - lo)) * BAR_W;
 const ticks = Array.from({ length: (hi - lo) / 10 + 1 }, (_, i) => lo + i * 10);
 const n = points.length;
 const median = consensus.median as number;
+// Boards shown at a size other than the median rule's, named in the caption.
+const overrides = resolved.filter((r) => r.board.size_override).map((r) => `the ${r.board.name}, shown at ${r.size.length}`);
 
 const readouts = resolved.map((r, i) => ({
 	eyebrow: `Board ${i + 1} of ${resolved.length} · ${r.board.style}`,
@@ -146,9 +148,10 @@ const boardList = resolved.map((r) => `${r.board.name} (${r.size.length}, ${r.si
 		</div>
 		<p class="mt-3 text-[11px] font-medium leading-snug">
 			<strong>To scale:</strong> every board's length, width, thickness and liters, on one shared scale, and the blob always holds exactly
-			the liters of the board it's becoming. Each model is shown in its stock size nearest the {median.toFixed(1)} L median.{" "}
-			<strong>Not to scale:</strong> the bounce, wobble and goo are animation; outlines, rocker, rails and fins are estimated from typical designs
-			(only length, width, thickness and liters are published); graphics are stylized; logos are the makers' own brand and model marks, recolored to suit some boards.
+			the liters of the board it's becoming. Each model is shown in its stock size nearest the {median.toFixed(1)} L median{overrides.length > 0 && <>{" "}(except {overrides.join(", ")})</>}.{" "}
+			<strong>Not to scale:</strong> the bounce, wobble and goo are animation; outlines, rocker and rails are estimated from typical designs or fitted to
+			maker photos (only length, width, thickness and liters are published); fins follow published specs where they exist; graphics are painted after
+			reference photos; logos are the makers' own brand and model marks.
 		</p>
 	</figcaption>
 </figure>

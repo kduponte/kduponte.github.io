@@ -136,6 +136,8 @@ export interface IconicBoard {
 	 * published sizes of its own. Pick the closest design family; omit to use the whole catalog.
 	 */
 	volume_reference_models?: string[];
+	/** Show this stock size instead of the one nearest the median, and say why. */
+	size_override?: { length: string; reason: string };
 	sizes: BoardSizeRow[];
 	sources: BoardSource[];
 	shape: ShapeSpec;
@@ -295,7 +297,10 @@ export function resolveBoards(data: IconicBoardData, consensus: ConsensusStats, 
 	if (consensus.median === null) throw new Error("Consensus median is missing");
 	const median = consensus.median;
 	return data.boards.map((board) => {
-		const size = pickNearestSize(withVolumes(board, data.boards), median);
+		const sizes = withVolumes(board, data.boards);
+		const override = board.size_override && sizes.find((s) => s.length === board.size_override!.length);
+		if (board.size_override && !override) throw new Error(`${board.id}: size_override ${board.size_override.length} is not one of its sizes`);
+		const size = override || pickNearestSize(sizes, median);
 		return {
 			board,
 			size,

@@ -82,6 +82,17 @@ describe("iconic_boards.json", () => {
 		}
 	});
 
+	it("uses every logo it ships, and never typesets a model name on a deck", () => {
+		const used = new Set(data.boards.flatMap((b) => (b.labels ?? []).map((l) => l.logo).filter(Boolean)));
+		for (const key of Object.keys(data.logos ?? {})) expect(used.has(key), key).toBe(true);
+		for (const board of data.boards) {
+			for (const label of board.labels ?? []) {
+				if (label.side !== "deck" || !label.text) continue;
+				expect(label.text.toLowerCase(), board.id).not.toContain(board.name.toLowerCase().replace(/^'/, ""));
+			}
+		}
+	});
+
 	it("uses unique ids", () => {
 		const ids = data.boards.map((b) => b.id);
 		expect(new Set(ids).size).toBe(ids.length);

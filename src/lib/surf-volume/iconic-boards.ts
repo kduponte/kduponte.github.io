@@ -36,8 +36,9 @@ export interface FinSpec {
 }
 
 /**
- * A laminate on the board: either one of the maker's own logos (`logo`, a key into the data
- * file's `logos`) or text typeset in one of the site's fonts (`text` with `font`).
+ * A laminate on the board: either one of the maker's own brand or model logos (`logo`, a key
+ * into the data file's `logos`) or text typeset in one of the site's fonts (`text` with `font`),
+ * kept for shaper signatures and construction marks; model names are never typeset on a deck.
  */
 export interface LabelSpec {
 	text?: string;
@@ -57,7 +58,7 @@ export interface LabelSpec {
 	patch?: string;
 }
 
-/** A maker's logo file, where it came from, and how to color it on a board. */
+/** A maker's brand or model logo file, where it came from, and how to color it on a board. */
 export interface LogoSpec {
 	/** Site path of the file (under public/). */
 	file: string;
@@ -65,10 +66,14 @@ export interface LogoSpec {
 	from: string;
 	/**
 	 * alpha: recolor the logo's shape (white-on-transparent files); luma: its bright parts are the
-	 * shape (white-on-black files); none: draw as-is; glyph: a character in an icon font file.
+	 * shape (white-on-black files); ink: its dark parts are the shape (black-on-white files);
+	 * none: draw as-is; knockout: draw as-is minus the white ground around it (full-color art
+	 * on white); glyph: a character in an icon font file. Empty margins are trimmed.
 	 */
-	mask: "alpha" | "luma" | "none" | "glyph";
+	mask: "alpha" | "luma" | "ink" | "none" | "knockout" | "glyph";
 	glyph?: string;
+	/** Part of the file to use, in its pixels: [x, y, width, height] (drops captions and the like). */
+	crop?: [number, number, number, number];
 }
 
 export interface ShapeSpec {

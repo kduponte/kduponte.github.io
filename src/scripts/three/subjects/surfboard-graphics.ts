@@ -1,9 +1,9 @@
 /**
  * Canvas-painted deck and bottom graphics for the Volume Gap boards. Stylized evocations of each
- * board's look (pink resin and pinlines, the '76 Sting's sprayed rails, a retro fish laminate, wrapped
- * rails, a rail spray, a carbon frame, tiger stripes, a soft-top starburst), never a copy of a
- * real board's artwork. Labels are the makers' own logo files (tinted to suit each board) or names
- * typeset in the site's fonts.
+ * board's look (pink resin and pinlines, the '76 Sting's sprayed rails, a retro fish laminate, a
+ * Lightning Bolt inlay, a rail spray, a carbon frame, tiger stripes, a soft-top starburst), never a
+ * copy of a real board's artwork. Labels are the makers' own logo files (tinted to suit each board),
+ * plus a few typeset names and shaper signatures.
  * Painted in the board's own texture space (see surfboard-morph's uv): canvas x runs nose to
  * tail, canvas y maps across the deck (top half) and bottom (lower half).
  *
@@ -173,10 +173,9 @@ const stingSpray: Painter = (pen, c) => {
 	}
 };
 
-/** Retro fish: yellow resin tint, cream stringer, pinline, and a round fish laminate up front. */
+/** Retro fish: yellow resin tint, cream stringer and a pinline; the model's logo goes on top. */
 const fishLaminate: Painter = (pen, c) => {
 	const base = pick(c, "base", "#ffd400");
-	const lam = pick(c, "laminate", "#2438ff");
 	const wood = pick(c, "wood", "#f6f1e4");
 	const ink = pick(c, "accent", "#111111");
 	pen.ctx.fillStyle = base;
@@ -187,30 +186,74 @@ const fishLaminate: Painter = (pen, c) => {
 		pen.stringer(side, 0.42, wood);
 	}
 	for (const sign of [1, -1]) pen.railBand("deck", sign * 0.85, sign * 0.865, ink, 3, pen.L);
-	// Round laminate disc: ink ring, cream ring, color disc. The brand name is a label on top.
-	const lx = 15;
-	pen.circle("deck", lx, 0, 4.1, ink);
-	pen.circle("deck", lx, 0, 3.75, wood);
-	pen.circle("deck", lx, 0, 3.3, lam);
 };
 
-/** Lopez-era Pipeliner: clear deck, resin-wrapped yellow rails and bottom, red pinstripes. */
-const pipelinerWrap: Painter = (pen, c) => {
-	const base = pick(c, "base", "#f6f1e4");
-	const wrap = pick(c, "wrap", "#ffd400");
-	const stripe = pick(c, "accent", "#d62828");
+/**
+ * Grow a polygon outward by `d` inches (mitered, with sharp tips capped), for an inlay's pinline.
+ * Expects counter-clockwise or clockwise points alike: it picks the side that grows the area.
+ */
+function grow(pts: [number, number][], d: number): [number, number][] {
+	const area = pts.reduce((a, [x0, z0], i) => {
+		const [x1, z1] = pts[(i + 1) % pts.length];
+		return a + x0 * z1 - x1 * z0;
+	}, 0);
+	const out = area > 0 ? -1 : 1;
+	return pts.map(([x, z], i) => {
+		const [px, pz] = pts[(i + pts.length - 1) % pts.length];
+		const [nx, nz] = pts[(i + 1) % pts.length];
+		const n = (ax: number, az: number, bx: number, bz: number): [number, number] => {
+			const len = Math.hypot(bx - ax, bz - az) || 1;
+			return [((bz - az) / len) * out, (-(bx - ax) / len) * out];
+		};
+		const [n1x, n1z] = n(px, pz, x, z);
+		const [n2x, n2z] = n(x, z, nx, nz);
+		const bx = n1x + n2x;
+		const bz = n1z + n2z;
+		const blen = Math.hypot(bx, bz) || 1;
+		const cos = (bx / blen) * n1x + (bz / blen) * n1z;
+		const miter = Math.min(d / Math.max(cos, 1e-3), d * 3);
+		return [x + (bx / blen) * miter, z + (bz / blen) * miter];
+	});
+}
+
+/**
+ * Gerry Lopez's Lightning Bolt look: a solid resin-tint board with one big contrasting bolt inlaid
+ * down the stringer in the front half, edged with a thin pinline over a drop shadow. Placement and size follow
+ * photos of Lopez-shaped Bolt single fins: the bolt runs from about 14% to 52% of the length and
+ * spans close to half the board's width.
+ */
+const boltInlay: Painter = (pen, c) => {
+	const base = pick(c, "base", "#d62828");
+	const bolt = pick(c, "bolt", "#fbfaf5");
+	const ink = pick(c, "accent", "#111111");
 	const wood = pick(c, "wood", "#e9c48f");
 	pen.ctx.fillStyle = base;
-	pen.ctx.fillRect(0, 0, TEX_W, TEX_H / 2);
-	pen.ctx.fillStyle = wrap;
-	pen.ctx.fillRect(0, TEX_H / 2, TEX_W, TEX_H / 2);
-	for (const sign of [1, -1]) {
-		// The bottom color laps over the rails onto the deck, edged with a double pinstripe.
-		pen.railBand("deck", sign * 0.74, sign * 1, wrap);
-		pen.railBand("deck", sign * 0.7, sign * 0.72, stripe, 1, pen.L - 1);
-		pen.railBand("deck", sign * 0.655, sign * 0.665, stripe, 2, pen.L - 2);
+	pen.ctx.fillRect(0, 0, TEX_W, TEX_H);
+	for (const side of ["deck", "bottom"] as const) {
+		pen.railBand(side, 0.9, 1, adjust(base, 0.14));
+		pen.railBand(side, -0.9, -1, adjust(base, 0.14));
+		pen.stringer(side, 0.3, wood);
 	}
-	for (const side of ["deck", "bottom"] as const) pen.stringer(side, 0.3, wood);
+	// The bolt in a unit frame (u: 0 at its front tip, 1 at its back tip; w: across), as two
+	// overlapping blades with slanted cuts, then laid along the stringer.
+	const unit: [number, number][] = [
+		[0, 0],
+		[0.6, -0.5],
+		[0.53, -0.08],
+		[1, 0],
+		[0.4, 0.5],
+		[0.47, 0.08],
+	];
+	const from = pen.L * 0.14;
+	const to = pen.L * 0.52;
+	const mid = (from + to) / 2;
+	const span = 0.48 * 2 * pen.halfWidth(mid);
+	const pts = unit.map(([u, w]): [number, number] => [from + u * (to - from), w * span]);
+	// Drop shadow: the same bolt knocked back toward the tail and one rail, then the pinline and bolt.
+	const shadow = pts.map(([x, z]): [number, number] => [x + 1.4, z + 1.2]);
+	pen.poly("deck", grow(shadow, 0.35), pick(c, "shadow", ink));
+	pen.poly("deck", grow(pts, 0.35), ink);
+	pen.poly("deck", pts, bolt);
 };
 
 /** Classic Channel Islands look: white board, airbrushed rail spray, black pinline, sprayed bottom. */
@@ -344,7 +387,7 @@ const PAINTERS: Record<string, Painter> = {
 	"pink-resin": pinkResin,
 	"sting-spray": stingSpray,
 	"fish-laminate": fishLaminate,
-	"pipeliner-wrap": pipelinerWrap,
+	"bolt-inlay": boltInlay,
 	"rail-spray": railSpray,
 	futureflex,
 	"tiger-stripes": tigerStripes,
@@ -432,15 +475,22 @@ function logoDecal(asset: LogoAsset, color: string | string[]): HTMLCanvasElemen
 		ctx.fillText(spec.glyph, 0, 0);
 		return decal;
 	}
+	// Images work at their own resolution (capped), so a logo that fills only part of its file
+	// still has pixels to spare once the empty margin is trimmed away.
 	const img = asset.image!;
-	decal.width = Math.round((img.naturalWidth / img.naturalHeight) * H);
-	decal.height = H;
-	ctx.drawImage(img, 0, 0, decal.width, decal.height);
+	const [cx, cy, cw, ch] = spec.crop ?? [0, 0, img.naturalWidth, img.naturalHeight];
+	const k = Math.min(1, 1024 / Math.max(cw, ch));
+	decal.width = Math.max(1, Math.round(cw * k));
+	decal.height = Math.max(1, Math.round(ch * k));
+	ctx.drawImage(img, cx, cy, cw, ch, 0, 0, decal.width, decal.height);
 	if (spec.mask === "alpha") {
 		ctx.globalCompositeOperation = "source-in";
 		ctx.fillStyle = paint(ctx, color, decal.width);
 		ctx.fillRect(0, 0, decal.width, decal.height);
-	} else if (spec.mask === "luma") {
+		ctx.globalCompositeOperation = "source-over";
+	} else if (spec.mask === "luma" || spec.mask === "ink") {
+		// luma: light marks on a dark ground; ink: dark marks on a light ground. Either way the
+		// marks become the label color and the ground drops out.
 		const data = ctx.getImageData(0, 0, decal.width, decal.height);
 		const tint = document.createElement("canvas").getContext("2d")!;
 		tint.fillStyle = Array.isArray(color) ? color[0] : color;
@@ -449,14 +499,71 @@ function logoDecal(asset: LogoAsset, color: string | string[]): HTMLCanvasElemen
 		const px = data.data;
 		for (let i = 0; i < px.length; i += 4) {
 			const lum = (0.299 * px[i] + 0.587 * px[i + 1] + 0.114 * px[i + 2]) / 255;
-			px[i + 3] = Math.round(px[i + 3] * lum);
+			// Ink logos are scans and JPEG-ish: push the near-white ground fully clear.
+			const cover = spec.mask === "luma" ? lum : Math.min(1, Math.max(0, (0.92 - lum) / 0.8));
+			px[i + 3] = Math.round(px[i + 3] * cover);
 			px[i] = r;
 			px[i + 1] = g;
 			px[i + 2] = b;
 		}
 		ctx.putImageData(data, 0, 0);
+	} else if (spec.mask === "knockout") {
+		knockOutBackground(ctx, decal.width, decal.height);
 	}
-	return decal;
+	return trim(decal);
+}
+
+/**
+ * Clear the near-white ground around a full-color logo (a screenshot on white), flood-filling
+ * from the edges so white inside the artwork, behind its own outline, is kept.
+ */
+function knockOutBackground(ctx: CanvasRenderingContext2D, w: number, h: number) {
+	const data = ctx.getImageData(0, 0, w, h);
+	const px = data.data;
+	const isGround = (p: number) => px[p * 4 + 3] > 0 && Math.min(px[p * 4], px[p * 4 + 1], px[p * 4 + 2]) >= 226;
+	const seen = new Uint8Array(w * h);
+	const stack: number[] = [];
+	for (let x = 0; x < w; x++) stack.push(x, (h - 1) * w + x);
+	for (let y = 0; y < h; y++) stack.push(y * w, y * w + w - 1);
+	while (stack.length) {
+		const p = stack.pop()!;
+		if (seen[p]) continue;
+		seen[p] = 1;
+		if (!isGround(p) && px[p * 4 + 3] > 0) continue;
+		px[p * 4 + 3] = 0;
+		const x = p % w;
+		if (x > 0) stack.push(p - 1);
+		if (x < w - 1) stack.push(p + 1);
+		if (p >= w) stack.push(p - w);
+		if (p < w * (h - 1)) stack.push(p + w);
+	}
+	ctx.putImageData(data, 0, 0);
+}
+
+/** Crop a decal to its visible pixels, so its height_in measures the logo, not the file's margin. */
+function trim(decal: HTMLCanvasElement): HTMLCanvasElement {
+	const { width: w, height: h } = decal;
+	const px = decal.getContext("2d")!.getImageData(0, 0, w, h).data;
+	let x0 = w;
+	let y0 = h;
+	let x1 = -1;
+	let y1 = -1;
+	for (let y = 0; y < h; y++) {
+		for (let x = 0; x < w; x++) {
+			if (px[(y * w + x) * 4 + 3] > 8) {
+				if (x < x0) x0 = x;
+				if (x > x1) x1 = x;
+				if (y < y0) y0 = y;
+				if (y > y1) y1 = y;
+			}
+		}
+	}
+	if (x1 < 0 || (x0 === 0 && y0 === 0 && x1 === w - 1 && y1 === h - 1)) return decal;
+	const out = document.createElement("canvas");
+	out.width = x1 - x0 + 1;
+	out.height = y1 - y0 + 1;
+	out.getContext("2d")!.drawImage(decal, x0, y0, out.width, out.height, 0, 0, out.width, out.height);
+	return out;
 }
 
 /**

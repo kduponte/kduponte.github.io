@@ -11,6 +11,7 @@ import BreakDisagreementSection from "../../components/projects/the-forecast-gap
 import PeriodSection from "../../components/projects/the-forecast-gap/PeriodSection.astro";
 import IndependenceSection from "../../components/projects/the-forecast-gap/IndependenceSection.astro";
 import RegistrySection from "../../components/projects/the-forecast-gap/RegistrySection.astro";
+import BuoysSection from "../../components/projects/the-forecast-gap/BuoysSection.astro";
 import KeyFindings from "../../components/editorial/KeyFindings.astro";
 import Methodology from "../../components/editorial/Methodology.astro";
 import Limitations from "../../components/editorial/Limitations.astro";
@@ -22,6 +23,7 @@ import comparisonData from "../../../public/data/surf-forecast/comparisons.json"
 import disagreementData from "../../../public/data/surf-forecast/disagreement.json";
 import metadata from "../../../public/data/surf-forecast/metadata.json";
 import breakData from "../../../public/data/surf-forecast/breaks.json";
+import buoyPages from "../../../public/data/surf-forecast/buoy-stations.json";
 import { ft, need, pct, pick, signed, signedFt } from "../../lib/surf-forecast/findings";
 
 // Every figure in the findings, methodology and limitations below is read from the frozen data.
@@ -228,12 +230,15 @@ const sfCoarse = st("46237", "ncep_gfswave025");
 		}}
 	/>
 
+	<BuoysSection />
+
 	<SourceList
 		sources={[
 			{ name: "Open-Meteo Marine API (archived forecasts)", url: "https://open-meteo.com/en/docs/marine-weather-api", collectedAt: "2026-10-26", method: "public_api" },
 			{ name: "NOAA ERDDAP, NDBC standard meteorological data (cwwcNDBCMet)", url: "https://coastwatch.pfeg.noaa.gov/erddap/tabledap/cwwcNDBCMet.html", collectedAt: "2026-10-26", method: "public_api" },
 			{ name: "NDBC measurement descriptions and units", url: "https://www.ndbc.noaa.gov/faq/measdes.shtml", collectedAt: "2026-10-26", method: "table_extraction" },
 			{ name: "NDBC station pages (buoy positions)", url: "https://www.ndbc.noaa.gov/", collectedAt: "2026-10-08", method: "table_extraction" },
+			{ name: "NDBC station pages (owner, hull, water depth, sensor heights)", url: "https://www.ndbc.noaa.gov/", collectedAt: [...buoyPages.stations.map((s) => s.fetched)].sort().at(-1) ?? "", method: "table_extraction" },
 			{ name: "Spotify oEmbed (playlist verification)", url: "https://developer.spotify.com/documentation/embeds", collectedAt: "2026-10-08", method: "public_api" },
 		]}
 	/>

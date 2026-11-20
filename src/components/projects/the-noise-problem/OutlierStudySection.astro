@@ -1,0 +1,84 @@
+---
+// Markup + mount points only; all behavior lives in src/scripts/the-noise-problem/outlier-study-chart.ts.
+---
+
+<section id="outlier-study" class="mx-auto max-w-7xl px-6 py-16 md:px-12 md:py-20">
+	<h2 class="font-anton text-4xl md:text-5xl">Outlier handling isn't a free lunch either</h2>
+	<p class="mt-3 max-w-[65ch] text-base leading-relaxed text-ink-soft">
+		One experiment is one draw of noise. This runs the same setup hundreds of times and asks what each method does on
+		average: with no real difference, how often it raises a false alarm; with a real lift, how often it catches it and
+		how much of the true lift its estimate keeps.
+	</p>
+
+	<form id="oh-study-controls" class="mt-8 grid grid-cols-2 gap-4 raw-box rounded-xl bg-cream p-6 md:grid-cols-4">
+		<label class="flex flex-col gap-1 text-sm">
+			<span class="font-mono text-xs uppercase tracking-wide text-ink-soft">Adjustment</span>
+			<select id="oh-study-adjustment" class="border-2 border-black bg-paper px-3 py-2 text-ink">
+				<option value="winsorize">Winsorize (cap)</option>
+				<option value="trim">Trim (drop)</option>
+			</select>
+		</label>
+		<label class="flex flex-col gap-1 text-sm">
+			<span class="font-mono text-xs uppercase tracking-wide text-ink-soft">Upper percentile</span>
+			<select id="oh-study-percentile" class="border-2 border-black bg-paper px-3 py-2 text-ink">
+				<option value="0.90">90th</option>
+				<option value="0.95">95th</option>
+				<option value="0.98">98th</option>
+				<option value="0.99">99th</option>
+				<option value="0.995">99.5th</option>
+				<option value="0.999">99.9th</option>
+			</select>
+		</label>
+		<label class="flex flex-col gap-1 text-sm">
+			<span class="font-mono text-xs uppercase tracking-wide text-ink-soft">Scenario</span>
+			<select id="oh-study-scenario" class="border-2 border-black bg-paper px-3 py-2 text-ink">
+				<option value="none">No real difference</option>
+				<option value="uniform">Uniform lift</option>
+				<option value="tail_concentrated">Tail-concentrated lift (whales)</option>
+			</select>
+		</label>
+		<label class="flex flex-col gap-1 text-sm">
+			<span class="font-mono text-xs uppercase tracking-wide text-ink-soft">Lift size (%)</span>
+			<input id="oh-study-lift" type="number" min="0" max="50" step="1" class="border-2 border-black bg-paper px-3 py-2 text-ink disabled:opacity-40" />
+		</label>
+		<label id="oh-study-whale-fraction-wrap" class="flex flex-col gap-1 text-sm">
+			<span class="font-mono text-xs uppercase tracking-wide text-ink-soft">Whale fraction (%)</span>
+			<select id="oh-study-whale-fraction" class="border-2 border-black bg-paper px-3 py-2 text-ink">
+				<option value="0.01">Top 1%</option>
+				<option value="0.02">Top 2%</option>
+				<option value="0.05">Top 5%</option>
+				<option value="0.10">Top 10%</option>
+			</select>
+		</label>
+		<label class="flex flex-col gap-1 text-sm">
+			<span class="font-mono text-xs uppercase tracking-wide text-ink-soft">Visitors per day per arm</span>
+			<input id="oh-study-visitors" type="number" min="5" max="500" step="5" class="border-2 border-black bg-paper px-3 py-2 text-ink" />
+		</label>
+		<label class="flex flex-col gap-1 text-sm">
+			<span class="font-mono text-xs uppercase tracking-wide text-ink-soft">Days per experiment</span>
+			<input id="oh-study-days" type="number" min="5" max="60" step="1" class="border-2 border-black bg-paper px-3 py-2 text-ink" />
+		</label>
+		<div class="flex items-end">
+			<button
+				type="button"
+				id="oh-study-run-button"
+				class="w-full border border-ink bg-ink px-5 py-2.5 font-mono text-xs uppercase tracking-wide text-paper transition-colors hover:border-accent-blue hover:bg-accent-blue"
+			>
+				Run study
+			</button>
+		</div>
+	</form>
+
+	<div id="oh-speed-study" class="mt-6">
+		<div data-vg-summary class="raw-box rounded-xl bg-cream p-4 font-mono text-sm"></div>
+		<div class="mt-4 flex justify-end">
+			<button type="button" data-vg-table-toggle class="font-mono text-xs uppercase tracking-wide text-accent-blue" aria-pressed="false">
+				View as table
+			</button>
+		</div>
+		<div data-vg-chart class="mt-2 grid grid-cols-1 gap-8 overflow-x-auto md:grid-cols-2"></div>
+		<div data-vg-table class="mt-2 overflow-x-auto"></div>
+	</div>
+
+	<script src="../../../scripts/the-noise-problem/outlier-study-chart.ts"></script>
+</section>

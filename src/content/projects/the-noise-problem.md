@@ -1,6 +1,6 @@
 ---
 title: "The Noise Problem"
-summary: "Most of the variance in your metric has nothing to do with your treatment. A live simulation of CUPED, the technique that removes it, without touching your false-positive rate."
+summary: "Most of the variance in your metric has nothing to do with your treatment. Live simulations of CUPED and outlier handling, the trade-offs each one carries, and when neither is the right tool."
 status: "live"
 tags: ["Statistics", "A/B Testing", "Data Viz"]
 order: -1

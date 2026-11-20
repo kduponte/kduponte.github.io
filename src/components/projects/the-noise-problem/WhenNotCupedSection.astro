@@ -1,0 +1,85 @@
+---
+// Sources, re-checked 2026-11-02:
+// - Optimizely's CUPED support article and glossary: the implementation reads data from two weeks
+//   before the experiment starts, the glossary calls that the practical minimum, and CUPED applies
+//   to numeric metrics only.
+// - GrowthBook's CUPED documentation: its list of excluded metric types does not include
+//   conversion metrics.
+// - Xie & Aurisset, "Improving the Sensitivity of Online Controlled Experiments: Case Studies at
+//   Netflix" (KDD 2016): covariate correlations of 0.2 to 0.4 for new users.
+// - Cosgrove, Townsend & Litz, "Deep Dive Into Variance Reduction" (Microsoft ExP, 2022-11-15): on
+//   one product surface more than 68% of metrics had an effective traffic multiplier of 1.05x or
+//   less.
+// - DoorDash's CUPAC post (2020-06-08): pre-experiment data "does not exist at the delivery level"
+//   in its logistics experiments.
+
+interface Condition {
+	condition: string;
+	why: string;
+	instead: string;
+}
+
+const CONDITIONS: Condition[] = [
+	{
+		condition: "Not enough pre-experiment history",
+		why: "CUPED needs a pre-period value to adjust with. Optimizely's implementation reads two weeks of data before the experiment starts, and its guidance treats that as the practical minimum.",
+		instead: "Wait for history to build up, or stratify on attributes known at assignment.",
+	},
+	{
+		condition: "New users, or a new metric",
+		why: "A user who just arrived, or a metric that did not exist yet, has no pre-period value at all. Netflix found correlations of only 0.2 to 0.4 between its covariates and business metrics for new users, against much larger gains for existing ones.",
+		instead: "Covariates captured at assignment (device, country, acquisition channel), or a CUPAC-style prediction.",
+	},
+	{
+		condition: "Weak correlation between covariate and outcome",
+		why: "Variance falls by exactly the squared correlation, the identity this page is built on: at a correlation of 0.3 that is a 9% reduction. Results vary widely even inside one company. On one Microsoft product surface, more than 68% of metrics gained an effective traffic multiplier of 1.05× or less.",
+		instead: "Look for a more predictive covariate, or a different technique.",
+	},
+	{
+		condition: "Binary or conversion metrics",
+		why: "Platforms disagree. Optimizely limits CUPED to numeric metrics; GrowthBook's implementation does not exclude conversion metrics. The adjustment still works mathematically, but the adjusted values are no longer 0 or 1.",
+		instead: "Check what your platform supports before assuming either answer.",
+	},
+	{
+		condition: "Switchback or other clustered designs",
+		why: "When the randomization unit is a market and a time window, the thing being measured may have no history of its own. DoorDash's example: in logistics experiments, pre-experiment data does not exist for an individual delivery.",
+		instead: "CUPAC, which predicts the outcome from features instead of reading one pre-period value.",
+	},
+	{
+		condition: "The covariate is affected by treatment",
+		why: "Adjusting for something measured after assignment can subtract part of the effect itself, which biases the estimate instead of only removing noise.",
+		instead: "Use only covariates fixed before assignment.",
+	},
+];
+---
+
+<section id="when-not-cuped" class="mx-auto max-w-7xl px-6 py-16 md:px-12 md:py-20">
+	<h2 class="font-anton text-4xl md:text-5xl">When CUPED isn't the right tool</h2>
+	<p class="mt-3 max-w-[65ch] text-base leading-relaxed text-ink-soft">
+		Every simulation on this page assumes CUPED's precondition holds: a correlated pre-period value for every visitor.
+		Often it does not. These are the common cases, and what to reach for instead.
+	</p>
+
+	<div class="mt-8 overflow-x-auto">
+		<table class="w-full min-w-[760px] border-collapse text-sm">
+			<thead>
+				<tr class="border-b border-line text-left font-mono text-xs uppercase tracking-wide text-ink-soft">
+					<th class="py-2 pr-4">Condition</th>
+					<th class="py-2 pr-4">Why CUPED struggles</th>
+					<th class="py-2">Reach for instead</th>
+				</tr>
+			</thead>
+			<tbody>
+				{
+					CONDITIONS.map((c) => (
+						<tr class="border-b border-line/60 align-top">
+							<td class="py-3 pr-4 font-medium text-ink">{c.condition}</td>
+							<td class="py-3 pr-4 text-ink-soft">{c.why}</td>
+							<td class="py-3 text-ink-soft">{c.instead}</td>
+						</tr>
+					))
+				}
+			</tbody>
+		</table>
+	</div>
+</section>

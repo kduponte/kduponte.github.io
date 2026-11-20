@@ -1,5 +1,6 @@
 ---
 import ProjectHeader from "../../editorial/ProjectHeader.astro";
+import BuoyViewer from "../../three/BuoyViewer.astro";
 ---
 
 <ProjectHeader
@@ -8,4 +9,10 @@ import ProjectHeader from "../../editorial/ProjectHeader.astro";
 	subtitle="Every surf forecast tells you what tomorrow will look like. Almost none of them tell you how often they are right."
 	summary="A companion to the surfboard volume project, with one important difference: this time there is a right answer. NOAA buoys record what the ocean actually did, so forecasts can be checked against it rather than just against each other. Nine months of forecasts from three forecasting systems, scored against twelve buoys in Hawaii and California: how far off they are, how fast that grows as you look further ahead, which ones lean consistently high or low, and whether their disagreement tells you anything."
 	primaryCta={{ label: "Should I surf right now?", href: "#linda-mar" }}
-/>
+>
+	<!-- On desktop the diorama is pulled up over the right of the headline, like the 22RE truck, and its readout card follows directly beneath it in the column, so the two can never collide however the headline wraps. The box is taller than the block (room for Monterey's mast), and that headroom sits transparently over the headline. On mobile both flow under the summary. -->
+	<BuoyViewer
+		class="z-10 md:-mt-72 md:ml-[-24%] md:w-[124%]"
+		cardClass="mt-4"
+	/>
+</ProjectHeader>

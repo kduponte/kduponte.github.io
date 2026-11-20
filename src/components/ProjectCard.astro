@@ -1,6 +1,7 @@
 ---
 import { projectTheme } from "../lib/project-theme";
 import TruckViewer from "./three/TruckViewer.astro";
+import BuoyViewer from "./three/BuoyViewer.astro";
 
 interface Props {
 	slug: string;
@@ -40,6 +41,7 @@ const theme = projectTheme(slug);
 		{statusLabel[status]}
 	</span>
 	{slug === "the-22re-restoration" && <TruckViewer class="pointer-events-auto absolute -bottom-4 -right-4 z-10 hidden w-[55%] sm:block" />}
+	{slug === "the-forecast-gap" && <BuoyViewer readout={false} class="pointer-events-auto absolute -bottom-4 -right-4 z-10 hidden w-[55%] sm:block" />}
 	<h3 class="font-anton relative text-4xl leading-[0.95] md:text-5xl">{title}</h3>
 	<p class="relative max-w-[42ch] text-[15px] font-medium leading-snug">{summary}</p>
 	{

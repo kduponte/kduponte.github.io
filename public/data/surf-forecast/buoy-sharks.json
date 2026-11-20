@@ -1,0 +1,142 @@
+{
+	"window": {
+		"from": "1995-01-01",
+		"to": "2021-12-31"
+	},
+	"radius_km": 50,
+	"base_interval_s": 45,
+	"method": "Recorded shark incidents within the radius of each buoy over the window. Hawaii: DLNR's incident list, place names geocoded with OpenStreetMap Nominatim within the island; California: CDFW's Shark Incident Database coordinates. The shadow's length is the median stated length nearby (at least 3), else the region's.",
+	"sources": [
+		{
+			"name": "Hawaii DLNR, Shark Incidents List",
+			"url": "https://dlnr.hawaii.gov/sharks/shark-incidents/incidents-list/"
+		},
+		{
+			"name": "CDFW, Shark Incident Database (1950–2022)",
+			"url": "https://data.cnra.ca.gov/dataset/shark-incident-database-california"
+		}
+	],
+	"hawaii_unlocated_n": 0,
+	"stations": {
+		"46042": {
+			"name": "Monterey",
+			"incidents_n": 14,
+			"per_year": 0.52,
+			"species": "white shark",
+			"length_m": 3.05,
+			"length_scope": "regional",
+			"lengths_n": 10,
+			"pass_interval_s": 199
+		},
+		"46221": {
+			"name": "Santa Monica Bay",
+			"incidents_n": 13,
+			"per_year": 0.48,
+			"species": "white shark",
+			"length_m": 3.05,
+			"length_scope": "regional",
+			"lengths_n": 10,
+			"pass_interval_s": 215
+		},
+		"46222": {
+			"name": "San Pedro",
+			"incidents_n": 16,
+			"per_year": 0.59,
+			"species": "white shark",
+			"length_m": 3.05,
+			"length_scope": "regional",
+			"lengths_n": 10,
+			"pass_interval_s": 174
+		},
+		"46224": {
+			"name": "Oceanside Offshore",
+			"incidents_n": 13,
+			"per_year": 0.48,
+			"species": "white shark",
+			"length_m": 3.05,
+			"length_scope": "regional",
+			"lengths_n": 10,
+			"pass_interval_s": 215
+		},
+		"46237": {
+			"name": "San Francisco Bar",
+			"incidents_n": 10,
+			"per_year": 0.37,
+			"species": "white shark",
+			"length_m": 3.05,
+			"length_scope": "regional",
+			"lengths_n": 10,
+			"pass_interval_s": 279
+		},
+		"46254": {
+			"name": "Scripps Nearshore",
+			"incidents_n": 12,
+			"per_year": 0.44,
+			"species": "white shark",
+			"length_m": 3.05,
+			"length_scope": "regional",
+			"lengths_n": 10,
+			"pass_interval_s": 233
+		},
+		"51201": {
+			"name": "Waimea Bay",
+			"incidents_n": 26,
+			"per_year": 0.96,
+			"species": "tiger shark",
+			"length_m": 2.74,
+			"length_scope": "local",
+			"lengths_n": 21,
+			"pass_interval_s": 107
+		},
+		"51202": {
+			"name": "Mokapu Point",
+			"incidents_n": 29,
+			"per_year": 1.07,
+			"species": "tiger shark",
+			"length_m": 2.74,
+			"length_scope": "local",
+			"lengths_n": 23,
+			"pass_interval_s": 96
+		},
+		"51205": {
+			"name": "Pauwela, Maui",
+			"incidents_n": 62,
+			"per_year": 2.3,
+			"species": "tiger shark",
+			"length_m": 2.74,
+			"length_scope": "local",
+			"lengths_n": 36,
+			"pass_interval_s": 45
+		},
+		"51206": {
+			"name": "Hilo",
+			"incidents_n": 3,
+			"per_year": 0.11,
+			"species": "tiger shark",
+			"length_m": 2.74,
+			"length_scope": "regional",
+			"lengths_n": 101,
+			"pass_interval_s": 930
+		},
+		"51208": {
+			"name": "Hanalei, Kauai",
+			"incidents_n": 20,
+			"per_year": 0.74,
+			"species": "tiger shark",
+			"length_m": 3.05,
+			"length_scope": "local",
+			"lengths_n": 14,
+			"pass_interval_s": 140
+		},
+		"51211": {
+			"name": "Pearl Harbor Entrance",
+			"incidents_n": 35,
+			"per_year": 1.3,
+			"species": "tiger shark",
+			"length_m": 2.74,
+			"length_scope": "local",
+			"lengths_n": 27,
+			"pass_interval_s": 80
+		}
+	}
+}

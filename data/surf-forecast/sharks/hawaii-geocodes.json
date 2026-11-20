@@ -1,0 +1,445 @@
+{
+	"Oahu|Portlock": {
+		"lat": 21.2695763,
+		"lon": -157.7066053,
+		"name": "Portlock, East Honolulu, Honolulu, Honolulu County, Hawaii, 96825, United States"
+	},
+	"Oahu|Ala Moana Beach Park": {
+		"lat": 21.2873843,
+		"lon": -157.8451811,
+		"name": "Ala Moana Beach Park, Ala Moana, East Honolulu, Honolulu, Honolulu County, Hawaii, United States"
+	},
+	"Oahu|Kaiko‘o's Cromwell's Beach": null,
+	"Maui|Olowalu": {
+		"lat": 20.811858,
+		"lon": -156.6221108,
+		"name": "Olowalu, Maui County, Hawaii, United States"
+	},
+	"Hawaii|Ka‘alu‘alu Bay": {
+		"lat": 18.9663772,
+		"lon": -155.6157131,
+		"name": "Kaʻaluʻalu Bay, Hawaiʻi County, Hawaii, United States"
+	},
+	"Kauai|Hanalei Bay": {
+		"lat": 22.21,
+		"lon": -159.5091667,
+		"name": "Hanalei Bay, Hanalei, Kauaʻi County, Hawaii, 96714, United States"
+	},
+	"Oahu|Makapu‘u": {
+		"lat": 21.3098988,
+		"lon": -157.6497592,
+		"name": "Makapu'u Point Lighthouse, Makapu’u Lighthouse Road, Hawaii Kai, East Honolulu, Honolulu, Honolulu County, Hawaii, 96795, United States"
+	},
+	"Oahu|Haleʻiwa": {
+		"lat": 21.5935975,
+		"lon": -158.1044697,
+		"name": "Haleiwa, Haleʻiwa, Honolulu County, Hawaii, 96712, United States"
+	},
+	"Maui|Waiehu": {
+		"lat": 20.9208377,
+		"lon": -156.4956999,
+		"name": "Waiʻehu, Wailuku, Maui County, Hawaii, 96733, United States"
+	},
+	"Oahu|Lā‘ie": {
+		"lat": 21.6438449,
+		"lon": -157.924442,
+		"name": "Laie, Honolulu County, Hawaii, 96762, United States"
+	},
+	"Oahu|Waikīkī": {
+		"lat": 21.2793568,
+		"lon": -157.8285713,
+		"name": "Waikīkī, East Honolulu, Honolulu, Honolulu County, Hawaii, 96830, United States"
+	},
+	"Oahu|Ka‘a‘awa": {
+		"lat": 21.3491238,
+		"lon": -158.0756043,
+		"name": "O'awa Street, Makakilo City, Kapolei, Honolulu County, Hawaii, 96707, United States"
+	},
+	"Maui|Pāʻia Bay": {
+		"lat": 20.9202778,
+		"lon": -156.386388,
+		"name": "Pā'ia Bay, Kuau, Paia, Maui County, Hawaii, 96779, United States"
+	},
+	"Maui|Ku‘au Bay": {
+		"lat": 20.9275,
+		"lon": -156.3752778,
+		"name": "Ku‘au Bay, Kuau, Paia, Maui County, Hawaii, 96779, United States"
+	},
+	"Oahu|Kewalo": {
+		"lat": 21.2912265,
+		"lon": -157.8575661,
+		"name": "Kewalo Basin Park, Kaka‘ako, East Honolulu, Honolulu, Honolulu County, Hawaii, United States"
+	},
+	"Molokai|Kaiwi Channel": null,
+	"Molokai|west-northwest of Pāpōhako Beach": null,
+	"Hawaii|‘Anaeho‘omalu": {
+		"lat": 19.9151528,
+		"lon": -155.8872426,
+		"name": "Anaehoomalu Beach, Kapalaoa, Hawaiʻi County, Hawaii, United States"
+	},
+	"Maui|Kīhei": {
+		"lat": 20.7476261,
+		"lon": -156.4549898,
+		"name": "Kihei, Maui County, Hawaii, United States"
+	},
+	"Kauai|Līhue": {
+		"lat": 21.9769622,
+		"lon": -159.3687721,
+		"name": "Lihue, Kauaʻi County, Hawaii, 96766, United States"
+	},
+	"Hawaii|Kailua-Kona": {
+		"lat": 19.641941,
+		"lon": -155.996933,
+		"name": "Kailua, Hawaiʻi County, Hawaii, United States"
+	},
+	"Maui|Lahaina": {
+		"lat": 20.8738769,
+		"lon": -156.677678,
+		"name": "Lahaina, Maui County, Hawaii, United States"
+	},
+	"Maui|Kanaha": {
+		"lat": 20.8914713,
+		"lon": -156.4571493,
+		"name": "Kanaha Pond, Kahului, Maui County, Hawaii, United States"
+	},
+	"Oahu|Kāneʻohe": {
+		"lat": 21.418555,
+		"lon": -157.804184,
+		"name": "Kaneohe, Honolulu County, Hawaii, United States"
+	},
+	"Hawaii|Kūkiʻo Bay": {
+		"lat": 19.8241667,
+		"lon": -156.001666,
+		"name": "Kukio Bay, Kukio, Hawaiʻi County, Hawaii, 96740, United States"
+	},
+	"Kauai|Waiokapua Bay": {
+		"lat": 22.0059901,
+		"lon": -159.7760574,
+		"name": "Waiapua'a Bay, Kauaʻi County, Hawaii, 96752, United States"
+	},
+	"Maui|Kāʻanapali": {
+		"lat": 20.9250419,
+		"lon": -156.6899009,
+		"name": "Kaanapali, Maui County, Hawaii, 96761, United States"
+	},
+	"Maui|Honolua Bay": {
+		"lat": 21.0146954,
+		"lon": -156.6394964,
+		"name": "Honolua Bay, Maui County, Hawaii, United States"
+	},
+	"Hawaii|Waikoloa": {
+		"lat": 19.9469278,
+		"lon": -155.787398,
+		"name": "Waikoloa, Hawaiʻi County, Hawaii, United States"
+	},
+	"Maui|Honokowai": {
+		"lat": 20.953821,
+		"lon": -156.6862836,
+		"name": "Honokowai, Kāʻanapali, Maui County, Hawaii, 96761, United States"
+	},
+	"Hawaii|Puakō": {
+		"lat": 19.970122,
+		"lon": -155.839005,
+		"name": "Puakō, Hawaiʻi County, Hawaii, United States"
+	},
+	"Kauai|Kekaha": {
+		"lat": 21.970833,
+		"lon": -159.715,
+		"name": "Kekaha, Kauaʻi County, Hawaii, United States"
+	},
+	"Hawaii|Kealakekua Bay": {
+		"lat": 19.4770877,
+		"lon": -155.927076,
+		"name": "Kealakekua Bay, Nāpō‘opo‘o, Honaunau-Napoopoo, Hawaiʻi County, Hawaii, 96740, United States"
+	},
+	"Oahu|Makaha Beach": {
+		"lat": 21.476965,
+		"lon": -158.2209082,
+		"name": "Mākaha Beach, Makaha, Honolulu County, Hawaii, United States"
+	},
+	"Oahu|Kaiwi Channel": {
+		"lat": 21.3008149,
+		"lon": -157.6513023,
+		"name": "On a Clear Day Across the Kaiwi Channel, Makapu'u Lighthouse Trail, Hawaii Kai, East Honolulu, Honolulu, Honolulu County, Hawaii, 96795, United States"
+	},
+	"Maui|Honokōwai": {
+		"lat": 20.953821,
+		"lon": -156.6862836,
+		"name": "Honokowai, Kāʻanapali, Maui County, Hawaii, 96761, United States"
+	},
+	"Kauai|Po‘ipū": {
+		"lat": 21.8766526,
+		"lon": -159.4539141,
+		"name": "Poʻipū, Kauaʻi County, Hawaii, 96756, United States"
+	},
+	"Hawaii|North Kona": null,
+	"Hawaii|Kūki‘o Beach": {
+		"lat": 19.820202,
+		"lon": -155.9974794,
+		"name": "Kūhiō Beach, Kukio, Hawaiʻi County, Hawaii, United States"
+	},
+	"Oahu|Kawailoa": {
+		"lat": 21.6070475,
+		"lon": -158.1014782,
+		"name": "Kawailoa Beach, Honolulu County, Hawaii, 96712, United States"
+	},
+	"Oahu|Kalaeloa": {
+		"lat": 21.3164283,
+		"lon": -158.0695659,
+		"name": "Kalaeloa, Kapolei, Honolulu County, Hawaii, 96707, United States"
+	},
+	"Maui|Pā‘ia": {
+		"lat": 20.9161277,
+		"lon": -156.3832272,
+		"name": "Pā'ia Bay Beach, Kuau, Paia, Maui County, Hawaii, United States"
+	},
+	"Oahu|Mākaha Beach": {
+		"lat": 21.476965,
+		"lon": -158.2209082,
+		"name": "Mākaha Beach, Makaha, Honolulu County, Hawaii, United States"
+	},
+	"Kauai|Līhu‘e": {
+		"lat": 21.9722488,
+		"lon": -159.3500201,
+		"name": "Lihue Airport, 3901, Kapule Highway, Lihue, Kauaʻi County, Hawaii, 96766, United States"
+	},
+	"Maui|Wailea Beach": {
+		"lat": 20.6825633,
+		"lon": -156.4431133,
+		"name": "Wailea Beach, Wailea, Maui County, Hawaii, United States"
+	},
+	"Maui|Wailea Beach Point": null,
+	"Hawaii|Puna": {
+		"lat": 19.4771565,
+		"lon": -154.8892445,
+		"name": "Puna Geothermal Venture, Hawaiʻi County, Hawaii, United States"
+	},
+	"Lanai|Po‘aīwa Beach": null,
+	"Oahu|Kailua": {
+		"lat": 21.3938252,
+		"lon": -157.7338673,
+		"name": "Kailua, Enchanted Lake, Kailua, Honolulu County, Hawaii, United States"
+	},
+	"Hawaii|North Kohala": {
+		"lat": 20.2346292,
+		"lon": -155.8005738,
+		"name": "North Kohala Veterans Field, Kamehameha Road, Kapaau, Hawaiʻi County, Hawaii, 96755, United States"
+	},
+	"Maui|‘Ahihi Bay": {
+		"lat": 20.6247222,
+		"lon": -156.4469444,
+		"name": "Ahihi Bay, Kanahena, Maui County, Hawaii, United States"
+	},
+	"Hawaii|South Kohala": {
+		"lat": 20.0236658,
+		"lon": -155.6623996,
+		"name": "South Kohala District Court, Mamalahoa Highway, Kuhio Village, Puʻu Opelu, Waimea/Kamuela, Hawaiʻi County, Hawaii, United States"
+	},
+	"Maui|Pali scenic lookout": null,
+	"Maui|Kā‘anapali": {
+		"lat": 20.9150196,
+		"lon": -156.6952588,
+		"name": "Ka'anapali, Beach Path, Kaanapali, Maui County, Hawaii, 96761, United States"
+	},
+	"Hawaii|Kohala": {
+		"lat": 20.0749887,
+		"lon": -155.718691,
+		"name": "Kohala, Hawaiʻi County, Hawaii, United States"
+	},
+	"Maui|Kahului Harbor": {
+		"lat": 20.8957911,
+		"lon": -156.4719414,
+		"name": "Kahului Harbor, Kahului, Maui County, Hawaii, United States"
+	},
+	"Maui|Mā‘alaea": {
+		"lat": 20.7863623,
+		"lon": -156.5161,
+		"name": "Ma'alaea Bay Place, Maʻalaea, Maui County, Hawaii, United States"
+	},
+	"Maui|Pā‘ia Bay": {
+		"lat": 20.9202778,
+		"lon": -156.386388,
+		"name": "Pā'ia Bay, Kuau, Paia, Maui County, Hawaii, 96779, United States"
+	},
+	"Hawaii|Punalu‘u": {
+		"lat": 19.1352964,
+		"lon": -155.5048902,
+		"name": "Punalu'u Black Sand Beach, Hawaiʻi County, Hawaii, United States"
+	},
+	"Maui|Mākena": {
+		"lat": 20.655027,
+		"lon": -156.4424385,
+		"name": "Makena, Wailea, Maui County, Hawaii, United States"
+	},
+	"Maui|Kanahā": {
+		"lat": 20.8914713,
+		"lon": -156.4571493,
+		"name": "Kanaha Pond, Kahului, Maui County, Hawaii, United States"
+	},
+	"Kauai|Pīla‘a Beach": null,
+	"Maui|Wailea": {
+		"lat": 20.6871749,
+		"lon": -156.4390415,
+		"name": "Wailea, Maui County, Hawaii, 96753, United States"
+	},
+	"Hawaii|Kekaha Kai": {
+		"lat": 19.7780705,
+		"lon": -156.0271842,
+		"name": "Kekaha Kai State Park, Kalaoa, Hawaiʻi County, Hawaii, United States"
+	},
+	"Hawaii|Kīholo Bay": {
+		"lat": 19.8594444,
+		"lon": -155.933333,
+		"name": "Kīholo Bay, Kīholo, Hawaiʻi County, Hawaii, 96740, United States"
+	},
+	"Kauai|Pākalā": {
+		"lat": 21.933492,
+		"lon": -159.647827,
+		"name": "Pakala Village, Waimea, Kauaʻi County, Hawaii, United States"
+	},
+	"Maui|Mākena Landing": {
+		"lat": 20.6539101,
+		"lon": -156.4410367,
+		"name": "Makena Landing, Makena, Wailea, Maui County, Hawaii, United States"
+	},
+	"Maui|Kahului": {
+		"lat": 20.8894101,
+		"lon": -156.4727118,
+		"name": "Kahului, Maui County, Hawaii, 96784, United States"
+	},
+	"Maui|Spreckelsville": {
+		"lat": 20.9089792,
+		"lon": -156.4080138,
+		"name": "Spreckelsville, Maui County, Hawaii, United States"
+	},
+	"Maui|Kahana": {
+		"lat": 20.9753751,
+		"lon": -156.6775703,
+		"name": "Kahana, Napili, Maui County, Hawaii, United States"
+	},
+	"Lanai|Keōmuku": {
+		"lat": 20.886384,
+		"lon": -156.8990043,
+		"name": "Keomuku Gulch, Maui County, Hawaii, United States"
+	},
+	"Hawaii|Ka‘ū": {
+		"lat": 19.2025824,
+		"lon": -155.4804433,
+		"name": "Ka'ū High & Pāhala Elementary School, 96-3150, Pikake Street, Pahala, Hawaiʻi County, Hawaii, 96777, United States"
+	},
+	"Hawaii|northwest of ‘Upolu Pt": null,
+	"Oahu|Hale‘iwa": {
+		"lat": 21.5882732,
+		"lon": -158.1111388,
+		"name": "Hale'iwa Road, Old Town Haleʻiwa, Haleiwa, Honolulu County, Hawaii, 96712, United States"
+	},
+	"Oahu|Waimānalo": {
+		"lat": 21.346304,
+		"lon": -157.7211,
+		"name": "Waimanalo, Honolulu County, Hawaii, United States"
+	},
+	"Oahu|Mokulē‘ia": {
+		"lat": 21.5793448,
+		"lon": -158.1969928,
+		"name": "Kawaihāpai Airfield, Farrington Highway, Honolulu County, Hawaii, 96786, United States"
+	},
+	"Kauai|Mānā": {
+		"lat": 22.0366633,
+		"lon": -159.7707094,
+		"name": "Mānā, Kauaʻi County, Hawaii, United States"
+	},
+	"Lanai|Club Lāna‘i": null,
+	"Maui|Keawakapu": {
+		"lat": 20.7054419,
+		"lon": -156.444168,
+		"name": "Keawakapu, Wailea, Maui County, Hawaii, 96753, United States"
+	},
+	"Oahu|Sunset Beach": {
+		"lat": 21.6708463,
+		"lon": -158.0456707,
+		"name": "Sunset Beach, Pūpūkea, Waiale‘e, Honolulu County, Hawaii, United States"
+	},
+	"Molokai|Pūko‘o": {
+		"lat": 21.07348,
+		"lon": -156.795914,
+		"name": "Pūko‘o, Maui County, Hawaii, United States"
+	},
+	"Kauai|Kalihiwai": {
+		"lat": 22.2148522,
+		"lon": -159.4436564,
+		"name": "Kalihiwai, Kauaʻi County, Hawaii, United States"
+	},
+	"Kauai|Hā‘ena": {
+		"lat": 22.2207523,
+		"lon": -159.5651226,
+		"name": "Ha'ena Beach, Hāʻena, Kauaʻi County, Hawaii, United States"
+	},
+	"Oahu|Mākua": {
+		"lat": 21.5312335,
+		"lon": -158.2293114,
+		"name": "Mākua Beach, Honolulu County, Hawaii, United States"
+	},
+	"Hawaii|Kahalu‘u": {
+		"lat": 19.5810976,
+		"lon": -155.965888,
+		"name": "Kahalu'u Road, Kahaluʻu, Kahaluu-Keauhou, Hawaiʻi County, Hawaii, 96725, United States"
+	},
+	"Oahu|Kāhala": {
+		"lat": 21.2705588,
+		"lon": -157.786244,
+		"name": "Kāhala, East Honolulu, Honolulu, Honolulu County, Hawaii, 96821, United States"
+	},
+	"Kauai|Princeville": {
+		"lat": 22.223611,
+		"lon": -159.485278,
+		"name": "Princeville, Kauaʻi County, Hawaii, 96714, United States"
+	},
+	"Kauai|‘Anini Beach": {
+		"lat": 22.2247707,
+		"lon": -159.448752,
+		"name": "'Anini Beach, Kauaʻi County, Hawaii, United States"
+	},
+	"Kauai|Brennecke's Beach": null,
+	"Maui|Kapalua": {
+		"lat": 20.994904,
+		"lon": -156.656234,
+		"name": "Kapalua, Maui County, Hawaii, United States"
+	},
+	"Oahu|‘Ewa Beach": {
+		"lat": 21.315603,
+		"lon": -158.008804,
+		"name": "Ewa Beach, Honolulu County, Hawaii, 96706, United States"
+	},
+	"Oahu|Sandy Beach": {
+		"lat": 21.2852142,
+		"lon": -157.6740781,
+		"name": "Sandy Beach, Mariner's Cove, East Honolulu, Honolulu, Honolulu County, Hawaii, United States"
+	},
+	"Hawaii|Kona": {
+		"lat": 19.6472213,
+		"lon": -155.9966428,
+		"name": "Kona Bikeworks, ʻEho Street, Hillcrest, Kailua, Hawaiʻi County, Hawaii, 96740, United States"
+	},
+	"Hawaii|Old Kona Airport": {
+		"lat": 19.6439007,
+		"lon": -156.0091339,
+		"name": "Old Kona Airport State Recreation Area, Laniākea, Kailua, Hawaiʻi County, Hawaii, United States"
+	},
+	"Oahu|Mokulua Island": null,
+	"Oahu|back lagoon": null,
+	"Hawaii|Honoli‘i": {
+		"lat": 19.7626463,
+		"lon": -155.1029045,
+		"name": "Honoli‘i Stream, Paukaa, Hawaiʻi County, Hawaii, 96781, United States"
+	},
+	"Maui|Paukūkalo": {
+		"lat": 20.909022,
+		"lon": -156.4904386,
+		"name": "Paukukalo, Wailuku, Maui County, Hawaii, 96793, United States"
+	},
+	"Maui|Nāpili": {
+		"lat": 20.9859587,
+		"lon": -156.6672,
+		"name": "Napili, Maui County, Hawaii, United States"
+	}
+}

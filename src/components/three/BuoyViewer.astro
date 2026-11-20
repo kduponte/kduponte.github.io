@@ -1,0 +1,246 @@
+---
+// The Forecast Gap buoy: a 3D diorama of one buoy riding its own archived swell, with each
+// forecast traced on the sea block's sides, plus (optionally) an HTML readout of the numbers.
+//
+// The root is `display: contents`, so the canvas box and the readout card are laid out by the
+// parent: the hero floats the canvas over the headline and flows the card in its column. Every
+// number shown or drawn comes from buoy-snapshots.json and buoy-sharks.json; nothing is typed in.
+import data from "../../../public/data/surf-forecast/buoy-snapshots.json";
+import sharkData from "../../../public/data/surf-forecast/buoy-sharks.json";
+import { SHARK_BASE_INTERVAL_S, sharkReadout } from "../../lib/surf-forecast/sharks";
+import { snapshotReadout, type BuoySnapshot } from "../../lib/surf-forecast/buoy-snapshot";
+import { INSTRUMENT_ENLARGEMENT, buildBuoyDiorama, frameAspect, toDioramaStation, type StationSharks } from "../../lib/three/buoy-diorama";
+import { FALLBACK_VIEWBOX, fallbackSvgGroups } from "../../lib/three/buoy-fallback";
+import { DISCUS_DIAMETER_M, WAVERIDER_DIAMETER_M } from "../../lib/three/buoy-model";
+import { SCALE_STEP_M, VERTICAL_EXAGGERATION } from "../../lib/three/ocean";
+import { WINDOW_M } from "../../lib/surf-forecast/swell-viz";
+import { temperatureDomain, temperatureFraction, waterColor, waterGradientStops } from "../../lib/three/water-color";
+import { SYSTEM_COLOR, SYSTEM_ORDER } from "../../scripts/surf-forecast/palette";
+
+interface Props {
+	/** Classes for the canvas box (placement and width). */
+	class?: string;
+	/**
+	 * Tailwind aspect-ratio class for the canvas box. By default the box takes the shape the scene's
+	 * one framing needs (frameAspect): tall enough for Monterey's mast, so the sea block is drawn as
+	 * large as the box's width allows, and the same size for every station.
+	 */
+	aspect?: string;
+	/** Show the readout card with the station's numbers and the scale note. */
+	readout?: boolean;
+	/** Classes for the readout card. */
+	cardClass?: string;
+}
+
+const { class: className = "", aspect, readout = true, cardClass = "" } = Astro.props;
+
+const snapshots = data.snapshots as BuoySnapshot[];
+if (snapshots.length === 0) throw new Error("buoy-snapshots.json has no snapshots");
+const sharkStations = sharkData.stations as Record<string, StationSharks & { name: string }>;
+const stations = snapshots.map((s) => toDioramaStation(s, SYSTEM_COLOR, sharkStations[s.station] ?? null));
+// The box shape the framing needs, measured from the same diorama the browser builds.
+const probe = buildBuoyDiorama(stations);
+const boxAspect = Math.round(frameAspect(probe.framing) * 100) / 100;
+probe.dispose();
+const sharkLines = snapshots.map((s) => {
+	const k = sharkStations[s.station];
+	return k ? sharkReadout(k, sharkData.radius_km, sharkData.window) : null;
+});
+const readouts = snapshots.map(snapshotReadout);
+const first = readouts[0];
+// Each readout row in the chart legend order, whatever order the JSON lists the forecasts in.
+const ordered = (r: (typeof readouts)[number]) => SYSTEM_ORDER.map((sys) => r.forecasts.find((f) => f.system === sys)?.text ?? "");
+// Water color: each station's sea temperature on one scale spanning the coldest and warmest snapshot.
+const temps = snapshots.map((s) => s.observed.water_temp_c ?? null);
+const domain = temperatureDomain(temps);
+const water = temps.map((t) => ({ color: waterColor(t, domain), pos: temperatureFraction(t, domain) }));
+const gradient = `linear-gradient(to right, ${waterGradientStops(6).join(", ")})`;
+const payload = JSON.stringify({
+	stations,
+	readouts: readouts.map((r, i) => ({ ...r, forecasts: ordered(r), waterColor: water[i].color, waterPos: water[i].pos, sharks: sharkLines[i] })),
+}).replace(/</g, "\\u003c");
+
+const discusName = snapshots.find((s) => s.instrument === "discus")?.name;
+const enlargement = Math.round(INSTRUMENT_ENLARGEMENT);
+const steps = Math.round(WINDOW_M / SCALE_STEP_M);
+const label = `A cut-away block of see-through sea, ${WINDOW_M} m across, slowly turning, with a wave buoy riding the swell one buoy recorded. The water's color shows the sea temperature, and where sharks have been recorded nearby a shark's shadow sometimes passes under the surface. Lines on the block's sides show what each forecast said the swell would be. Drag to spin it; tap it for the next buoy.`;
+const sharkiest = Object.values(sharkStations).reduce((a, b) => (b.incidents_n > a.incidents_n ? b : a));
+---
+
+<div data-buoy-root data-station="0" data-count={snapshots.length} class="contents">
+	<script is:inline type="application/json" data-buoy-data set:html={payload} />
+	<div
+		data-buoy-viewer
+		role="img"
+		aria-label={label}
+		class:list={["relative w-full select-none", aspect, className]}
+		style={aspect ? undefined : `aspect-ratio: ${boxAspect}`}
+	>
+		<!-- Static fallback: shown until WebGL mounts, and kept if it can't. Same numbers, cut side-on. -->
+		<svg data-fallback viewBox={FALLBACK_VIEWBOX} class="absolute inset-0 h-full w-full" aria-hidden="true">
+			<Fragment set:html={fallbackSvgGroups(stations)} />
+		</svg>
+	</div>
+
+	{
+		readout && (
+			<div data-buoy-card class:list={["raw-box shadow-hard-lg relative rounded-2xl bg-cream p-5 text-black md:p-6", cardClass]}>
+				<div class="flex flex-wrap items-start justify-between gap-3">
+					<div class="min-w-0">
+						<p class="font-mono text-[11px] uppercase">
+							Buoy <span data-buoy-pos>1</span> of {snapshots.length} · one archived hour
+						</p>
+						<p class="font-display mt-1 text-xl md:text-2xl" data-buoy-title>
+							{first.title}
+						</p>
+						<p class="font-mono mt-0.5 text-xs" data-buoy-when>
+							{first.when}
+						</p>
+					</div>
+					<div class="flex shrink-0 gap-2">
+						<button
+							type="button"
+							data-buoy-step="-1"
+							class="font-mono raw-box shadow-hard-sm raw-press rounded-full bg-cream px-3 py-1.5 text-xs uppercase"
+							aria-label="Previous buoy"
+						>
+							← Prev
+						</button>
+						<button
+							type="button"
+							data-buoy-step="1"
+							class="font-mono raw-box shadow-hard-sm raw-press rounded-full bg-black px-3 py-1.5 text-xs uppercase text-lime"
+							aria-label="Next buoy"
+						>
+							Next →
+						</button>
+					</div>
+				</div>
+
+				<ul class="mt-4 space-y-1.5 text-sm font-medium leading-snug" aria-live="polite">
+					<li class="flex items-baseline gap-2.5">
+						<span aria-hidden="true" class="inline-block h-[5px] w-5 shrink-0 -translate-y-[3px] rounded-[2px] bg-black" />
+						<span data-buoy-observed>{first.observed}</span>
+					</li>
+					<li class="flex items-baseline gap-2.5">
+						<span
+							aria-hidden="true"
+							data-buoy-water-swatch
+							class="inline-block h-[9px] w-5 shrink-0 -translate-y-[1px] rounded-[2px] outline outline-[1.5px] outline-black"
+							style={`background:${water[0].color}`}
+						/>
+						<span data-buoy-water>{first.water ?? "No sea temperature logged that hour"}</span>
+					</li>
+					{sharkLines.some((l) => l !== null) ? (
+						<li class="flex items-baseline gap-2.5">
+							<svg aria-hidden="true" viewBox="0 -4 40 20" class="inline-block h-[10px] w-5 shrink-0 translate-y-[1px]">
+								<path d="M40 6 L37 4.8 L32 3.5 L26 2.3 L22 2 L20 -4 L18 -4 L19 2.2 L12 2.8 L6 3.8 L4.5 2.9 L3 4.2 L1 5 L0 4 L1.6 6 L0 8 L1 7 L3 7.8 L4.5 9.1 L6 8.2 L12 9.2 L19 9.8 L18 16 L20 16 L22 10 L26 9.7 L32 8.5 L37 7.2 Z" fill="#0a1720" />
+							</svg>
+							<span data-buoy-sharks>{sharkLines[0] ?? ""}</span>
+						</li>
+					) : null}
+					{SYSTEM_ORDER.map((sys, i) => (
+						<li class="flex items-baseline gap-2.5">
+							<span
+								aria-hidden="true"
+								class="inline-block h-[5px] w-5 shrink-0 -translate-y-[3px] rounded-[2px] outline outline-[1.5px] outline-black"
+								style={`background:${SYSTEM_COLOR[sys]}`}
+							/>
+							<span data-buoy-forecast={i}>{ordered(first)[i]}</span>
+						</li>
+					))}
+				</ul>
+				{
+					domain && (
+						<div class="mt-3 flex items-center gap-2 font-mono text-[10px] uppercase" aria-hidden="true">
+							<span>{domain[0]} °C</span>
+							<span class="relative h-2.5 flex-1 rounded-[3px] outline outline-[1.5px] outline-black" style={`background:${gradient}`}>
+								<span
+									data-buoy-water-marker
+									class="absolute -top-1 h-[18px] w-[3px] -translate-x-1/2 rounded-full bg-black"
+									style={`left:${(water[0].pos ?? 0) * 100}%;${water[0].pos === null ? "display:none" : ""}`}
+								/>
+							</span>
+							<span>{domain[1]} °C</span>
+						</div>
+					)
+				}
+				<p class="mt-3 text-xs leading-relaxed" data-buoy-note>
+					{first.note}
+				</p>
+				<p class="font-mono mt-3 border-t-2 border-black pt-3 text-[10px] uppercase leading-relaxed">
+					To scale across: the block is {WINDOW_M} m of sea (bar on the base: {steps} × {SCALE_STEP_M} m). Heights
+					stretched {VERTICAL_EXAGGERATION}×. The swell is drawn as one regular wave at the buoy's height and
+					period; each forecast line is that wave at the forecast's height. Water color is the buoy's sea surface
+					temperature that hour{domain && `, ${domain[0]} °C (green) to ${domain[1]} °C (turquoise)`}; the water is
+					see-through so the hull and mooring below it show. A shark's shadow crosses as often as sharks have been
+					recorded within {sharkData.radius_km} km of the buoy ({sharkData.window.from.slice(0, 4)}–{sharkData.window.to.slice(0, 4)}; Hawaii DLNR and
+					California CDFW incident lists): every {SHARK_BASE_INTERVAL_S} s at {sharkiest.name}, the most, and in proportion elsewhere,
+					at the median length recorded and the species' cruising speed. Buoys and sharks drawn {enlargement}× life size, all
+					at one scale{discusName && `, so ${discusName}'s ${DISCUS_DIAMETER_M} m discus dwarfs the ${WAVERIDER_DIAMETER_M} m Waveriders`}.
+				</p>
+			</div>
+		)
+	}
+</div>
+
+<script>
+	import { mountViewers } from "../../scripts/three/viewer";
+	mountViewers("[data-buoy-viewer]", () => import("../../scripts/three/subjects/buoy").then((m) => m.default));
+</script>
+
+<script>
+	// The readout: prev/next buttons, plus text and fallback updates for any station change (from
+	// these buttons or a tap on the 3D view). Talks to the 3D chunk only through root events.
+	import { BUOY_SELECT, currentStation, selectStation, type BuoySelectDetail } from "../../scripts/three/buoy-events";
+
+	interface Readout {
+		title: string;
+		when: string;
+		observed: string;
+		water: string | null;
+		waterColor: string;
+		waterPos: number | null;
+		sharks: string | null;
+		forecasts: string[];
+		note: string;
+	}
+
+	for (const root of document.querySelectorAll<HTMLElement>("[data-buoy-root]")) {
+		const json = root.querySelector("script[data-buoy-data]")?.textContent;
+		if (!json) continue;
+		const { readouts } = JSON.parse(json) as { readouts: Readout[] };
+		const set = (sel: string, text: string) => {
+			const el = root.querySelector(sel);
+			if (el) el.textContent = text;
+		};
+
+		root.addEventListener(BUOY_SELECT, (e) => {
+			const i = (e as CustomEvent<BuoySelectDetail>).detail.index;
+			const r = readouts[i];
+			if (!r) return;
+			set("[data-buoy-pos]", String(i + 1));
+			set("[data-buoy-title]", r.title);
+			set("[data-buoy-when]", r.when);
+			set("[data-buoy-observed]", r.observed);
+			set("[data-buoy-water]", r.water ?? "No sea temperature logged that hour");
+			set("[data-buoy-sharks]", r.sharks ?? "");
+			root.querySelector<HTMLElement>("[data-buoy-water-swatch]")?.style.setProperty("background", r.waterColor);
+			const marker = root.querySelector<HTMLElement>("[data-buoy-water-marker]");
+			if (marker) {
+				marker.style.display = r.waterPos === null ? "none" : "";
+				marker.style.left = `${(r.waterPos ?? 0) * 100}%`;
+			}
+			r.forecasts.forEach((text, k) => set(`[data-buoy-forecast="${k}"]`, text));
+			set("[data-buoy-note]", r.note);
+			for (const g of root.querySelectorAll<SVGGElement>("[data-fallback-station]")) {
+				if (Number(g.dataset.fallbackStation) === i) g.removeAttribute("display");
+				else g.setAttribute("display", "none");
+			}
+		});
+
+		for (const btn of root.querySelectorAll<HTMLButtonElement>("[data-buoy-step]")) {
+			btn.addEventListener("click", () => selectStation(root, currentStation(root) + Number(btn.dataset.buoyStep)));
+		}
+	}
+</script>

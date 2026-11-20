@@ -1,0 +1,19 @@
+{
+	"dlnr-incidents.csv": {
+		"source": "https://dlnr.hawaii.gov/sharks/shark-incidents/incidents-list/",
+		"publisher": "Hawaii Department of Land and Natural Resources",
+		"fields": "date, location, shark (victim names and descriptions omitted)",
+		"fetched": "2026-11-20T00:10:26.952Z"
+	},
+	"cdfw-shark-incidents.csv": {
+		"source": "https://data.cnra.ca.gov/dataset/022f670f-eb4e-4314-9fad-74f7f9560400/resource/fa77215c-a06c-4fa2-b8bc-ffbcaaa65286/download/sharkincidents_1950_2022_220302.zip",
+		"publisher": "California Department of Fish and Wildlife, Shark Incident Database",
+		"sheet": "SharkIncidents_1950_2022_220302.xlsx, first sheet",
+		"fetched": "2026-11-20T00:10:26.952Z"
+	},
+	"hawaii-geocodes.json": {
+		"source": "https://nominatim.openstreetmap.org/search",
+		"publisher": "OpenStreetMap contributors (ODbL), via Nominatim",
+		"fetched": "2026-11-20T00:10:26.952Z"
+	}
+}

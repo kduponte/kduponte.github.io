@@ -43,7 +43,7 @@ export interface FinSpec {
 /** The fin system and fins a board is shown with. */
 export interface FinSetup {
 	/** How the fins attach, which decides the boxes painted on the bottom. */
-	system: "fcs2" | "futures" | "us-box" | "glass-on" | "soft";
+	system: "fcs2" | "futures" | "us-box" | "glass-on" | "soft" | "screw-through";
 	/** The fins shown, e.g. "FCS II Performer Neo Glass, Medium". */
 	model: string;
 	/** "published": base, depth, area (and sweep, if given) come from the fin maker or a retailer's spec table. */
@@ -88,11 +88,18 @@ export interface LogoSpec {
 	/**
 	 * alpha: recolor the logo's shape (white-on-transparent files); luma: its bright parts are the
 	 * shape (white-on-black files); ink: its dark parts are the shape (black-on-white files);
-	 * none: draw as-is; knockout: draw as-is minus the white ground around it (full-color art
-	 * on white); glyph: a character in an icon font file. Empty margins are trimmed.
+	 * none: draw as-is; knockout: draw as-is minus the light ground around it (full-color art
+	 * on white); key: drop one ground color (a logo cropped from a board photo); glyph: a
+	 * character in an icon font file. Empty margins are trimmed.
 	 */
-	mask: "alpha" | "luma" | "ink" | "none" | "knockout" | "glyph";
+	mask: "alpha" | "luma" | "ink" | "none" | "knockout" | "key" | "glyph";
 	glyph?: string;
+	/** knockout: luminance (0-1) at or above which the surround counts as ground; default 0.885. */
+	ground?: number;
+	/** knockout: flatten light pixels left inside the artwork to white (photo crops). */
+	whiten?: boolean;
+	/** key: the ground color to drop. */
+	key?: string;
 	/** Part of the file to use, in its pixels: [x, y, width, height] (drops captions and the like). */
 	crop?: [number, number, number, number];
 }

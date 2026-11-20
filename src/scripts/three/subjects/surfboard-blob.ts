@@ -144,6 +144,7 @@ const FIN_ANGLES: Record<FinSetup["system"], { cant: number; toe: number }> = {
 	"us-box": { cant: 0, toe: 0 },
 	"glass-on": { cant: 0, toe: 0 },
 	soft: { cant: 3, toe: 1.5 },
+	"screw-through": { cant: 4, toe: 1.5 },
 };
 
 /**

@@ -13,6 +13,10 @@
 		"ci-water-hog": { "file": "/images/board-logos/ci-water-hog.png", "source": "https://cisurfboards.com/cdn/shop/products/water_hog.png", "from": "cisurfboards.com Water Hog page: the model's hog icon", "mask": "none" },
 		"pyzel-bar": { "file": "/images/board-logos/pyzel-bar.png", "source": "https://pyzelsurfboards.com/cdn/shop/files/logo_1.png", "from": "pyzelsurfboards.com header: the black PYZEL bar printed on every Pyzel deck", "mask": "none" },
 		"pyzel-white-tiger": { "file": "/images/board-logos/pyzel-white-tiger-crest.png", "source": "https://www.keepitsimplesurf.co.za/cdn/shop/products/Screenshot2023-03-31at15.52.04.png", "from": "Keep It Simple Surf (a Pyzel retailer) White Tiger page: a screenshot of the model's crest; Pyzel's own site has no file for it", "mask": "knockout" },
+		"tc-yin-yang": { "file": "/images/board-logos/tc-glide-bottom.jpg", "source": "https://cdn.shopify.com/s/files/1/2683/3942/products/Glide68-bottom-137127.jpg", "from": "tcsurf.com Glide product photo (bottom), cropped to the Town & Country Surf Designs yin-yang; T&C publishes no separate file", "mask": "knockout", "ground": 0.75, "whiten": true, "crop": [438, 338, 186, 182] },
+		"tc-tanaka": { "file": "/images/board-logos/tc-glide-bottom.jpg", "source": "https://cdn.shopify.com/s/files/1/2683/3942/products/Glide68-bottom-137127.jpg", "from": "tcsurf.com Glide product photo (bottom), cropped to the Tanaka signature", "mask": "ink", "crop": [455, 524, 145, 72] },
+		"catch-surf": { "file": "/images/board-logos/catch-surf.png", "source": "https://catchsurf.com/cdn/shop/files/header-Logo.svg", "from": "catchsurf.com header logo (the raster inside its SVG)", "mask": "none" },
+		"odysea": { "file": "/images/board-logos/catch-surf-odysea-log.jpg", "source": "https://cdn.shopify.com/s/files/1/1154/7998/files/ODY80_BL26_Pcopy.jpg", "from": "catchsurf.com Odysea Log product photo, cropped to the ODYSEA Surfboards deck badge; Catch Surf publishes no separate file", "mask": "key", "key": "#019dd6", "crop": [462, 481, 256, 160] },
 		"wavestorm": { "file": "/images/board-logos/wavestorm.png", "source": "https://shop.agit-global.com/images/submenu_logo_wavestorm.png", "from": "AGIT Global (Wavestorm's maker) brand menu", "mask": "alpha" }
 	},
 	"boards": [
@@ -113,9 +117,9 @@
 			"fins": "twin + 1",
 			"fin_setup": { "system": "futures", "model": "Futures Mayhem Evil Twin+1, Medium (Honeycomb)", "status": "published", "source": "https://jackssurfboards.com/products/mayhem-evil-twin-1-medium", "note": "Futures sells this set as a replica of the original RNF twin fins. Side fins 4.87\" deep x 4.72\" base, 19.34 sq in; center 2.91\" x 3.16\", 7.22 sq in. No sweep is published, so it is estimated. The RNF Retro Revamp ships with Futures or FCS II boxes (Hawaiian South Shore).", "finish": "honeycomb", "box_color": "#151515" },
 			"graphic": "fish-laminate",
-			"colors": { "base": "#ffd400", "accent": "#111111", "wood": "#f6f1e4", "fin": "#2438ff" },
+			"colors": { "base": "#f2782b", "wood": "#fbfaf5", "fin": "#2438ff" },
 			"labels": [
-				{ "logo": "lost-rnf-retro", "side": "deck", "at_in": 21, "z_in": 0, "height_in": 4.0, "color": "#111111", "orient": "across" },
+				{ "logo": "lost-rnf-retro", "side": "deck", "at_in": 50, "z_in": 0, "height_in": 4.6, "color": "#111111", "orient": "across" },
 				{ "text": "Mayhem", "side": "bottom", "at_in": 38, "z_in": 0, "height_in": 3.4, "font": "script", "color": "#111111", "orient": "along" }
 			],
 			"sizes": [
@@ -358,6 +362,59 @@
 			}
 		},
 		{
+			"id": "tc-tanaka-glide",
+			"name": "Glide",
+			"maker": "T&C Surf Designs (a Tanaka shape)",
+			"style": "Small-longboard hybrid, round pin",
+			"construction": "Not specified by T&C",
+			"fins": "thruster",
+			"fin_setup": {
+				"system": "fcs2",
+				"model": "FCS II Performer Neo Glass, Medium",
+				"status": "published",
+				"source": "https://easternlines.com/product/fcs-ii-performer-neo-glass-5-fin/",
+				"note": "T&C sells the Glide as a thruster, quad or 5-fin, and its product photo shows white FCS II-style boxes. T&C names no fin, so a typical medium FCS II thruster set is shown: 4.55\" deep x 4.37\" base, 14.81 sq in, 33.7 degree sweep.",
+				"finish": "neo-glass",
+				"box_color": "#f2f2f2"
+			},
+			"graphic": "tc-airbrush",
+			"colors": { "deck": ["#a6f0d6", "#5fd3e2", "#36aee8", "#2a92dc"], "bolt": ["#ff4f9a", "#ff9a3c", "#ffe14a"], "triangle": "#ffe45c", "slash": "#fbfaf5", "bottom": "#fbfaf5", "wood": "#e9c48f", "accent": "#111111", "fin": "#ffcf33" },
+			"labels": [
+				{ "logo": "tc-yin-yang", "side": "deck", "at_in": 23, "z_in": -1.5, "height_in": 7.0, "color": "#111111", "orient": "across" },
+				{ "logo": "tc-tanaka", "side": "deck", "at_in": 40, "z_in": 4.4, "height_in": 2.1, "color": "#111111", "orient": "along" },
+				{ "logo": "tc-yin-yang", "side": "bottom", "at_in": 22, "z_in": 0, "height_in": 6.4, "color": "#111111", "orient": "across" },
+				{ "logo": "tc-tanaka", "side": "bottom", "at_in": 30.5, "z_in": 0, "height_in": 1.5, "color": "#111111", "orient": "across" }
+			],
+			"sizes": [
+				{ "length": "5'10\"", "width_in": 20.25, "thickness_in": 2.625, "volume_l": 34.61, "volume_status": "published", "source": 0 },
+				{ "length": "6'0\"", "width_in": 20.5, "thickness_in": 2.75, "volume_l": 38.91, "volume_status": "published", "source": 0 },
+				{ "length": "6'2\"", "width_in": 21, "thickness_in": 2.875, "volume_l": 41.21, "volume_status": "published", "source": 0 },
+				{ "length": "6'4\"", "width_in": 21.5, "thickness_in": 3, "volume_l": 45.11, "volume_status": "published", "source": 0 }
+			],
+			"sources": [
+				{
+					"label": "T&C Surf Designs, Glide",
+					"url": "https://tcsurf.com/products/glide",
+					"note": "T&C's size options with published liters, 5'10\" to 6'4\". \"A fun, easy to ride, small long board shape\" with a full outline and a narrow round pintail; thruster, quad or 5-fin. Tagged as a Tanaka shape on T&C's site."
+				}
+			],
+			"shape": {
+				"wide_point_from_center_in": 0,
+				"nose_width_12_in": 15.5,
+				"tail_width_12_in": 12.5,
+				"nose_tip": 1.8,
+				"tail": { "kind": "pin", "end_width_in": 0, "pin_roundness": 2.2 },
+				"rocker_in": { "nose": 4.2, "tail": 2.0 },
+				"foil": { "nose_frac_12": 0.68, "tail_frac_12": 0.62, "thickest_from_center_in": 1 },
+				"rail": { "apex_frac": 0.35, "deck_exp": 2.6, "bottom_exp": 3.5 },
+				"fin_layout": [
+					{ "from_tail_in": 11.5, "off_center_in": 5.0, "depth_in": 4.55, "base_in": 4.37, "area_in2": 14.81, "sweep_deg": 33.7, "template": "thruster" },
+					{ "from_tail_in": 11.5, "off_center_in": -5.0, "depth_in": 4.55, "base_in": 4.37, "area_in2": 14.81, "sweep_deg": 33.7, "template": "thruster" },
+					{ "from_tail_in": 3.5, "off_center_in": 0, "depth_in": 4.55, "base_in": 4.37, "area_in2": 14.81, "sweep_deg": 33.7, "template": "thruster" }
+				]
+			}
+		},
+		{
 			"id": "wavestorm-8-classic",
 			"name": "8' Classic",
 			"maker": "Wavestorm (AGIT Global)",
@@ -394,6 +451,61 @@
 					{ "from_tail_in": 10, "off_center_in": 5.8, "depth_in": 4.0, "base_in": 4.6, "template": "soft" },
 					{ "from_tail_in": 10, "off_center_in": -5.8, "depth_in": 4.0, "base_in": 4.6, "template": "soft" },
 					{ "from_tail_in": 4, "off_center_in": 0, "depth_in": 4.2, "base_in": 4.8, "template": "soft" }
+				]
+			}
+		},
+		{
+			"id": "catch-surf-odysea-log",
+			"name": "Odysea Log",
+			"maker": "Catch Surf",
+			"style": "Foam soft-top log",
+			"construction": "Dual-composite core, triple maple stringers, HDPE slick bottom with bumper tail, OG Deck 2.0",
+			"fins": "thruster",
+			"fin_setup": {
+				"system": "screw-through",
+				"model": "Catch Surf Hi-Performance fins (included)",
+				"status": "estimated",
+				"source": "https://catchsurf.com/collections/boards/products/log",
+				"note": "Catch Surf's Hi-Performance fin system with leash plug; the fins come with the board. Their size isn't published, so it is estimated.",
+				"finish": "resin",
+				"box_color": "#f1e33b"
+			},
+			"graphic": "odysea-log",
+			"finish": "matte",
+			"colors": { "base": "#019dd6", "bottom": ["#ff5a8a", "#ff8a3d", "#ffd23a"], "bumper": "#1a1a1a", "fin": "#efe3c2" },
+			"labels": [
+				{ "logo": "odysea", "side": "deck", "at_in": 15, "z_in": 0, "height_in": 5.6, "color": "#111111", "orient": "across" },
+				{ "logo": "catch-surf", "side": "deck", "at_in": 50, "z_in": 5.2, "height_in": 3.8, "color": "#111111", "orient": "across" },
+				{ "logo": "catch-surf", "side": "bottom", "at_in": 56, "z_in": 0, "height_in": 3.6, "color": "#111111", "orient": "across" }
+			],
+			"sizes": [
+				{ "length": "6'0\"", "width_in": 22, "thickness_in": 3.125, "volume_l": 57, "volume_status": "published", "source": 0 },
+				{ "length": "7'0\"", "width_in": 22, "thickness_in": 3.125, "volume_l": 72, "volume_status": "published", "source": 0 },
+				{ "length": "7'6\"", "width_in": 22, "thickness_in": 3.25, "volume_l": 78, "volume_status": "published", "source": 0 },
+				{ "length": "8'0\"", "width_in": 23, "thickness_in": 3.375, "volume_l": 86, "volume_status": "published", "source": 0 },
+				{ "length": "9'0\"", "width_in": 24, "thickness_in": 3.5, "volume_l": 98, "volume_status": "published", "source": 0 },
+				{ "length": "10'0\"", "width_in": 25, "thickness_in": 3.5, "volume_l": 125, "volume_status": "published", "source": 0 }
+			],
+			"sources": [
+				{
+					"label": "Catch Surf, Odysea LOG",
+					"url": "https://catchsurf.com/collections/boards/products/log",
+					"note": "Catch Surf's chart: 6'0\" x 22.0\" x 3.125\" (57 L) up to 10'0\" x 25.0\" x 3.5\" (125 L); the 9'0\" and 10'0\" are in-store pickup only. Shown in the Blue/Gradient colorway."
+				}
+			],
+			"shape": {
+				"wide_point_from_center_in": 0,
+				"nose_width_12_in": 17.5,
+				"tail_width_12_in": 17,
+				"nose_tip": 2.2,
+				"tail": { "kind": "squash", "end_width_in": 13, "corner_in": 2.5 },
+				"rocker_in": { "nose": 3.2, "tail": 1.2 },
+				"foil": { "nose_frac_12": 0.85, "tail_frac_12": 0.85, "thickest_from_center_in": 0 },
+				"rail": { "apex_frac": 0.45, "deck_exp": 3.5, "bottom_exp": 3.5 },
+				"fin_layout": [
+					{ "from_tail_in": 10, "off_center_in": 7.2, "depth_in": 4.3, "base_in": 4.2, "template": "thruster" },
+					{ "from_tail_in": 10, "off_center_in": -7.2, "depth_in": 4.3, "base_in": 4.2, "template": "thruster" },
+					{ "from_tail_in": 4, "off_center_in": 0, "depth_in": 4.3, "base_in": 4.2, "template": "thruster" }
 				]
 			}
 		}

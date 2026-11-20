@@ -173,19 +173,20 @@ const stingSpray: Painter = (pen, c) => {
 	}
 };
 
-/** Retro fish: yellow resin tint, cream stringer and a pinline; the model's logo goes on top. */
+/**
+ * Retro fish: a solid resin tint that pools a shade deeper toward the rails, a thin stringer, and an
+ * optional pinline; the model's logo goes on top.
+ */
 const fishLaminate: Painter = (pen, c) => {
-	const base = pick(c, "base", "#ffd400");
-	const wood = pick(c, "wood", "#f6f1e4");
-	const ink = pick(c, "accent", "#111111");
+	const base = pick(c, "base", "#f2782b");
+	const wood = pick(c, "wood", "#fbfaf5");
 	pen.ctx.fillStyle = base;
 	pen.ctx.fillRect(0, 0, TEX_W, TEX_H);
 	for (const side of ["deck", "bottom"] as const) {
-		pen.railBand(side, 0.92, 1, adjust(base, 0.12));
-		pen.railBand(side, -0.92, -1, adjust(base, 0.12));
-		pen.stringer(side, 0.42, wood);
+		pen.railFade(side, [adjust(base, 0.2), fadeTo(adjust(base, 0.2), 0)], 0.7);
+		pen.stringer(side, 0.22, wood);
 	}
-	for (const sign of [1, -1]) pen.railBand("deck", sign * 0.85, sign * 0.865, ink, 3, pen.L);
+	if (typeof c.pinline === "string") for (const sign of [1, -1]) pen.railBand("deck", sign * 0.85, sign * 0.865, c.pinline, 3, pen.L);
 };
 
 /**
@@ -396,6 +397,100 @@ const clearWhite: Painter = (pen, c) => {
 	}
 };
 
+/**
+ * T&C's Tanaka Glide, after T&C's own product shot: an airbrushed mint-to-blue deck, a big
+ * pink-orange-yellow lightning bolt down one rail, a yellow triangle, white slashes on the tail,
+ * and a white bottom with sprayed rails.
+ */
+const tcAirbrush: Painter = (pen, c) => {
+	const deck = Array.isArray(c.deck) ? c.deck : ["#a6f0d6", "#5fd3e2", "#36aee8", "#2a92dc"];
+	const bolt = Array.isArray(c.bolt) ? c.bolt : ["#ff4f9a", "#ff9a3c", "#ffe14a"];
+	const tri = pick(c, "triangle", "#ffe45c");
+	const ink = pick(c, "accent", "#111111");
+	const wood = pick(c, "wood", "#e9c48f");
+	const { ctx, L } = pen;
+	const along = (stops: string[], from: number, to: number) => {
+		const g = ctx.createLinearGradient(pen.x(from), 0, pen.x(to), 0);
+		stops.forEach((s, i) => g.addColorStop(i / (stops.length - 1), s));
+		return g;
+	};
+	ctx.fillStyle = along(deck, 0, L);
+	ctx.fillRect(0, 0, TEX_W, TEX_H / 2);
+	ctx.fillStyle = pick(c, "bottom", "#fbfaf5");
+	ctx.fillRect(0, TEX_H / 2, TEX_W, TEX_H / 2);
+	for (const sign of [1, -1]) pen.railBand("bottom", sign * 0.86, sign, along(deck, 0, L));
+	pen.railBand("bottom", 0.86, 1, bolt[0], 0, L * 0.12);
+	for (const side of ["deck", "bottom"] as const) pen.stringer(side, 0.16, wood);
+	// The bolt, in a frame running down the +z rail: u nose-to-tail along the board, w from
+	// near the stringer (0) to the rail (1).
+	const shape: [number, number][] = [
+		[0, 0.42],
+		[0, 1],
+		[0.45, 0.66],
+		[0.41, 0.9],
+		[1, 0.05],
+		[0.56, 0.36],
+		[0.6, 0.12],
+	];
+	const u0 = L * 0.03;
+	const u1 = L * 0.6;
+	const pts = shape.map(([u, w]): [number, number] => {
+		const at = u0 + u * (u1 - u0);
+		return [at, (0.12 + 0.88 * w) * pen.halfWidth(at) * 0.97];
+	});
+	pen.poly("deck", grow(pts, 0.22), ink);
+	pen.poly("deck", pts, along(bolt, u0, u1));
+	// Triangle on the other side, and the tail slashes.
+	const triPts: [number, number][] = [
+		[L * 0.47, -0.08 * pen.halfWidth(L * 0.47)],
+		[L * 0.68, -0.96 * pen.halfWidth(L * 0.68)],
+		[L * 0.68, -0.1 * pen.halfWidth(L * 0.68)],
+	];
+	pen.poly("deck", grow(triPts, 0.22), ink);
+	pen.poly("deck", triPts, tri);
+	for (let k = 0; k < 4; k++) {
+		const a = L * (0.8 + k * 0.045);
+		pen.poly("deck", [
+			[a, -pen.halfWidth(a)],
+			[a + L * 0.022, -pen.halfWidth(a + L * 0.022)],
+			[a - L * 0.04, -0.15 * pen.halfWidth(a)],
+			[a - L * 0.062, -0.15 * pen.halfWidth(a)],
+		], pick(c, "slash", "#fbfaf5"));
+	}
+};
+
+/**
+ * Catch Surf's Odysea Log (Blue/Gradient): a sky-blue waffle foam deck, a sunset gradient on the
+ * slick bottom, and a black bumper on the tail.
+ */
+const odyseaLog: Painter = (pen, c) => {
+	const deck = pick(c, "base", "#019dd6");
+	const slick = Array.isArray(c.bottom) ? c.bottom : ["#ff5a8a", "#ff8a3d", "#ffd23a"];
+	const { ctx, L } = pen;
+	ctx.fillStyle = deck;
+	ctx.fillRect(0, 0, TEX_W, TEX_H / 2);
+	const g = ctx.createLinearGradient(0, TEX_H / 2, TEX_W, TEX_H);
+	slick.forEach((s, i) => g.addColorStop(i / (slick.length - 1), s));
+	ctx.fillStyle = g;
+	ctx.fillRect(0, TEX_H / 2, TEX_W, TEX_H / 2);
+	for (const sign of [1, -1]) pen.railBand("bottom", sign * 0.92, sign, deck);
+	// Waffle texture of the foam deck.
+	ctx.strokeStyle = "rgba(17, 17, 17, 0.1)";
+	ctx.lineWidth = 1.5;
+	for (let x = -TEX_H; x < TEX_W; x += 14) {
+		for (const dir of [1, -1]) {
+			ctx.beginPath();
+			ctx.moveTo(x, 0);
+			ctx.lineTo(x + dir * (TEX_H / 2), TEX_H / 2);
+			ctx.stroke();
+		}
+	}
+	// Bumper tail and the leash plug.
+	ctx.fillStyle = pick(c, "bumper", "#1a1a1a");
+	ctx.fillRect(pen.x(L - 1.2), 0, TEX_W - pen.x(L - 1.2), TEX_H);
+	pen.circle("deck", L - 3, 0, 0.55, "#1a1a1a");
+};
+
 /** Fallback for boards added without a painter: base color and a stringer. */
 const plain: Painter = (pen, c) => {
 	pen.ctx.fillStyle = pick(c, "base", "#f6f1e4");
@@ -412,6 +507,8 @@ const PAINTERS: Record<string, Painter> = {
 	futureflex,
 	"tiger-stripes": tigerStripes,
 	"classic-stripes": classicStripes,
+	"tc-airbrush": tcAirbrush,
+	"odysea-log": odyseaLog,
 	"clear-white": clearWhite,
 };
 
@@ -521,7 +618,7 @@ function logoDecal(asset: LogoAsset, color: string | string[]): HTMLCanvasElemen
 		for (let i = 0; i < px.length; i += 4) {
 			const lum = (0.299 * px[i] + 0.587 * px[i + 1] + 0.114 * px[i + 2]) / 255;
 			// Ink logos are scans and JPEG-ish: push the near-white ground fully clear.
-			const cover = spec.mask === "luma" ? lum : Math.min(1, Math.max(0, (0.92 - lum) / 0.8));
+			const cover = spec.mask === "luma" ? lum : Math.min(1, Math.max(0, (0.86 - lum) / 0.7));
 			px[i + 3] = Math.round(px[i + 3] * cover);
 			px[i] = r;
 			px[i + 1] = g;
@@ -529,7 +626,20 @@ function logoDecal(asset: LogoAsset, color: string | string[]): HTMLCanvasElemen
 		}
 		ctx.putImageData(data, 0, 0);
 	} else if (spec.mask === "knockout") {
-		knockOutBackground(ctx, decal.width, decal.height);
+		knockOutBackground(ctx, decal.width, decal.height, spec.ground ?? 0.885, spec.whiten ?? false);
+	} else if (spec.mask === "key" && spec.key) {
+		// A logo printed on a known ground color (a board photo): that color drops out.
+		const tint = document.createElement("canvas").getContext("2d")!;
+		tint.fillStyle = spec.key;
+		tint.fillRect(0, 0, 1, 1);
+		const [kr, kg, kb] = tint.getImageData(0, 0, 1, 1).data;
+		const data = ctx.getImageData(0, 0, decal.width, decal.height);
+		const px = data.data;
+		for (let i = 0; i < px.length; i += 4) {
+			const d = Math.hypot(px[i] - kr, px[i + 1] - kg, px[i + 2] - kb);
+			px[i + 3] = Math.round(px[i + 3] * Math.min(1, Math.max(0, (d - 45) / 70)));
+		}
+		ctx.putImageData(data, 0, 0);
 	}
 	return trim(decal);
 }
@@ -538,10 +648,11 @@ function logoDecal(asset: LogoAsset, color: string | string[]): HTMLCanvasElemen
  * Clear the near-white ground around a full-color logo (a screenshot on white), flood-filling
  * from the edges so white inside the artwork, behind its own outline, is kept.
  */
-function knockOutBackground(ctx: CanvasRenderingContext2D, w: number, h: number) {
+function knockOutBackground(ctx: CanvasRenderingContext2D, w: number, h: number, ground: number, whiten: boolean) {
 	const data = ctx.getImageData(0, 0, w, h);
 	const px = data.data;
-	const isGround = (p: number) => px[p * 4 + 3] > 0 && Math.min(px[p * 4], px[p * 4 + 1], px[p * 4 + 2]) >= 226;
+	const lumOf = (p: number) => (0.299 * px[p * 4] + 0.587 * px[p * 4 + 1] + 0.114 * px[p * 4 + 2]) / 255;
+	const isGround = (p: number) => px[p * 4 + 3] > 0 && lumOf(p) >= ground;
 	const seen = new Uint8Array(w * h);
 	const stack: number[] = [];
 	for (let x = 0; x < w; x++) stack.push(x, (h - 1) * w + x);
@@ -558,6 +669,8 @@ function knockOutBackground(ctx: CanvasRenderingContext2D, w: number, h: number)
 		if (p >= w) stack.push(p - w);
 		if (p < w * (h - 1)) stack.push(p + w);
 	}
+	// Photo crops: flatten what's left of the light ground inside the artwork to clean white.
+	if (whiten) for (let p = 0; p < w * h; p++) if (px[p * 4 + 3] > 0 && lumOf(p) >= ground) px[p * 4] = px[p * 4 + 1] = px[p * 4 + 2] = 255;
 	ctx.putImageData(data, 0, 0);
 }
 
@@ -712,6 +825,11 @@ function drawFinBoxes(pen: Pen, layout: FinSpec[], setup: FinSetup, finColor: st
 				pen.poly("bottom", stadium(at, z, b * 0.75, 0.95), box);
 				pen.circle("bottom", at - b * 0.2, z, 0.18, screw);
 				pen.circle("bottom", at + b * 0.2, z, 0.18, screw);
+				break;
+			case "screw-through":
+				// Fin plugs on the bottom, and the screws that hold the fins showing through the deck.
+				pen.poly("bottom", stadium(at, z, b * 0.85, 1.0), box);
+				for (const k of [-0.22, 0.22]) pen.circle("deck", at + b * k, z, 0.35, "#1a1a1a");
 				break;
 		}
 	}

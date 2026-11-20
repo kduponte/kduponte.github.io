@@ -4,5 +4,65 @@
 		"lon": -157.851,
 		"name": "Ka‘a‘awa, Honolulu County (windward O‘ahu)",
 		"why": "Nominatim matched O'awa Street in Makakilo, Kapolei, on the opposite side of the island. Coordinates of the community of Ka‘a‘awa."
+	},
+	"Oahu|Kaiko‘o's Cromwell's Beach": {
+		"lat": 21.257,
+		"lon": -157.797,
+		"name": "Cromwell's Beach, Kāhala, Honolulu (OpenStreetMap)",
+		"why": "Unlocated as written (Kaiko‘o's is the surf break off Cromwell's Beach). OSM has the beach under \"Cromwell's\"."
+	},
+	"Molokai|west-northwest of Pāpōhako Beach": {
+		"lat": 21.2357,
+		"lon": -157.4307,
+		"name": "Kaiwi Channel, 12 miles west-northwest of Papohaku Beach (computed)",
+		"why": "Open water, given as \"approx 12 miles west-northwest of Pāpōhako Beach\". Computed 12 statute miles at a bearing of 292.5° from Papohaku Beach (OSM, 21.1693, -157.2586; DLNR spells it Pāpōhako)."
+	},
+	"Maui|Wailea Beach Point": {
+		"lat": 20.6789,
+		"lon": -156.443,
+		"name": "Wailea Point, Wailea, Maui (OpenStreetMap)",
+		"why": "Unlocated as written. OSM has the point as \"Wailea Point\"."
+	},
+	"Lanai|Po‘aīwa Beach": {
+		"lat": 20.9161,
+		"lon": -156.9035,
+		"name": "Poaiwa, Lāna‘i (OpenStreetMap)",
+		"why": "Unlocated with diacritics and \"Beach\". OSM has the place as \"Poaiwa\", on the Shipwreck Beach shore."
+	},
+	"Maui|Pali scenic lookout": {
+		"lat": 20.7745,
+		"lon": -156.5366,
+		"name": "Papawai Point scenic lookout, Honoapi‘ilani Highway pali, Maui (OpenStreetMap)",
+		"why": "\"Pali scenic lookout\" is the lookout on the Honoapi‘ilani Highway cliffs between Mā‘alaea and Olowalu. Papawai Point is that lookout; McGregor Point, the other candidate, is 1.5 km away, which cannot change a 50 km count."
+	},
+	"Kauai|Pīla‘a Beach": {
+		"lat": 22.2117,
+		"lon": -159.3631,
+		"name": "Pila'a Beach, Kaua‘i (USGS Anahola topo map, via TopoZone)",
+		"why": "Not in OpenStreetMap. Coordinates from the USGS place name on the Anahola topographic map."
+	},
+	"Hawaii|northwest of ‘Upolu Pt": {
+		"lat": 20.3708,
+		"lon": -155.9599,
+		"name": "Open water 10 miles northwest of ‘Upolu Point (computed)",
+		"why": "Given as \"approx 10 miles northwest of ‘Upolu Pt\". Computed 10 statute miles at a bearing of 315° from ‘Upolu Point (OSM, 20.2685, -155.8507)."
+	},
+	"Lanai|Club Lāna‘i": {
+		"lat": 20.829,
+		"lon": -156.8113,
+		"name": "Halepalaoa Landing, Lāna‘i (OpenStreetMap)",
+		"why": "Club Lāna‘i was the day-use beach resort at Halepalaoa on Lāna‘i's east shore; its remains are on the ocean side of Halepalaoa Landing."
+	},
+	"Kauai|Brennecke's Beach": {
+		"lat": 21.8731,
+		"lon": -159.4514,
+		"name": "Brennecke Beach, Po‘ipū, Kaua‘i (OpenStreetMap)",
+		"why": "Unlocated with the possessive. OSM has it as \"Brennecke Beach\"."
+	},
+	"Oahu|Mokulua Island": {
+		"lat": 21.3896,
+		"lon": -157.6981,
+		"name": "Mokulua Islands, off Lanikai, Kailua (OpenStreetMap)",
+		"why": "Unlocated in the singular. OSM has the pair as \"Mokulua Islands\"; the incident was in the back lagoon between them and the shore."
 	}
 }

@@ -16,7 +16,7 @@
 			"url": "https://data.cnra.ca.gov/dataset/shark-incident-database-california"
 		}
 	],
-	"hawaii_unlocated_n": 10,
+	"hawaii_unlocated_n": 0,
 	"stations": {
 		"46042": {
 			"name": "Monterey",
@@ -26,7 +26,7 @@
 			"length_m": 3.05,
 			"length_scope": "regional",
 			"lengths_n": 10,
-			"pass_interval_s": 190
+			"pass_interval_s": 199
 		},
 		"46221": {
 			"name": "Santa Monica Bay",
@@ -36,7 +36,7 @@
 			"length_m": 3.05,
 			"length_scope": "regional",
 			"lengths_n": 10,
-			"pass_interval_s": 204
+			"pass_interval_s": 215
 		},
 		"46222": {
 			"name": "San Pedro",
@@ -46,7 +46,7 @@
 			"length_m": 3.05,
 			"length_scope": "regional",
 			"lengths_n": 10,
-			"pass_interval_s": 166
+			"pass_interval_s": 174
 		},
 		"46224": {
 			"name": "Oceanside Offshore",
@@ -56,7 +56,7 @@
 			"length_m": 3.05,
 			"length_scope": "regional",
 			"lengths_n": 10,
-			"pass_interval_s": 204
+			"pass_interval_s": 215
 		},
 		"46237": {
 			"name": "San Francisco Bar",
@@ -66,7 +66,7 @@
 			"length_m": 3.05,
 			"length_scope": "regional",
 			"lengths_n": 10,
-			"pass_interval_s": 266
+			"pass_interval_s": 279
 		},
 		"46254": {
 			"name": "Scripps Nearshore",
@@ -76,7 +76,7 @@
 			"length_m": 3.05,
 			"length_scope": "regional",
 			"lengths_n": 10,
-			"pass_interval_s": 221
+			"pass_interval_s": 233
 		},
 		"51201": {
 			"name": "Waimea Bay",
@@ -86,26 +86,26 @@
 			"length_m": 2.74,
 			"length_scope": "local",
 			"lengths_n": 21,
-			"pass_interval_s": 102
+			"pass_interval_s": 107
 		},
 		"51202": {
 			"name": "Mokapu Point",
-			"incidents_n": 28,
-			"per_year": 1.04,
+			"incidents_n": 29,
+			"per_year": 1.07,
 			"species": "tiger shark",
 			"length_m": 2.74,
 			"length_scope": "local",
 			"lengths_n": 23,
-			"pass_interval_s": 95
+			"pass_interval_s": 96
 		},
 		"51205": {
 			"name": "Pauwela, Maui",
-			"incidents_n": 59,
-			"per_year": 2.19,
+			"incidents_n": 62,
+			"per_year": 2.3,
 			"species": "tiger shark",
 			"length_m": 2.74,
 			"length_scope": "local",
-			"lengths_n": 33,
+			"lengths_n": 36,
 			"pass_interval_s": 45
 		},
 		"51206": {
@@ -116,27 +116,27 @@
 			"length_m": 2.74,
 			"length_scope": "regional",
 			"lengths_n": 101,
-			"pass_interval_s": 885
+			"pass_interval_s": 930
 		},
 		"51208": {
 			"name": "Hanalei, Kauai",
-			"incidents_n": 18,
-			"per_year": 0.67,
+			"incidents_n": 20,
+			"per_year": 0.74,
 			"species": "tiger shark",
 			"length_m": 3.05,
 			"length_scope": "local",
-			"lengths_n": 12,
-			"pass_interval_s": 148
+			"lengths_n": 14,
+			"pass_interval_s": 140
 		},
 		"51211": {
 			"name": "Pearl Harbor Entrance",
-			"incidents_n": 34,
-			"per_year": 1.26,
+			"incidents_n": 35,
+			"per_year": 1.3,
 			"species": "tiger shark",
 			"length_m": 2.74,
 			"length_scope": "local",
 			"lengths_n": 27,
-			"pass_interval_s": 78
+			"pass_interval_s": 80
 		}
 	}
 }

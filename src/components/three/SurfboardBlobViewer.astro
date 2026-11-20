@@ -27,6 +27,7 @@ const resolved = resolveBoards(data, consensus, rows);
 
 const config: BlobViewerConfig = {
 	blobColor: "#b4f03a",
+	logos: data.logos,
 	ink: "#111111",
 	boards: resolved.map((r) => ({
 		id: r.board.id,
@@ -146,7 +147,7 @@ const boardList = resolved.map((r) => `${r.board.name} (${r.size.length}, ${r.si
 			<strong>To scale:</strong> every board's length, width, thickness and liters, on one shared scale, and the blob always holds exactly
 			the liters of the board it's becoming. Each model is shown in its stock size nearest the {median.toFixed(1)} L median.{" "}
 			<strong>Not to scale:</strong> the bounce, wobble and goo are animation; outlines, rocker, rails and fins are estimated from typical designs
-			(only length, width, thickness and liters are published); graphics are stylized, and labels are the makers' names set in this site's type, not their logos.
+			(only length, width, thickness and liters are published); graphics are stylized; logos are the makers' own, recolored to suit each board.
 		</p>
 	</figcaption>
 </figure>

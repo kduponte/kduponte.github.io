@@ -1,6 +1,6 @@
 // Data gate for the hand-curated iconic boards behind the Volume Gap's 3D hero, plus the size
 // rule, range placement and volume-estimate method it relies on.
-import { readFileSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import path from "node:path";
 import { describe, expect, it } from "vitest";
 import {
@@ -59,16 +59,26 @@ describe("iconic_boards.json", () => {
 		for (const { board, size } of resolveBoards(data, summary.consensus, summary.rows)) {
 			const L = parseLengthIn(size.length);
 			for (const label of board.labels ?? []) {
-				expect(label.text.trim().length, board.id).toBeGreaterThan(0);
-				expect(["display", "script", "sans", "mono"]).toContain(label.font);
+				// Each label is either a logo from the registry or text in one of the site's fonts.
+				expect(Boolean(label.logo) !== Boolean(label.text?.trim()), `${board.id} label`).toBe(true);
+				if (label.logo) expect(data.logos?.[label.logo], label.logo).toBeDefined();
+				else expect(["display", "script", "sans", "mono"]).toContain(label.font);
 				expect(["deck", "bottom"]).toContain(label.side);
 				expect(["along", "across"]).toContain(label.orient);
 				expect(label.at_in, `${board.id} ${label.text}`).toBeGreaterThan(4);
 				expect(label.at_in, `${board.id} ${label.text}`).toBeLessThan(L - 4);
 				expect(Math.abs(label.z_in)).toBeLessThan(size.width_in / 2);
 				expect(label.height_in).toBeLessThan(size.width_in / 3);
-				expect(label.color).toMatch(/^#[0-9a-f]{6}$/i);
+				for (const c of [label.color].flat()) expect(c).toMatch(/^#[0-9a-f]{6}$/i);
 			}
+		}
+	});
+
+	it("ships every logo file it names, with its source", () => {
+		for (const [key, logo] of Object.entries(data.logos ?? {})) {
+			expect(existsSync(path.resolve(PUBLIC, "../..", `.${logo.file}`)), key).toBe(true);
+			expect(logo.source, key).toMatch(/^https:\/\//);
+			if (logo.mask === "glyph") expect(logo.glyph, key).toBeTruthy();
 		}
 	});
 

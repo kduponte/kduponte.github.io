@@ -26,7 +26,7 @@ import {
 	Vector3,
 } from "three";
 import { createPartKit, extrude } from "../../../lib/three/kit";
-import type { FinSpec, LabelSpec } from "../../../lib/surf-volume/iconic-boards";
+import type { FinSpec, LabelSpec, LogoSpec } from "../../../lib/surf-volume/iconic-boards";
 import {
 	INCH,
 	VERTEX_COUNT,
@@ -41,7 +41,7 @@ import {
 	type BoardShape,
 	type CalibratedBoard,
 } from "../../../lib/three/surfboard-morph";
-import { loadLabelFonts, paintBoardCanvas, type BoardColors } from "./surfboard-graphics";
+import { loadLabelFonts, loadLogos, paintBoardCanvas, type BoardColors } from "./surfboard-graphics";
 import type { SubjectFactory } from "../viewer";
 
 export interface BlobBoardConfig {
@@ -58,6 +58,8 @@ export interface BlobBoardConfig {
 
 export interface BlobViewerConfig {
 	boards: BlobBoardConfig[];
+	/** Makers' logo files the labels can use, keyed by name. */
+	logos?: Record<string, LogoSpec>;
 	blobColor: string;
 	ink: string;
 }
@@ -248,12 +250,12 @@ const createSurfboardBlob: SubjectFactory = async ({ host, reducedMotion, reques
 		texture: CanvasTexture;
 		fins: Group[];
 	}
-	await loadLabelFonts();
+	const [, logos] = await Promise.all([loadLabelFonts(), loadLogos(config.logos)]);
 	const boards: BoardRuntime[] = config.boards.map((b) => {
 		const cal = calibrateBoard(b.shape, b.liters);
 		const lifted = cal.positions.slice();
 		for (let k = 1; k < lifted.length; k += 3) lifted[k] += HOVER;
-		const texture = new CanvasTexture(paintBoardCanvas(cal.prepared, b.graphic, b.colors, b.labels));
+		const texture = new CanvasTexture(paintBoardCanvas(cal.prepared, b.graphic, b.colors, b.labels, logos));
 		texture.colorSpace = SRGBColorSpace;
 		texture.flipY = false;
 		texture.anisotropy = 4;

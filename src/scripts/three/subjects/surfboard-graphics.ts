@@ -2,13 +2,14 @@
  * Canvas-painted deck and bottom graphics for the Volume Gap boards. Stylized evocations of each
  * board's look (pink resin and pinlines, the '76 Sting's sprayed rails, a retro fish laminate, wrapped
  * rails, a rail spray, a carbon frame, tiger stripes, a soft-top starburst), never a copy of a
- * real logo. Labels are the makers' brand and model names typeset in the site's own fonts.
+ * real board's artwork. Labels are the makers' own logo files (tinted to suit each board) or names
+ * typeset in the site's fonts.
  * Painted in the board's own texture space (see surfboard-morph's uv): canvas x runs nose to
  * tail, canvas y maps across the deck (top half) and bottom (lower half).
  *
  * New boards pick a painter by name in iconic_boards.json ("graphic") and pass colors and labels.
  */
-import type { LabelSpec } from "../../../lib/surf-volume/iconic-boards";
+import type { LabelSpec, LogoSpec } from "../../../lib/surf-volume/iconic-boards";
 import { bottomV, deckV, halfWidthIn, type PreparedBoard } from "../../../lib/three/surfboard-morph";
 
 export const TEX_W = 2048;
@@ -350,7 +351,9 @@ const PAINTERS: Record<string, Painter> = {
 	"soft-top": softTop,
 };
 
-const LABEL_FONTS: Record<LabelSpec["font"], (px: number) => string> = {
+type LabelFont = NonNullable<LabelSpec["font"]>;
+
+const LABEL_FONTS: Record<LabelFont, (px: number) => string> = {
 	display: (px) => `400 ${px}px Anton, Impact, sans-serif`,
 	script: (px) => `italic 400 ${px}px "Instrument Serif", Georgia, serif`,
 	sans: (px) => `800 ${px}px "Bricolage Grotesque Variable", system-ui, sans-serif`,
@@ -364,69 +367,172 @@ export async function loadLabelFonts(): Promise<void> {
 	await Promise.race([all, new Promise((r) => setTimeout(r, 2500))]);
 }
 
+/** A loaded logo: an image, or (for an icon-font logo) the font family holding its glyph. */
+export interface LogoAsset {
+	spec: LogoSpec;
+	image?: HTMLImageElement;
+	fontFamily?: string;
+}
+export type LogoAssets = Map<string, LogoAsset>;
+
+/** Load every logo file; any that fail are left out and their labels skipped. */
+export async function loadLogos(logos: Record<string, LogoSpec> = {}): Promise<LogoAssets> {
+	const assets: LogoAssets = new Map();
+	await Promise.all(
+		Object.entries(logos).map(async ([key, spec]) => {
+			try {
+				if (spec.mask === "glyph") {
+					const fontFamily = `board-logo-${key}`;
+					const face = new FontFace(fontFamily, `url(${spec.file})`);
+					document.fonts.add(await face.load());
+					assets.set(key, { spec, fontFamily });
+				} else {
+					const image = new Image();
+					image.src = spec.file;
+					await image.decode();
+					assets.set(key, { spec, image });
+				}
+			} catch (err) {
+				console.warn(`Board logo "${key}" failed to load`, err);
+			}
+		}),
+	);
+	return assets;
+}
+
+/** Fill style for a label: one color, or hard left-to-right bands across `width` pixels. */
+function paint(ctx: CanvasRenderingContext2D, color: string | string[], width: number): string | CanvasGradient {
+	if (!Array.isArray(color)) return color;
+	const g = ctx.createLinearGradient(0, 0, width, 0);
+	color.forEach((c, i) => {
+		g.addColorStop(i / color.length, c);
+		g.addColorStop((i + 1) / color.length - 1e-4, c);
+	});
+	return g;
+}
+
+/** Render a logo, colored per its mask, into its own canvas (so tinting never touches the board). */
+function logoDecal(asset: LogoAsset, color: string | string[]): HTMLCanvasElement {
+	const H = 256;
+	const decal = document.createElement("canvas");
+	const ctx = decal.getContext("2d")!;
+	const { spec } = asset;
+	if (spec.mask === "glyph" && asset.fontFamily && spec.glyph) {
+		ctx.font = `400 ${H}px "${asset.fontFamily}"`;
+		const m = ctx.measureText(spec.glyph);
+		const top = m.actualBoundingBoxAscent;
+		const height = top + m.actualBoundingBoxDescent || H;
+		const width = m.actualBoundingBoxLeft + m.actualBoundingBoxRight || m.width;
+		decal.width = Math.ceil((width / height) * H);
+		decal.height = H;
+		ctx.font = `400 ${H}px "${asset.fontFamily}"`;
+		ctx.fillStyle = paint(ctx, color, decal.width);
+		const k = H / height;
+		ctx.setTransform(k, 0, 0, k, m.actualBoundingBoxLeft * k, top * k);
+		ctx.fillText(spec.glyph, 0, 0);
+		return decal;
+	}
+	const img = asset.image!;
+	decal.width = Math.round((img.naturalWidth / img.naturalHeight) * H);
+	decal.height = H;
+	ctx.drawImage(img, 0, 0, decal.width, decal.height);
+	if (spec.mask === "alpha") {
+		ctx.globalCompositeOperation = "source-in";
+		ctx.fillStyle = paint(ctx, color, decal.width);
+		ctx.fillRect(0, 0, decal.width, decal.height);
+	} else if (spec.mask === "luma") {
+		const data = ctx.getImageData(0, 0, decal.width, decal.height);
+		const tint = document.createElement("canvas").getContext("2d")!;
+		tint.fillStyle = Array.isArray(color) ? color[0] : color;
+		tint.fillRect(0, 0, 1, 1);
+		const [r, g, b] = tint.getImageData(0, 0, 1, 1).data;
+		const px = data.data;
+		for (let i = 0; i < px.length; i += 4) {
+			const lum = (0.299 * px[i] + 0.587 * px[i + 1] + 0.114 * px[i + 2]) / 255;
+			px[i + 3] = Math.round(px[i + 3] * lum);
+			px[i] = r;
+			px[i + 1] = g;
+			px[i + 2] = b;
+		}
+		ctx.putImageData(data, 0, 0);
+	}
+	return decal;
+}
+
 /**
- * Typeset a label in plan inches. The texture stretches differently along and across the board
- * (and the across scale changes as the outline tapers), so text is drawn in inch space and mapped
- * per glyph; it reads nose-right for "along" labels and nose-up for "across" ones, on deck and bottom.
+ * Lay a label out in plan inches. The texture stretches differently along and across the board
+ * (and the across scale changes as the outline tapers), so everything is drawn in inch space and
+ * mapped locally; it reads nose-right for "along" labels and nose-up for "across" ones, on deck
+ * and bottom alike. Text goes glyph by glyph so long names keep their shape.
  */
-function drawLabel(pen: Pen, l: LabelSpec) {
+function drawLabel(pen: Pen, l: LabelSpec, logos: LogoAssets) {
 	const { ctx } = pen;
-	const BASE = 100;
-	ctx.font = LABEL_FONTS[l.font](BASE);
-	const cap = ctx.measureText("H").actualBoundingBoxAscent || 0.72 * BASE;
-	const k = l.height_in / cap; // inches per base-font pixel
-	const widths = [...l.text].map((ch) => ctx.measureText(ch).width * k);
-	const total = widths.reduce((a, b) => a + b, 0);
 	const sx = TEX_W / pen.L;
 	const sy = (at: number) => TEX_H / 4 / Math.max(pen.halfWidth(at), 0.5);
-	const glyph = (ch: string, at: number, z: number, rot: number) => {
+	const rot = l.orient === "across" ? -Math.PI / 2 : Math.PI;
+	const place = (at: number, z: number, draw: () => void) => {
 		const [cx, cy] = pen.pt(l.side, at, z);
 		ctx.save();
 		ctx.translate(cx, cy);
 		ctx.scale(sx, sy(at));
 		ctx.rotate(rot);
-		ctx.scale(k, k);
-		ctx.textAlign = "center";
-		ctx.textBaseline = "alphabetic";
-		ctx.fillStyle = l.color;
-		ctx.fillText(ch, 0, cap / 2);
+		draw();
 		ctx.restore();
 	};
-	const pad = l.height_in * 0.45;
-	if (l.orient === "across") {
-		if (l.patch) {
-			const rect = (grow: number): [number, number][] => [
-				[l.at_in - l.height_in * 0.85 - grow, l.z_in - total / 2 - pad - grow],
-				[l.at_in + l.height_in * 0.85 + grow, l.z_in - total / 2 - pad - grow],
-				[l.at_in + l.height_in * 0.85 + grow, l.z_in + total / 2 + pad + grow],
-				[l.at_in - l.height_in * 0.85 - grow, l.z_in + total / 2 + pad + grow],
-			];
-			pen.poly(l.side, rect(0.14), "#111111");
-			pen.poly(l.side, rect(0), l.patch);
-		}
-		glyph(l.text, l.at_in, l.z_in, -Math.PI / 2);
-		return;
-	}
-	if (l.patch) {
+	/** A laminate patch, `length` inches along the reading direction and `height` across it. */
+	const patch = (length: number, height: number) => {
+		if (!l.patch) return;
+		const [along, across] = l.orient === "across" ? [height, length] : [length, height];
 		const rect = (grow: number): [number, number][] => [
-			[l.at_in - total / 2 - pad - grow, l.z_in - l.height_in * 0.85 - grow],
-			[l.at_in + total / 2 + pad + grow, l.z_in - l.height_in * 0.85 - grow],
-			[l.at_in + total / 2 + pad + grow, l.z_in + l.height_in * 0.85 + grow],
-			[l.at_in - total / 2 - pad - grow, l.z_in + l.height_in * 0.85 + grow],
+			[l.at_in - along / 2 - grow, l.z_in - across / 2 - grow],
+			[l.at_in + along / 2 + grow, l.z_in - across / 2 - grow],
+			[l.at_in + along / 2 + grow, l.z_in + across / 2 + grow],
+			[l.at_in - along / 2 - grow, l.z_in + across / 2 + grow],
 		];
 		pen.poly(l.side, rect(0.14), "#111111");
 		pen.poly(l.side, rect(0), l.patch);
+	};
+
+	if (l.logo) {
+		const asset = logos.get(l.logo);
+		if (!asset) return;
+		const decal = logoDecal(asset, l.color);
+		const h = l.height_in;
+		const w = (decal.width / decal.height) * h;
+		patch(w + h * 0.6, h * 1.5);
+		place(l.at_in, l.z_in, () => ctx.drawImage(decal, -w / 2, -h / 2, w, h));
+		return;
+	}
+	if (!l.text) return;
+	const BASE = 100;
+	ctx.font = LABEL_FONTS[l.font ?? "display"](BASE);
+	const cap = ctx.measureText("H").actualBoundingBoxAscent || 0.72 * BASE;
+	const k = l.height_in / cap; // inches per base-font pixel
+	const widths = [...l.text].map((ch) => ctx.measureText(ch).width * k);
+	const total = widths.reduce((a, b) => a + b, 0);
+	patch(total + l.height_in * 0.9, l.height_in * 1.7);
+	const glyph = (ch: string, at: number, z: number) =>
+		place(at, z, () => {
+			ctx.scale(k, k);
+			ctx.textAlign = "center";
+			ctx.textBaseline = "alphabetic";
+			ctx.fillStyle = paint(ctx, l.color, 0);
+			ctx.fillText(ch, 0, cap / 2);
+		});
+	if (l.orient === "across") {
+		glyph(l.text, l.at_in, l.z_in);
+		return;
 	}
 	// Reading toward the nose: the first glyph sits nearest the tail.
 	let run = 0;
 	[...l.text].forEach((ch, i) => {
-		glyph(ch, l.at_in + total / 2 - run - widths[i] / 2, l.z_in, Math.PI);
+		glyph(ch, l.at_in + total / 2 - run - widths[i] / 2, l.z_in);
 		run += widths[i];
 	});
 }
 
 /** Paint a board's deck and bottom, then its labels, into a new canvas. */
-export function paintBoardCanvas(prepared: PreparedBoard, graphic: string, colors: BoardColors, labels: LabelSpec[] = []): HTMLCanvasElement {
+export function paintBoardCanvas(prepared: PreparedBoard, graphic: string, colors: BoardColors, labels: LabelSpec[] = [], logos: LogoAssets = new Map()): HTMLCanvasElement {
 	const canvas = document.createElement("canvas");
 	canvas.width = TEX_W;
 	canvas.height = TEX_H;
@@ -434,6 +540,6 @@ export function paintBoardCanvas(prepared: PreparedBoard, graphic: string, color
 	if (!ctx) return canvas;
 	const pen = new Pen(ctx, prepared);
 	(PAINTERS[graphic] ?? plain)(pen, colors);
-	for (const l of labels) drawLabel(pen, l);
+	for (const l of labels) drawLabel(pen, l, logos);
 	return canvas;
 }

@@ -35,21 +35,40 @@ export interface FinSpec {
 	template: "longboard" | "single" | "keel" | "thruster" | "soft";
 }
 
-/** A laminate-style label: the maker's brand or model name, typeset in one of the site's fonts. */
+/**
+ * A laminate on the board: either one of the maker's own logos (`logo`, a key into the data
+ * file's `logos`) or text typeset in one of the site's fonts (`text` with `font`).
+ */
 export interface LabelSpec {
-	text: string;
+	text?: string;
+	logo?: string;
 	side: "deck" | "bottom";
 	/** Center of the label, inches back from the nose tip, and across from the stringer. */
 	at_in: number;
 	z_in: number;
-	/** Cap height, inches. */
+	/** Cap height for text, overall height for a logo, inches. */
 	height_in: number;
-	font: "display" | "script" | "sans" | "mono";
-	color: string;
+	font?: "display" | "script" | "sans" | "mono";
+	/** One color, or several laid left to right in hard bands (a multicolor logo). */
+	color: string | string[];
 	/** "along" reads down the stringer; "across" reads rail to rail with the nose up. */
 	orient: "along" | "across";
-	/** Optional laminate patch behind the text. */
+	/** Optional laminate patch behind the label. */
 	patch?: string;
+}
+
+/** A maker's logo file, where it came from, and how to color it on a board. */
+export interface LogoSpec {
+	/** Site path of the file (under public/). */
+	file: string;
+	source: string;
+	from: string;
+	/**
+	 * alpha: recolor the logo's shape (white-on-transparent files); luma: its bright parts are the
+	 * shape (white-on-black files); none: draw as-is; glyph: a character in an icon font file.
+	 */
+	mask: "alpha" | "luma" | "none" | "glyph";
+	glyph?: string;
 }
 
 export interface ShapeSpec {
@@ -91,6 +110,7 @@ export interface IconicBoard {
 export interface IconicBoardData {
 	accessed: string;
 	size_rule: string;
+	logos?: Record<string, LogoSpec>;
 	boards: IconicBoard[];
 }
 

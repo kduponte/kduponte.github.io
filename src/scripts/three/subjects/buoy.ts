@@ -5,6 +5,8 @@
  * - The block and the buoy spin as one. The swell runs in real time: crests advance one
  *   wavelength per wave period, and the buoy bobs and tilts with them.
  * - Hover warms the lantern. A tap steps to the next station.
+ * - Where sharks have been recorded near the buoy, a shark's shadow sometimes crosses under the
+ *   surface, as often as the record says (lib/three/shark.ts).
  * - The camera is framed for the Waverider stations. Monterey's 5 m mast needs more room, so its
  *   whole scene eases to a smaller size about the camera's target: a zoom out, with every
  *   object still at one scale.
@@ -62,7 +64,8 @@ const createBuoy: SubjectFactory = ({ THREE, host, reducedMotion, requestRender 
 		framing: diorama.framing,
 		autoSpeed: 0.16,
 		update({ t, dt }) {
-			diorama.update(reducedMotion ? 0 : t);
+			// Under reduced motion the frame is still, so the shark (pure motion) stays away.
+			diorama.update(reducedMotion ? 0 : t, { sharks: !reducedMotion });
 			fit += (fitTarget - fit) * Math.min(1, dt * FIT_EASE);
 			if (Math.abs(fitTarget - fit) < 1e-4) fit = fitTarget;
 			applyFit();

@@ -18,6 +18,8 @@ import { CylinderGeometry, Group, Mesh, MeshStandardMaterial, Quaternion, Vector
 import type { ForecastSystem } from "../surf-forecast/models";
 import type { BuoySnapshot, Instrument } from "../surf-forecast/buoy-snapshot";
 import { DEFAULT_BUOY_COLORS, buildBuoy, type BuoyModel } from "./buoy-model";
+import { CRUISE_SPEED_MS, DEFAULT_CRUISE_SPEED_MS, buildSharkShadow, type SharkPlan } from "./shark";
+import { splitAtWaterline, type WaterSplit } from "./underwater";
 import { temperatureDomain, waterColor } from "./water-color";
 import {
 	BASE_H,
@@ -41,20 +43,44 @@ export const INSTRUMENT_ENLARGEMENT = INSTRUMENT_UNITS_PER_M / UNITS_PER_M;
 /** Upper bound on the buoy's tilt, radians (about 17 degrees). */
 export const MAX_TILT_RAD = 0.3;
 
+/** Recorded shark incidents near a station, as the shadow uses them (see surf-forecast/sharks.ts). */
+export interface StationSharks {
+	incidents_n: number;
+	/** Seconds between shadow passes; null when no incidents were recorded nearby. */
+	pass_interval_s: number | null;
+	species: string | null;
+	length_m: number | null;
+}
+
 export interface DioramaStation {
 	station: string;
 	instrument: Instrument;
 	observed: SwellReading;
 	forecasts: { system: ForecastSystem; wave_height_m: number; color: string }[];
+	sharks?: StationSharks | null;
+}
+
+/** The shadow's pass plan for a station, at the buoys' drawing scale; null if it never passes. */
+export function sharkPlanFor(s: DioramaStation): SharkPlan | null {
+	const k = s.sharks;
+	if (!k || !k.pass_interval_s || !k.length_m) return null;
+	const speed = (k.species ? CRUISE_SPEED_MS[k.species] : undefined) ?? DEFAULT_CRUISE_SPEED_MS;
+	return {
+		interval_s: k.pass_interval_s,
+		length: k.length_m * INSTRUMENT_UNITS_PER_M,
+		speed: speed * INSTRUMENT_UNITS_PER_M,
+		seed: Number.parseInt(s.station, 10) || 1,
+	};
 }
 
 /** A frozen snapshot as the diorama draws it, with each forecast in its system's chart color. */
-export function toDioramaStation(s: BuoySnapshot, colors: Record<ForecastSystem, string>): DioramaStation {
+export function toDioramaStation(s: BuoySnapshot, colors: Record<ForecastSystem, string>, sharks?: StationSharks | null): DioramaStation {
 	return {
 		station: s.station,
 		instrument: s.instrument,
 		observed: s.observed,
 		forecasts: s.forecasts.map((f) => ({ system: f.system, wave_height_m: f.wave_height_m, color: colors[f.system] })),
+		sharks: sharks ?? null,
 	};
 }
 
@@ -162,14 +188,16 @@ export interface BuoyDiorama {
 	readonly index: number;
 	readonly active: BuoyModel;
 	setStation(i: number): void;
-	/** Pose the sea and buoy for t seconds. */
-	update(t: number): void;
+	/** Pose the sea, buoy and any shark shadow for t seconds. `sharks: false` keeps the shadow away. */
+	update(t: number, opts?: { sharks?: boolean }): void;
 	/** Lantern glow on the active buoy, 0 = dark. */
 	setLantern(intensity: number): void;
 	/** The water color drawn for a station (default: the current one). */
 	waterColorFor(i?: number): string;
 	/** The mooring line, from the block floor to the active buoy's eye, for tests. */
 	mooring: Mesh;
+	/** The shark shadow, for tests. */
+	shark: Mesh;
 	framing: { target: Vector3; turnRadius: number; halfHeight: number; viewDir: Vector3 };
 	/**
 	 * The uniform scale, about framing.target, that fits a station (default: the current one) in
@@ -202,6 +230,7 @@ export function buildBuoyDiorama(stations: DioramaStation[], startIndex = 0): Bu
 	group.add(buoyRig);
 	// One model per kind of hull, built once: every Waverider station shares the sphere.
 	const models = new Map<string, BuoyModel>();
+	const splits: WaterSplit[] = [];
 	for (const s of stations) {
 		const key = modelKey(s);
 		if (models.has(key)) continue;
@@ -210,6 +239,8 @@ export function buildBuoyDiorama(stations: DioramaStation[], startIndex = 0): Bu
 		m.group.visible = false;
 		buoyRig.add(m.group);
 		models.set(key, m);
+		// Only the submerged part of a hull may show through the water (see underwater.ts).
+		splits.push(splitAtWaterline(m.group, m.parts));
 	}
 	let active = models.get(modelKey(stations[index]))!;
 	active.group.visible = true;
@@ -225,9 +256,14 @@ export function buildBuoyDiorama(stations: DioramaStation[], startIndex = 0): Bu
 	const eye = new Vector3();
 	const up = new Vector3(0, 1, 0);
 
+	const shark = buildSharkShadow(group, TILE / 2);
+	group.add(shark.mesh);
+	const plans = stations.map(sharkPlanFor);
+
 	const q = new Quaternion();
-	const update = (t: number) => {
+	const update = (t: number, opts: { sharks?: boolean } = {}) => {
 		ocean.update(t);
+		shark.update(opts.sharks === false ? null : plans[index], t);
 		buoyRig.position.set(0, surfaceHeight(field, 0, 0, t), 0);
 		const { axis, angle } = buoyTilt(surfaceSlope(field, 0, 0, t), active.maxTilt_rad);
 		buoyRig.quaternion.copy(q.setFromAxisAngle(axis, angle));
@@ -291,6 +327,7 @@ export function buildBuoyDiorama(stations: DioramaStation[], startIndex = 0): Bu
 			return waterColors[wrap(i)];
 		},
 		mooring,
+		shark: shark.mesh,
 		framing: { target: frame.target, turnRadius, halfHeight: frame.halfHeight, viewDir },
 		fitScale(i = index) {
 			return scales[wrap(i)];
@@ -299,7 +336,9 @@ export function buildBuoyDiorama(stations: DioramaStation[], startIndex = 0): Bu
 			ocean.dispose();
 			mooringGeo.dispose();
 			mooringMat.dispose();
+			shark.dispose();
 			for (const m of models.values()) m.dispose();
+			splits.forEach((w) => w.dispose());
 		},
 	};
 }

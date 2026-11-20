@@ -169,7 +169,7 @@ export interface OceanBlock {
 	dispose(): void;
 }
 
-const GRID = 48;
+const GRID = 64;
 const SIDE_SAMPLES = 64;
 const HALF = TILE / 2;
 /** Plinth: margin beyond the water on each side, and thickness. */
@@ -259,7 +259,9 @@ export function buildOceanBlock(
 			attenuationColor: colors.water,
 			attenuationDistance: 2.5,
 			clearcoat: 1,
-			clearcoatRoughness: 0.04,
+			// Soft enough that the studio lights read as broad sheens on the crests rather than
+			// breaking into zigzags along the surface grid's triangles.
+			clearcoatRoughness: 0.22,
 		}),
 	);
 	const insideMat = kit.material(new MeshStandardMaterial({ color: shade(colors.water, INSIDE_SHADE), roughness: 0.9, side: BackSide }));

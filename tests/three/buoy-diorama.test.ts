@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { Vector3 } from "three";
 import data from "../../public/data/surf-forecast/buoy-snapshots.json";
-import { INSTRUMENT_ENLARGEMENT, INSTRUMENT_UNITS_PER_M, MAX_TILT_RAD, buildBuoyDiorama, buoyTilt, type DioramaStation } from "../../src/lib/three/buoy-diorama";
+import { INSTRUMENT_ENLARGEMENT, INSTRUMENT_UNITS_PER_M, MAX_TILT_RAD, sharkPlanFor, buildBuoyDiorama, buoyTilt, type DioramaStation } from "../../src/lib/three/buoy-diorama";
 import { BLOCK_DEPTH, UNITS_PER_M, surfaceHeight, surfaceSlope, swellField } from "../../src/lib/three/ocean";
 import { hexToOklab, temperatureDomain, waterColor } from "../../src/lib/three/water-color";
 import type { Instrument } from "../../src/lib/surf-forecast/buoy-snapshot";
@@ -142,5 +142,34 @@ describe("buildBuoyDiorama", () => {
 
 	it("disposes without throwing", () => {
 		expect(() => d.dispose()).not.toThrow();
+	});
+});
+
+describe("shark shadow in the diorama", () => {
+	const sharky: DioramaStation = {
+		...stations[2],
+		sharks: { incidents_n: 59, pass_interval_s: 45, species: "tiger shark", length_m: 2.74 },
+	};
+	const quiet: DioramaStation = { ...stations[0], sharks: { incidents_n: 0, pass_interval_s: null, species: null, length_m: null } };
+
+	it("plans passes at the buoys' scale and the species' cruising speed", () => {
+		const plan = sharkPlanFor(sharky)!;
+		expect(plan.interval_s).toBe(45);
+		expect(plan.length).toBeCloseTo(2.74 * INSTRUMENT_UNITS_PER_M);
+		expect(plan.speed).toBeCloseTo(0.7 * INSTRUMENT_UNITS_PER_M);
+		expect(sharkPlanFor(quiet)).toBeNull();
+		expect(sharkPlanFor(stations[0])).toBeNull();
+	});
+
+	it("shows the shadow during a pass, never where none were recorded, and not under reduced motion", () => {
+		const d = buildBuoyDiorama([sharky, quiet]);
+		d.update(6);
+		expect(d.shark.visible).toBe(true);
+		d.update(6, { sharks: false });
+		expect(d.shark.visible).toBe(false);
+		d.setStation(1);
+		d.update(6);
+		expect(d.shark.visible).toBe(false);
+		d.dispose();
 	});
 });

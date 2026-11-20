@@ -30,6 +30,8 @@
     "surf-forecast:build-break-data": "tsx scripts/surf-forecast/build-break-data.ts",
     "surf-forecast:build-buoy-snapshots": "tsx scripts/surf-forecast/build-buoy-snapshots.ts",
     "surf-forecast:collect-snapshot-water-temp": "tsx scripts/surf-forecast/collect/collect-snapshot-water-temp.ts",
+    "surf-forecast:collect-shark-incidents": "tsx scripts/surf-forecast/collect/collect-shark-incidents.ts",
+    "surf-forecast:build-buoy-sharks": "tsx scripts/surf-forecast/build-buoy-sharks.ts",
     "the-noise-problem:build-outlier-findings": "tsx scripts/the-noise-problem/build-outlier-findings.ts"
   },
   "dependencies": {

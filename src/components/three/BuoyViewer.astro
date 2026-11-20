@@ -4,10 +4,12 @@
 //
 // The root is `display: contents`, so the canvas box and the readout card are laid out by the
 // parent: the hero floats the canvas over the headline and flows the card in its column. Every
-// number shown or drawn comes from buoy-snapshots.json; nothing is typed in.
+// number shown or drawn comes from buoy-snapshots.json and buoy-sharks.json; nothing is typed in.
 import data from "../../../public/data/surf-forecast/buoy-snapshots.json";
+import sharkData from "../../../public/data/surf-forecast/buoy-sharks.json";
+import { SHARK_BASE_INTERVAL_S, sharkReadout } from "../../lib/surf-forecast/sharks";
 import { snapshotReadout, type BuoySnapshot } from "../../lib/surf-forecast/buoy-snapshot";
-import { INSTRUMENT_ENLARGEMENT, toDioramaStation } from "../../lib/three/buoy-diorama";
+import { INSTRUMENT_ENLARGEMENT, toDioramaStation, type StationSharks } from "../../lib/three/buoy-diorama";
 import { FALLBACK_VIEWBOX, fallbackSvgGroups } from "../../lib/three/buoy-fallback";
 import { DISCUS_DIAMETER_M, WAVERIDER_DIAMETER_M } from "../../lib/three/buoy-model";
 import { SCALE_STEP_M, VERTICAL_EXAGGERATION } from "../../lib/three/ocean";
@@ -30,7 +32,12 @@ const { class: className = "", aspect = "aspect-[4/3]", readout = true, cardClas
 
 const snapshots = data.snapshots as BuoySnapshot[];
 if (snapshots.length === 0) throw new Error("buoy-snapshots.json has no snapshots");
-const stations = snapshots.map((s) => toDioramaStation(s, SYSTEM_COLOR));
+const sharkStations = sharkData.stations as Record<string, StationSharks & { name: string }>;
+const stations = snapshots.map((s) => toDioramaStation(s, SYSTEM_COLOR, sharkStations[s.station] ?? null));
+const sharkLines = snapshots.map((s) => {
+	const k = sharkStations[s.station];
+	return k ? sharkReadout(k, sharkData.radius_km, sharkData.window) : null;
+});
 const readouts = snapshots.map(snapshotReadout);
 const first = readouts[0];
 // Each readout row in the chart legend order, whatever order the JSON lists the forecasts in.
@@ -42,17 +49,18 @@ const water = temps.map((t) => ({ color: waterColor(t, domain), pos: temperature
 const gradient = `linear-gradient(to right, ${waterGradientStops(6).join(", ")})`;
 const payload = JSON.stringify({
 	stations,
-	readouts: readouts.map((r, i) => ({ ...r, forecasts: ordered(r), waterColor: water[i].color, waterPos: water[i].pos })),
+	readouts: readouts.map((r, i) => ({ ...r, forecasts: ordered(r), waterColor: water[i].color, waterPos: water[i].pos, sharks: sharkLines[i] })),
 }).replace(/</g, "\\u003c");
 
 const discusName = snapshots.find((s) => s.instrument === "discus")?.name;
 const enlargement = Math.round(INSTRUMENT_ENLARGEMENT);
 const steps = Math.round(WINDOW_M / SCALE_STEP_M);
-const label = `A cut-away block of see-through sea, ${WINDOW_M} m across, slowly turning, with a wave buoy riding the swell one buoy recorded. The water's color shows the sea temperature. Lines on the block's sides show what each forecast said the swell would be. Drag to spin it; tap it for the next buoy.`;
+const label = `A cut-away block of see-through sea, ${WINDOW_M} m across, slowly turning, with a wave buoy riding the swell one buoy recorded. The water's color shows the sea temperature, and where sharks have been recorded nearby a shark's shadow sometimes passes under the surface. Lines on the block's sides show what each forecast said the swell would be. Drag to spin it; tap it for the next buoy.`;
+const sharkiest = Object.values(sharkStations).reduce((a, b) => (b.incidents_n > a.incidents_n ? b : a));
 ---
 
 <div data-buoy-root data-station="0" data-count={snapshots.length} class="contents">
-	<script type="application/json" data-buoy-data set:html={payload} />
+	<script is:inline type="application/json" data-buoy-data set:html={payload} />
 	<div data-buoy-viewer role="img" aria-label={label} class:list={["relative w-full select-none", aspect, className]}>
 		<!-- Static fallback: shown until WebGL mounts, and kept if it can't. Same numbers, cut side-on. -->
 		<svg data-fallback viewBox={FALLBACK_VIEWBOX} class="absolute inset-0 h-full w-full" aria-hidden="true">
@@ -109,6 +117,14 @@ const label = `A cut-away block of see-through sea, ${WINDOW_M} m across, slowly
 						/>
 						<span data-buoy-water>{first.water ?? "No sea temperature logged that hour"}</span>
 					</li>
+					{sharkLines.some((l) => l !== null) ? (
+						<li class="flex items-baseline gap-2.5">
+							<svg aria-hidden="true" viewBox="0 -4 40 20" class="inline-block h-[10px] w-5 shrink-0 translate-y-[1px]">
+								<path d="M40 6 L37 4.8 L32 3.5 L26 2.3 L22 2 L20 -4 L18 -4 L19 2.2 L12 2.8 L6 3.8 L4.5 2.9 L3 4.2 L1 5 L0 4 L1.6 6 L0 8 L1 7 L3 7.8 L4.5 9.1 L6 8.2 L12 9.2 L19 9.8 L18 16 L20 16 L22 10 L26 9.7 L32 8.5 L37 7.2 Z" fill="#0a1720" />
+							</svg>
+							<span data-buoy-sharks>{sharkLines[0] ?? ""}</span>
+						</li>
+					) : null}
 					{SYSTEM_ORDER.map((sys, i) => (
 						<li class="flex items-baseline gap-2.5">
 							<span
@@ -143,7 +159,10 @@ const label = `A cut-away block of see-through sea, ${WINDOW_M} m across, slowly
 					stretched {VERTICAL_EXAGGERATION}×. The swell is drawn as one regular wave at the buoy's height and
 					period; each forecast line is that wave at the forecast's height. Water color is the buoy's sea surface
 					temperature that hour{domain && `, ${domain[0]} °C (green) to ${domain[1]} °C (turquoise)`}; the water is
-					see-through so the hull and mooring below it show. Buoys drawn {enlargement}× life size, all
+					see-through so the hull and mooring below it show. A shark's shadow crosses as often as sharks have been
+					recorded within {sharkData.radius_km} km of the buoy ({sharkData.window.from.slice(0, 4)}–{sharkData.window.to.slice(0, 4)}; Hawaii DLNR and
+					California CDFW incident lists): every {SHARK_BASE_INTERVAL_S} s at {sharkiest.name}, the most, and in proportion elsewhere,
+					at the median length recorded and the species' cruising speed. Buoys and sharks drawn {enlargement}× life size, all
 					at one scale{discusName && `, so ${discusName}'s ${DISCUS_DIAMETER_M} m discus dwarfs the ${WAVERIDER_DIAMETER_M} m Waveriders (its whole scene is drawn zoomed out to fit its mast)`}.
 				</p>
 			</div>
@@ -168,6 +187,7 @@ const label = `A cut-away block of see-through sea, ${WINDOW_M} m across, slowly
 		water: string | null;
 		waterColor: string;
 		waterPos: number | null;
+		sharks: string | null;
 		forecasts: string[];
 		note: string;
 	}
@@ -190,6 +210,7 @@ const label = `A cut-away block of see-through sea, ${WINDOW_M} m across, slowly
 			set("[data-buoy-when]", r.when);
 			set("[data-buoy-observed]", r.observed);
 			set("[data-buoy-water]", r.water ?? "No sea temperature logged that hour");
+			set("[data-buoy-sharks]", r.sharks ?? "");
 			root.querySelector<HTMLElement>("[data-buoy-water-swatch]")?.style.setProperty("background", r.waterColor);
 			const marker = root.querySelector<HTMLElement>("[data-buoy-water-marker]");
 			if (marker) {

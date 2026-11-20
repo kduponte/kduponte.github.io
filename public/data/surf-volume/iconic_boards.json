@@ -7,7 +7,9 @@
 		"aipa-atom": { "file": "/images/board-logos/aipa-atom.jpg", "source": "https://cdn.shopify.com/s/files/1/0061/5150/3990/products/ATOM-DIE-CUT.jpg", "from": "aipasurf.com Vintage Atom Logo Die Cut Decal: Ben Aipa's rainbow AIPA Hawaii atom logo", "mask": "knockout", "crop": [0, 0, 1200, 870] },
 		"channel-islands": { "file": "/images/board-logos/channel-islands-icons.woff2", "source": "https://cisurfboards.com/cdn/shop/t/45/assets/icomoon.woff", "from": "cisurfboards.com icon font; the hex logo is glyph U+E601", "mask": "glyph", "glyph": "\ue601" },
 		"haydenshapes": { "file": "/images/board-logos/haydenshapes.png", "source": "https://www.haydenshapes.com/cdn/shop/files/HS-LOGO-2026.png", "from": "haydenshapes.com header", "mask": "none" },
+		"haydenshapes-futureflex": { "file": "/images/board-logos/haydenshapes-futureflex.jpg", "source": "https://www.haydenshapes.com/cdn/shop/files/logo-ff-8-01.png", "from": "haydenshapes.com Technology page: the FutureFlex construction mark", "mask": "ink" },
 		"lost-rnf-retro": { "file": "/images/board-logos/lost-rnf-retro.webp", "source": "https://lostsurfboards.com/wp-content/uploads/2026/10/rnf-retro-logo.jpg", "from": "lostsurfboards.com RNF Retro page: the model's own Mayhem / Round Nose Fish Retro logo", "mask": "ink" },
+		"ci-al-merrick-stamp": { "file": "/images/board-logos/ci-al-merrick-stamp.jpg", "source": "https://web.archive.org/web/20140224142551/http://www.cisurfboards.com/cifact/logos/CI_logo_Merrick_Stamp.jpg", "from": "CI's own logo page (cisurfboards.com/cifact/logos, since taken down), via the Internet Archive's 2014 copy: the Shapes & Designs / Al Merrick stamp that sits under the hex", "mask": "ink" },
 		"ci-water-hog": { "file": "/images/board-logos/ci-water-hog.png", "source": "https://cisurfboards.com/cdn/shop/products/water_hog.png", "from": "cisurfboards.com Water Hog page: the model's hog icon", "mask": "none" },
 		"pyzel-bar": { "file": "/images/board-logos/pyzel-bar.png", "source": "https://pyzelsurfboards.com/cdn/shop/files/logo_1.png", "from": "pyzelsurfboards.com header: the black PYZEL bar printed on every Pyzel deck", "mask": "none" },
 		"pyzel-white-tiger": { "file": "/images/board-logos/pyzel-white-tiger-crest.png", "source": "https://www.keepitsimplesurf.co.za/cdn/shop/products/Screenshot2023-03-31at15.52.04.png", "from": "Keep It Simple Surf (a Pyzel retailer) White Tiger page: a screenshot of the model's crest; Pyzel's own site has no file for it", "mask": "knockout" },
@@ -21,6 +23,7 @@
 			"style": "Noserider longboard",
 			"construction": "Tuflite Pro",
 			"fins": "single",
+			"fin_setup": { "system": "us-box", "model": "9\" longboard single fin in a US box", "status": "estimated", "source": "https://surftech.com/products/in-the-pink-tuflite-pro", "note": "Surftech sells the In the Pink without fins; a classic 9\" noserider single fin is shown.", "finish": "resin", "box_color": "#1a1a1a" },
 			"graphic": "pink-resin",
 			"colors": { "base": "#ff5cb8", "accent": "#111111", "wood": "#e9c48f", "fin": "#f6f1e4" },
 			"labels": [
@@ -51,7 +54,9 @@
 				"rocker_in": { "nose": 4.25, "tail": 2.5 },
 				"foil": { "nose_frac_12": 0.64, "tail_frac_12": 0.64, "thickest_from_center_in": 2 },
 				"rail": { "apex_frac": 0.45, "deck_exp": 2.3, "bottom_exp": 3.0 },
-				"fin_layout": [{ "from_tail_in": 8, "off_center_in": 0, "depth_in": 9, "base_in": 8, "template": "longboard" }]
+				"fin_layout": [
+					{ "from_tail_in": 8, "off_center_in": 0, "depth_in": 9, "base_in": 8, "template": "longboard" }
+				]
 			}
 		},
 		{
@@ -61,6 +66,7 @@
 			"style": "Stinger single fin",
 			"construction": "PU/polyester, \"Spray\" finish",
 			"fins": "single",
+			"fin_setup": { "system": "us-box", "model": "7.5\" single fin in a US box", "status": "estimated", "source": "https://www.side-shore.com/produits/73748/76-sting-spray-68-x-21-x-3-433-l-single-us-box-aipa", "note": "The listing names a single US box; the fin itself is a typical 70s-style single.", "finish": "resin", "box_color": "#1a1a1a" },
 			"graphic": "sting-spray",
 			"colors": { "base": "#ffd400", "accent": "#111111", "rail": "#2438ff", "rail_tail": "#8fd0ff", "fin": "#2438ff", "bands": ["#d62828", "#ff5a1f", "#ff9f1c", "#8fd0ff"] },
 			"labels": [
@@ -93,7 +99,9 @@
 				"rocker_in": { "nose": 5.0, "tail": 2.25 },
 				"foil": { "nose_frac_12": 0.62, "tail_frac_12": 0.66, "thickest_from_center_in": 1 },
 				"rail": { "apex_frac": 0.34, "deck_exp": 2.2, "bottom_exp": 4.0 },
-				"fin_layout": [{ "from_tail_in": 6, "off_center_in": 0, "depth_in": 7.5, "base_in": 6.5, "template": "single" }]
+				"fin_layout": [
+					{ "from_tail_in": 6, "off_center_in": 0, "depth_in": 7.5, "base_in": 6.5, "template": "single" }
+				]
 			}
 		},
 		{
@@ -102,7 +110,8 @@
 			"maker": "Matt \"Mayhem\" Biolos (Lost Surfboards)",
 			"style": "Round-nose retro fish",
 			"construction": "Double Dart (carbon shell over EPS)",
-			"fins": "twin keel",
+			"fins": "twin + 1",
+			"fin_setup": { "system": "futures", "model": "Futures Mayhem Evil Twin+1, Medium (Honeycomb)", "status": "published", "source": "https://jackssurfboards.com/products/mayhem-evil-twin-1-medium", "note": "Futures sells this set as a replica of the original RNF twin fins. Side fins 4.87\" deep x 4.72\" base, 19.34 sq in; center 2.91\" x 3.16\", 7.22 sq in. No sweep is published, so it is estimated. The RNF Retro Revamp ships with Futures or FCS II boxes (Hawaiian South Shore).", "finish": "honeycomb", "box_color": "#151515" },
 			"graphic": "fish-laminate",
 			"colors": { "base": "#ffd400", "accent": "#111111", "wood": "#f6f1e4", "fin": "#2438ff" },
 			"labels": [
@@ -145,8 +154,9 @@
 				"foil": { "nose_frac_12": 0.7, "tail_frac_12": 0.74, "thickest_from_center_in": 0 },
 				"rail": { "apex_frac": 0.4, "deck_exp": 2.6, "bottom_exp": 4.0 },
 				"fin_layout": [
-					{ "from_tail_in": 4, "off_center_in": 5.6, "depth_in": 4.6, "base_in": 7.5, "template": "keel" },
-					{ "from_tail_in": 4, "off_center_in": -5.6, "depth_in": 4.6, "base_in": 7.5, "template": "keel" }
+					{ "from_tail_in": 7.5, "off_center_in": 5.3, "depth_in": 4.87, "base_in": 4.72, "area_in2": 19.34, "template": "keel" },
+					{ "from_tail_in": 7.5, "off_center_in": -5.3, "depth_in": 4.87, "base_in": 4.72, "area_in2": 19.34, "template": "keel" },
+					{ "from_tail_in": 6.0, "off_center_in": 0, "depth_in": 2.91, "base_in": 3.16, "area_in2": 7.22, "template": "stabilizer" }
 				]
 			}
 		},
@@ -157,6 +167,7 @@
 			"style": "70s pintail single fin",
 			"construction": "PU/polyester, glassed-on single fin",
 			"fins": "single",
+			"fin_setup": { "system": "glass-on", "model": "Glassed-on single fin", "status": "estimated", "source": "https://www.seachangesummerparty.org/product/live-auction-one-of-a-kind-classic-pipeliner-shaped-by-gerry-lopez/", "note": "The auction board has a glassed-on single fin; its size is estimated.", "finish": "resin" },
 			"graphic": "bolt-inlay",
 			"colors": { "base": "#d62828", "bolt": "#fbfaf5", "accent": "#111111", "wood": "#e9c48f", "fin": "#fbfaf5" },
 			"labels": [
@@ -187,7 +198,9 @@
 				"rocker_in": { "nose": 5.0, "tail": 2.6 },
 				"foil": { "nose_frac_12": 0.6, "tail_frac_12": 0.62, "thickest_from_center_in": 2 },
 				"rail": { "apex_frac": 0.4, "deck_exp": 2.2, "bottom_exp": 3.0 },
-				"fin_layout": [{ "from_tail_in": 7, "off_center_in": 0, "depth_in": 8.5, "base_in": 7.5, "template": "single" }]
+				"fin_layout": [
+					{ "from_tail_in": 7, "off_center_in": 0, "depth_in": 8.5, "base_in": 7.5, "template": "single" }
+				]
 			}
 		},
 		{
@@ -197,12 +210,13 @@
 			"style": "Mini-longboard",
 			"construction": "PU/polyester",
 			"fins": "thruster",
-			"graphic": "rail-spray",
-			"colors": { "base": "#fbfaf5", "accent": "#111111", "spray": "#2438ff", "fin": "#111111" },
+			"fin_setup": { "system": "fcs2", "model": "FCS II Al Merrick (AM) PC, Medium", "status": "published", "source": "https://www.cleanlinesurf.com/fcs-ii-al-merrick-pc-tri-fin-set.html", "note": "CI's own photo of a stock 7'0\" Water Hog shows three white FCS II boxes. AM PC Medium: 4.52\" deep x 4.55\" base, 14.89 sq in, 36.6 degree sweep; the center fin is shown with the same template.", "finish": "performance-core", "box_color": "#f2f2f2" },
+			"graphic": "clear-white",
+			"colors": { "base": "#fbfaf5", "wood": "#b5754a", "fin": "#2f3540" },
 			"labels": [
-				{ "logo": "channel-islands", "side": "deck", "at_in": 20, "z_in": 0, "height_in": 3.4, "color": "#111111", "orient": "across" },
-				{ "logo": "ci-water-hog", "side": "deck", "at_in": 60, "z_in": 0, "height_in": 3.2, "color": "#111111", "orient": "across" },
-				{ "text": "Al Merrick", "side": "bottom", "at_in": 42, "z_in": 0, "height_in": 3.2, "font": "script", "color": "#f6f1e4", "orient": "along" }
+				{ "logo": "channel-islands", "side": "deck", "at_in": 21, "z_in": 0, "height_in": 5.4, "color": "#111111", "orient": "across" },
+				{ "logo": "ci-al-merrick-stamp", "side": "deck", "at_in": 25.8, "z_in": 0, "height_in": 3.3, "color": "#111111", "orient": "across" },
+				{ "logo": "ci-water-hog", "side": "deck", "at_in": 62, "z_in": 0, "height_in": 3.4, "color": "#111111", "orient": "across" }
 			],
 			"sizes": [
 				{ "length": "6'10\"", "width_in": 20.5, "thickness_in": 2.5, "volume_l": 40.3, "volume_status": "published", "source": 0 },
@@ -234,9 +248,9 @@
 				"foil": { "nose_frac_12": 0.66, "tail_frac_12": 0.64, "thickest_from_center_in": 1 },
 				"rail": { "apex_frac": 0.38, "deck_exp": 2.6, "bottom_exp": 3.5 },
 				"fin_layout": [
-					{ "from_tail_in": 11.5, "off_center_in": 6.0, "depth_in": 4.6, "base_in": 4.5, "template": "thruster" },
-					{ "from_tail_in": 11.5, "off_center_in": -6.0, "depth_in": 4.6, "base_in": 4.5, "template": "thruster" },
-					{ "from_tail_in": 3.75, "off_center_in": 0, "depth_in": 4.8, "base_in": 4.5, "template": "thruster" }
+					{ "from_tail_in": 11.5, "off_center_in": 6.0, "depth_in": 4.52, "base_in": 4.55, "area_in2": 14.89, "sweep_deg": 36.6, "template": "thruster" },
+					{ "from_tail_in": 11.5, "off_center_in": -6.0, "depth_in": 4.52, "base_in": 4.55, "area_in2": 14.89, "sweep_deg": 36.6, "template": "thruster" },
+					{ "from_tail_in": 3.75, "off_center_in": 0, "depth_in": 4.52, "base_in": 4.55, "area_in2": 14.89, "sweep_deg": 36.6, "template": "thruster" }
 				]
 			}
 		},
@@ -247,11 +261,12 @@
 			"style": "Everyday hybrid shortboard",
 			"construction": "FutureFlex (carbon frame over EPS)",
 			"fins": "thruster",
+			"fin_setup": { "system": "fcs2", "model": "FCS II Performer Neo Glass, Medium", "status": "published", "source": "https://easternlines.com/product/fcs-ii-performer-neo-glass-5-fin/", "note": "Haydenshapes sells the FutureFlex Hypto Krypto with Futures or FCS II boxes (5-fin); FCS II is shown, ridden as a thruster. Performer Medium: 4.55\" deep x 4.37\" base, 14.81 sq in, 33.7 degree sweep.", "finish": "neo-glass", "box_color": "#151515" },
 			"graphic": "futureflex",
 			"colors": { "base": "#f4f4f0", "accent": "#111111", "carbon": "#2b2b2b", "fin": "#111111" },
 			"labels": [
 				{ "logo": "haydenshapes", "side": "deck", "at_in": 20, "z_in": 0, "height_in": 2.6, "color": "#111111", "orient": "across" },
-				{ "text": "FUTUREFLEX", "side": "bottom", "at_in": 38, "z_in": 0, "height_in": 1.2, "font": "mono", "color": "#2b2b2b", "orient": "along" }
+				{ "logo": "haydenshapes-futureflex", "side": "deck", "at_in": 50, "z_in": -5.6, "height_in": 1.6, "color": "#111111", "orient": "across" }
 			],
 			"sizes": [
 				{ "length": "5'10\"", "width_in": 20.25, "thickness_in": 2.625, "volume_l": 33.73, "volume_status": "published", "source": 0 },
@@ -283,9 +298,9 @@
 				"foil": { "nose_frac_12": 0.66, "tail_frac_12": 0.66, "thickest_from_center_in": 1 },
 				"rail": { "apex_frac": 0.38, "deck_exp": 2.6, "bottom_exp": 4.0 },
 				"fin_layout": [
-					{ "from_tail_in": 11, "off_center_in": 6.25, "depth_in": 4.5, "base_in": 4.4, "template": "thruster" },
-					{ "from_tail_in": 11, "off_center_in": -6.25, "depth_in": 4.5, "base_in": 4.4, "template": "thruster" },
-					{ "from_tail_in": 3.5, "off_center_in": 0, "depth_in": 4.6, "base_in": 4.4, "template": "thruster" }
+					{ "from_tail_in": 11, "off_center_in": 6.25, "depth_in": 4.55, "base_in": 4.37, "area_in2": 14.81, "sweep_deg": 33.7, "template": "thruster" },
+					{ "from_tail_in": 11, "off_center_in": -6.25, "depth_in": 4.55, "base_in": 4.37, "area_in2": 14.81, "sweep_deg": 33.7, "template": "thruster" },
+					{ "from_tail_in": 3.5, "off_center_in": 0, "depth_in": 4.55, "base_in": 4.37, "area_in2": 14.81, "sweep_deg": 33.7, "template": "thruster" }
 				]
 			}
 		},
@@ -296,6 +311,7 @@
 			"style": "Stubby small-wave shortboard",
 			"construction": "PU/polyester",
 			"fins": "thruster",
+			"fin_setup": { "system": "futures", "model": "Futures F6 Honeycomb, Medium", "status": "published", "source": "https://www.cleanlinesurf.com/products/futures-fins-f6-legacy-honeycomb-tri-fin-set-green", "note": "Pyzel's own White Tiger listings ship with Futures (or FCS II) boxes. F6 Medium: 4.56\" deep x 4.35\" base, 15.12 sq in; Futures publishes no sweep, so a neutral 34 degrees is assumed.", "finish": "honeycomb", "box_color": "#151515" },
 			"graphic": "tiger-stripes",
 			"colors": { "base": "#fbfaf5", "accent": "#111111", "fin": "#111111" },
 			"labels": [
@@ -335,9 +351,9 @@
 				"foil": { "nose_frac_12": 0.7, "tail_frac_12": 0.6, "thickest_from_center_in": 3 },
 				"rail": { "apex_frac": 0.3, "deck_exp": 3.0, "bottom_exp": 4.0 },
 				"fin_layout": [
-					{ "from_tail_in": 11, "off_center_in": 6.9, "depth_in": 4.5, "base_in": 4.4, "template": "thruster" },
-					{ "from_tail_in": 11, "off_center_in": -6.9, "depth_in": 4.5, "base_in": 4.4, "template": "thruster" },
-					{ "from_tail_in": 3.5, "off_center_in": 0, "depth_in": 4.6, "base_in": 4.4, "template": "thruster" }
+					{ "from_tail_in": 11, "off_center_in": 6.9, "depth_in": 4.56, "base_in": 4.35, "area_in2": 15.12, "template": "thruster" },
+					{ "from_tail_in": 11, "off_center_in": -6.9, "depth_in": 4.56, "base_in": 4.35, "area_in2": 15.12, "template": "thruster" },
+					{ "from_tail_in": 3.5, "off_center_in": 0, "depth_in": 4.56, "base_in": 4.35, "area_in2": 15.12, "template": "thruster" }
 				]
 			}
 		},
@@ -348,12 +364,12 @@
 			"style": "Foam soft-top",
 			"construction": "EPS core, 3 marine-ply stringers, HDPE slick bottom",
 			"fins": "thruster",
-			"graphic": "soft-top",
+			"fin_setup": { "system": "soft", "model": "Wavestorm soft fins (screw-on)", "status": "estimated", "source": "https://shop.agit-global.com/surfboards-longboards/Wavestorm/8ft-Classic-Surfboard/starburst/WS22SF2STA/", "note": "The board comes with three soft, screw-on fins; their size is estimated.", "finish": "soft", "box_color": "#e9eef2" },
+			"graphic": "classic-stripes",
 			"finish": "matte",
-			"colors": { "base": "#8fd0ff", "accent": "#111111", "burst": "#f6f1e4", "bottom": "#f6f1e4", "fin": "#2438ff" },
+			"colors": { "stripes": ["#1b2a7a", "#2438ff", "#4aa3e8", "#3fb44a", "#c6e84a", "#ffffff"], "rail": "#1b2a7a", "pad": "#9aa6bf", "bottom": "#f4f5f2", "fin": "#a6d63a" },
 			"labels": [
-				{ "logo": "wavestorm", "side": "deck", "at_in": 26, "z_in": 0, "height_in": 2.6, "color": "#2438ff", "orient": "along", "patch": "#f6f1e4" },
-				{ "logo": "wavestorm", "side": "bottom", "at_in": 48, "z_in": 0, "height_in": 4.2, "color": "#2438ff", "orient": "along" }
+				{ "logo": "wavestorm", "side": "deck", "at_in": 24, "z_in": 0, "height_in": 2.4, "color": "#1b2a7a", "orient": "along" }
 			],
 			"sizes": [
 				{ "length": "8'0\"", "width_in": 22.5, "thickness_in": 3.25, "volume_l": 81, "volume_status": "published", "source": 0 }

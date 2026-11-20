@@ -30,9 +30,30 @@ export interface BoardSource {
 export interface FinSpec {
 	from_tail_in: number;
 	off_center_in: number;
+	/** Height of the fin below the bottom, and its base length, inches (published where the setup says so). */
 	depth_in: number;
 	base_in: number;
-	template: "longboard" | "single" | "keel" | "thruster" | "soft";
+	template: "longboard" | "single" | "keel" | "stabilizer" | "thruster" | "soft";
+	/** Published fin area, square inches: the outline's fullness is solved to match it. */
+	area_in2?: number;
+	/** Published sweep, degrees (the lean from mid-base to the tip). */
+	sweep_deg?: number;
+}
+
+/** The fin system and fins a board is shown with. */
+export interface FinSetup {
+	/** How the fins attach, which decides the boxes painted on the bottom. */
+	system: "fcs2" | "futures" | "us-box" | "glass-on" | "soft";
+	/** The fins shown, e.g. "FCS II Performer Neo Glass, Medium". */
+	model: string;
+	/** "published": base, depth, area (and sweep, if given) come from the fin maker or a retailer's spec table. */
+	status: "published" | "estimated";
+	source?: string;
+	note?: string;
+	/** Surface of the fins: solid glass, a honeycomb core under clear, molded resin, or soft foam. */
+	finish: "neo-glass" | "honeycomb" | "performance-core" | "resin" | "soft";
+	/** Fin box color on the bottom. */
+	box_color?: string;
 }
 
 /**
@@ -96,6 +117,7 @@ export interface IconicBoard {
 	style: string;
 	construction: string;
 	fins: string;
+	fin_setup: FinSetup;
 	/** Which painter draws its deck and bottom (see the hero's graphics module). */
 	graphic: string;
 	/** Surface finish; soft-tops are matte. Defaults to gloss. */

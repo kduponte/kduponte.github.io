@@ -113,8 +113,12 @@ describe.each(calibrated)("$r.board.name", ({ r, cal }) => {
 	it("mounts fins on the bottom surface", () => {
 		for (const fin of r.board.shape.fin_layout) {
 			const [x, y, z] = bottomPoint(cal, -cal.prepared.halfL + fin.from_tail_in, fin.off_center_in);
-			// A swallow's notch pulls off-center tail points forward a fraction of an inch.
-			expect(Math.abs(x / INCH - (-cal.prepared.halfL + fin.from_tail_in))).toBeLessThan(0.25);
+			// A swallow's notch pulls tail points forward: a fraction of an inch out by the side fins,
+			// up to the notch depth on the stringer (a center fin rides ahead of the notch with it).
+			const shift = x / INCH - (-cal.prepared.halfL + fin.from_tail_in);
+			const swallowCenter = r.board.shape.tail.kind === "swallow" && fin.off_center_in === 0;
+			expect(shift).toBeGreaterThan(-0.25);
+			expect(shift).toBeLessThan(swallowCenter ? (r.board.shape.tail.depth_in ?? 0) : 0.25);
 			expect(z / INCH).toBeCloseTo(fin.off_center_in, 2);
 			// On the bottom: above the flat spot, below the deck (side fins sit near the rail).
 			expect(y).toBeGreaterThanOrEqual(-1e-6);

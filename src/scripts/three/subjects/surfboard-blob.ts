@@ -20,13 +20,15 @@ import {
 	Mesh,
 	MeshBasicMaterial,
 	MeshPhysicalMaterial,
+	RepeatWrapping,
 	BackSide,
 	SRGBColorSpace,
 	Shape,
 	Vector3,
 } from "three";
 import { createPartKit, extrude } from "../../../lib/three/kit";
-import type { FinSpec, LabelSpec, LogoSpec } from "../../../lib/surf-volume/iconic-boards";
+import type { FinSetup, FinSpec, LabelSpec, LogoSpec } from "../../../lib/surf-volume/iconic-boards";
+import { fitFinOutline } from "../../../lib/three/surf-fins";
 import {
 	INCH,
 	VERTEX_COUNT,
@@ -51,6 +53,7 @@ export interface BlobBoardConfig {
 	finish?: "gloss" | "matte";
 	shape: BoardShape;
 	fins: FinSpec[];
+	finSetup: FinSetup;
 	graphic: string;
 	colors: BoardColors;
 	labels?: LabelSpec[];
@@ -125,31 +128,80 @@ function hopSquash(p: number): number {
 	return 1 - LAND_SQUASH * Math.exp(-((d / 0.06) ** 2)) + 0.12 * smooth((d - 0.04) / 0.14) * (1 - smooth((d - 0.3) / 0.2));
 }
 
+/** A fin's outline, fitted to its published base, depth, sweep and area (see surf-fins). */
 function finShape(fin: FinSpec): Shape {
-	const h = fin.depth_in * INCH;
-	const b = fin.base_in * INCH;
+	const pts = fitFinOutline(fin).points;
 	const s = new Shape();
-	s.moveTo(b / 2, 0);
-	if (fin.template === "keel") {
-		s.quadraticCurveTo(b * 0.15, -h * 0.95, -b * 0.4, -h);
-		s.quadraticCurveTo(-b * 0.52, -h * 0.5, -b / 2, 0);
-	} else if (fin.template === "thruster") {
-		// Swept side and center fins.
-		s.quadraticCurveTo(b * 0.05, -h * 0.7, -b * 0.55, -h);
-		s.quadraticCurveTo(-b * 0.38, -h * 0.42, -b / 2, 0);
-	} else if (fin.template === "soft") {
-		// Stubby, rounded soft-top fins.
-		s.quadraticCurveTo(b * 0.45, -h * 0.95, -b * 0.15, -h);
-		s.quadraticCurveTo(-b * 0.55, -h * 0.85, -b / 2, 0);
-	} else if (fin.template === "longboard") {
-		s.quadraticCurveTo(-b * 0.05, -h * 0.6, -b * 0.62, -h);
-		s.quadraticCurveTo(-b * 0.5, -h * 0.45, -b / 2, 0);
-	} else {
-		s.quadraticCurveTo(-b * 0.02, -h * 0.62, -b * 0.42, -h);
-		s.quadraticCurveTo(-b * 0.42, -h * 0.4, -b / 2, 0);
-	}
-	s.lineTo(b / 2, 0);
+	pts.forEach(([x, y], i) => (i ? s.lineTo(x * INCH, y * INCH) : s.moveTo(x * INCH, y * INCH)));
+	s.closePath();
 	return s;
+}
+
+/** Side-fin cant (tip out toward the rail) and toe-in (leading edge toward the stringer), degrees. */
+const FIN_ANGLES: Record<FinSetup["system"], { cant: number; toe: number }> = {
+	fcs2: { cant: 6, toe: 2 },
+	futures: { cant: 6, toe: 2 },
+	"us-box": { cant: 0, toe: 0 },
+	"glass-on": { cant: 0, toe: 0 },
+	soft: { cant: 3, toe: 1.5 },
+};
+
+/**
+ * A foiled fin: thickest at the base and thinning toward the tip, as molded and glass fins are.
+ * Soft fins stay chunky.
+ */
+function finGeometry(fin: FinSpec, setup: FinSetup) {
+	const soft = setup.finish === "soft";
+	const geo = extrude(finShape(fin), (soft ? 0.5 : 0.3) * INCH, (soft ? 0.12 : 0.07) * INCH, false);
+	const pos = geo.getAttribute("position");
+	const h = fin.depth_in * INCH;
+	for (let i = 0; i < pos.count; i++) {
+		const down = Math.min(1, Math.max(0, -pos.getY(i) / h));
+		pos.setZ(i, pos.getZ(i) * (1 - (soft ? 0.35 : 0.68) * down));
+	}
+	pos.needsUpdate = true;
+	geo.computeVertexNormals();
+	return geo;
+}
+
+/** Futures' honeycomb fins show a hex core through a clear skin: a tileable hex texture. */
+function honeycombTexture(color: string): CanvasTexture {
+	// Flat-topped hexes of radius r tile a 3r x (sqrt 3) r cell: corners plus one in the middle.
+	const r = 48;
+	const W = 3 * r;
+	const H = Math.round(Math.sqrt(3) * r);
+	const c = document.createElement("canvas");
+	c.width = W;
+	c.height = H;
+	const ctx = c.getContext("2d")!;
+	ctx.fillStyle = color;
+	ctx.fillRect(0, 0, W, H);
+	ctx.strokeStyle = "rgba(255,255,255,0.24)";
+	ctx.lineWidth = 4;
+	for (const [cx, cy] of [
+		[0, 0],
+		[W, 0],
+		[0, H],
+		[W, H],
+		[W / 2, H / 2],
+	]) {
+		ctx.beginPath();
+		for (let k = 0; k < 6; k++) {
+			const a = (Math.PI / 3) * k;
+			if (k) ctx.lineTo(cx + r * Math.cos(a), cy + r * Math.sin(a));
+			else ctx.moveTo(cx + r * Math.cos(a), cy + r * Math.sin(a));
+		}
+		ctx.closePath();
+		ctx.stroke();
+	}
+	const t = new CanvasTexture(c);
+	t.colorSpace = SRGBColorSpace;
+	t.wrapS = RepeatWrapping;
+	t.wrapT = RepeatWrapping;
+	// Shape UVs are in meters; one tile is 30 mm wide, so cells read at hero size.
+	const tile = 0.03;
+	t.repeat.set(1 / tile, W / H / tile);
+	return t;
 }
 
 const createSurfboardBlob: SubjectFactory = async ({ host, reducedMotion, requestRender }) => {
@@ -255,16 +307,37 @@ const createSurfboardBlob: SubjectFactory = async ({ host, reducedMotion, reques
 		const cal = calibrateBoard(b.shape, b.liters);
 		const lifted = cal.positions.slice();
 		for (let k = 1; k < lifted.length; k += 3) lifted[k] += HOVER;
-		const texture = new CanvasTexture(paintBoardCanvas(cal.prepared, b.graphic, b.colors, b.labels, logos));
+		const texture = new CanvasTexture(paintBoardCanvas(cal.prepared, b.graphic, b.colors, b.labels, logos, { layout: b.fins, setup: b.finSetup }));
 		texture.colorSpace = SRGBColorSpace;
 		texture.flipY = false;
 		texture.anisotropy = 4;
-		const finMat = kit.std(typeof b.colors.fin === "string" ? b.colors.fin : config.ink, 0.35);
+		const finColor = typeof b.colors.fin === "string" ? b.colors.fin : config.ink;
+		const setup = b.finSetup;
+		const finMat =
+			setup.finish === "soft"
+				? kit.std(finColor, 0.85)
+				: kit.material(
+						new MeshPhysicalMaterial({
+							color: setup.finish === "honeycomb" ? "#ffffff" : finColor,
+							map: setup.finish === "honeycomb" ? honeycombTexture(finColor) : null,
+							roughness: setup.finish === "performance-core" ? 0.35 : 0.22,
+							clearcoat: setup.finish === "performance-core" ? 0.3 : 0.8,
+							clearcoatRoughness: 0.1,
+							metalness: 0,
+						}),
+					);
+		const angles = FIN_ANGLES[setup.system];
 		const fins = b.fins.map((fin) => {
 			const [x, y, z] = bottomPoint(cal, -cal.prepared.halfL + fin.from_tail_in, fin.off_center_in);
 			const pivot = new Group();
 			pivot.position.set(x, y + HOVER + 0.15 * INCH, z);
-			kit.add(pivot, extrude(finShape(fin), 0.32 * INCH, 0.1 * INCH, false), finMat, [0, 0, 0], { outline: SHELL_FIN });
+			if (fin.off_center_in !== 0) {
+				const side = Math.sign(fin.off_center_in);
+				pivot.rotation.order = "YXZ";
+				pivot.rotation.x = -side * ((angles.cant * Math.PI) / 180);
+				pivot.rotation.y = side * ((angles.toe * Math.PI) / 180);
+			}
+			kit.add(pivot, finGeometry(fin, setup), finMat, [0, 0, 0], { outline: SHELL_FIN });
 			pivot.scale.setScalar(0);
 			pivot.visible = false;
 			yaw.add(pivot);

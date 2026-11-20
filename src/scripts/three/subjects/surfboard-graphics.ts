@@ -1,7 +1,7 @@
 /**
  * Canvas-painted deck and bottom graphics for the Volume Gap boards. Stylized evocations of each
  * board's look (pink resin and pinlines, the '76 Sting's sprayed rails, a retro fish laminate, a
- * Lightning Bolt inlay, a rail spray, a carbon frame, tiger stripes, a soft-top starburst), never a
+ * Lightning Bolt inlay, a clear white blank, a carbon frame, tiger stripes, the classic Wavestorm stripes), never a
  * copy of a real board's artwork. Labels are the makers' own logo files (tinted to suit each board),
  * plus a few typeset names and shaper signatures.
  * Painted in the board's own texture space (see surfboard-morph's uv): canvas x runs nose to
@@ -9,7 +9,7 @@
  *
  * New boards pick a painter by name in iconic_boards.json ("graphic") and pass colors and labels.
  */
-import type { LabelSpec, LogoSpec } from "../../../lib/surf-volume/iconic-boards";
+import type { FinSetup, FinSpec, LabelSpec, LogoSpec } from "../../../lib/surf-volume/iconic-boards";
 import { bottomV, deckV, halfWidthIn, type PreparedBoard } from "../../../lib/three/surfboard-morph";
 
 export const TEX_W = 2048;
@@ -219,8 +219,8 @@ function grow(pts: [number, number][], d: number): [number, number][] {
 /**
  * Gerry Lopez's Lightning Bolt look: a solid resin-tint board with one big contrasting bolt inlaid
  * down the stringer in the front half, edged with a thin pinline over a drop shadow. Placement and size follow
- * photos of Lopez-shaped Bolt single fins: the bolt runs from about 14% to 52% of the length and
- * spans close to half the board's width.
+ * photos of Lopez-shaped Bolt single fins: a long, slim bolt from about 14% to 52% of the length,
+ * spanning under a third of the board's width.
  */
 const boltInlay: Painter = (pen, c) => {
 	const base = pick(c, "base", "#d62828");
@@ -247,28 +247,13 @@ const boltInlay: Painter = (pen, c) => {
 	const from = pen.L * 0.14;
 	const to = pen.L * 0.52;
 	const mid = (from + to) / 2;
-	const span = 0.48 * 2 * pen.halfWidth(mid);
+	const span = 0.3 * 2 * pen.halfWidth(mid);
 	const pts = unit.map(([u, w]): [number, number] => [from + u * (to - from), w * span]);
 	// Drop shadow: the same bolt knocked back toward the tail and one rail, then the pinline and bolt.
-	const shadow = pts.map(([x, z]): [number, number] => [x + 1.4, z + 1.2]);
-	pen.poly("deck", grow(shadow, 0.35), pick(c, "shadow", ink));
-	pen.poly("deck", grow(pts, 0.35), ink);
+	const shadow = pts.map(([x, z]): [number, number] => [x + 0.55, z + 0.45]);
+	pen.poly("deck", grow(shadow, 0.25), pick(c, "shadow", ink));
+	pen.poly("deck", grow(pts, 0.25), ink);
 	pen.poly("deck", pts, bolt);
-};
-
-/** Classic Channel Islands look: white board, airbrushed rail spray, black pinline, sprayed bottom. */
-const railSpray: Painter = (pen, c) => {
-	const base = pick(c, "base", "#fbfaf5");
-	const spray = pick(c, "spray", "#2438ff");
-	const ink = pick(c, "accent", "#111111");
-	pen.ctx.fillStyle = base;
-	pen.ctx.fillRect(0, 0, TEX_W, TEX_H / 2);
-	pen.ctx.fillStyle = spray;
-	pen.ctx.fillRect(0, TEX_H / 2, TEX_W, TEX_H / 2);
-	pen.railFade("deck", [spray, fadeTo(spray, 0.55), fadeTo(spray, 0)], 0.62);
-	for (const sign of [1, -1]) pen.railBand("deck", sign * 0.6, sign * 0.615, ink, 3, pen.L - 2);
-	pen.stringer("deck", 0.18, adjust(base, 0.25));
-	pen.stringer("bottom", 0.18, base);
 };
 
 /** Haydenshapes FutureFlex: stringerless white board inside a dark carbon perimeter frame. */
@@ -339,30 +324,24 @@ const tigerStripes: Painter = (pen, c) => {
 	}
 };
 
-/** Wavestorm-style soft-top: textured foam deck with a starburst, white slick bottom. */
-const softTop: Painter = (pen, c) => {
-	const base = pick(c, "base", "#8fd0ff");
-	const burst = pick(c, "burst", "#f6f1e4");
-	const bottom = pick(c, "bottom", "#f6f1e4");
-	pen.ctx.fillStyle = base;
-	pen.ctx.fillRect(0, 0, TEX_W, TEX_H / 2);
+/**
+ * The classic Costco Wavestorm 8': lengthwise stripes from navy rails through blues and greens to a
+ * white center, a waffle-textured foam deck, a traction pad on the tail, and a white slick bottom.
+ */
+const classicStripes: Painter = (pen, c) => {
+	const stripes = Array.isArray(c.stripes) ? c.stripes : ["#1b2a7a", "#2438ff", "#4aa3e8", "#3fb44a", "#c6e84a", "#ffffff"];
+	// Stripe edges across the deck (rail = 1, stringer = 0), read off AGIT's product shot.
+	const edges = [1, 0.86, 0.7, 0.54, 0.4, 0.26, 0];
+	const bottom = pick(c, "bottom", "#f4f5f2");
+	const rail = pick(c, "rail", stripes[0]);
+	const pad = pick(c, "pad", "#9aa6bf");
 	pen.ctx.fillStyle = bottom;
-	pen.ctx.fillRect(0, TEX_H / 2, TEX_W, TEX_H / 2);
-	// Starburst rays out from mid-deck to past the rails (clamped to the outline).
-	const cx = pen.L * 0.45;
-	for (let a = 0; a < 20; a++) {
-		const a0 = (a / 20) * Math.PI * 2;
-		const a1 = a0 + Math.PI / 40;
-		pen.poly("deck", [
-			[cx + 3 * Math.cos(a0), 3 * Math.sin(a0)],
-			[cx + 60 * Math.cos(a0), 60 * Math.sin(a0)],
-			[cx + 60 * Math.cos(a1), 60 * Math.sin(a1)],
-			[cx + 3 * Math.cos(a1), 3 * Math.sin(a1)],
-		], burst);
-	}
-	pen.circle("deck", cx, 0, 3.2, burst);
-	// Waffle texture of the foam deck.
-	pen.ctx.strokeStyle = "rgba(17, 17, 17, 0.12)";
+	pen.ctx.fillRect(0, 0, TEX_W, TEX_H);
+	stripes.forEach((color, i) => {
+		for (const sign of [1, -1]) pen.railBand("deck", sign * edges[i], sign * edges[i + 1], color);
+	});
+	// The foam's waffle texture.
+	pen.ctx.strokeStyle = "rgba(17, 17, 17, 0.1)";
 	pen.ctx.lineWidth = 1.5;
 	for (let x = -TEX_H; x < TEX_W; x += 14) {
 		for (const dir of [1, -1]) {
@@ -372,7 +351,49 @@ const softTop: Painter = (pen, c) => {
 			pen.ctx.stroke();
 		}
 	}
-	for (const sign of [1, -1]) pen.railBand("bottom", sign * 0.86, sign * 1, base);
+	// Traction pad on the tail, following the outline, with diamond grooves.
+	const from = pen.L - 20;
+	const to = pen.L - 3;
+	const outline: [number, number][] = [];
+	for (let k = 0; k <= 24; k++) outline.push([from + ((to - from) * k) / 24, 0.74 * pen.halfWidth(from + ((to - from) * k) / 24)]);
+	for (let k = 24; k >= 0; k--) outline.push([outline[k][0], -outline[k][1]]);
+	pen.poly("deck", outline, pad);
+	const { ctx } = pen;
+	ctx.save();
+	ctx.beginPath();
+	outline.forEach(([at, z], k) => {
+		const [x, y] = pen.pt("deck", at, z);
+		if (k) ctx.lineTo(x, y);
+		else ctx.moveTo(x, y);
+	});
+	ctx.closePath();
+	ctx.clip();
+	ctx.strokeStyle = adjust(pad, 0.3);
+	ctx.lineWidth = 2;
+	for (let x = pen.x(from) - TEX_H; x < pen.x(to) + TEX_H; x += 10) {
+		for (const dir of [1, -1]) {
+			ctx.beginPath();
+			ctx.moveTo(x, 0);
+			ctx.lineTo(x + dir * (TEX_H / 2), TEX_H / 2);
+			ctx.stroke();
+		}
+	}
+	ctx.restore();
+	// The deck color wraps the rails onto the slick bottom.
+	for (const sign of [1, -1]) pen.railBand("bottom", sign * 0.9, sign * 1, rail);
+};
+
+/** A clear-glassed white board: just the blank, a thin wood stringer and the faintest rail shade. */
+const clearWhite: Painter = (pen, c) => {
+	const base = pick(c, "base", "#fbfaf5");
+	const wood = pick(c, "wood", "#b5754a");
+	pen.ctx.fillStyle = base;
+	pen.ctx.fillRect(0, 0, TEX_W, TEX_H);
+	for (const side of ["deck", "bottom"] as const) {
+		pen.railBand(side, 0.92, 1, adjust(base, 0.05));
+		pen.railBand(side, -0.92, -1, adjust(base, 0.05));
+		pen.stringer(side, 0.22, wood);
+	}
 };
 
 /** Fallback for boards added without a painter: base color and a stringer. */
@@ -388,10 +409,10 @@ const PAINTERS: Record<string, Painter> = {
 	"sting-spray": stingSpray,
 	"fish-laminate": fishLaminate,
 	"bolt-inlay": boltInlay,
-	"rail-spray": railSpray,
 	futureflex,
 	"tiger-stripes": tigerStripes,
-	"soft-top": softTop,
+	"classic-stripes": classicStripes,
+	"clear-white": clearWhite,
 };
 
 type LabelFont = NonNullable<LabelSpec["font"]>;
@@ -638,8 +659,73 @@ function drawLabel(pen: Pen, l: LabelSpec, logos: LogoAssets) {
 	});
 }
 
-/** Paint a board's deck and bottom, then its labels, into a new canvas. */
-export function paintBoardCanvas(prepared: PreparedBoard, graphic: string, colors: BoardColors, labels: LabelSpec[] = [], logos: LogoAssets = new Map()): HTMLCanvasElement {
+/** A rounded slot in plan inches: `length` along the board, `width` across, centered on a point. */
+function stadium(cx: number, cz: number, length: number, width: number): [number, number][] {
+	const r = width / 2;
+	const half = Math.max(0, length / 2 - r);
+	const pts: [number, number][] = [];
+	for (let k = 0; k <= 12; k++) {
+		const a = -Math.PI / 2 + (Math.PI * k) / 12;
+		pts.push([cx - half - r * Math.cos(a), cz + r * Math.sin(a)]);
+	}
+	for (let k = 0; k <= 12; k++) {
+		const a = Math.PI / 2 + (Math.PI * k) / 12;
+		pts.push([cx + half - r * Math.cos(a), cz + r * Math.sin(a)]);
+	}
+	return pts;
+}
+
+/**
+ * The fin boxes (or glass-on fillets, or soft-fin plates) on the bottom, sized for each system:
+ * a long single Futures box, a shorter FCS II tab box, a long US single box with its plate screw.
+ */
+function drawFinBoxes(pen: Pen, layout: FinSpec[], setup: FinSetup, finColor: string) {
+	const box = setup.box_color ?? "#151515";
+	const dark = parseInt(box.slice(1, 3), 16) < 128;
+	const slot = dark ? "#000000" : adjust(box, 0.35);
+	const screw = "#9aa0a6";
+	for (const fin of layout) {
+		const at = pen.L - fin.from_tail_in;
+		const z = fin.off_center_in;
+		const b = fin.base_in;
+		switch (setup.system) {
+			case "futures":
+				pen.poly("bottom", stadium(at, z, b + 0.5, 0.7), box);
+				pen.poly("bottom", stadium(at, z, b + 0.15, 0.3), slot);
+				break;
+			case "fcs2":
+				pen.poly("bottom", stadium(at, z, b * 0.95, 0.62), box);
+				pen.poly("bottom", stadium(at, z, b * 0.8, 0.26), slot);
+				break;
+			case "us-box": {
+				const len = Math.min(10, b * 1.35);
+				pen.poly("bottom", stadium(at, z, len, 0.85), box);
+				pen.poly("bottom", stadium(at, z, len - 0.3, 0.32), "#000000");
+				pen.circle("bottom", at - b / 2 + 0.2, z, 0.3, screw);
+				break;
+			}
+			case "glass-on":
+				// The resin fillet that blends a glassed-on fin into the bottom.
+				pen.poly("bottom", stadium(at, z, b + 1.4, 1.2), fadeTo(adjust(finColor, 0.15), 0.85));
+				break;
+			case "soft":
+				pen.poly("bottom", stadium(at, z, b * 0.75, 0.95), box);
+				pen.circle("bottom", at - b * 0.2, z, 0.18, screw);
+				pen.circle("bottom", at + b * 0.2, z, 0.18, screw);
+				break;
+		}
+	}
+}
+
+/** Paint a board's deck and bottom, its fin boxes, then its labels, into a new canvas. */
+export function paintBoardCanvas(
+	prepared: PreparedBoard,
+	graphic: string,
+	colors: BoardColors,
+	labels: LabelSpec[] = [],
+	logos: LogoAssets = new Map(),
+	fins?: { layout: FinSpec[]; setup: FinSetup },
+): HTMLCanvasElement {
 	const canvas = document.createElement("canvas");
 	canvas.width = TEX_W;
 	canvas.height = TEX_H;
@@ -647,6 +733,7 @@ export function paintBoardCanvas(prepared: PreparedBoard, graphic: string, color
 	if (!ctx) return canvas;
 	const pen = new Pen(ctx, prepared);
 	(PAINTERS[graphic] ?? plain)(pen, colors);
+	if (fins) drawFinBoxes(pen, fins.layout, fins.setup, pick(colors, "fin", "#111111"));
 	for (const l of labels) drawLabel(pen, l, logos);
 	return canvas;
 }

@@ -39,5 +39,6 @@ data/surf-forecast/cache/open-meteo/
 data/surf-forecast/cache/erddap/
 data/surf-forecast/cache/ndbc-stdmet/
 data/surf-forecast/cache/dlnr/
+data/surf-forecast/cache/ndbc-station-pages/
 data/surf-forecast/cache/open-meteo-breaks/
 data/surf-forecast/processed/pairs.csv

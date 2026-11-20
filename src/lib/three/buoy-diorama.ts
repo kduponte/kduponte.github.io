@@ -258,7 +258,7 @@ export function buildBuoyDiorama(stations: DioramaStation[], startIndex = 0): Bu
 	};
 
 	// One frame for every station, so the sea block is drawn the same size whichever buoy is shown.
-	// It has to fit the tallest thing any station draws, which is Monterey's 5 m discus mast, not
+	// It has to fit the tallest thing any station draws, which is Monterey's anemometer mast (4.1 m), not
 	// any wave. The extremes are the buoy's top on the spin axis, the water's far corner rising
 	// behind it as the block turns, and the plinth's near corner dropping in front. A box tall
 	// enough for the mast (see frameAspect) keeps the block as large as the box's width allows.

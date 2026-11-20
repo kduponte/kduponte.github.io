@@ -18,8 +18,9 @@ import { BUOYS, regionOfStation, type Region } from "./spots";
 export type Instrument = "waverider" | "discus";
 
 /**
- * Every station in this set is a CDIP Datawell Waverider, a 0.9 m sphere, except Monterey: NDBC
- * 46042 is a 3 m discus hull with a mast, which is also why it is the only one reporting wind.
+ * Every station in this set is a Datawell Waverider, a 0.9 m sphere, except Monterey: NDBC 46042
+ * is a 3 m foam hull with a tower, which is also why it is the only one reporting wind (each
+ * station's NDBC page, public/data/surf-forecast/buoy-stations.json, names its hull).
  */
 export const DISCUS_STATIONS = new Set(["46042"]);
 

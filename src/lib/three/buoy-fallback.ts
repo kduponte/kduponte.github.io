@@ -3,7 +3,15 @@
 // Crest spacing is the true wavelength on the 400 m patch, heights carry the same exaggeration,
 // the buoy is drawn at the same instrument scale, and the phase matches the 3D still frame (a
 // crest under the buoy at t = 0). One group per station; the readout script shows the active one.
-import { DISCUS_ANEMOMETER_HEIGHT_M, DISCUS_DIAMETER_M, WAVERIDER_DIAMETER_M } from "./buoy-model";
+import {
+	DISCUS_ANEMOMETER_HEIGHT_M,
+	DISCUS_DECK_M,
+	DISCUS_DIAMETER_M,
+	DISCUS_TOWER_APEX_M,
+	SEAL_CAGE_HEIGHT_M,
+	SEAL_CAGE_INSET_M,
+	WAVERIDER_DIAMETER_M,
+} from "./buoy-model";
 import { INSTRUMENT_UNITS_PER_M, type DioramaStation } from "./buoy-diorama";
 import { temperatureDomain, waterColor } from "./water-color";
 import {
@@ -52,14 +60,21 @@ function buoySvg(s: DioramaStation, y: number): string {
 	const yellow = "#ffd400";
 	if (s.instrument === "discus") {
 		const r = (DISCUS_DIAMETER_M / 2) * m;
-		const deck = y - 0.45 * m;
-		const apex = y - 4.2 * m;
+		const deck = y - DISCUS_DECK_M * m;
+		const apex = y - DISCUS_TOWER_APEX_M * m;
+		// Seal cage, side on: the bars at their projected positions, a mid rail and a top rail.
+		const cageR = (DISCUS_DIAMETER_M / 2 - SEAL_CAGE_INSET_M) * m;
+		const cageTop = deck - SEAL_CAGE_HEIGHT_M * m;
+		const cageXs = Array.from({ length: 12 }, (_, i) => CX + Math.cos(((i + 0.5) / 12) * Math.PI) * cageR);
+		const cage = `<path d="${cageXs.map((x) => `M${f1(x)} ${f1(deck)}V${f1(cageTop)}`).join("")}M${f1(CX - cageR)} ${f1(cageTop)}H${f1(CX + cageR)}M${f1(CX - cageR)} ${f1((deck + cageTop) / 2)}H${f1(CX + cageR)}" fill="none" stroke="#d6dadd" stroke-width="2.5"/>
+<path d="M${f1(CX - cageR)} ${f1(deck)}V${f1(cageTop)}H${f1(CX + cageR)}V${f1(deck)}" fill="none" stroke-width="1.5"/>`;
 		const arm = y - (DISCUS_ANEMOMETER_HEIGHT_M - 0.22) * m;
 		const vane = y - DISCUS_ANEMOMETER_HEIGHT_M * m;
 		return `<g stroke="${INK}" stroke-linejoin="round" stroke-linecap="round">
 <path d="M${f1(CX - 0.78 * m)} ${f1(deck)}L${f1(CX - 0.12 * m)} ${f1(apex)}M${f1(CX + 0.78 * m)} ${f1(deck)}L${f1(CX + 0.12 * m)} ${f1(apex)}M${f1(CX)} ${f1(deck)}L${f1(CX)} ${f1(apex)}" stroke="#d6dadd" stroke-width="4"/>
 <path d="M${f1(CX - 0.78 * m)} ${f1(deck)}L${f1(CX - 0.12 * m)} ${f1(apex)}L${f1(CX + 0.12 * m)} ${f1(apex)}L${f1(CX + 0.78 * m)} ${f1(deck)}" fill="none" stroke-width="2"/>
-<rect x="${f1(CX - 0.4 * m)}" y="${f1(y - 2.4 * m)}" width="${f1(0.8 * m)}" height="${f1(0.95 * m)}" fill="#1f2a44" stroke-width="2"/>
+${cage}
+<rect x="${f1(CX - 0.4 * m)}" y="${f1(y - 2.08 * m)}" width="${f1(0.8 * m)}" height="${f1(0.95 * m)}" fill="#1f2a44" stroke-width="2"/>
 <path d="M${f1(CX)} ${f1(apex)}V${f1(arm)}M${f1(CX - 0.7 * m)} ${f1(arm)}H${f1(CX + 0.7 * m)}M${f1(CX - 0.7 * m)} ${f1(arm)}V${f1(vane)}M${f1(CX + 0.7 * m)} ${f1(arm)}V${f1(vane)}" fill="none" stroke-width="3"/>
 <rect x="${f1(CX - 0.7 * m - 0.21 * m)}" y="${f1(vane - 0.035 * m)}" width="${f1(0.42 * m)}" height="${f1(0.07 * m)}" fill="${INK}"/>
 <rect x="${f1(CX + 0.7 * m - 0.21 * m)}" y="${f1(vane - 0.035 * m)}" width="${f1(0.42 * m)}" height="${f1(0.07 * m)}" fill="${INK}"/>

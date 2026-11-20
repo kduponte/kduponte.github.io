@@ -1,8 +1,12 @@
 import { describe, expect, it } from "vitest";
 import { Box3, Vector3, type Mesh } from "three";
+import stationPages from "../../public/data/surf-forecast/buoy-stations.json";
 import {
+	DISCUS_AIR_TEMP_HEIGHT_M,
 	DISCUS_ANEMOMETER_HEIGHT_M,
+	DISCUS_DECK_M,
 	DISCUS_DIAMETER_M,
+	SEAL_CAGE_HEIGHT_M,
 	WAVERIDER_DIAMETER_M,
 	buildBuoy,
 	buildDiscus,
@@ -106,19 +110,33 @@ describe("buildDiscus", () => {
 		expect(hull.y).toBeLessThan(1.2);
 	});
 
-	it("carries its anemometers at NDBC's nominal 5 m", () => {
+	const page = stationPages.stations.find((s) => s.station === "46042")!;
+
+	it("carries its anemometers and air temperature sensor at the heights its station page gives", () => {
+		expect(DISCUS_ANEMOMETER_HEIGHT_M).toBe(page.anemometer_height_m);
+		expect(DISCUS_AIR_TEMP_HEIGHT_M).toBe(page.air_temp_height_m);
 		const vanes = partsOfKind(d, "anemometer");
 		expect(vanes.length).toBeGreaterThan(0);
-		const c = bounds(vanes).getCenter(new Vector3());
-		expect(c.y).toBeCloseTo(DISCUS_ANEMOMETER_HEIGHT_M, 1);
+		expect(bounds(vanes).getCenter(new Vector3()).y).toBeCloseTo(DISCUS_ANEMOMETER_HEIGHT_M, 1);
+		expect(bounds(partsOfKind(d, "air-temp")).getCenter(new Vector3()).y).toBeCloseTo(DISCUS_AIR_TEMP_HEIGHT_M, 1);
 	});
 
 	it("stands a lattice tower between the deck and the anemometers", () => {
 		const tower = bounds(partsOfKind(d, "tower"));
 		expect(partsOfKind(d, "tower").length).toBeGreaterThan(12);
 		expect(tower.min.y).toBeLessThan(0.6);
-		expect(tower.max.y).toBeGreaterThan(4);
+		expect(tower.max.y).toBeGreaterThan(3.3);
+		expect(tower.max.y).toBeLessThan(DISCUS_ANEMOMETER_HEIGHT_M);
 		expect(size(tower).x).toBeLessThan(DISCUS_DIAMETER_M);
+	});
+
+	it("has the seal cage its station page lists, inside the deck edge", () => {
+		expect(page.hull).toMatch(/seal cage/);
+		const cage = bounds(partsOfKind(d, "seal-cage"));
+		expect(partsOfKind(d, "seal-cage").length).toBeGreaterThan(20);
+		expect(size(cage).x).toBeLessThan(DISCUS_DIAMETER_M);
+		expect(size(cage).x).toBeGreaterThan(DISCUS_DIAMETER_M - 0.4);
+		expect(cage.max.y).toBeCloseTo(DISCUS_DECK_M + SEAL_CAGE_HEIGHT_M, 1);
 	});
 
 	it("letters its station number and NOAA on the hull", () => {

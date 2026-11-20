@@ -5,6 +5,7 @@ import { INSTRUMENT_ENLARGEMENT, INSTRUMENT_UNITS_PER_M, MAX_TILT_RAD, frameAspe
 import { BLOCK_DEPTH, UNITS_PER_M, surfaceHeight, surfaceSlope, swellField } from "../../src/lib/three/ocean";
 import { hexToOklab, temperatureDomain, waterColor } from "../../src/lib/three/water-color";
 import type { Instrument } from "../../src/lib/surf-forecast/buoy-snapshot";
+import { buildDiscus } from "../../src/lib/three/buoy-model";
 
 const stations: DioramaStation[] = data.snapshots.map((s) => ({
 	station: s.station,
@@ -94,7 +95,9 @@ describe("buildBuoyDiorama", () => {
 		const cosE = Math.cos(Math.asin(viewDir.clone().normalize().y));
 		const half = halfHeight / Math.cos((14 * Math.PI) / 180);
 		// The discus mast top sits on the spin axis, at the target's depth, so a flat projection is exact.
-		const mastTop = 0.25 + 5.5 * INSTRUMENT_UNITS_PER_M;
+		const discus = buildDiscus("46042");
+		const mastTop = 0.25 + discus.height_m * INSTRUMENT_UNITS_PER_M;
+		discus.dispose();
 		expect((mastTop - target.y) * cosE).toBeLessThanOrEqual(half * 1.001);
 		expect(turnRadius).toBeGreaterThan(4);
 		expect(d).not.toHaveProperty("fitScale");

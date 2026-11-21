@@ -12,7 +12,7 @@
  *   something the user did is still settling.
  */
 import type * as ThreeNS from "three";
-import type { Object3D, Vector3 } from "three";
+import type { Camera, Object3D, Vector3 } from "three";
 
 export type Three = typeof ThreeNS;
 
@@ -25,6 +25,8 @@ export interface FrameContext {
 	spin: number;
 	reducedMotion: boolean;
 	hovering: boolean;
+	/** The viewer's camera, for subjects that place things relative to the frame. */
+	camera: Camera;
 }
 
 export interface Subject {
@@ -51,6 +53,10 @@ export interface Subject {
 	onHover?(hovering: boolean): void;
 	/** Mouse x across the canvas, -1 (left) to 1 (right). */
 	onPointerX?(nx: number): void;
+	/** A tap, in normalized device coordinates (-1 to 1, y up) with the camera, for picking. */
+	onTapAt?(x: number, y: number, camera: Camera): void;
+	/** The mouse moving over the canvas (not dragging), in normalized device coordinates, with the camera. */
+	onPointerAt?(x: number, y: number, camera: Camera): void;
 	dispose(): void;
 }
 
@@ -138,6 +144,11 @@ async function mount(host: HTMLElement, loadFactory: () => Promise<SubjectFactor
 	};
 
 	const autoSpeed = subject.autoSpeed ?? 0.45;
+	/** Pointer position in normalized device coordinates, for subjects that pick. */
+	const ndc = (e: PointerEvent): [number, number] => {
+		const r = canvas.getBoundingClientRect();
+		return [((e.clientX - r.left) / r.width) * 2 - 1, -(((e.clientY - r.top) / r.height) * 2 - 1)];
+	};
 	let dragging = false;
 	let hovering = false;
 	let velocity = 0; // radians per second added by dragging
@@ -156,7 +167,7 @@ async function mount(host: HTMLElement, loadFactory: () => Promise<SubjectFactor
 		const spin = (reducedMotion || dragging ? 0 : autoSpeed) + velocity;
 		subject.spin.rotation.y += spin * dt;
 		if (!dragging) velocity *= Math.exp(-FRICTION * dt);
-		subject.update?.({ t: now / 1000, dt, spin, reducedMotion, hovering });
+		subject.update?.({ t: now / 1000, dt, spin, reducedMotion, hovering, camera });
 
 		render();
 		if (visible && (!reducedMotion || !settled())) raf = requestAnimationFrame(frame);
@@ -179,6 +190,7 @@ async function mount(host: HTMLElement, loadFactory: () => Promise<SubjectFactor
 		} else if (e.pointerType === "mouse") {
 			const r = canvas.getBoundingClientRect();
 			subject.onPointerX?.(Math.max(-1, Math.min(1, ((e.clientX - r.left) / r.width) * 2 - 1)));
+			if (subject.onPointerAt) subject.onPointerAt(...ndc(e), camera);
 		}
 		kick();
 	});
@@ -199,6 +211,7 @@ async function mount(host: HTMLElement, loadFactory: () => Promise<SubjectFactor
 		if (wasTap && e.type === "pointerup") {
 			velocity = 0;
 			subject.onTap?.();
+			subject.onTapAt?.(...ndc(e), camera);
 		}
 		kick();
 	};

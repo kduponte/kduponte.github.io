@@ -1,9 +1,11 @@
 /**
  * The Volume Gap's board rack as a viewer subject: every iconic board standing in a wooden rack,
- * at true relative size and ordered by liters. Tap one (or pick it from the list) and it slides
- * out to the front, nose right, where dragging rolls it to show deck, rail and bottom. The page
- * can reshape the pulled board to any length x width x thickness inside the model's real range;
- * the mesh is recalibrated to the estimated liters each time, so what you see holds that volume.
+ * at true relative size and ordered by liters. Tap one (or pick it from the list) and the rack
+ * shrinks off to one side while the board comes forward to fill the rest of the frame, rolling
+ * over on the way to show its bottom before settling deck up, nose right. Dragging rolls it. The
+ * page can reshape the pulled board to any length x width x thickness inside the model's real
+ * range; the mesh is recalibrated to the estimated liters each time, so what you see holds that
+ * volume.
  *
  * Host events in: "surfrack:select" {id | null}, "surfrack:dims" {id, lengthIn, widthIn,
  * thicknessIn, liters, final}. Out: "surfrack:selected" {id | null} when a board is tapped in 3D,
@@ -17,9 +19,11 @@ import {
 	DynamicDrawUsage,
 	Group,
 	Matrix4,
+	MathUtils,
 	Mesh,
 	MeshBasicMaterial,
 	MeshPhysicalMaterial,
+	PerspectiveCamera,
 	PlaneGeometry,
 	Quaternion,
 	Raycaster,
@@ -45,6 +49,8 @@ export interface RackBoardConfig {
 	shapeSpec: ShapeSpec;
 	/** The stock size it starts at. */
 	size: BoardSizeRow;
+	/** The model's longest stock size, inches. */
+	maxLengthIn: number;
 	fins: FinSpec[];
 	finSetup: FinSetup;
 	graphic: string;
@@ -76,19 +82,44 @@ const LEAN = 0.09;
 /** Top of the floor plank the tails stand on, and where the tails sit front to back. */
 const FLOOR = 0.04;
 const TAIL_Z = 0.25;
-/** Where the pulled board turns: well in front of the rack, so it reads at about half the frame. */
-const PRESENT_AT = new Vector3(0, 1.15, 4.2);
 /** Roll of the pulled board: deck toward the camera, tipped up a little. */
 const PRESENT_ROLL = -0.42;
+/** Putting a board back, and the rack shrinking aside or growing back, seconds. */
 const PULL_S = 0.75;
+const STAGE_S = 0.8;
+/**
+ * Taking a board out: it comes forward and rolls belly up, holds, then rolls on to its deck.
+ * The eased roll already slows into and out of belly up, so the board rests there for about
+ * 0.3 s more than HOLD_S.
+ */
+const ARRIVE_S = 1.0;
+const HOLD_S = 0.08;
+const TURN_S = 0.7;
 const HOVER_LIFT = 0.06;
-const VEIL_OPACITY = 0.72;
+const VEIL_OPACITY = 0.4;
 const WOOD = "#c8925a";
+
+/**
+ * Where things sit once a board is out, in normalized device coordinates (-1 to 1, y up): the
+ * rack's box (center and size) and the pulled board's center and the width its longest stock
+ * size spans. Wide frames put the rack on the left; tall ones put it across the top.
+ */
+interface Stage {
+	rack: { x: number; y: number; w: number; h: number };
+	board: { x: number; y: number; w: number };
+}
+const WIDE_STAGE: Stage = { rack: { x: -0.66, y: 0, w: 0.6, h: 1.6 }, board: { x: 0.35, y: 0.02, w: 1.12 } };
+const TALL_STAGE: Stage = { rack: { x: 0, y: 0.62, w: 1.8, h: 0.62 }, board: { x: 0, y: -0.3, w: 1.84 } };
+const X_AXIS = new Vector3(1, 0, 0);
 
 /** Board frame (x nose, y deck, z across) to standing: nose up, deck toward the camera. */
 const STANDING = new Quaternion().setFromRotationMatrix(new Matrix4().makeBasis(new Vector3(0, 1, 0), new Vector3(0, 0, 1), new Vector3(1, 0, 0)));
 
 const ease = (t: number) => (t < 0.5 ? 4 * t * t * t : 1 - (-2 * t + 2) ** 3 / 2);
+const clamp01 = (t: number) => Math.min(1, Math.max(0, t));
+/** The extra roll about the board's own length while it comes out: belly up on arrival, deck up after. */
+const flipAngle = (t: number) =>
+	t < ARRIVE_S + HOLD_S ? Math.PI * ease(clamp01((t - ARRIVE_S * 0.2) / (ARRIVE_S * 0.8))) : Math.PI * (1 + ease(clamp01((t - ARRIVE_S - HOLD_S) / TURN_S)));
 const dimsOf = (s: BoardSizeRow): Dims => ({ lengthIn: parseLengthIn(s.length), widthIn: s.width_in, thicknessIn: s.thickness_in });
 
 interface RackBoard {
@@ -112,12 +143,18 @@ interface RackBoard {
 
 interface Move {
 	b: RackBoard;
+	/** Seconds since it started. */
 	t: number;
 	fromPos: Vector3;
 	fromQuat: Quaternion;
+	/** Local scale right after re-parenting (the rack may be shrunk); eases to 1. */
+	fromScale: number;
 	toPos: Vector3;
 	toQuat: Quaternion;
+	/** Coming out: roll over to show the bottom on the way. */
+	flip: boolean;
 }
+const moveSeconds = (m: Move) => (m.flip ? ARRIVE_S + HOLD_S + TURN_S : PULL_S);
 
 const createSurfboardRack: SubjectFactory = async ({ host, reducedMotion, requestRender }) => {
 	const config = JSON.parse(host.dataset.config ?? "{}") as RackViewerConfig;
@@ -133,9 +170,8 @@ const createSurfboardRack: SubjectFactory = async ({ host, reducedMotion, reques
 	const rack = new Group();
 	root.add(rack);
 	// The pulled board rolls about its length: the viewer turns `roll` about its local y, which
-	// `presentBase` points along world x.
+	// `presentBase` points along world x. Where `presentBase` sits is worked out from the camera.
 	const presentBase = new Group();
-	presentBase.position.copy(PRESENT_AT);
 	presentBase.rotation.z = -Math.PI / 2;
 	const roll = new Group();
 	roll.rotation.y = PRESENT_ROLL;
@@ -227,9 +263,16 @@ const createSurfboardRack: SubjectFactory = async ({ host, reducedMotion, reques
 	kit.add(rack, slab(rowWidth + 0.5, 0.1, 0.08), wood, [0, railY, railZ], { outline: 0.015 });
 	for (const side of [-1, 1]) kit.add(rack, slab(0.1, railY + 0.1, 0.1), wood, [side * (rowWidth / 2 + 0.2), (railY + 0.1) / 2, railZ], { outline: 0.015 });
 
+	// The rack's box, for shrinking it into its corner of the frame once a board is out.
+	const rackW = rowWidth + 0.5;
+	const rackH = Math.max(railY + 0.1, ...boards.map((b) => FLOOR + 2 * b.cal.prepared.halfL * INCH * Math.cos(LEAN)));
+	const rackCenter = new Vector3(0, rackH / 2, TAIL_Z - 0.2);
+	/** Each model's longest stock size sets how far forward it comes, so it fills the frame at full stretch. */
+	const longestM = (b: RackBoard) => Math.max(b.cfg.maxLengthIn, b.dims.lengthIn) * INCH;
+
 	// A veil of page color between the rack and the pulled board, so the board stands apart.
 	const veilMat = kit.material(new MeshBasicMaterial({ color: config.paper, transparent: true, opacity: 0, depthWrite: false }));
-	const veil = new Mesh(kit.geometry(new PlaneGeometry(rowWidth + 3, 5)), veilMat);
+	const veil = new Mesh(kit.geometry(new PlaneGeometry(60, 30)), veilMat);
 	veil.position.set(0, 1.3, 0.9);
 	veil.visible = false;
 	root.add(veil);
@@ -238,17 +281,74 @@ const createSurfboardRack: SubjectFactory = async ({ host, reducedMotion, reques
 	let hovered: RackBoard | null = null;
 	const moves: Move[] = [];
 	const raycaster = new Raycaster();
+	const target = new Vector3(0, 1.2, 0.5);
 
-	const moveTo = (b: RackBoard, parent: Group, toPos: Vector3, toQuat: Quaternion) => {
+	// Staging: where the shrunk rack and the pulled board go, worked out from the camera so it
+	// holds at any aspect ratio. `stageK` runs 0 (whole rack) to 1 (board out, rack aside).
+	let camera: PerspectiveCamera | null = null;
+	let lastAspect = 0;
+	let stageK = 0;
+	const stagedRackPos = new Vector3();
+	let stagedRackScale = 1;
+	const right = new Vector3();
+	const up = new Vector3();
+	const fwd = new Vector3();
+	/** The world point at normalized device (x, y), `depth` in front of the camera. */
+	const atScreen = (cam: PerspectiveCamera, x: number, y: number, depth: number) => {
+		const tanV = Math.tan(MathUtils.degToRad(cam.fov / 2));
+		return cam.position.clone().addScaledVector(fwd, depth).addScaledVector(right, x * tanV * cam.aspect * depth).addScaledVector(up, y * tanV * depth);
+	};
+	const stageFor = (cam: PerspectiveCamera) => (cam.aspect >= 1.5 ? WIDE_STAGE : TALL_STAGE);
+	const updateStage = (cam: PerspectiveCamera) => {
+		cam.updateMatrixWorld();
+		right.setFromMatrixColumn(cam.matrixWorld, 0);
+		up.setFromMatrixColumn(cam.matrixWorld, 1);
+		fwd.setFromMatrixColumn(cam.matrixWorld, 2).negate();
+		const stage = stageFor(cam);
+		const tanV = Math.tan(MathUtils.degToRad(cam.fov / 2));
+		const depth = target.clone().sub(cam.position).dot(fwd);
+		stagedRackScale = Math.min((stage.rack.w * depth * tanV * cam.aspect) / rackW, (stage.rack.h * depth * tanV) / rackH);
+		stagedRackPos.copy(atScreen(cam, stage.rack.x, stage.rack.y, depth)).addScaledVector(rackCenter, -stagedRackScale);
+	};
+	/** Bring the turning point forward until this model's longest size spans the board's share of the frame. */
+	const placePresent = (b: RackBoard) => {
+		if (!camera) return;
+		const stage = stageFor(camera);
+		const tanH = Math.tan(MathUtils.degToRad(camera.fov / 2)) * camera.aspect;
+		presentBase.position.copy(atScreen(camera, stage.board.x, stage.board.y, longestM(b) / (stage.board.w * tanH)));
+	};
+
+	const moveTo = (b: RackBoard, parent: Group, toPos: Vector3, toQuat: Quaternion, flip = false) => {
 		root.updateMatrixWorld(true);
 		parent.attach(b.group);
 		const i = moves.findIndex((m) => m.b === b);
 		if (i >= 0) moves.splice(i, 1);
-		const m: Move = { b, t: 0, fromPos: b.group.position.clone(), fromQuat: b.group.quaternion.clone(), toPos, toQuat };
+		const m: Move = { b, t: 0, fromPos: b.group.position.clone(), fromQuat: b.group.quaternion.clone(), fromScale: b.group.scale.x, toPos, toQuat, flip };
 		if (reducedMotion) {
 			b.group.position.copy(toPos);
 			b.group.quaternion.copy(toQuat);
+			b.group.scale.setScalar(1);
 		} else moves.push(m);
+	};
+
+	/** Step a move: travel, re-scale, and (coming out) the roll that shows the bottom on the way. */
+	const pivot = new Vector3();
+	const turned = new Quaternion();
+	const stepMove = (m: Move) => {
+		const g = m.b.group;
+		const f = ease(clamp01(m.t / (m.flip ? ARRIVE_S : PULL_S)));
+		g.position.lerpVectors(m.fromPos, m.toPos, f);
+		g.quaternion.slerpQuaternions(m.fromQuat, m.toQuat, f);
+		const scale = m.fromScale + (1 - m.fromScale) * f;
+		g.scale.setScalar(scale);
+		if (!m.flip) return;
+		// Roll about the board's own length, keeping its mid-thickness line where it was.
+		turned.copy(g.quaternion).multiply(new Quaternion().setFromAxisAngle(X_AXIS, flipAngle(m.t)));
+		pivot.set(0, (m.b.dims.thicknessIn * INCH) / 2, 0);
+		const before = pivot.clone().applyQuaternion(g.quaternion);
+		const after = pivot.applyQuaternion(turned);
+		g.position.addScaledVector(before.sub(after), scale);
+		g.quaternion.copy(turned);
 	};
 
 	const reshape = (b: RackBoard, dims: Dims, liters: number, final: boolean) => {
@@ -285,7 +385,8 @@ const createSurfboardRack: SubjectFactory = async ({ host, reducedMotion, reques
 		if (next) {
 			next.lift = 0;
 			roll.rotation.y = PRESENT_ROLL;
-			moveTo(next, roll, presentPos(next), STANDING.clone());
+			placePresent(next);
+			moveTo(next, roll, presentPos(next), STANDING.clone(), true);
 		}
 		if (emit) host.dispatchEvent(new CustomEvent("surfrack:selected", { detail: { id: next?.cfg.id ?? null } }));
 		requestRender();
@@ -318,20 +419,32 @@ const createSurfboardRack: SubjectFactory = async ({ host, reducedMotion, reques
 		host.dispatchEvent(new CustomEvent("surfrack:hover", { detail: { id: b?.cfg.id ?? null } }));
 	};
 
-	const target = new Vector3(0, 1.2, 0.5);
 	return {
 		root,
 		spin: roll,
 		autoSpeed: 0,
 		framing: { target, turnRadius: rowWidth / 2 + 0.3, halfHeight: 1.45, viewDir: new Vector3(0, 0.12, 1) },
-		update({ dt }) {
+		update({ dt, camera: cam }) {
+			if (cam instanceof PerspectiveCamera) {
+				const resized = camera !== cam || camera.aspect !== lastAspect;
+				camera = cam;
+				if (resized) {
+					lastAspect = cam.aspect;
+					updateStage(cam);
+					if (selected) placePresent(selected);
+				}
+			}
+			const goal = selected ? 1 : 0;
+			stageK = reducedMotion ? goal : goal > stageK ? Math.min(goal, stageK + dt / STAGE_S) : Math.max(goal, stageK - dt / STAGE_S);
+			const sf = ease(stageK);
+			rack.position.copy(stagedRackPos).multiplyScalar(sf);
+			rack.scale.setScalar(1 + (stagedRackScale - 1) * sf);
+
 			for (let i = moves.length - 1; i >= 0; i--) {
 				const m = moves[i];
-				m.t = Math.min(1, m.t + dt / PULL_S);
-				const f = ease(m.t);
-				m.b.group.position.lerpVectors(m.fromPos, m.toPos, f);
-				m.b.group.quaternion.slerpQuaternions(m.fromQuat, m.toQuat, f);
-				if (m.t >= 1) moves.splice(i, 1);
+				m.t = Math.min(moveSeconds(m), m.t + dt);
+				stepMove(m);
+				if (m.t >= moveSeconds(m)) moves.splice(i, 1);
 			}
 			const k = reducedMotion ? 1 : 1 - Math.exp(-14 * dt);
 			for (const b of boards) {
@@ -344,6 +457,7 @@ const createSurfboardRack: SubjectFactory = async ({ host, reducedMotion, reques
 		},
 		busy: () =>
 			moves.length > 0 ||
+			stageK !== (selected ? 1 : 0) ||
 			Math.abs(veilMat.opacity - (selected ? VEIL_OPACITY : 0)) > 0.01 ||
 			boards.some((b) => Math.abs(b.lift - (b === hovered && b !== selected ? HOVER_LIFT : 0)) > 0.002),
 		onTapAt(x, y, camera) {

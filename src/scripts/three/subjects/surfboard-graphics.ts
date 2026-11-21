@@ -3,7 +3,7 @@
  * board's look (pink resin and pinlines, the '76 Sting's sprayed rails, a retro fish laminate, a
  * Lightning Bolt inlay, a clear white blank, a carbon frame, tiger stripes, the classic Wavestorm stripes), never a
  * copy of a real board's artwork. Labels are the makers' own logo files (tinted to suit each board),
- * plus a few typeset names and shaper signatures.
+ * placed on deck and bottom where reference photos of the real boards show them.
  * Painted in the board's own texture space (see surfboard-morph's uv): canvas x runs nose to
  * tail, canvas y maps across the deck (top half) and bottom (lower half).
  *
@@ -143,11 +143,33 @@ const pinkResin: Painter = (pen, c) => {
 		pen.railBand("deck", sign * 0.78, sign * 0.8, ink, 2, pen.L - 1);
 		pen.railBand("deck", sign * 0.835, sign * 0.845, ink, 2, pen.L - 1);
 	}
+	// Under the nose, a pinline outlines the nose concave: it runs in from the rails near the tip
+	// and closes to a point on the stringer, as on Surftech's In the Pink (37% back from the nose).
+	const line = pick(c, "concave_line", "#fbfaf5");
+	const tip = pen.L * 0.02;
+	const close = pen.L * 0.37;
+	const reach = (at: number) => {
+		const u = Math.max(0, Math.min(1, (at - tip) / (close - tip)));
+		return 0.86 * (1 - u ** 1.7) * pen.halfWidth(at);
+	};
+	const half = 0.09;
+	for (const sign of [1, -1]) {
+		const outer: [number, number][] = [];
+		const inner: [number, number][] = [];
+		for (let k = 0; k <= 48; k++) {
+			const at = tip + ((close - tip) * k) / 48;
+			const z = reach(at);
+			outer.push([at, sign * (z + half)]);
+			inner.push([at, sign * Math.max(0, z - half)]);
+		}
+		pen.poly("bottom", [...outer, ...inner.reverse()], line);
+	}
 };
 
 /**
  * AIPA '76 Sting "Spray", after the real board: yellow deck, deep-blue sprayed rails that turn
- * light blue behind the stinger step, and a short rainbow burst in the rail band mid-board.
+ * light blue behind the stinger step, a short rainbow burst in the rail band mid-board, and a
+ * bottom sprayed blue from nose to tail.
  */
 const stingSpray: Painter = (pen, c) => {
 	const base = pick(c, "base", "#ffd400");
@@ -160,16 +182,26 @@ const stingSpray: Painter = (pen, c) => {
 	const step = pen.p.xStep !== null ? pen.p.halfL - pen.p.xStep : pen.L * 0.75;
 	const burst0 = pen.L * 0.44;
 	const burst1 = pen.L * 0.53;
+	// The bottom is sprayed blue all over, deep at the nose and pale by the tail (Side-Shore's
+	// bottom shot of the Spray); the rainbow burst shows on its rails too.
+	if (Array.isArray(c.bottom)) {
+		const g = pen.ctx.createLinearGradient(pen.x(0), 0, pen.x(pen.L), 0);
+		c.bottom.forEach((stop, i) => g.addColorStop(i / (c.bottom.length - 1), stop));
+		pen.ctx.fillStyle = g;
+		pen.ctx.fillRect(0, TEX_H / 2, TEX_W, TEX_H / 2);
+	}
 	for (const side of ["deck", "bottom"] as const) {
 		for (const sign of [1, -1]) {
-			pen.railBand(side, sign * 0.84, sign, rail, 0, step);
-			pen.railBand(side, sign * 0.84, sign, railTail, step, pen.L);
+			if (side === "deck" || !Array.isArray(c.bottom)) {
+				pen.railBand(side, sign * 0.84, sign, rail, 0, step);
+				pen.railBand(side, sign * 0.84, sign, railTail, step, pen.L);
+			}
 			bands.forEach((band, i) => {
 				const a = burst0 + ((burst1 - burst0) * i) / bands.length;
 				pen.railBand(side, sign * 0.78, sign, band, a, a + (burst1 - burst0) / bands.length);
 			});
 		}
-		pen.stringer(side, 0.18, adjust(base, -0.6));
+		pen.stringer(side, 0.18, side === "bottom" && Array.isArray(c.bottom) ? "#f3efe4" : adjust(base, -0.6));
 	}
 };
 
@@ -626,7 +658,9 @@ function logoDecal(asset: LogoAsset, color: string | string[]): HTMLCanvasElemen
 		}
 		ctx.putImageData(data, 0, 0);
 	} else if (spec.mask === "knockout") {
-		knockOutBackground(ctx, decal.width, decal.height, spec.ground ?? 0.885, spec.whiten ?? false);
+		// Regions that keep their light fill, mapped from file pixels into the decal.
+		const keep = (spec.keep ?? []).map(([x, y, w, h]): [number, number, number, number] => [(x - cx) * k, (y - cy) * k, w * k, h * k]);
+		knockOutBackground(ctx, decal.width, decal.height, spec.ground ?? 0.885, spec.whiten ?? false, spec.clear === "all" ? keep : null);
 	} else if (spec.mask === "key" && spec.key) {
 		// A logo printed on a known ground color (a board photo): that color drops out.
 		const tint = document.createElement("canvas").getContext("2d")!;
@@ -646,9 +680,17 @@ function logoDecal(asset: LogoAsset, color: string | string[]): HTMLCanvasElemen
 
 /**
  * Clear the near-white ground around a full-color logo (a screenshot on white), flood-filling
- * from the edges so white inside the artwork, behind its own outline, is kept.
+ * from the edges so white inside the artwork, behind its own outline, is kept. With `clearAll`,
+ * the enclosed light areas go too, except inside its keep regions (decal pixels).
  */
-function knockOutBackground(ctx: CanvasRenderingContext2D, w: number, h: number, ground: number, whiten: boolean) {
+function knockOutBackground(
+	ctx: CanvasRenderingContext2D,
+	w: number,
+	h: number,
+	ground: number,
+	whiten: boolean,
+	clearAll: [number, number, number, number][] | null = null,
+) {
 	const data = ctx.getImageData(0, 0, w, h);
 	const px = data.data;
 	const lumOf = (p: number) => (0.299 * px[p * 4] + 0.587 * px[p * 4 + 1] + 0.114 * px[p * 4 + 2]) / 255;
@@ -668,6 +710,20 @@ function knockOutBackground(ctx: CanvasRenderingContext2D, w: number, h: number,
 		if (x < w - 1) stack.push(p + 1);
 		if (p >= w) stack.push(p - w);
 		if (p < w * (h - 1)) stack.push(p + w);
+	}
+	if (clearAll) {
+		const kept = (p: number) => {
+			const x = p % w;
+			const y = (p - x) / w;
+			return clearAll.some(([kx, ky, kw, kh]) => x >= kx && x < kx + kw && y >= ky && y < ky + kh);
+		};
+		// Lines are anti-aliased: fade the light side of each edge rather than cutting it.
+		for (let p = 0; p < w * h; p++) {
+			if (!px[p * 4 + 3] || kept(p)) continue;
+			const lum = lumOf(p);
+			const soft = ground - 0.25;
+			if (lum >= soft) px[p * 4 + 3] = Math.round(px[p * 4 + 3] * Math.max(0, Math.min(1, (ground - lum) / (ground - soft))));
+		}
 	}
 	// Photo crops: flatten what's left of the light ground inside the artwork to clean white.
 	if (whiten) for (let p = 0; p < w * h; p++) if (px[p * 4 + 3] > 0 && lumOf(p) >= ground) px[p * 4] = px[p * 4 + 1] = px[p * 4 + 2] = 255;
@@ -711,6 +767,7 @@ function drawLabel(pen: Pen, l: LabelSpec, logos: LogoAssets) {
 	const sx = TEX_W / pen.L;
 	const sy = (at: number) => TEX_H / 4 / Math.max(pen.halfWidth(at), 0.5);
 	const rot = l.orient === "across" ? -Math.PI / 2 : Math.PI;
+	const at = l.anchor === "tail" ? pen.L - l.at_in : l.at_in;
 	const place = (at: number, z: number, draw: () => void) => {
 		const [cx, cy] = pen.pt(l.side, at, z);
 		ctx.save();
@@ -725,10 +782,10 @@ function drawLabel(pen: Pen, l: LabelSpec, logos: LogoAssets) {
 		if (!l.patch) return;
 		const [along, across] = l.orient === "across" ? [height, length] : [length, height];
 		const rect = (grow: number): [number, number][] => [
-			[l.at_in - along / 2 - grow, l.z_in - across / 2 - grow],
-			[l.at_in + along / 2 + grow, l.z_in - across / 2 - grow],
-			[l.at_in + along / 2 + grow, l.z_in + across / 2 + grow],
-			[l.at_in - along / 2 - grow, l.z_in + across / 2 + grow],
+			[at - along / 2 - grow, l.z_in - across / 2 - grow],
+			[at + along / 2 + grow, l.z_in - across / 2 - grow],
+			[at + along / 2 + grow, l.z_in + across / 2 + grow],
+			[at - along / 2 - grow, l.z_in + across / 2 + grow],
 		];
 		pen.poly(l.side, rect(0.14), "#111111");
 		pen.poly(l.side, rect(0), l.patch);
@@ -741,7 +798,7 @@ function drawLabel(pen: Pen, l: LabelSpec, logos: LogoAssets) {
 		const h = l.height_in;
 		const w = (decal.width / decal.height) * h;
 		patch(w + h * 0.6, h * 1.5);
-		place(l.at_in, l.z_in, () => ctx.drawImage(decal, -w / 2, -h / 2, w, h));
+		place(at, l.z_in, () => ctx.drawImage(decal, -w / 2, -h / 2, w, h));
 		return;
 	}
 	if (!l.text) return;
@@ -761,13 +818,13 @@ function drawLabel(pen: Pen, l: LabelSpec, logos: LogoAssets) {
 			ctx.fillText(ch, 0, cap / 2);
 		});
 	if (l.orient === "across") {
-		glyph(l.text, l.at_in, l.z_in);
+		glyph(l.text, at, l.z_in);
 		return;
 	}
 	// Reading toward the nose: the first glyph sits nearest the tail.
 	let run = 0;
 	[...l.text].forEach((ch, i) => {
-		glyph(ch, l.at_in + total / 2 - run - widths[i] / 2, l.z_in);
+		glyph(ch, at + total / 2 - run - widths[i] / 2, l.z_in);
 		run += widths[i];
 	});
 }

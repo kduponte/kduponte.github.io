@@ -68,7 +68,9 @@ describe("iconic_boards.json", () => {
 				expect(label.at_in, `${board.id} ${label.text}`).toBeGreaterThan(4);
 				expect(label.at_in, `${board.id} ${label.text}`).toBeLessThan(L - 4);
 				expect(Math.abs(label.z_in)).toBeLessThan(size.width_in / 2);
-				expect(label.height_in).toBeLessThan(size.width_in / 3);
+				// Big laminates (the AIPA atom spans half the bottom) stay well inside the outline.
+				expect(label.height_in).toBeLessThan(size.width_in / 2);
+				expect([undefined, "nose", "tail"]).toContain(label.anchor);
 				for (const c of [label.color].flat()) expect(c).toMatch(/^#[0-9a-f]{6}$/i);
 			}
 		}
@@ -80,6 +82,10 @@ describe("iconic_boards.json", () => {
 			expect(logo.source, key).toMatch(/^https:\/\//);
 			if (logo.mask === "glyph") expect(logo.glyph, key).toBeTruthy();
 		}
+	});
+
+	it("dresses decks and bottoms only in makers' logo files, never typeset words", () => {
+		for (const board of data.boards) for (const label of board.labels ?? []) expect(label.logo, `${board.id} ${label.text ?? ""}`).toBeTruthy();
 	});
 
 	it("uses every logo it ships, and never typesets a model name on a deck", () => {

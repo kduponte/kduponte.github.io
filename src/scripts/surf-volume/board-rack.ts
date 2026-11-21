@@ -39,6 +39,7 @@ export async function initBoardRack(root: HTMLElement) {
 	const host = root.querySelector<HTMLElement>("[data-volume-rack-viewer]")!;
 	const panel = root.querySelector<HTMLElement>("[data-rack-panel]")!;
 	const hint = root.querySelector<HTMLElement>("[data-rack-hint]")!;
+	const outHint = root.querySelector<HTMLElement>("[data-rack-out-hint]")!;
 	const q = <T extends HTMLElement = HTMLElement>(sel: string) => root.querySelector<T>(sel)!;
 	const picks = [...root.querySelectorAll<HTMLButtonElement>("[data-rack-pick]")];
 	const sliders = Object.fromEntries((["length", "width", "thickness"] as Key[]).map((k) => [k, q<HTMLInputElement>(`[data-p-slider="${k}"]`)])) as Record<Key, HTMLInputElement>;
@@ -112,10 +113,13 @@ export async function initBoardRack(root: HTMLElement) {
 				? `${est.basis} volume at this stock size`
 				: `≈ estimated: L × W × T × ${est.boxFill.toFixed(3)} box fill (median of ${est.nRefs} ${est.basis === "published" ? "published" : "estimated"} sizes)`;
 		for (const k of Object.keys(sliders) as Key[]) outs[k].textContent = FORMAT[k](dims[FIELD[k]]);
+		// Between stock sizes, offer the closest size the maker actually sells.
 		const near = nearestStockSize(board, data.boards, dims);
 		const nearDims: Dims = { lengthIn: parseLengthIn(near.length), widthIn: near.width_in, thicknessIn: near.thickness_in };
-		q("[data-p-nearest]").textContent = `${dimsLine(nearDims)} · ${near.volume_l.toFixed(1)} L (${near.volume_status})`;
-		q("[data-p-snap]").hidden = est.method === "stock";
+		const onStock = est.method === "stock";
+		q("[data-p-nearest-label]").textContent = onStock ? "This is a stock size they make." : "Closest size they make:";
+		q("[data-p-nearest]").textContent = onStock ? "" : `${dimsLine(nearDims)} · ${near.volume_l.toFixed(1)} L (${near.volume_status})`;
+		q("[data-p-snap]").hidden = onStock;
 
 		const place = placeAgainstRange(est.liters, fit.consensus, fit.rows);
 		q("[data-p-headline]").textContent = FIT_HEADLINES[place.band];
@@ -138,6 +142,7 @@ export async function initBoardRack(root: HTMLElement) {
 		if (!fromViewer) host.dispatchEvent(new CustomEvent("surfrack:select", { detail: { id } }));
 		panel.hidden = !board;
 		hint.hidden = !!board;
+		outHint.hidden = !board;
 		if (!board) return;
 		ranges = specRanges(board);
 		q("[data-p-eyebrow]").textContent = `${board.style} · ${ranges.nSizes === 1 ? "1 size on record" : `${ranges.nSizes} stock sizes`}`;

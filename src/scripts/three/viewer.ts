@@ -25,6 +25,8 @@ export interface FrameContext {
 	spin: number;
 	reducedMotion: boolean;
 	hovering: boolean;
+	/** The viewer's camera, for subjects that place things relative to the frame. */
+	camera: Camera;
 }
 
 export interface Subject {
@@ -165,7 +167,7 @@ async function mount(host: HTMLElement, loadFactory: () => Promise<SubjectFactor
 		const spin = (reducedMotion || dragging ? 0 : autoSpeed) + velocity;
 		subject.spin.rotation.y += spin * dt;
 		if (!dragging) velocity *= Math.exp(-FRICTION * dt);
-		subject.update?.({ t: now / 1000, dt, spin, reducedMotion, hovering });
+		subject.update?.({ t: now / 1000, dt, spin, reducedMotion, hovering, camera });
 
 		render();
 		if (visible && (!reducedMotion || !settled())) raf = requestAnimationFrame(frame);

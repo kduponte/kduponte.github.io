@@ -65,8 +65,10 @@ export interface LabelSpec {
 	text?: string;
 	logo?: string;
 	side: "deck" | "bottom";
-	/** Center of the label, inches back from the nose tip, and across from the stringer. */
+	/** Center of the label, inches back from the nose tip (or the tail, see anchor), and across from the stringer. */
 	at_in: number;
+	/** "tail": at_in counts forward from the tail, so a decal near the fins stays there as the board stretches. */
+	anchor?: "nose" | "tail";
 	z_in: number;
 	/** Cap height for text, overall height for a logo, inches. */
 	height_in: number;
@@ -98,6 +100,13 @@ export interface LogoSpec {
 	ground?: number;
 	/** knockout: flatten light pixels left inside the artwork to white (photo crops). */
 	whiten?: boolean;
+	/**
+	 * knockout: "all" also clears light pixels enclosed by the artwork's lines (a laminate printed as
+	 * outlines, where the board shows through), except inside `keep`.
+	 */
+	clear?: "surround" | "all";
+	/** knockout with clear "all": regions, in file pixels [x, y, width, height], whose light fill stays. */
+	keep?: [number, number, number, number][];
 	/** key: the ground color to drop. */
 	key?: string;
 	/** Part of the file to use, in its pixels: [x, y, width, height] (drops captions and the like). */

@@ -34,6 +34,10 @@ export interface GaugeMetric {
 	/** Signed two-proportion z statistic: positive when arm B converted better. */
 	z: number;
 	p: number;
+	/** Observed relative lift, (rate_b - rate_a) / rate_a; null if arm A converted nobody. */
+	lift: number | null;
+	/** The lift the simulation actually built in: 0 for a null metric, the configured lift otherwise. */
+	true_lift: number;
 	flagged: Record<Correction, boolean>;
 }
 
@@ -96,6 +100,8 @@ export function runGaugeDashboard(seed: number, config = HERO_CONFIG, alpha = HE
 			rate_b: o.rate_b,
 			z: test.z ?? 0,
 			p: o.p_value,
+			lift: o.rate_a > 0 ? o.rate_b / o.rate_a - 1 : null,
+			true_lift: o.is_null ? 0 : config.relative_lift,
 			flagged: { none: naive[i], bonferroni: bonferroni[i], bh: bh[i] },
 		};
 	});
@@ -119,10 +125,20 @@ export function runGaugeDashboard(seed: number, config = HERO_CONFIG, alpha = HE
 	};
 }
 
+/** Mean observed lift of the truly lifted metrics that pass `keep`, or null if none do. */
+export function meanLift(metrics: GaugeMetric[], keep: (m: GaugeMetric) => boolean = () => true): number | null {
+	const lifts = metrics.filter((m) => !m.is_null && keep(m) && m.lift !== null).map((m) => m.lift as number);
+	return lifts.length ? lifts.reduce((a, b) => a + b, 0) / lifts.length : null;
+}
+
 export interface RunTally {
 	runs: number;
 	/** Runs in which at least one truly null metric was flagged, per rule. */
 	anyFalse: Record<Correction, number>;
+	/** The winner's curse: mean observed lift of the truly lifted metrics each rule flagged, pooled over runs. */
+	flaggedLift: Record<Correction, number | null>;
+	/** Mean observed lift of every truly lifted metric, flagged or not (the ratio of two noisy rates runs a little high). */
+	allLift: number | null;
 }
 
 export function tallyRuns(runs: GaugeRun[]): RunTally {
@@ -130,5 +146,8 @@ export function tallyRuns(runs: GaugeRun[]): RunTally {
 	for (const run of runs) {
 		for (const c of CORRECTIONS) if (run.metrics.some((m) => m.is_null && m.flagged[c])) anyFalse[c]++;
 	}
-	return { runs: runs.length, anyFalse };
+	const pooled = runs.flatMap((r) => r.metrics);
+	const flaggedLift = { none: 0, bonferroni: 0, bh: 0 } as Record<Correction, number | null>;
+	for (const c of CORRECTIONS) flaggedLift[c] = meanLift(pooled, (m) => m.flagged[c]);
+	return { runs: runs.length, anyFalse, flaggedLift, allLift: meanLift(pooled) };
 }

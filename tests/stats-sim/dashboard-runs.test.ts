@@ -5,6 +5,7 @@ import {
 	HERO_CONFIG,
 	HERO_SEEDS,
 	inRed,
+	meanLift,
 	runGaugeDashboard,
 	tallyRuns,
 	zForTwoSidedP,
@@ -93,6 +94,34 @@ describe("runGaugeDashboard", () => {
 	});
 
 	it("tallies false discoveries across the whole seed list", () => {
-		expect(tallyRuns(runs)).toEqual({ runs: 20, anyFalse: { none: 11, bonferroni: 1, bh: 3 } });
+		expect(tallyRuns(runs).anyFalse).toEqual({ none: 11, bonferroni: 1, bh: 3 });
+		expect(tallyRuns(runs).runs).toBe(20);
+	});
+
+	it("records each metric's observed lift against the lift the simulation built in", () => {
+		for (const run of runs) {
+			for (const m of run.metrics) {
+				expect(m.lift).toBeCloseTo(m.rate_b / m.rate_a - 1, 12);
+				expect(m.true_lift).toBe(m.is_null ? 0 : 0.6);
+			}
+		}
+		expect(runs[0].metrics[8].lift).toBeCloseTo(-0.389, 3); // seed 1's false discovery reads -39% on a true 0%
+	});
+
+	it("shows the winner's curse: flagged real lifts read high, more so under stricter rules", () => {
+		const { flaggedLift, allLift } = tallyRuns(runs);
+		expect(allLift).toBeCloseTo(0.618, 3);
+		expect(flaggedLift.none).toBeCloseTo(0.772, 3);
+		expect(flaggedLift.bh).toBeCloseTo(0.922, 3);
+		expect(flaggedLift.bonferroni).toBeCloseTo(1.035, 3);
+		expect(flaggedLift.none!).toBeGreaterThan(allLift!);
+		expect(flaggedLift.bonferroni!).toBeGreaterThan(flaggedLift.bh!);
+		expect(flaggedLift.bh!).toBeGreaterThan(flaggedLift.none!);
+	});
+
+	it("averages lifts only over truly lifted metrics, and returns null when none qualify", () => {
+		expect(meanLift(runs[0].metrics, () => false)).toBeNull();
+		const six = runs[0].metrics.filter((m) => !m.is_null).map((m) => m.lift as number);
+		expect(meanLift(runs[0].metrics)).toBeCloseTo(six.reduce((a, b) => a + b, 0) / 6, 12);
 	});
 });

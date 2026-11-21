@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { describeRun, formatP, formatZ } from "../../src/lib/stats-sim/dashboard-readout";
+import { describeRun, formatLift, formatP, formatZ } from "../../src/lib/stats-sim/dashboard-readout";
 import { runGaugeDashboard } from "../../src/lib/stats-sim/dashboard-runs";
 
 const run = runGaugeDashboard(1);
@@ -8,6 +8,11 @@ describe("formatZ / formatP", () => {
 	it("signs z with a real minus", () => {
 		expect(formatZ(-2.416)).toBe("−2.42");
 		expect(formatZ(1.5)).toBe("+1.50");
+	});
+
+	it("rounds lifts to whole signed percents", () => {
+		expect(formatLift(0.7332)).toBe("+73%");
+		expect(formatLift(-0.389)).toBe("−39%");
 	});
 
 	it("keeps tiny p-values honest", () => {
@@ -46,6 +51,21 @@ describe("describeRun", () => {
 		expect(r.falseCount).toBe(2);
 		expect(r.sentence).toContain("Seed 3, Benjamini-Hochberg: 7 of 20 needles in the red");
 		expect(r.sentence).toContain("#2, #10 are truly null, 2 false discoveries.");
+	});
+
+	it("states the winner's curse for the real lifts in the red, under each rule", () => {
+		expect(describeRun(run, "none", 0, 20).curse).toBe(
+			"Winner's curse: the 5 real lifts in the red read +73% on average, against a true +60% (all 6 average +59%).",
+		);
+		expect(describeRun(run, "bonferroni", 0, 20).curse).toBe(
+			"Winner's curse: the 2 real lifts in the red read +96% on average, against a true +60% (all 6 average +59%).",
+		);
+		expect(describeRun(run, "bh", 0, 20).curse).toContain("the 3 real lifts in the red read +86% on average");
+	});
+
+	it("says so when no real lift is in the red", () => {
+		const r = describeRun(runGaugeDashboard(2), "bonferroni", 1, 20);
+		expect(r.curse).toMatch(/^No real lift is in the red, so no winner is overstated \(all 6 average [+−]\d+%\); the truth is \+60%\.$/);
 	});
 
 	it("explains a BH run that flags nothing", () => {

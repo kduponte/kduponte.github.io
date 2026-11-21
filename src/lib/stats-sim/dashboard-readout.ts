@@ -1,6 +1,6 @@
 // Words and numbers for the gauge console's readout, shared by the build-time HTML, the client
 // script that updates it, and the console's aria-label, so all three always say the same thing.
-import { type Correction, type GaugeRun } from "./dashboard-runs";
+import { meanLift, type Correction, type GaugeRun } from "./dashboard-runs";
 
 export const CORRECTION_LABEL: Record<Correction, string> = {
 	none: "No correction",
@@ -11,6 +11,12 @@ export const CORRECTION_LABEL: Record<Correction, string> = {
 /** Signed, with a real minus sign. */
 export function formatZ(z: number): string {
 	return `${z < 0 ? "−" : "+"}${Math.abs(z).toFixed(2)}`;
+}
+
+/** A relative lift as a whole percent, signed with a real minus: 0.733 -> "+73%". */
+export function formatLift(lift: number): string {
+	const pct = Math.round(lift * 100);
+	return `${pct < 0 ? "−" : "+"}${Math.abs(pct)}%`;
 }
 
 export function formatP(p: number): string {
@@ -36,6 +42,8 @@ export interface RunReadout {
 	redline: string;
 	/** Why the redline sits where it does under this rule. */
 	rule: string;
+	/** The winner's curse in this run: how big the real lifts in the red look, against the truth. */
+	curse: string;
 	/** One sentence for screen readers. */
 	sentence: string;
 }
@@ -69,6 +77,19 @@ export function describeRun(run: GaugeRun, mode: Correction, index: number, tota
 				: `Not even the smallest p-value clears its rank line, (1/${m}) × ${alpha}, so nothing is flagged.`;
 	}
 
+	const trueLift = formatLift(run.config.relative_lift);
+	const lifted = run.metrics.filter((x) => !x.is_null);
+	const inRed = lifted.filter((x) => x.flagged[mode]);
+	const allMean = meanLift(run.metrics);
+	const flaggedMean = meanLift(run.metrics, (x) => x.flagged[mode]);
+	const all = allMean === null ? "" : ` (all ${lifted.length} average ${formatLift(allMean)})`;
+	const curse =
+		flaggedMean === null
+			? `No real lift is in the red, so no winner is overstated${all}; the truth is ${trueLift}.`
+			: inRed.length === 1
+				? `Winner's curse: the one real lift in the red reads ${formatLift(flaggedMean)}, against a true ${trueLift}${all}.`
+				: `Winner's curse: the ${inRed.length} real lifts in the red read ${formatLift(flaggedMean)} on average, against a true ${trueLift}${all}.`;
+
 	const names = (list: CrossedMetric[]) => list.map((c) => `#${c.number}`).join(", ");
 	const falseNames = names(crossed.filter((c) => c.is_null));
 	const sentence =
@@ -88,6 +109,7 @@ export function describeRun(run: GaugeRun, mode: Correction, index: number, tota
 		missed,
 		redline,
 		rule,
+		curse,
 		sentence,
 	};
 }

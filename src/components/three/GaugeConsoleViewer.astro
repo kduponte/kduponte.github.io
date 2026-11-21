@@ -4,12 +4,13 @@
  * metric, driven by seeded runs of the page's own simulation at the live experiment's defaults.
  * Needles are z statistics, red zones are the chosen rule's redline, lamps light for flagged
  * metrics (lime: truly lifted; tomato: truly null). Tap (or Next) runs the next seed; the
- * correction switch moves the redline. The readout under the canvas spells out every number.
+ * correction switch moves the redline. The readout under the canvas spells out every number,
+ * including the winner's curse: how much bigger the real lifts in the red look than the truth.
  *
  * With `readout={false}` it renders the canvas box alone (still tappable, draggable, with the
  * static fallback), transparent over whatever sits behind it, e.g. a project tile.
  */
-import { CORRECTION_LABEL, describeRun, formatP, formatZ } from "../../lib/stats-sim/dashboard-readout";
+import { CORRECTION_LABEL, describeRun, formatLift, formatP, formatZ } from "../../lib/stats-sim/dashboard-readout";
 import { CORRECTIONS, HERO_ALPHA, HERO_CONFIG, HERO_SEEDS, runGaugeDashboard, tallyRuns } from "../../lib/stats-sim/dashboard-runs";
 import { FALLBACK_VIEWBOX, gaugeConsoleSvg } from "../../lib/three/gauge-console-fallback";
 import { DEFAULT_CONSOLE_COLORS } from "../../lib/three/gauge-dial";
@@ -35,6 +36,12 @@ const nNull = first.metrics.filter((m) => m.is_null).length;
 const nLift = first.metrics.length - nNull;
 const lastNull = nNull;
 const pct = (x: number) => `${Math.round(x * 100)}%`;
+const curseText = (x: number | null) => (x === null ? "n/a" : formatLift(x));
+const curseCaption =
+	`pooled over the same ${tally.runs} runs, the real lifts in the red read ${curseText(tally.flaggedLift.none)} on average uncorrected, ` +
+	`${curseText(tally.flaggedLift.bonferroni)} under Bonferroni and ${curseText(tally.flaggedLift.bh)} under Benjamini-Hochberg, while all ` +
+	`real lifts average ${curseText(tally.allLift)} against the ${formatLift(HERO_CONFIG.relative_lift)} built in. The stricter the redline, ` +
+	`the luckier a real lift has to be to clear it, so the more it overstates.`;
 const c = DEFAULT_CONSOLE_COLORS;
 
 const ariaLabel = (sentence: string) =>
@@ -101,6 +108,7 @@ const ariaLabel = (sentence: string) =>
 						))
 					}
 				</ul>
+				<p class="mt-2 rounded-lg border-2 border-black bg-white px-2 py-1.5 text-[12px] font-semibold leading-snug" data-g-curse>{r0.curse}</p>
 				<p class="mt-2 text-[12px] font-medium leading-snug" data-g-missed>
 					{r0.missed.length ? `Real lifts left out of the red: ${r0.missed.map((m) => `#${m.number} (z ${formatZ(m.z)})`).join(", ")}.` : "Every real lift is in the red."}
 				</p>
@@ -109,7 +117,7 @@ const ariaLabel = (sentence: string) =>
 					<summary class="font-mono cursor-pointer text-[10px] uppercase">All {first.metrics.length} needles</summary>
 					<table class="font-mono mt-2 w-full text-left text-[10px]">
 						<thead>
-							<tr class="border-b-2 border-black"><th class="py-0.5">#</th><th>Truth</th><th>A</th><th>B</th><th>z</th><th>p</th></tr>
+							<tr class="border-b-2 border-black"><th class="py-0.5">#</th><th>Truth</th><th>A</th><th>B</th><th title="Observed relative lift, B against A">Lift</th><th>z</th><th>p</th></tr>
 						</thead>
 						<tbody data-g-table>
 							{
@@ -119,6 +127,7 @@ const ariaLabel = (sentence: string) =>
 										<td>{m.is_null ? "null" : "lift"}</td>
 										<td>{(m.rate_a * 100).toFixed(1)}%</td>
 										<td>{(m.rate_b * 100).toFixed(1)}%</td>
+										<td>{m.lift === null ? "–" : formatLift(m.lift)}</td>
 										<td>{formatZ(m.z)}</td>
 										<td>{formatP(m.p)}</td>
 									</tr>
@@ -135,7 +144,7 @@ const ariaLabel = (sentence: string) =>
 				at α = {HERO_ALPHA}. Dials run from z −5 to +5, a tick per unit. Red zones: the rule's redline. Lamps: lit in the red, lime if the metric
 				truly moved, tomato if it didn't. Seeds run 1 to {HERO_SEEDS.length} in order, none skipped; across all {tally.runs}, a truly unchanged metric
 				reached the red in {tally.anyFalse.none} runs uncorrected, {tally.anyFalse.bonferroni} under Bonferroni and {tally.anyFalse.bh} under
-				Benjamini-Hochberg. <strong>Not data:</strong> the needle swing, the sway and the blinking.
+				Benjamini-Hochberg. <strong>Winner's curse:</strong> {curseCaption} <strong>Not data:</strong> the needle swing, the sway and the blinking.
 			</p>
 		</figcaption>
 	)}
@@ -144,7 +153,7 @@ const ariaLabel = (sentence: string) =>
 <script>
 	import { mountViewers } from "../../scripts/three/viewer";
 	import type { GaugeSelect, GaugeState } from "../../scripts/three/subjects/gauge-console";
-	import { describeRun, formatP, formatZ } from "../../lib/stats-sim/dashboard-readout";
+	import { describeRun, formatLift, formatP, formatZ } from "../../lib/stats-sim/dashboard-readout";
 	import { HERO_SEEDS, runGaugeDashboard, type Correction } from "../../lib/stats-sim/dashboard-runs";
 	import { DEFAULT_CONSOLE_COLORS } from "../../lib/three/gauge-dial";
 
@@ -159,7 +168,7 @@ const ariaLabel = (sentence: string) =>
 		if (!host) continue;
 		const lead = intro(host);
 		const el = (key: string) => fig.querySelector<HTMLElement>(`[data-g-${key}]`);
-		const [eyebrow, crossed, falseN, falseLabel, redline, rule, list, missed, table] = [
+		const [eyebrow, crossed, falseN, falseLabel, redline, rule, list, curse, missed, table] = [
 			"eyebrow",
 			"crossed",
 			"false",
@@ -167,6 +176,7 @@ const ariaLabel = (sentence: string) =>
 			"redline",
 			"rule",
 			"list",
+			"curse",
 			"missed",
 			"table",
 		].map(el);
@@ -199,6 +209,7 @@ const ariaLabel = (sentence: string) =>
 					return li;
 				}),
 			);
+			curse!.textContent = r.curse;
 			missed!.textContent = r.missed.length
 				? `Real lifts left out of the red: ${r.missed.map((m) => `#${m.number} (z ${formatZ(m.z)})`).join(", ")}.`
 				: "Every real lift is in the red.";
@@ -211,6 +222,7 @@ const ariaLabel = (sentence: string) =>
 						m.is_null ? "null" : "lift",
 						`${(m.rate_a * 100).toFixed(1)}%`,
 						`${(m.rate_b * 100).toFixed(1)}%`,
+						m.lift === null ? "–" : formatLift(m.lift),
 						formatZ(m.z),
 						formatP(m.p),
 					].entries()) {

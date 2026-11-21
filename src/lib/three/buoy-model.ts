@@ -5,8 +5,11 @@
 //   (0.9 m excludes the fender, per Datawell's spec), floating at about its equator, with a black
 //   rubber fender around the waterline, a bolted hatch on top carrying the LED flash and antenna,
 //   and small solar panels on the upper hemisphere.
-// - Monterey, NDBC 46042, is a 3 m aluminum discus hull with a tripod tower. NDBC puts its
-//   anemometers at a nominal 5 m above the waterline on these hulls, which sets the cross-arm.
+// - Monterey, NDBC 46042, is what its station page calls a "3-meter foam buoy w/ seal cage": a
+//   3 m round hull with a tripod tower, its air temperature sensor at 3.7 m and its anemometers at
+//   4.1 m above the waterline (public/data/surf-forecast/buoy-stations.json), which set the
+//   tower. The seal cage keeps sea lions off the deck; NDBC publishes no drawing of it, so it is
+//   drawn as a plain ring of bars around the deck edge at railing height.
 //
 // Both are built at true size, so drawn at one shared scale the discus dwarfs the Waveriders the
 // way it does in the water. Below the waterline each has the eye its mooring hangs from; the
@@ -31,8 +34,16 @@ import { createPartKit, shade, slab, type PartKit } from "./kit";
 
 export const WAVERIDER_DIAMETER_M = 0.9;
 export const DISCUS_DIAMETER_M = 3;
-/** NDBC's nominal anemometer height on a 3 m discus, metres above the waterline. */
-export const DISCUS_ANEMOMETER_HEIGHT_M = 5;
+/** Anemometer height on 46042, metres above the waterline, from its NDBC station page. */
+export const DISCUS_ANEMOMETER_HEIGHT_M = 4.1;
+/** Air temperature sensor height on 46042, from the same page. */
+export const DISCUS_AIR_TEMP_HEIGHT_M = 3.7;
+/** Top of the tripod tower, where the mast to the anemometer arm begins. */
+export const DISCUS_TOWER_APEX_M = 3.45;
+export const DISCUS_DECK_M = 0.45;
+/** The seal cage's bars: how far in from the hull's edge, and how high above the deck (railing height, not published). */
+export const SEAL_CAGE_INSET_M = 0.12;
+export const SEAL_CAGE_HEIGHT_M = 0.9;
 
 /** Outline shells, in metres: hull-sized parts and fittings. */
 export const BUOY_OUTLINE_M = 0.06;
@@ -295,7 +306,7 @@ export function buildDiscus(station = "46042", colors: BuoyColors = DEFAULT_BUOY
 	const m = materials(kit, colors);
 	const group = new Group();
 	const R = DISCUS_DIAMETER_M / 2;
-	const deckY = 0.45;
+	const deckY = DISCUS_DECK_M;
 
 	// Hull: a lathed disc with a chamfered bilge and a crowned deck.
 	const profile = [
@@ -332,9 +343,24 @@ export function buildDiscus(station = "46042", colors: BuoyColors = DEFAULT_BUOY
 		group.add(hatch);
 	}
 
-	// Tripod tower: three aluminum legs from the deck to an apex, with ring braces and diagonals.
+	// Seal cage: bars standing around the deck edge, joined by a mid and a top rail.
+	const cageR = R - SEAL_CAGE_INSET_M;
+	const cageTop = deckY + SEAL_CAGE_HEIGHT_M;
+	const cageBars = 24;
+	for (let i = 0; i < cageBars; i++) {
+		const a = (i / cageBars) * Math.PI * 2 + Math.PI / cageBars;
+		const foot = new Vector3(Math.cos(a) * cageR, deckY - 0.02, Math.sin(a) * cageR);
+		bar(kit, group, foot, new Vector3(foot.x, cageTop, foot.z), 0.02, m.steel).userData.kind = "seal-cage";
+	}
+	for (const y of [deckY + SEAL_CAGE_HEIGHT_M / 2, cageTop]) {
+		const ring = new TorusGeometry(cageR, 0.025, 8, 72);
+		ring.rotateX(Math.PI / 2);
+		kit.add(group, ring, m.steel, [0, y, 0], { outline: BUOY_OUTLINE_SMALL_M }).userData.kind = "seal-cage";
+	}
+
+	// Tripod tower: three legs from the deck to an apex, with ring braces and diagonals.
 	const baseR = 0.78;
-	const apexY = 4.2;
+	const apexY = DISCUS_TOWER_APEX_M;
 	const apexR = 0.12;
 	const legAt = (az: number, y: number) => {
 		const f = (y - deckY) / (apexY - deckY);
@@ -347,7 +373,7 @@ export function buildDiscus(station = "46042", colors: BuoyColors = DEFAULT_BUOY
 		const foot = legAt(az, deckY + 0.03);
 		kit.add(group, slab(0.2, 0.04, 0.2, 0.02, 0.006), m.steel, [foot.x, foot.y, foot.z], { rot: [0, -az, 0], outline: 0 });
 	}
-	const levels = [1.35, 2.45, 3.4, apexY - 0.05];
+	const levels = [0.24, 0.53, 0.79].map((f) => deckY + f * (apexY - deckY)).concat(apexY - 0.05);
 	for (let li = 0; li < levels.length; li++) {
 		for (let i = 0; i < 3; i++) {
 			const a = legAz[i];
@@ -385,16 +411,21 @@ export function buildDiscus(station = "46042", colors: BuoyColors = DEFAULT_BUOY
 		group.add(panel);
 	}
 
-	// Air temperature and humidity sensor in its stacked-plate radiation shield, on one leg.
+	// Air temperature and humidity sensor in its stacked-plate radiation shield, on a bracket off
+	// the mast at the station's stated height.
 	const white = kit.std("#f4f4f0", 0.55);
 	{
-		const p = legAt(legAz[1], 3.75);
-		const out = new Vector3(p.x, 0, p.z).normalize();
-		const c = p.clone().addScaledVector(out, 0.2);
+		const p = new Vector3(0, DISCUS_AIR_TEMP_HEIGHT_M, 0);
+		const out = new Vector3(Math.cos(legAz[1]), 0, Math.sin(legAz[1]));
+		const c = p.clone().addScaledVector(out, 0.3);
 		bar(kit, group, p, c, 0.015, m.steel);
+		const shield = new Group();
+		shield.position.copy(c);
+		shield.userData.kind = "air-temp";
 		for (let k = 0; k < 6; k++) {
-			kit.add(group, new CylinderGeometry(0.08, 0.09, 0.018, 16), white, [c.x, c.y - 0.12 + k * 0.04, c.z], { outline: 0 });
+			kit.add(shield, new CylinderGeometry(0.08, 0.09, 0.018, 16), white, [0, -0.1 + k * 0.04, 0], { outline: 0 });
 		}
+		group.add(shield);
 	}
 
 	// Top: a platform plate, a short mast, a cross-arm with an anemometer at each end, the lantern

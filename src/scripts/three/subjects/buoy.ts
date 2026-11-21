@@ -7,7 +7,7 @@
  * - Hover warms the lantern. A tap steps to the next station.
  * - Where sharks have been recorded near the buoy, a shark's shadow sometimes crosses under the
  *   surface, as often as the record says (lib/three/shark.ts).
- * - The camera is framed once for every station (room for Monterey's 5 m mast included), so the
+ * - The camera is framed once for every station (room for Monterey's 4.1 m anemometer mast included), so the
  *   block never changes size when the station does.
  * - Reduced motion: a still frame at t = 0 (a crest under the buoy), redrawn only when the
  *   station changes or the lantern glow settles.

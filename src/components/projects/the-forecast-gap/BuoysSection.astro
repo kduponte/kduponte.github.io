@@ -1,0 +1,283 @@
+---
+// "The twelve buoys": what each instrument behind the results is, where it sits and what it
+// recorded, with all twelve drawn at true size in one 3D view. Pointing at a buoy's card lights
+// its lantern in the view. Every figure comes from the frozen data: the NDBC station pages
+// (buoy-stations.json), the coverage and per-station error tables, and the break registry.
+import pages from "../../../../public/data/surf-forecast/buoy-stations.json";
+import coverage from "../../../../public/data/surf-forecast/coverage.json";
+import stationRows from "../../../../public/data/surf-forecast/stations.json";
+import metadata from "../../../../public/data/surf-forecast/metadata.json";
+import {
+	PROFILE_LEAD_DAYS,
+	buoyProfiles,
+	countWord,
+	hullLabel,
+	operatorLabel,
+	type ErrorRow,
+	type ProfilePage,
+} from "../../../lib/surf-forecast/buoy-profiles";
+import { REGION_LABEL } from "../../../lib/surf-forecast/spots";
+import { ft } from "../../../lib/surf-forecast/findings";
+import { FLEET_GAP_M, FLEET_SCALE_STEP_M, buildBuoyFleet, type FleetStation } from "../../../lib/three/buoy-fleet";
+import { frameAspect } from "../../../lib/three/buoy-diorama";
+import { fleetFallbackSvg } from "../../../lib/three/buoy-fallback";
+import { WAVERIDER_DIAMETER_M } from "../../../lib/three/buoy-model";
+import { REPRESENTATIVE, SYSTEM_COLOR, SYSTEM_ORDER, SYSTEM_SHORT } from "../../../scripts/surf-forecast/palette";
+
+const profiles = buoyProfiles({
+	pages: pages.stations as ProfilePage[],
+	coverage: coverage.rows,
+	errors: stationRows.rows as ErrorRow[],
+	representative: REPRESENTATIVE,
+	systems: SYSTEM_ORDER,
+});
+const n = profiles.length;
+const fleetStations: FleetStation[] = profiles.map(({ station, name, region, instrument, longitude }) => ({ station, name, region, instrument, longitude }));
+
+// The box shape and the fallback lineup, measured from the same fleet the browser builds.
+const probe = buildBuoyFleet(fleetStations);
+const boxAspect = Math.round(frameAspect(probe.framing) * 100) / 100;
+const blockDepth = probe.blockDepth;
+const rowSizes = probe.layout.rows.map((r) => ({ region: r.region, count: r.indices.length }));
+const fallback = fleetFallbackSvg(
+	profiles.map((p, i) => ({ instrument: p.instrument, reach: probe.reach[i], region: p.region })),
+	{ tallest: Math.max(...probe.models.map((m) => m.height_m)), blockDepth, gap: FLEET_GAP_M, aspect: boxAspect },
+);
+probe.dispose();
+
+// Prose figures.
+const waveriders = profiles.filter((p) => p.instrument === "waverider");
+const other = profiles.find((p) => p.instrument !== "waverider");
+if (!other) throw new Error("expected one non-Waverider buoy");
+const pacioos = profiles.filter((p) => p.page.owner?.includes("PacIOOS"));
+const viaScripps = profiles.filter((p) => p.page.data_from?.includes("Scripps"));
+const withWind = profiles.filter((p) => p.page.anemometer_height_m !== null);
+const byDepth = [...profiles].filter((p) => p.page.water_depth_m !== null).sort((a, b) => a.page.water_depth_m! - b.page.water_depth_m!);
+const shallow = byDepth[0];
+const deep = byDepth[byDepth.length - 1];
+const depthText = (m: number) => `${Math.round(m).toLocaleString("en-US")} m`;
+const fetched = [...new Set(profiles.map((p) => p.page.fetched))].sort().join(", ");
+
+// One scale for every mean-miss bar on the page, so bars compare across buoys as well as systems.
+const maxMiss = Math.max(...profiles.flatMap((p) => p.errors.map((e) => e.mae_m ?? 0)));
+const months = profiles[0].record.months.map((m) => m.month);
+const MONTH = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+const monthName = (ym: string) => `${MONTH[Number(ym.slice(5, 7)) - 1]} ${ym.slice(0, 4)}`;
+const span = `${MONTH[Number(months[0].slice(5, 7)) - 1]}–${monthName(months[months.length - 1])}`;
+const pct = (x: number) => `${Math.round(x * 100)}%`;
+const coord = (lat: number, lon: number) => `${Math.abs(lat).toFixed(3)}° ${lat >= 0 ? "N" : "S"}, ${Math.abs(lon).toFixed(3)}° ${lon >= 0 ? "E" : "W"}`;
+
+const hullText = (p: (typeof profiles)[number]) =>
+	p.instrument === "waverider" ? `${hullLabel(p.page.hull)}, a ${WAVERIDER_DIAMETER_M} m sphere` : hullLabel(p.page.hull);
+const sensorText = (pg: ProfilePage) =>
+	[
+		pg.anemometer_height_m !== null && `anemometers ${pg.anemometer_height_m} m up`,
+		pg.air_temp_height_m !== null && `air temperature ${pg.air_temp_height_m} m up`,
+		pg.sea_temp_depth_m !== null && `sea temperature ${pg.sea_temp_depth_m} m down`,
+	]
+		.filter(Boolean)
+		.join(", ");
+const readouts = profiles.map((p) => `Lit: ${p.station} ${p.name} · ${hullLabel(p.page.hull)} · ${p.page.water_depth_m === null ? "depth not stated" : `${depthText(p.page.water_depth_m)} of water`}`);
+const payload = JSON.stringify({ stations: fleetStations, readouts }).replace(/</g, "\\u003c");
+
+const rowText = rowSizes
+	.map((r, i) => `${i === 0 ? "the row of" : "the"} ${countWord(r.count)} ${i === 0 ? "is" : "are"} ${REGION_LABEL[r.region]}${r.region === other.region ? `, with ${other.name}` : ""}`)
+	.join("; ");
+const label = `${countWord(n, true)} wave buoys at true size on a slowly turning block of still water: ${countWord(waveriders.length)} yellow Waverider spheres and ${other.name}'s larger ${hullLabel(other.page.hull)} with its tower. Drag to spin it; tap it for the next buoy.`;
+const regions = [...new Set(profiles.map((p) => p.region))];
+---
+
+<section id="buoys" class="mx-auto max-w-7xl px-6 py-16 md:px-12 md:py-20">
+	<h2 class="font-anton text-4xl md:text-5xl">The {countWord(n)} buoys</h2>
+	<p class="mt-3 max-w-[65ch] text-base leading-relaxed text-ink-soft">
+		Every accuracy figure above is a comparison with one of these {countWord(n)} instruments. {countWord(waveriders.length, true)} are
+		Datawell Waverider buoys, {WAVERIDER_DIAMETER_M} m spheres that ride the surface and record its motion; the {countWord(pacioos.length)} in Hawaii
+		belong to the {pacioos[0]?.page.owner}, and {viaScripps.length === waveriders.length ? `all ${countWord(viaScripps.length)}` : countWord(viaScripps.length)} report
+		through Scripps Institution of Oceanography under a Coastal Data Information Program (CDIP) number. The other, {other.name}, is a
+		{" "}{other.page.owner} {hullLabel(other.page.hull)}, and {withWind.length === 1 ? "the only one with an anemometer" : `one of ${countWord(withWind.length)} with anemometers`}.
+		They are moored in water from {depthText(shallow.page.water_depth_m!)} deep at {shallow.name} to {depthText(deep.page.water_depth_m!)} at {deep.name}.
+	</p>
+
+	<div data-fleet-root data-station="0" data-count={n} class="mt-10 lg:grid lg:grid-cols-12 lg:gap-10">
+		<script is:inline type="application/json" data-fleet-data set:html={payload} />
+		<div class="lg:col-span-7">
+			<div class="lg:sticky lg:top-6">
+				<div data-fleet-viewer role="img" aria-label={label} class="relative w-full select-none" style={`aspect-ratio: ${boxAspect}`}>
+					<!-- Static fallback: shown until WebGL mounts, and kept if it can't. The same lineup, side on. -->
+					<svg data-fallback viewBox={fallback.viewBox} class="absolute inset-0 h-full w-full" aria-hidden="true">
+						<Fragment set:html={fallback.svg} />
+					</svg>
+				</div>
+				<p data-fleet-readout class="mt-3 font-mono text-xs uppercase" aria-live="polite">{readouts[0]}</p>
+				<p class="mt-2 max-w-[65ch] text-xs leading-relaxed text-ink-soft">
+					All {countWord(n)} at true size and one scale, on a cut of still water {blockDepth.toFixed(1)} m deep: each hull floats at its own
+					waterline, and the water is see-through so the part below it shows. {rowText.charAt(0).toUpperCase() + rowText.slice(1)}; each
+					row runs west to east. The steps along the plinth's front edge are {FLEET_SCALE_STEP_M} m. {other.name}'s anemometers stand
+					{" "}{other.page.anemometer_height_m} m above the water and its air temperature sensor {other.page.air_temp_height_m} m, as its station page
+					gives; NDBC publishes no drawing of its seal cage, so the cage is drawn as a plain ring of bars. Point at a buoy's card to light its
+					lantern, or tap the view for the next. Station details are from NDBC's station pages as fetched on {fetched}, which describe each
+					buoy as deployed then.
+				</p>
+			</div>
+		</div>
+
+		<div class="mt-10 lg:col-span-5 lg:mt-0">
+			{
+				regions.map((region) => (
+					<div class="mb-10 last:mb-0">
+						<h3 class="font-display text-lg font-semibold">{REGION_LABEL[region]}</h3>
+						<ol class="mt-3 grid gap-4 sm:grid-cols-2 lg:grid-cols-1">
+							{profiles.map((p, i) =>
+								p.region !== region ? null : (
+									<li
+										data-fleet-card={i}
+										data-selected={i === 0 ? "" : undefined}
+										class="raw-box shadow-hard-sm rounded-xl bg-cream p-4 text-black transition-colors data-[selected]:bg-lime"
+									>
+										<p class="font-mono text-[11px] uppercase">
+											{p.station}
+											{p.page.cdip && ` · CDIP ${p.page.cdip}`}
+										</p>
+										<h4 class="font-display mt-0.5 text-lg leading-tight">
+											<button
+												type="button"
+												data-fleet-pick={i}
+												aria-pressed={i === 0 ? "true" : "false"}
+												class="text-left underline decoration-2 underline-offset-4 hover:decoration-[3px]"
+											>
+												{p.name}
+											</button>
+										</h4>
+										<dl class="mt-3 grid grid-cols-[auto_1fr] gap-x-3 gap-y-1 text-sm leading-snug">
+											<dt class="font-mono text-[10px] uppercase leading-5">Hull</dt>
+											<dd>{hullText(p)}</dd>
+											<dt class="font-mono text-[10px] uppercase leading-5">Run by</dt>
+											<dd>{operatorLabel(p.page)}</dd>
+											<dt class="font-mono text-[10px] uppercase leading-5">Moored</dt>
+											<dd>
+												{p.page.water_depth_m === null ? "Depth not stated" : `In ${depthText(p.page.water_depth_m)} of water`}, at{" "}
+												{coord(p.latitude, p.longitude)}
+											</dd>
+											{sensorText(p.page) && (
+												<>
+													<dt class="font-mono text-[10px] uppercase leading-5">Sensors</dt>
+													<dd>{sensorText(p.page).replace(/^./, (c) => c.toUpperCase())}</dd>
+												</>
+											)}
+										</dl>
+
+										<div class="mt-3">
+											<p class="font-mono text-[10px] uppercase">
+												Wave record, {span}: {pct(p.record.share)} of hours
+											</p>
+											<div class="mt-1 flex items-end gap-[3px]" role="img" aria-label={p.record.months.map((m) => `${monthName(m.month)} ${pct(m.share)}`).join(", ")}>
+												{p.record.months.map((m) => (
+													<span class="flex flex-1 flex-col items-center gap-0.5">
+														<span class="flex h-4 w-full items-end border-b-[1.5px] border-black">
+															<span class="w-full bg-black" style={`height:${(m.share * 100).toFixed(1)}%`} title={`${monthName(m.month)}: ${pct(m.share)}`} />
+														</span>
+														<span class="font-mono text-[9px] leading-none">{MONTH[Number(m.month.slice(5, 7)) - 1][0]}</span>
+													</span>
+												))}
+											</div>
+										</div>
+
+										<div class="mt-3">
+											<p class="font-mono text-[10px] uppercase">Mean miss, {PROFILE_LEAD_DAYS} days out</p>
+											<ul class="mt-1 space-y-1">
+												{p.errors.map((e) => (
+													<li class="grid grid-cols-[3.25rem_1fr_3.5rem] items-center gap-2 text-xs">
+														<span class="font-mono text-[10px] uppercase">{SYSTEM_SHORT[e.system]}</span>
+														<span class="h-2 rounded-[2px] bg-black/10">
+															{e.mae_m !== null && (
+																<span
+																	class="block h-2 rounded-[2px] outline outline-[1.5px] outline-black"
+																	style={`width:${((e.mae_m / maxMiss) * 100).toFixed(1)}%;background:${SYSTEM_COLOR[e.system]}`}
+																/>
+															)}
+														</span>
+														<span class="text-right font-mono">{e.mae_m === null ? "—" : `${ft(e.mae_m)} ft`}</span>
+													</li>
+												))}
+											</ul>
+										</div>
+
+										<div class="mt-3 text-xs leading-relaxed">
+											{p.breaks.some((b) => b.tier !== "disagreement_only") && (
+												<p>
+													<span class="font-mono text-[10px] uppercase">Results apply at </span>
+													{p.breaks
+														.filter((b) => b.tier !== "disagreement_only")
+														.map((b) => `${b.name} (${b.distance_km} km)`)
+														.join(", ")}
+												</p>
+											)}
+											{p.breaks.some((b) => b.tier === "disagreement_only") && (
+												<p class="mt-1">
+													<span class="font-mono text-[10px] uppercase">Nearest buoy, no accuracy claim: </span>
+													{p.breaks
+														.filter((b) => b.tier === "disagreement_only")
+														.map((b) => `${b.name} (${b.distance_km} km)`)
+														.join(", ")}
+												</p>
+											)}
+											{p.note && <p class="mt-1">{p.note}</p>}
+											<p class="mt-1">
+												<a href={p.page.url} class="underline underline-offset-2" rel="noopener">
+													NDBC station page
+												</a>
+											</p>
+										</div>
+									</li>
+								),
+							)}
+						</ol>
+					</div>
+				))
+			}
+			<p class="mt-6 text-xs leading-relaxed text-ink-soft">
+				Mean miss is each system's average wave height error at the buoy, {PROFILE_LEAD_DAYS} days out, over the hours the buoy reported
+				({metadata.window.start} to {metadata.window.end}). Every bar on this page shares one scale, so bars compare across buoys as well as systems.
+				The record bars show each month's share of the analysis's {metadata.grid} hours with a wave height reading.
+			</p>
+		</div>
+	</div>
+</section>
+
+<script>
+	import { mountViewers } from "../../../scripts/three/viewer";
+	mountViewers("[data-fleet-viewer]", () => import("../../../scripts/three/subjects/buoy-fleet").then((m) => m.default));
+</script>
+
+<script>
+	// Cards and the 3D view select through events on the section's root: pointing at or focusing a
+	// card lights its buoy, and any selection (including a tap on the view) marks the card.
+	import { BUOY_SELECT, currentStation, selectStation, type BuoySelectDetail } from "../../../scripts/three/buoy-events";
+
+	for (const root of document.querySelectorAll<HTMLElement>("[data-fleet-root]")) {
+		const data = JSON.parse(root.querySelector("script[data-fleet-data]")?.textContent ?? "{}") as { readouts?: string[] };
+		const cards = [...root.querySelectorAll<HTMLElement>("[data-fleet-card]")];
+		const picks = [...root.querySelectorAll<HTMLButtonElement>("[data-fleet-pick]")];
+		const out = root.querySelector<HTMLElement>("[data-fleet-readout]");
+		const pick = (i: number) => {
+			if (currentStation(root) !== i) selectStation(root, i);
+		};
+		for (const card of cards) {
+			const i = Number(card.dataset.fleetCard);
+			card.addEventListener("pointerenter", (e) => {
+				if (e.pointerType === "mouse") pick(i);
+			});
+		}
+		for (const b of picks) {
+			const i = Number(b.dataset.fleetPick);
+			b.addEventListener("click", () => pick(i));
+			b.addEventListener("focus", () => pick(i));
+		}
+		root.addEventListener(BUOY_SELECT, (e) => {
+			const { index } = (e as CustomEvent<BuoySelectDetail>).detail;
+			cards.forEach((c) => c.toggleAttribute("data-selected", Number(c.dataset.fleetCard) === index));
+			picks.forEach((b) => b.setAttribute("aria-pressed", String(Number(b.dataset.fleetPick) === index)));
+			if (out && data.readouts?.[index]) out.textContent = data.readouts[index];
+		});
+	}
+</script>

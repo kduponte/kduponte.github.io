@@ -1,0 +1,206 @@
+---
+/**
+ * The Noise Problem's 3D hero: a glass display cube holding one sphere per visitor of a seeded run
+ * of the page's live CUPED experiment, at that experiment's opening settings. Tap the cube (or the
+ * readout's button) to apply CUPED and watch the tilted cloud fold into a flat slab; the readout
+ * shows the real variance before, during and after, and the factor it shrinks by.
+ * With `readout={false}` it renders the canvas box alone (still swaying, draggable and tappable,
+ * with the static fallback), transparent over whatever sits behind it, e.g. a project tile.
+ */
+import { buildCupedCloud } from "../../lib/stats-sim/cuped-cloud";
+import { HERO_CUBE_SEED, LIVE_EXPERIMENT_DEFAULTS } from "../../lib/stats-sim/cuped-defaults";
+import type { CupedExperimentConfig } from "../../lib/stats-sim/cuped-experiment";
+import { FALLBACK_VIEWBOX, cubeFallbackSvg } from "../../lib/three/cuped-cube-fallback";
+import { DEFAULT_CUPED_CUBE_COLORS as C } from "../../lib/three/cuped-cube-model";
+
+interface Props {
+	/** Classes for the whole figure (canvas plus readout). */
+	class?: string;
+	/** Classes for the canvas box alone, e.g. negative margins to float it over a headline. */
+	canvasClass?: string;
+	/** Tailwind aspect-ratio classes for the canvas box. Defaults to 16:10. */
+	aspect?: string;
+	/** The readout card and caption under the canvas. False: the canvas alone. */
+	readout?: boolean;
+	/** Seconds between automatic raw/CUPED toggles while nobody is interacting (0: only on tap). */
+	cycle?: number;
+}
+
+const { class: className = "", canvasClass = "", aspect = "aspect-[16/10]", readout = true, cycle = 0 } = Astro.props;
+
+const config: CupedExperimentConfig = { ...LIVE_EXPERIMENT_DEFAULTS, seed: HERO_CUBE_SEED };
+const cloud = buildCupedCloud(config);
+const n = cloud.visitors.length;
+const nf = (v: number, d: number) => v.toLocaleString("en-US", { minimumFractionDigits: d, maximumFractionDigits: d });
+const r = cloud.correlation;
+const removedPct = (1 - cloud.varianceFactor) * 100;
+// Marker ids for the fallback's dots. Hero and tile never share a page; if two identical cubes ever
+// did, their markers are identical too, so a repeated id would still draw correctly.
+const fallbackId = readout ? "cuped-fb-hero" : "cuped-fb-tile";
+
+// Variance bar: one axis from 0 past the raw variance, ticks every 100.
+const BAR_W = 300;
+const barMax = Math.ceil(cloud.variance.raw / 100) * 100;
+const X = (v: number) => (v / barMax) * BAR_W;
+const barTicks = Array.from({ length: barMax / 100 + 1 }, (_, i) => i * 100);
+
+const label =
+	`A glass display cube holding ${nf(n, 0)} small spheres, one per simulated visitor: pre-period value from left to right, ` +
+	`post-period value from bottom to top, day of arrival from back to front; cream for control, blue for treatment. ` +
+	`The cloud tilts up to the right because the two values are correlated (${r.toFixed(3)} in these visitors). ` +
+	`Tap to apply CUPED: the cloud folds into a flat slab and the post-period variance falls from ${nf(cloud.variance.raw, 1)} to ${nf(cloud.variance.adjusted, 1)}, ` +
+	`${removedPct.toFixed(1)}% less. Drag to turn it.`;
+---
+
+<figure
+	data-cuped-cube
+	data-raw-variance={cloud.variance.raw}
+	data-adjusted-variance={cloud.variance.adjusted}
+	data-bar-max={barMax}
+	data-count={n}
+	class:list={["relative w-full", className]}
+>
+	<div
+		data-cuped-cube-viewer
+		data-config={JSON.stringify(config)}
+		data-cycle={cycle > 0 ? cycle : undefined}
+		role="img"
+		aria-label={label}
+		class:list={["relative z-10 w-full select-none", aspect, canvasClass]}
+	>
+		<!-- Static fallback: the same visitors drawn flat, shown until WebGL mounts and kept if it can't. -->
+		<svg data-fallback viewBox={FALLBACK_VIEWBOX} class="absolute inset-0 h-full w-full" aria-hidden="true" set:html={cubeFallbackSvg(cloud, fallbackId)} />
+	</div>
+
+	{
+		readout && (
+			<figcaption class="relative z-20 ml-auto mt-2 w-full max-w-[26rem]">
+				<div class="raw-box rounded-2xl bg-cream p-4 text-black">
+					<div class="flex items-center justify-between gap-3">
+						<p class="font-mono text-[10px] uppercase leading-tight" data-c-eyebrow aria-live="polite">
+							Raw · {nf(n, 0)} visitors
+						</p>
+						<button
+							type="button"
+							data-c-toggle
+							aria-pressed="false"
+							class="font-mono raw-box shadow-hard-sm raw-press shrink-0 rounded-full bg-lime px-3 py-1 text-[10px] uppercase"
+						>
+							Apply CUPED →
+						</button>
+					</div>
+					<div class="mt-2 flex items-end justify-between gap-3">
+						<div>
+							<p class="font-mono text-[10px] uppercase leading-tight">Variance, post-period</p>
+							<p class="font-anton text-[2.2rem] leading-none" data-c-variance>
+								{nf(cloud.variance.raw, 1)}
+							</p>
+						</div>
+						<div class="text-right">
+							<p class="font-mono text-[10px] uppercase leading-tight">Pre/post correlation</p>
+							<p class="font-anton text-[2.2rem] leading-none">{r.toFixed(3)}</p>
+						</div>
+					</div>
+
+					<svg viewBox={`-8 0 ${BAR_W + 16} 52`} class="mt-3 w-full overflow-visible" aria-hidden="true">
+						<rect x="0" y="8" width={X(cloud.variance.raw)} height="18" fill="#f6f1e4" stroke="#111" stroke-width="2.5" />
+						<rect data-c-bar x="0" y="8" width={X(cloud.variance.raw)} height="18" fill="#c8ff3d" stroke="#111" stroke-width="2.5" />
+						<line x1={X(cloud.variance.adjusted)} x2={X(cloud.variance.adjusted)} y1="2" y2="32" stroke="#2438ff" stroke-width="3" />
+						<text x={X(cloud.variance.adjusted)} y="0" text-anchor="middle" font-size="8" font-family="Silkscreen, monospace" fill="#2438ff">
+							CUPED
+						</text>
+						<line x1="0" x2={BAR_W} y1="38" y2="38" stroke="#111" stroke-width="1.5" />
+						{barTicks.map((t) => (
+							<g>
+								<line x1={X(t)} x2={X(t)} y1="38" y2="42" stroke="#111" stroke-width="1.5" />
+								<text x={X(t)} y="51" text-anchor="middle" font-size="8" font-family="Silkscreen, monospace">
+									{t}
+								</text>
+							</g>
+						))}
+					</svg>
+
+					<p class="mt-2 text-[13px] font-semibold leading-snug">
+						Var(Y<sub>cuped</sub>) = Var(Y) · (1 − correlation²) = {nf(cloud.variance.raw, 1)} × (1 − {r.toFixed(3)}²) = {nf(cloud.variance.adjusted, 1)}:{" "}
+						{removedPct.toFixed(1)}% of the variance removed, and the spread (one SD) shrinks from {cloud.sd.raw.toFixed(1)} to {cloud.sd.adjusted.toFixed(1)}, × √(1 − {r.toFixed(3)}²) ={" "}
+						{Math.sqrt(cloud.varianceFactor).toFixed(3)}.
+					</p>
+					<p class="font-mono mt-2 flex flex-wrap gap-x-3 gap-y-1 text-[9px] uppercase">
+						<span class="inline-flex items-center gap-1">
+							<span class="inline-block size-2.5 rounded-full border-[1.5px] border-black" style={`background:${C.control}`} />
+							Control (A) · {nf(cloud.countA, 0)}
+						</span>
+						<span class="inline-flex items-center gap-1">
+							<span class="inline-block size-2.5 rounded-full border-[1.5px] border-black" style={`background:${C.treatment}`} />
+							Treatment (B) · {nf(cloud.countB, 0)}
+						</span>
+						<span class="inline-flex items-center gap-1">
+							<span class="inline-block h-2.5 w-1.5 border-[1.5px] border-black" style={`background:${C.bracket}`} />
+							Mean ± 1 SD
+						</span>
+					</p>
+				</div>
+				<p class="mt-3 text-[11px] font-medium leading-snug">
+					<strong>Every sphere is a visitor</strong> from one seeded run (seed {config.seed}) of the live experiment below, at its opening settings:{" "}
+					{config.visitors_per_day} visitors a day per arm for {config.days} days, a real {config.true_lift}-point lift for B, and a pre/post correlation of{" "}
+					{config.correlation} ({r.toFixed(3)} in these visitors). Left to right: pre-period value, a tick per SD. Bottom to top: post-period value, a
+					tick every 20 points. Back to front: day 1 to day {config.days}. Tapping moves each visitor by −θ(x − x̄), with θ = {cloud.theta.toFixed(2)}, the
+					adjustment the live experiment runs on its final day. The formula at the set {config.correlation} predicts × {cloud.expectedVarianceFactor.toFixed(4)};
+					this run's own correlation gives × {cloud.varianceFactor.toFixed(4)}, exactly.
+				</p>
+			</figcaption>
+		)
+	}
+</figure>
+
+<script>
+	import { mountViewers } from "../../scripts/three/viewer";
+	import type { CubeState } from "../../scripts/three/subjects/cuped-cube";
+
+	mountViewers("[data-cuped-cube-viewer]", () => import("../../scripts/three/subjects/cuped-cube").then((m) => m.default));
+
+	const fmt = (v: number) => v.toLocaleString("en-US", { minimumFractionDigits: 1, maximumFractionDigits: 1 });
+
+	for (const fig of document.querySelectorAll<HTMLElement>("[data-cuped-cube]")) {
+		const host = fig.querySelector<HTMLElement>("[data-cuped-cube-viewer]");
+		const eyebrow = fig.querySelector<HTMLElement>("[data-c-eyebrow]");
+		const variance = fig.querySelector<HTMLElement>("[data-c-variance]");
+		const bar = fig.querySelector<SVGRectElement>("[data-c-bar]");
+		const button = fig.querySelector<HTMLButtonElement>("[data-c-toggle]");
+		// Canvas-only (readout={false}): the viewer still mounts; there's just nothing to update.
+		if (!host || !eyebrow || !variance || !bar || !button) continue;
+		const raw = Number(fig.dataset.rawVariance);
+		const adjusted = Number(fig.dataset.adjustedVariance);
+		const barMax = Number(fig.dataset.barMax);
+		const count = Number(fig.dataset.count).toLocaleString("en-US");
+
+		let shownKey = "";
+		const show = ({ t, adjusted: on, variance: v }: CubeState) => {
+			variance.textContent = fmt(v);
+			bar.setAttribute("width", ((v / barMax) * 300).toFixed(2));
+			const moving = t > 0 && t < 1;
+			const key = `${on}:${moving}`;
+			if (key === shownKey) return;
+			shownKey = key;
+			eyebrow.textContent = moving ? (on ? "Applying CUPED…" : "Back to raw…") : on ? `CUPED-adjusted · ${count} visitors` : `Raw · ${count} visitors`;
+			button.textContent = on ? "← Show raw" : "Apply CUPED →";
+			button.setAttribute("aria-pressed", String(on));
+		};
+
+		host.addEventListener("cupedcube:state", (e) => show((e as CustomEvent<CubeState>).detail));
+		// Without WebGL nothing answers "cupedcube:toggle", so the button flips the static drawing.
+		let fallbackOn = false;
+		button.addEventListener("click", () => {
+			if (host.querySelector("canvas")) {
+				host.dispatchEvent(new CustomEvent("cupedcube:toggle"));
+				return;
+			}
+			fallbackOn = !fallbackOn;
+			// If WebGL mounts later, the cube starts in the state the drawing shows.
+			host.dataset.adjusted = fallbackOn ? "1" : "";
+			host.querySelector('[data-fb-state="raw"]')?.toggleAttribute("hidden", fallbackOn);
+			host.querySelector('[data-fb-state="adjusted"]')?.toggleAttribute("hidden", !fallbackOn);
+			show({ t: fallbackOn ? 1 : 0, adjusted: fallbackOn, variance: fallbackOn ? adjusted : raw });
+		});
+	}
+</script>

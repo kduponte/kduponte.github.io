@@ -1,5 +1,6 @@
 ---
 import ProjectHeader from "../../editorial/ProjectHeader.astro";
+import CupedCubeViewer from "../../three/CupedCubeViewer.astro";
 ---
 
 <ProjectHeader
@@ -9,4 +10,11 @@ import ProjectHeader from "../../editorial/ProjectHeader.astro";
 	summary="A/B tests often take longer than they need to, not because the real effect is small, but because the metric itself is noisy for reasons that have nothing to do with the treatment. This project runs a live simulated experiment twice, once on the raw metric, once adjusted with CUPED, a real, widely-used variance-reduction technique, to measure exactly how much faster and more reliably it finds a genuine effect, without inflating false positives."
 	primaryCta={{ label: "Run the experiment", href: "#live-experiment" }}
 	secondaryCta={{ label: "See the speed study", href: "#speed-study" }}
-/>
+>
+	<!--
+		On desktop the cube floats up over the right of the headline, like the Volume Gap blob, while
+		its readout stays in flow beside the summary so the header grows to fit it. Tablets keep it in
+		the right column; on mobile both sit below the summary.
+	-->
+	<CupedCubeViewer canvasClass="md:-ml-[12%] md:w-[112%] lg:-ml-[36%] lg:-mt-48 lg:w-[136%] xl:-mt-56" />
+</ProjectHeader>

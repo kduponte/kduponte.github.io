@@ -6,6 +6,7 @@ import Widget from "../components/Widget.astro";
 import Chip from "../components/Chip.astro";
 import SectionHeading from "../components/SectionHeading.astro";
 import ProjectCard from "../components/ProjectCard.astro";
+import { hasTilePreview, layoutTiles } from "../lib/project-tiles";
 
 const projects = (await getCollection("projects"))
 	.filter((p) => p.data.status !== "coming-soon")
@@ -16,13 +17,9 @@ const log = (await getCollection("truckLog")).sort((a, b) => b.data.date.valueOf
 const latest = log[0];
 const latestDate = latest?.data.date.toISOString().slice(0, 10);
 
-// Asymmetric collage: span (of 12 cols), tilt, and vertical offset per card.
-const layout = [
-	{ cls: "md:col-span-7", rotate: -0.8 },
-	{ cls: "md:col-span-5 md:mt-12", rotate: 1 },
-	{ cls: "md:col-span-5", rotate: 0.8 },
-	{ cls: "md:col-span-7 md:mt-8", rotate: -0.5 },
-];
+// Asymmetric collage: cards with a 3D preview take a two-row slot (see layoutTiles), each card tilted.
+const places = layoutTiles(projects.map((p) => hasTilePreview(p.id)));
+const tilts = [-0.8, 1, 0.8, -0.5];
 ---
 
 <BaseLayout
@@ -106,8 +103,8 @@ const layout = [
 							summary={project.data.summary}
 							status={project.data.status}
 							tags={project.data.tags}
-							rotate={layout[i % layout.length].rotate}
-							class={layout[i % layout.length].cls}
+							rotate={tilts[i % tilts.length]}
+							place={places[i]}
 						/>
 					))
 				}

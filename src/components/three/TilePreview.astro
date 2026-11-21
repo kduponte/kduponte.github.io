@@ -1,0 +1,19 @@
+---
+// The live 3D preview on a project card: the same model as the project's hero, sized for the
+// tile. Which projects have one is listed in lib/project-tiles.ts; add a branch here for each.
+import TruckViewer from "./TruckViewer.astro";
+import BuoyViewer from "./BuoyViewer.astro";
+import SurfboardBlobViewer from "./SurfboardBlobViewer.astro";
+
+interface Props {
+	slug: string;
+}
+
+const { slug } = Astro.props;
+---
+
+<div class="relative z-10 -mx-2 flex flex-1 items-center justify-center">
+	{slug === "the-22re-restoration" && <TruckViewer aspect="aspect-[16/10]" />}
+	{slug === "the-volume-gap" && <SurfboardBlobViewer readout={false} />}
+	{slug === "the-forecast-gap" && <BuoyViewer readout={false} class="max-w-[30rem]" />}
+</div>

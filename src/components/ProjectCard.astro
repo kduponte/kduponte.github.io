@@ -1,7 +1,7 @@
 ---
 import { projectTheme } from "../lib/project-theme";
-import TruckViewer from "./three/TruckViewer.astro";
-import BuoyViewer from "./three/BuoyViewer.astro";
+import { hasTilePreview, type TilePlacement } from "../lib/project-tiles";
+import TilePreview from "./three/TilePreview.astro";
 
 interface Props {
 	slug: string;
@@ -11,10 +11,12 @@ interface Props {
 	tags: string[];
 	/** Degrees of tilt, for the collage feel. */
 	rotate?: number;
+	/** Where the card sits on a 12-column grid at md and up (see layoutTiles). */
+	place?: TilePlacement;
 	class?: string;
 }
 
-const { slug, title, summary, status, tags, rotate = 0, class: className = "" } = Astro.props;
+const { slug, title, summary, status, tags, rotate = 0, place, class: className = "" } = Astro.props;
 
 const statusLabel: Record<Props["status"], string> = {
 	"coming-soon": "Coming soon",
@@ -24,24 +26,25 @@ const statusLabel: Record<Props["status"], string> = {
 
 const isLinkable = status !== "coming-soon";
 const theme = projectTheme(slug);
+const placeVars = place ? ` --tile-col: ${place.column}; --tile-row: ${place.row};` : "";
 ---
 
 <article
 	class:list={[
 		"group raw-box shadow-hard-lg relative flex min-h-[18rem] flex-col gap-4 overflow-hidden rounded-3xl p-6 pt-9",
 		theme.fill,
+		place && "md:[grid-column:var(--tile-col)] md:[grid-row:var(--tile-row)]",
 		isLinkable && "raw-press",
 		!isLinkable && "opacity-80",
 		className,
 	]}
-	style={`transform: rotate(${rotate}deg); --dot: ${theme.dot}; --cell: 9px;`}
+	style={`transform: rotate(${rotate}deg); --dot: ${theme.dot}; --cell: 9px;${placeVars}`}
 >
 	<div class="halftone pointer-events-none absolute inset-0 opacity-20" aria-hidden="true"></div>
 	<span class="font-mono absolute -top-px right-5 rounded-b-lg bg-black px-2.5 py-1 text-[10px] uppercase text-lime">
 		{statusLabel[status]}
 	</span>
-	{slug === "the-22re-restoration" && <TruckViewer class="pointer-events-auto absolute -bottom-4 -right-4 z-10 hidden w-[55%] sm:block" />}
-	{slug === "the-forecast-gap" && <BuoyViewer readout={false} class="pointer-events-auto absolute -bottom-4 -right-4 z-10 hidden w-[55%] sm:block" />}
+	{hasTilePreview(slug) && <TilePreview slug={slug} />}
 	<h3 class="font-anton relative text-4xl leading-[0.95] md:text-5xl">{title}</h3>
 	<p class="relative max-w-[42ch] text-[15px] font-medium leading-snug">{summary}</p>
 	{

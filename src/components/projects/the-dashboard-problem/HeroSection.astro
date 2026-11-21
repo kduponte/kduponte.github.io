@@ -1,5 +1,6 @@
 ---
 import ProjectHeader from "../../editorial/ProjectHeader.astro";
+import GaugeConsoleViewer from "../../three/GaugeConsoleViewer.astro";
 ---
 
 <ProjectHeader
@@ -9,4 +10,14 @@ import ProjectHeader from "../../editorial/ProjectHeader.astro";
 	summary="Checking one metric at a fixed 5% false-positive rate feels safe. Checking twenty at once, even at that same safe rate each, isn't, the chance that at least one of them cries wolf climbs fast. This project simulates a real dashboard of metrics, some genuinely moved, most genuinely not, and measures exactly how often naive thresholds get fooled, and how much two real corrections, Bonferroni and Benjamini-Hochberg, actually fix it."
 	primaryCta={{ label: "Run the experiment", href: "#live-experiment" }}
 	secondaryCta={{ label: "See the metric-count study", href: "#metric-study" }}
-/>
+>
+	<!--
+		Like the Volume Gap blob: on desktop the console floats up beside the second headline line while
+		its readout stays in flow beside the summary; on mobile both sit below the summary. The box is
+		4:3 there because the console itself is about 5:4, so a wider box would only add empty sides.
+	-->
+	<GaugeConsoleViewer
+		aspect="aspect-[16/10] md:aspect-[4/3]"
+		canvasClass="md:-ml-[8%] md:w-[116%] lg:-ml-[12%] lg:-mt-56 lg:w-[120%]"
+	/>
+</ProjectHeader>

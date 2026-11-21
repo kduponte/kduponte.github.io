@@ -3,7 +3,7 @@
  * water (see lib/three/buoy-fleet.ts), turning slowly as one.
  *
  * - The selected station's lantern glows and a ring marks it. Selection arrives as events on the
- *   section's root (a card pointed at, focused or clicked); a tap on the view steps to the next.
+ *   section's root (a name in the picker clicked); a tap on the view steps to the next.
  * - Reduced motion: no turning, and the lantern switches without easing.
  *
  * Station data comes from the JSON the section embeds at build time.

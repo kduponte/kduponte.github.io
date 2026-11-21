@@ -5,22 +5,21 @@
 import * as Plot from "@observablehq/plot";
 import type { RectYOptions } from "@observablehq/plot";
 import { runPeekingStudy } from "../../lib/stats-sim/peeking-study";
+import {
+	DEFAULT_CONVERSION_BASELINE_RATE,
+	DEFAULT_CONVERSION_VISITORS_PER_DAY,
+	DEFAULT_REVENUE_AVG_SPEND,
+	DEFAULT_REVENUE_SPEND_RATE,
+	DEFAULT_REVENUE_VISITORS_PER_DAY,
+	STUDY_BAYESIAN_THRESHOLD as BAYESIAN_THRESHOLD,
+	STUDY_DAYS as DAYS,
+	STUDY_FREQUENTIST_ALPHA as FREQUENTIST_ALPHA,
+	STUDY_MC_SAMPLES as MC_SAMPLES,
+	STUDY_PRIOR_STRENGTH,
+	STUDY_TRIALS as TRIALS,
+} from "../../lib/stats-sim/peeking-study-defaults";
 import type { MetricType, PeekingStudyResult } from "../../lib/stats-sim/types";
 import { wireTableToggle } from "../shared/chart-utils";
-
-const DEFAULT_REVENUE_SPEND_RATE = 0.01;
-const DEFAULT_REVENUE_VISITORS_PER_DAY = 500_000;
-const DEFAULT_REVENUE_AVG_SPEND = 50;
-const DEFAULT_CONVERSION_BASELINE_RATE = 0.1;
-const DEFAULT_CONVERSION_VISITORS_PER_DAY = 50;
-const DAYS = 30;
-const TRIALS = 500;
-const FREQUENTIST_ALPHA = 0.05;
-// Calibrated (not the more obvious 0.95) so the Bayesian rule's final-day-only rate lands near the
-// same ~5% nominal rate as the frequentist test — without matching that baseline, the "any day vs.
-// final day" comparison between the two methods wouldn't be apples-to-apples. See Methodology.
-const BAYESIAN_THRESHOLD = 0.975;
-const MC_SAMPLES = 200;
 
 type Method = "Frequentist" | "Bayesian" | "Always-valid";
 const METHOD_ORDER: Method[] = ["Frequentist", "Bayesian", "Always-valid"];
@@ -80,7 +79,7 @@ export function initPeekingStudy(controlsForm: HTMLFormElement, root: HTMLElemen
 	}
 	metricTypeSelect.value = "revenue";
 	applyMetricTypeDefaults();
-	priorStrengthInput.value = "0";
+	priorStrengthInput.value = String(STUDY_PRIOR_STRENGTH);
 
 	function renderRateChart(rows: RateRow[], width: number) {
 		const plot = Plot.plot({

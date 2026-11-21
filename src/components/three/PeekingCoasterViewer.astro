@@ -1,0 +1,339 @@
+---
+/**
+ * The Peeking Problem's 3D hero: a p-value roller coaster. A toy 22RE pickup rides one null run's
+ * daily p-value, stopping at each daily peek, over a glass floor at alpha that flashes wherever
+ * the track dips through it. "All 20 runs" lays the 20 runs down at once as concentric ribbons.
+ * The runs are the page's own peeking study (src/lib/stats-sim), trials 1-20 from seed 1, with
+ * the study's default settings; the full 500-run study from the same seed is shown beside them.
+ * With `readout={false}` it renders the canvas box alone (still riding, draggable and tappable,
+ * with the static fallback), transparent over whatever sits behind it, e.g. a project tile.
+ */
+import { publishedCoasterData } from "../../lib/stats-sim/peeking-coaster-runs";
+import { coasterLayout } from "../../lib/three/peeking-coaster";
+import { FALLBACK_BOX, FALLBACK_H, FALLBACK_W, coasterFallback } from "../../lib/three/peeking-coaster-fallback";
+import type { CoasterMode, CoasterViewerConfig } from "../../scripts/three/subjects/peeking-coaster";
+
+interface Props {
+	/** Classes for the whole figure (canvas plus readout). */
+	class?: string;
+	/** Classes for the canvas box alone, e.g. negative margins to float it over a headline. */
+	canvasClass?: string;
+	/** Tailwind aspect-ratio classes for the canvas box. Defaults to 16:10. */
+	aspect?: string;
+	/** The readout card and caption under the canvas. False: the canvas alone. */
+	readout?: boolean;
+	/** Start on one run (default) or all 20. */
+	mode?: CoasterMode;
+}
+
+const { class: className = "", canvasClass = "", aspect = "aspect-[16/10]", readout = true, mode = "one" } = Astro.props;
+
+const data = publishedCoasterData();
+const { config: study, alpha, days, runs } = data;
+const layout = coasterLayout(days, alpha);
+const fallback = coasterFallback(
+	runs.map((r) => r.p),
+	layout,
+);
+
+const viewerConfig: CoasterViewerConfig = {
+	alpha,
+	days,
+	runs: runs.map((r) => ({ seed: r.seed, p: r.p })),
+	crossedByDay: data.crossedByDay,
+	mode,
+};
+
+const fmtP = (p: number) => (p < 0.001 ? "<0.001" : p.toFixed(3));
+const pct = (v: number) => `${(v * 100).toFixed(1).replace(/\.0$/, "")}%`;
+const n = runs.length;
+const first = runs[0];
+const lastSeed = runs[n - 1].seed;
+const alphaLabel = String(alpha);
+
+const readouts = runs.map((r) => ({
+	seed: r.seed,
+	first: r.firstCrossing ? { day: r.firstCrossing.day, p: fmtP(r.firstCrossing.p) } : null,
+	final: fmtP(r.final.p),
+	finalUnder: r.final.p < alpha,
+	low: { day: r.low.day, p: fmtP(r.low.p) },
+	p: r.p.map(fmtP),
+	under: r.p.map((v) => v < alpha),
+}));
+
+// Bars for the all-runs view, on one 0-to-max percentage scale.
+const share = data.crossedCount / n;
+const finalShare = data.finalCount / n;
+const barMax = Math.max(0.3, Math.ceil(Math.max(share, data.study.anyDayRate) * 10) / 10);
+const BAR_W = 168;
+const bw = (v: number) => ((v / barMax) * BAR_W).toFixed(1);
+const bars = [
+	{ key: "daily", label: `These ${n}, peeked daily`, value: share, text: `${data.crossedCount} of ${n} · ${pct(share)}`, fill: "#ff5a1f" },
+	{ key: "once", label: `These ${n}, day ${days} only`, value: finalShare, text: `${data.finalCount} of ${n} · ${pct(finalShare)}`, fill: "#2438ff" },
+	{ key: "nominal", label: "Nominal α", value: alpha, text: pct(alpha), fill: "#f6f1e4" },
+	{ key: "study", label: `Study, ${data.study.trials} runs, daily`, value: data.study.anyDayRate, text: pct(data.study.anyDayRate), fill: "#ff5a1f" },
+];
+
+const runSentence = (r: (typeof runs)[number]) =>
+	r.firstCrossing
+		? `dips through the glass at p = ${alphaLabel} on day ${r.firstCrossing.day} (p = ${fmtP(r.firstCrossing.p)}), where a daily peek would call a winner that isn't there, and ends on day ${days} at p = ${fmtP(r.final.p)}`
+		: `stays over p = ${alphaLabel} all ${days} days (lowest p = ${fmtP(r.low.p)}, day ${r.low.day})`;
+const ariaLabel = `A toy red pickup rides a roller-coaster track tracing one simulated A/B test's daily p-value, with no true difference between the arms: run 1 of ${n} (seed ${first.seed}) ${runSentence(first)}. Drag to spin; tap for the next run. In all-runs mode, ${data.crossedCount} of ${n} runs dip under ${alphaLabel} at some daily peek.`;
+---
+
+<figure data-peek-coaster data-readouts={readout ? JSON.stringify(readouts) : undefined} data-days={days} data-alpha={alphaLabel} class:list={["relative w-full", className]}>
+	<div
+		data-peek-coaster-viewer
+		data-config={JSON.stringify(viewerConfig)}
+		role="img"
+		aria-label={ariaLabel}
+		class:list={["relative z-10 w-full select-none", aspect, canvasClass]}
+	>
+		<!-- Static fallback: the same runs unrolled flat. Shown until WebGL mounts, and kept if it can't. -->
+		<svg data-fallback viewBox={`0 0 ${FALLBACK_W} ${FALLBACK_H}`} class="absolute inset-0 h-full w-full" aria-hidden="true">
+			<defs>
+				<clipPath id="pc-under"><rect x="0" y={fallback.floorY} width={FALLBACK_W} height={FALLBACK_H - fallback.floorY} /></clipPath>
+			</defs>
+			<rect x={FALLBACK_BOX.x0 - 10} y={fallback.floorY} width={FALLBACK_BOX.x1 - FALLBACK_BOX.x0 + 20} height={FALLBACK_BOX.y1 - fallback.floorY} fill="#e4f5ff" opacity="0.55" />
+			<line x1={FALLBACK_BOX.x0 - 10} x2={FALLBACK_BOX.x1 + 10} y1={fallback.floorY} y2={fallback.floorY} stroke="#ff5a1f" stroke-width="4" />
+			<line x1={FALLBACK_BOX.x0 - 10} x2={FALLBACK_BOX.x1 + 10} y1={FALLBACK_BOX.y1} y2={FALLBACK_BOX.y1} stroke="#111" stroke-width="5" />
+			{
+				fallback.ticks.map((t) => (
+					<text x={FALLBACK_BOX.x0 - 16} y={t.y + 4} text-anchor="end" font-size="12" font-family="Silkscreen, monospace" fill={t.accent ? "#ff5a1f" : "#111"}>
+						{t.label}
+					</text>
+				))
+			}
+			{
+				fallback.days.map((d) => (
+					<text x={d.x} y={FALLBACK_H - 6} text-anchor="middle" font-size="11" font-family="Silkscreen, monospace" fill="#111">
+						{d.label}
+					</text>
+				))
+			}
+			<g data-fb-all hidden={mode !== "all"} fill="none" stroke-linejoin="round" stroke-linecap="round">
+				{fallback.runs.map((r) => <path d={r.d} stroke="#2438ff" stroke-width="1.6" opacity="0.7" />)}
+				{fallback.runs.map((r) => <path d={r.d} stroke="#ff5a1f" stroke-width="2.2" clip-path="url(#pc-under)" />)}
+				{fallback.runs.map((r) => r.mark && <circle cx={r.mark.x} cy={r.mark.y} r="5" fill="#ff5a1f" stroke="#111" stroke-width="2" />)}
+			</g>
+			{
+				fallback.runs.map((r, i) => (
+					<g data-fb-run={i} hidden={mode === "all" || i !== 0} fill="none" stroke-linejoin="round" stroke-linecap="round">
+						<path d={r.d} stroke="#111" stroke-width="9" />
+						<path d={r.d} stroke="#2438ff" stroke-width="5" />
+						<path d={r.d} stroke="#ff5a1f" stroke-width="5" clip-path="url(#pc-under)" />
+						{r.mark && <circle cx={r.mark.x} cy={r.mark.y} r="8" fill="#ff5a1f" stroke="#111" stroke-width="3" />}
+					</g>
+				))
+			}
+		</svg>
+	</div>
+
+	{
+		readout && (
+			<figcaption class="relative z-20 ml-auto mt-2 w-full max-w-[26rem] md:-mt-2">
+				<div class="raw-box rounded-2xl bg-cream p-4 text-black">
+					<div class="flex items-center justify-between gap-3">
+						<p class="font-mono text-[10px] uppercase leading-tight" data-r-eyebrow>
+							Run 1 of {n} · seed {first.seed} · no true difference
+						</p>
+						<button
+							type="button"
+							data-r-next
+							class="font-mono raw-box shadow-hard-sm raw-press shrink-0 rounded-full bg-lime px-3 py-1 text-[10px] uppercase"
+						>
+							Next run →
+						</button>
+					</div>
+
+					<div data-r-one hidden={mode === "all"}>
+						<div class="mt-2 flex items-end justify-between gap-3">
+							<p class="font-anton text-[1.9rem] leading-none">
+								Day <span data-r-day>{days}</span>
+							</p>
+							<p class="font-anton text-[1.9rem] leading-none">
+								p = <span data-r-p>{fmtP(first.final.p)}</span>
+							</p>
+						</div>
+						<p class="font-mono mt-2 inline-block rounded-full border-2 border-black px-2 py-0.5 text-[10px] uppercase" data-r-badge>
+							Over {alphaLabel}
+						</p>
+						<dl class="mt-3 grid grid-cols-[1fr_auto] gap-x-3 gap-y-1 text-[13px] font-semibold leading-snug">
+							<dt>First daily peek under {alphaLabel}</dt>
+							<dd class="font-mono text-right text-[11px] uppercase" data-r-first>
+								{first.firstCrossing ? `Day ${first.firstCrossing.day} · p = ${fmtP(first.firstCrossing.p)}` : "Never"}
+							</dd>
+							<dt>Day {days}, the planned end</dt>
+							<dd class="font-mono text-right text-[11px] uppercase" data-r-final>
+								p = {fmtP(first.final.p)}
+							</dd>
+						</dl>
+						<p class="mt-2 text-[13px] font-semibold leading-snug" data-r-sentence>
+							{first.firstCrossing
+								? `Peeking daily, you'd have stopped on day ${first.firstCrossing.day} and shipped a winner that isn't there. Checked once on day ${days}: ${first.final.p < alpha ? "also under" : "no winner"}.`
+								: `Never under ${alphaLabel}: peeking daily or not, no false winner this time.`}
+						</p>
+					</div>
+
+					<div data-r-all hidden={mode !== "all"}>
+						<div class="mt-2 flex items-end justify-between gap-3">
+							<p class="font-anton text-[1.9rem] leading-none">
+								Day <span data-r-all-day>{days}</span>
+							</p>
+							<p class="font-anton text-[1.9rem] leading-none">
+								<span data-r-crossed>{data.crossedCount}</span>
+								<span class="text-base"> of {n} fooled</span>
+							</p>
+						</div>
+						<svg viewBox="0 0 330 100" class="mt-3 w-full overflow-visible" aria-label={`False-positive rates with no true difference: these ${n} runs peeked daily ${pct(share)}, checked on day ${days} only ${pct(finalShare)}, nominal ${pct(alpha)}, the full ${data.study.trials}-run study peeked daily ${pct(data.study.anyDayRate)}.`} role="img">
+							{
+								bars.map((b, i) => (
+									<g transform={`translate(0 ${i * 24})`}>
+										<text x="0" y="12" font-size="8.5" font-family="Silkscreen, monospace">{b.label}</text>
+										<rect data-r-bar={b.key} x="0" y="15" width={bw(b.value)} height="7" fill={b.fill} stroke="#111" stroke-width="1.8" />
+										<text data-r-bar-text={b.key} x={Number(bw(b.value)) + 6} y="22" font-size="8.5" font-family="Silkscreen, monospace">{b.text}</text>
+									</g>
+								))
+							}
+						</svg>
+						<p class="mt-2 text-[13px] font-semibold leading-snug">
+							Peek every day and {pct(share)} of these no-difference runs dip under {alphaLabel} at least once. Check only on day {days} and it's {pct(finalShare)}; the
+							test promises {pct(alpha)}. The page's full study at the same settings and seed: {pct(data.study.anyDayRate)} peeking daily, {pct(data.study.finalDayRate)} checking once.
+						</p>
+					</div>
+
+					<div class="mt-3 flex gap-2" role="group" aria-label="How many runs to show">
+						<button type="button" data-r-mode="one" aria-pressed={mode === "one" ? "true" : "false"} class="font-mono raw-box shadow-hard-sm raw-press rounded-full px-3 py-1 text-[10px] uppercase aria-pressed:bg-black aria-pressed:text-lime">
+							One run
+						</button>
+						<button type="button" data-r-mode="all" aria-pressed={mode === "all" ? "true" : "false"} class="font-mono raw-box shadow-hard-sm raw-press rounded-full px-3 py-1 text-[10px] uppercase aria-pressed:bg-black aria-pressed:text-lime">
+							All {n} runs
+						</button>
+					</div>
+				</div>
+				<p class="mt-3 text-[11px] font-medium leading-snug">
+					<strong>Data:</strong> every run is a simulated A/B test with no true difference: revenue per user ({pct(study.true_rate)} of visitors spend, ${study.avg_revenue_per_spender} average), {study.visitors_per_day.toLocaleString("en-US")} visitors per arm per day, a two-sided z-test on the
+					cumulative data at each of {days} daily peeks, α = {alphaLabel}. These are the peeking study's defaults; run <em>i</em> is its trial <em>i</em> (seeds {first.seed}–{lastSeed}).
+					Height is the p-value on a log scale, 1 at the top to {layout.pMin} at the base, with the glass at {alphaLabel}; angle is day 1 to {days} around the ring; posts are the daily
+					peeks. In all-runs mode run 1 is the innermost ribbon, runs that ever dip under {alphaLabel} are the outlined ones, and a mark on the glass is a run's first dip. Between peeks the track is a smooth curve through the daily values (no
+					data exists between peeks). <strong>Not data:</strong> the truck, its pace and the spin.
+				</p>
+			</figcaption>
+		)
+	}
+</figure>
+
+<script>
+	import { mountViewers } from "../../scripts/three/viewer";
+	import type { CoasterMode, CoasterState } from "../../scripts/three/subjects/peeking-coaster";
+
+	interface Readout {
+		seed: number;
+		first: { day: number; p: string } | null;
+		final: string;
+		finalUnder: boolean;
+		low: { day: number; p: string };
+		p: string[];
+		under: boolean[];
+	}
+
+	mountViewers("[data-peek-coaster-viewer]", () => import("../../scripts/three/subjects/peeking-coaster").then((m) => m.default));
+
+	const BADGE = "font-mono mt-2 inline-block rounded-full border-2 border-black px-2 py-0.5 text-[10px] uppercase";
+
+	for (const fig of document.querySelectorAll<HTMLElement>("[data-peek-coaster]")) {
+		const host = fig.querySelector<HTMLElement>("[data-peek-coaster-viewer]");
+		const readouts = JSON.parse(fig.dataset.readouts ?? "[]") as Readout[];
+		const days = Number(fig.dataset.days);
+		const a = fig.dataset.alpha ?? "0.05";
+		const q = <T extends Element = HTMLElement>(sel: string) => fig.querySelector<T>(sel);
+		const one = q("[data-r-one]");
+		const all = q("[data-r-all]");
+		// Canvas-only (readout={false}): the viewer still mounts and rides; there's nothing to update.
+		if (!host || !readouts.length || !one || !all) continue;
+		const n = readouts.length;
+		const eyebrow = q("[data-r-eyebrow]")!;
+		const dayEl = q("[data-r-day]")!;
+		const pEl = q("[data-r-p]")!;
+		const badge = q("[data-r-badge]")!;
+		const firstEl = q("[data-r-first]")!;
+		const finalEl = q("[data-r-final]")!;
+		const sentence = q("[data-r-sentence]")!;
+		const allDay = q("[data-r-all-day]")!;
+		const crossedEl = q("[data-r-crossed]")!;
+		const dailyBar = q<SVGRectElement>('[data-r-bar="daily"]');
+		const dailyText = q<SVGTextElement>('[data-r-bar-text="daily"]');
+		const fullBar = Number(dailyBar?.getAttribute("width") ?? 0);
+		const crossedTotal = Number(crossedEl.textContent);
+		const modeButtons = fig.querySelectorAll<HTMLButtonElement>("[data-r-mode]");
+
+		let shown = { mode: "" as CoasterMode | "", run: -1 };
+		const showRunStatics = (run: number) => {
+			const r = readouts[run];
+			eyebrow.textContent = `Run ${run + 1} of ${n} · seed ${r.seed} · no true difference`;
+			firstEl.textContent = r.first ? `Day ${r.first.day} · p = ${r.first.p}` : "Never";
+			finalEl.textContent = `p = ${r.final}`;
+		};
+		const show = (s: CoasterState) => {
+			if (s.mode !== shown.mode) {
+				one.hidden = s.mode !== "one";
+				all.hidden = s.mode !== "all";
+				modeButtons.forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.rMode === s.mode)));
+			}
+			if (s.mode === "one") {
+				if (s.run !== shown.run || shown.mode !== "one") showRunStatics(s.run);
+				const r = readouts[s.run];
+				const i = s.day - 1;
+				dayEl.textContent = String(s.day);
+				pEl.textContent = r.p[i];
+				const under = r.under[i];
+				const isFirst = r.first?.day === s.day;
+				const pastFirst = r.first !== null && s.day >= r.first.day;
+				badge.className = `${BADGE} ${under ? "bg-tomato" : "bg-cobalt text-cream"}`;
+				badge.textContent = under ? (isFirst ? `Under ${a} · a daily peek stops here` : `Under ${a}`) : pastFirst ? `Back over ${a}` : `Over ${a}`;
+				if (s.done) {
+					sentence.textContent = r.first
+						? `Peeking daily, you'd have stopped on day ${r.first.day} and shipped a winner that isn't there. Checked once on day ${days}: ${r.finalUnder ? `also under ${a}, the false alarm a single look allows ${Number(a) * 100}% of the time` : "no winner"}.`
+						: `Never under ${a} (lowest p = ${r.low.p} on day ${r.low.day}): no false winner this time, peeking or not.`;
+				} else if (pastFirst) {
+					sentence.textContent = `A daily peeker already stopped on day ${r.first!.day}. The test keeps running anyway.`;
+				} else {
+					sentence.textContent = `Peek ${s.day} of ${days}: nothing under ${a} yet.`;
+				}
+			} else {
+				allDay.textContent = String(s.day);
+				crossedEl.textContent = String(s.crossed);
+				if (dailyBar && dailyText && crossedTotal > 0) {
+					const w = (fullBar * s.crossed) / crossedTotal;
+					dailyBar.setAttribute("width", w.toFixed(1));
+					dailyText.setAttribute("x", (w + 6).toFixed(1));
+					dailyText.textContent = `${s.crossed} of ${n} · ${((s.crossed / n) * 100).toFixed(0)}%`;
+				}
+			}
+			shown = { mode: s.mode, run: s.run };
+		};
+
+		// Without WebGL nothing answers the buttons, so the readout and the flat fallback step alone.
+		let fbRun = 0;
+		const live = () => !!host.querySelector("canvas");
+		const showFallback = (mode: CoasterMode, run: number) => {
+			fig.querySelector("[data-fb-all]")?.toggleAttribute("hidden", mode !== "all");
+			fig.querySelectorAll("[data-fb-run]").forEach((g) => g.toggleAttribute("hidden", mode === "all" || Number((g as HTMLElement).dataset.fbRun) !== run));
+			show({ mode, run, day: days, p: NaN, crossed: crossedTotal, done: true });
+		};
+
+		host.addEventListener("peekcoaster:state", (e) => show((e as CustomEvent<CoasterState>).detail));
+		q("[data-r-next]")?.addEventListener("click", () => {
+			if (live()) host.dispatchEvent(new CustomEvent("peekcoaster:next"));
+			else showFallback("one", (fbRun = (fbRun + 1) % n));
+		});
+		modeButtons.forEach((b) =>
+			b.addEventListener("click", () => {
+				const mode = b.dataset.rMode as CoasterMode;
+				if (live()) host.dispatchEvent(new CustomEvent<CoasterMode>("peekcoaster:mode", { detail: mode }));
+				else showFallback(mode, fbRun);
+			}),
+		);
+		showFallback(one.hidden ? "all" : "one", 0);
+	}
+</script>

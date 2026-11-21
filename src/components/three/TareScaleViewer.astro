@@ -1,0 +1,206 @@
+---
+/**
+ * The Noise Problem's 3D hero: a kitchen scale, the page's own "tare" analogy, weighing one seeded
+ * run of the page's live CUPED experiment. It plays the 20 days (60 visitors drop into the bowl
+ * each day; the needle and band show that day's measured lift and 95% interval), and TARE switches
+ * the reading to the CUPED-adjusted one. The readout shows both readings for the day on the dial.
+ * With `readout={false}` it renders the canvas box alone (still playing, draggable and tappable,
+ * with the static fallback), transparent over whatever sits behind it, e.g. a project tile.
+ */
+import { simulateCupedVisitors } from "../../lib/stats-sim/cuped-cloud";
+import { HERO_CUBE_SEED, LIVE_EXPERIMENT_DEFAULTS } from "../../lib/stats-sim/cuped-defaults";
+import type { CupedExperimentConfig } from "../../lib/stats-sim/cuped-experiment";
+import { buildScaleReadings, intervalWidth, type Reading } from "../../lib/stats-sim/cuped-readings";
+import { FALLBACK_VIEWBOX, scaleFallbackSvg } from "../../lib/three/tare-scale-fallback";
+import { DEFAULT_TARE_SCALE_COLORS as C } from "../../lib/three/tare-scale-model";
+
+interface Props {
+	/** Classes for the whole figure (canvas plus readout). */
+	class?: string;
+	/** Classes for the canvas box alone, e.g. negative margins to float it over a headline. */
+	canvasClass?: string;
+	/** Tailwind aspect-ratio classes for the canvas box. Defaults to 16:10. */
+	aspect?: string;
+	/** The readout card and caption under the canvas. False: the canvas alone. */
+	readout?: boolean;
+	/** Seconds between automatic raw/tared toggles once the days have played (0: only on tap). */
+	cycle?: number;
+}
+
+const { class: className = "", canvasClass = "", aspect = "aspect-[16/10]", readout = true, cycle = 0 } = Astro.props;
+
+const config: CupedExperimentConfig = { ...LIVE_EXPERIMENT_DEFAULTS, seed: HERO_CUBE_SEED };
+const readings = buildScaleReadings(config);
+const arms = simulateCupedVisitors(config).map((v) => v.arm);
+const last = readings.days[readings.days.length - 1];
+const fallbackId = readout ? "tare-fb-hero" : "tare-fb-tile";
+
+const signed = (v: number) => `${v >= 0 ? "+" : "−"}${Math.abs(v).toFixed(2)}`;
+const num = (v: number) => `${v < 0 ? "−" : ""}${Math.abs(v).toFixed(2)}`;
+const pText = (p: number) => (p < 0.001 ? "p < 0.001" : `p = ${p.toFixed(3)}`);
+const narrower = (d: { raw: Reading; cuped: Reading }) => (1 - intervalWidth(d.cuped) / intervalWidth(d.raw)) * 100;
+// Compact per-day readings for the readout script: [lift, low, high, p] raw then CUPED.
+const days = readings.days.map((d) => [d.visitors, ...[d.raw, d.cuped].flatMap((r) => [r.lift, r.low, r.high, r.p])]);
+
+const label =
+	`A red kitchen scale with a glass bowl of ${arms.length.toLocaleString("en-US")} small balls, one per simulated visitor. ` +
+	`Its dial reads the measured lift, B minus A: on day ${last.day}, raw, ${signed(last.raw.lift)} points with a 95% interval from ${last.raw.low.toFixed(2)} to ${last.raw.high.toFixed(2)}. ` +
+	`Pressing TARE applies CUPED: ${signed(last.cuped.lift)} points, interval ${last.cuped.low.toFixed(2)} to ${last.cuped.high.toFixed(2)}, ${narrower(last).toFixed(0)}% narrower. ` +
+	`The simulation's true lift is ${readings.trueLift}. Tap to tare; drag to turn it.`;
+
+const column = (key: "raw" | "cuped", title: string, r: Reading) => ({ key, title, r });
+const columns = [column("raw", "Raw", last.raw), column("cuped", "Tared · CUPED", last.cuped)];
+---
+
+<figure data-tare-scale data-days={readout ? JSON.stringify(days) : undefined} data-last-day={last.day} class:list={["relative w-full", className]}>
+	<div
+		data-tare-scale-viewer
+		data-config={JSON.stringify(config)}
+		data-cycle={cycle > 0 ? cycle : undefined}
+		role="img"
+		aria-label={label}
+		class:list={["relative z-10 w-full select-none", aspect, canvasClass]}
+	>
+		<!-- Static fallback: the same scale and visitors drawn flat, shown until WebGL mounts and kept if it can't. -->
+		<svg data-fallback viewBox={FALLBACK_VIEWBOX} class="absolute inset-0 h-full w-full" aria-hidden="true" set:html={scaleFallbackSvg(readings, arms, fallbackId)} />
+	</div>
+
+	{
+		readout && (
+			<figcaption class="relative z-20 ml-auto mt-2 w-full max-w-[26rem]">
+				<div class="raw-box rounded-2xl bg-cream p-4 text-black">
+					<div class="flex items-center justify-between gap-2">
+						<p class="font-mono text-[10px] uppercase leading-tight" data-s-eyebrow>
+							Day {last.day} of {last.day} · {last.visitors.toLocaleString("en-US")} visitors
+						</p>
+						<div class="flex shrink-0 gap-2">
+							<button
+								type="button"
+								data-s-replay
+								disabled
+								class="font-mono raw-box shadow-hard-sm raw-press rounded-full bg-cream px-3 py-1 text-[10px] uppercase disabled:opacity-40"
+							>
+								↺ Replay
+							</button>
+							<button type="button" data-s-tare aria-pressed="false" class="font-mono raw-box shadow-hard-sm raw-press rounded-full bg-lime px-3 py-1 text-[10px] uppercase">
+								Tare
+							</button>
+						</div>
+					</div>
+					<div class="mt-3 grid grid-cols-2 gap-2">
+						{columns.map(({ key, title, r }) => (
+							<div data-s-col={key} class:list={["rounded-xl border-[2.5px] border-black p-2.5", key === "raw" ? "bg-lime" : "bg-cream"]}>
+								<p class="font-mono flex items-center gap-1.5 text-[9px] uppercase leading-tight">
+									<span class="inline-block h-2.5 w-4 rounded-sm border-[1.5px] border-black" style={`background:${key === "raw" ? C.rawBand : C.cupedBand}`} />
+									{title}
+								</p>
+								<p class="font-anton mt-1 text-[1.9rem] leading-none" data-s-lift>
+									{signed(r.lift)}
+								</p>
+								<p class="mt-1 text-[11px] font-semibold leading-snug" data-s-ci>
+									95%: {num(r.low)} to {num(r.high)}
+								</p>
+								<p class="font-mono text-[9px] uppercase leading-snug" data-s-p>
+									Width {intervalWidth(r).toFixed(2)} · {pText(r.p)}
+								</p>
+							</div>
+						))}
+					</div>
+					<p class="mt-2 text-[13px] font-semibold leading-snug" data-s-sentence>
+						Taring narrows day {last.day}'s interval by {narrower(last).toFixed(0)}%, from {intervalWidth(last.raw).toFixed(2)} to {intervalWidth(last.cuped).toFixed(2)} points.
+					</p>
+					<p class="font-mono mt-2 flex flex-wrap gap-x-3 gap-y-1 text-[9px] uppercase">
+						<span class="inline-flex items-center gap-1">
+							<span class="inline-block size-2.5 rounded-full border-[1.5px] border-black" style={`background:${C.control}`} />
+							Control (A)
+						</span>
+						<span class="inline-flex items-center gap-1">
+							<span class="inline-block size-2.5 rounded-full border-[1.5px] border-black" style={`background:${C.treatment}`} />
+							Treatment (B)
+						</span>
+						<span class="inline-flex items-center gap-1">
+							<svg viewBox="0 0 12 10" class="h-2.5 w-3" aria-hidden="true">
+								<path d="M1 1 H11 L6 9 Z" fill={C.button} stroke="#111" stroke-width="1.5" stroke-linejoin="round" />
+							</svg>
+							True lift +{readings.trueLift}
+						</span>
+					</p>
+				</div>
+				<p class="mt-3 text-[11px] font-medium leading-snug">
+					<strong>Every ball is a visitor</strong> from one seeded run (seed {config.seed}) of the live experiment below, at its opening settings:{" "}
+					{config.visitors_per_day} visitors a day per arm for {config.days} days, a real {config.true_lift}-point lift for B, and a pre/post correlation of{" "}
+					{config.correlation}. The scale plays the days: {2 * config.visitors_per_day} visitors drop in each day, and the needle and band move to that day's measured
+					lift and 95% interval. Zero is at twelve o'clock, so while the band covers it the result isn't significant. TARE subtracts what each visitor's pre-period
+					value predicted (CUPED, exactly as the live experiment does it). The scale, bowl and sway are decoration; the balls, needle, band and pointer are data.
+				</p>
+			</figcaption>
+		)
+	}
+</figure>
+
+<script>
+	import { mountViewers } from "../../scripts/three/viewer";
+	import type { ScaleState } from "../../scripts/three/subjects/tare-scale";
+
+	mountViewers("[data-tare-scale-viewer]", () => import("../../scripts/three/subjects/tare-scale").then((m) => m.default));
+
+	const signed = (v: number) => `${v >= 0 ? "+" : "−"}${Math.abs(v).toFixed(2)}`;
+	const num = (v: number) => `${v < 0 ? "−" : ""}${Math.abs(v).toFixed(2)}`;
+	const pText = (p: number) => (p < 0.001 ? "p < 0.001" : `p = ${p.toFixed(3)}`);
+
+	for (const fig of document.querySelectorAll<HTMLElement>("[data-tare-scale]")) {
+		const host = fig.querySelector<HTMLElement>("[data-tare-scale-viewer]");
+		const days = JSON.parse(fig.dataset.days ?? "[]") as number[][];
+		const eyebrow = fig.querySelector<HTMLElement>("[data-s-eyebrow]");
+		const sentence = fig.querySelector<HTMLElement>("[data-s-sentence]");
+		const tare = fig.querySelector<HTMLButtonElement>("[data-s-tare]");
+		const replay = fig.querySelector<HTMLButtonElement>("[data-s-replay]");
+		const cols = (["raw", "cuped"] as const).map((key) => fig.querySelector<HTMLElement>(`[data-s-col="${key}"]`));
+		// Canvas-only (readout={false}): the viewer still mounts; there's just nothing to update.
+		if (!host || !days.length || !eyebrow || !sentence || !tare || !replay || cols.some((c) => !c)) continue;
+		const lastDay = days.length;
+
+		let shownKey = "";
+		const show = ({ day, tared, playing }: ScaleState) => {
+			const key = `${day}:${tared}:${playing}`;
+			if (key === shownKey) return;
+			shownKey = key;
+			const [visitors, ...vals] = days[day - 1];
+			eyebrow.textContent = `Day ${day} of ${lastDay} · ${visitors.toLocaleString("en-US")} visitors${playing ? "…" : ""}`;
+			const widths: number[] = [];
+			cols.forEach((col, k) => {
+				const [lift, low, high, p] = vals.slice(k * 4, k * 4 + 4);
+				widths.push(high - low);
+				col!.querySelector("[data-s-lift]")!.textContent = signed(lift);
+				col!.querySelector("[data-s-ci]")!.textContent = `95%: ${num(low)} to ${num(high)}`;
+				col!.querySelector("[data-s-p]")!.textContent = `Width ${(high - low).toFixed(2)} · ${pText(p)}`;
+				const active = (k === 1) === tared;
+				col!.classList.toggle("bg-lime", active);
+				col!.classList.toggle("bg-cream", !active);
+			});
+			sentence.textContent = `Taring narrows day ${day}'s interval by ${((1 - widths[1] / widths[0]) * 100).toFixed(0)}%, from ${widths[0].toFixed(2)} to ${widths[1].toFixed(2)} points.`;
+			tare.setAttribute("aria-pressed", String(tared));
+			tare.textContent = tared ? "Untare" : "Tare";
+		};
+
+		host.addEventListener("tarescale:state", (e) => {
+			replay.disabled = false;
+			show((e as CustomEvent<ScaleState>).detail);
+		});
+		replay.addEventListener("click", () => host.dispatchEvent(new CustomEvent("tarescale:replay")));
+		// Without WebGL nothing answers "tarescale:tare", so the button flips the static drawing (the last day).
+		let fallbackTared = false;
+		tare.addEventListener("click", () => {
+			if (host.querySelector("canvas")) {
+				host.dispatchEvent(new CustomEvent("tarescale:tare"));
+				return;
+			}
+			fallbackTared = !fallbackTared;
+			// If WebGL mounts later, the scale starts in the state the drawing shows.
+			host.dataset.tared = fallbackTared ? "1" : "";
+			host.querySelector('[data-fb-state="raw"]')?.toggleAttribute("hidden", fallbackTared);
+			host.querySelector('[data-fb-state="cuped"]')?.toggleAttribute("hidden", !fallbackTared);
+			show({ day: lastDay, tared: fallbackTared, playing: false });
+		});
+	}
+</script>

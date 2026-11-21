@@ -1,6 +1,6 @@
 ---
 import ProjectHeader from "../../editorial/ProjectHeader.astro";
-import CupedCubeViewer from "../../three/CupedCubeViewer.astro";
+import TareScaleViewer from "../../three/TareScaleViewer.astro";
 ---
 
 <ProjectHeader
@@ -12,9 +12,9 @@ import CupedCubeViewer from "../../three/CupedCubeViewer.astro";
 	secondaryCta={{ label: "See the speed study", href: "#speed-study" }}
 >
 	<!--
-		On desktop the cube floats up over the right of the headline, like the Volume Gap blob, while
+		On desktop the scale floats up over the right of the headline, like the Volume Gap blob, while
 		its readout stays in flow beside the summary so the header grows to fit it. Tablets keep it in
 		the right column; on mobile both sit below the summary.
 	-->
-	<CupedCubeViewer canvasClass="md:-ml-[12%] md:w-[112%] lg:-ml-[36%] lg:-mt-48 lg:w-[136%] xl:-mt-56" />
+	<TareScaleViewer aspect="aspect-[16/10] lg:aspect-[4/3]" canvasClass="md:-ml-[12%] md:w-[112%] lg:-ml-[36%] lg:-mt-64 lg:w-[136%] xl:-mt-[19rem]" />
 </ProjectHeader>

@@ -29,6 +29,7 @@ import {
 	SphereGeometry,
 	Vector3,
 } from "three";
+import { frameVertically } from "./framing";
 import { createPartKit, outlineGeometry, slab, OUTLINE } from "./kit";
 import {
 	postAxisPosition,
@@ -73,46 +74,14 @@ export const DATA_HALF = CUBE_HALF - ROD / 2 - SPHERE_R - GLASS_GAP;
 /** Height of the cube's center above the plinth's base. */
 export const CUBE_CENTER_Y = PLINTH_H + ROD / 2 + CUBE_HALF;
 
-/** The direction the camera looks from, and the shared viewer's field of view and margin (viewer.ts). */
+/** The direction the camera looks from. */
 export const VIEW_DIR = new Vector3(0, 0.2, 1).normalize();
-const VIEWER_HALF_FOV = (14 * Math.PI) / 180;
-const VIEWER_MARGIN = 1.12;
 
 const TICK_LEN = 0.085;
 const TICK_W = 0.016;
 const BRACKET_X = CUBE_HALF + ROD / 2 + 0.11;
 const BRACKET_W = 0.05;
 const BRACKET_CAP = 0.15;
-
-/** A point to keep in frame: its height, and its horizontal distance away from the camera (negative = nearer). */
-type Extreme = [y: number, away: number];
-
-/**
- * A target on the spin axis and a half-height for the viewer so every extreme fits vertically in
- * perspective, seen from `elevation` above the horizon. The viewer only fits a flat half-height, so
- * near-low corners (which look lower) and far-high ones (which look higher) need this correction.
- * The same method as frameVertically in buoy-diorama.ts, kept local so this bundle doesn't pull in
- * the ocean code.
- */
-function frameVertically(extremes: Extreme[], elevation: number): { targetY: number; halfHeight: number } {
-	const c = Math.cos(elevation);
-	const s = Math.sin(elevation);
-	let ty = 0;
-	let half = 1;
-	for (let i = 0; i < 16; i++) {
-		const dist = (half / Math.tan(VIEWER_HALF_FOV)) * VIEWER_MARGIN;
-		const ups = extremes.map(([y, away]) => {
-			const up = (y - ty) * c + away * s;
-			const depth = away * c - (y - ty) * s;
-			return (up * dist) / (dist + depth);
-		});
-		const top = Math.max(...ups);
-		const bottom = Math.min(...ups);
-		ty += (top + bottom) / 2 / c;
-		half = Math.max((top - bottom) / 2, 1e-3);
-	}
-	return { targetY: ty, halfHeight: half * Math.cos(VIEWER_HALF_FOV) };
-}
 
 export interface CupedCubeModel {
 	/** Origin at the center of the plinth's base. */

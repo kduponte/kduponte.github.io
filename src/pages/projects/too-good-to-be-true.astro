@@ -5,26 +5,64 @@ import FoundationsSection from "../../components/projects/the-dashboard-problem/
 import CoreIdeaSection from "../../components/projects/the-dashboard-problem/CoreIdeaSection.astro";
 import LiveExperimentSection from "../../components/projects/the-dashboard-problem/LiveExperimentSection.astro";
 import StudySection from "../../components/projects/the-dashboard-problem/StudySection.astro";
-import WinnersCurseAside from "../../components/projects/the-dashboard-problem/WinnersCurseAside.astro";
+import CurseCoreIdeaSection from "../../components/projects/the-dashboard-problem/CurseCoreIdeaSection.astro";
+import CurseLiveSection from "../../components/projects/the-dashboard-problem/CurseLiveSection.astro";
+import CurseStudySection from "../../components/projects/the-dashboard-problem/CurseStudySection.astro";
 import KeyFindings from "../../components/editorial/KeyFindings.astro";
 import Methodology from "../../components/editorial/Methodology.astro";
 import Limitations from "../../components/editorial/Limitations.astro";
 import NextSteps from "../../components/editorial/NextSteps.astro";
+import {
+	CURSE_CONFIG,
+	formatCount,
+	formatLift,
+	formatShare,
+	measureWinnersCurse,
+	ratioBiasFirstOrder,
+	RETEST_SEED_OFFSET,
+	runCurseStudy,
+	STUDY_METRIC_COUNTS,
+	STUDY_VISITORS,
+} from "../../lib/stats-sim/winners-curse";
+
+// Every winner's-curse number on this page is computed here, once, at build time, from seeded
+// helpers pinned in tests/stats-sim/winners-curse.test.ts, and passed to the sections that print it.
+const curse = measureWinnersCurse();
+const byVisitors = runCurseStudy("visitors_per_arm", STUDY_VISITORS);
+const byMetrics = runCurseStudy("num_metrics", STUDY_METRIC_COUNTS);
+const ratio = ratioBiasFirstOrder(CURSE_CONFIG);
+
+const { none, bh, bonferroni } = curse.rules;
+const at = (sweep: typeof byVisitors, x: number) => sweep.points.find((p) => p.x === x)!;
+const bar = (x: number | null) => Math.round((x ?? 0) * 100);
+const points = (x: number | null) => ((x ?? 0) * 100).toFixed(2);
+const v100 = at(byVisitors, 100);
+const v400 = at(byVisitors, 400);
+const v1600 = at(byVisitors, 1600);
+const v6400 = at(byVisitors, 6400);
+const m2 = at(byMetrics, 2);
+const m10 = at(byMetrics, 10);
+const m20 = at(byMetrics, 20);
+const m50 = at(byMetrics, 50);
+const noneByMetrics = byMetrics.points.map((p) => p.rules.none.mean_observed_lift ?? 0);
+const lastSeed = curse.last_seed;
 ---
 
 <BaseLayout
-	title="The Dashboard Problem"
-	description="Test twenty metrics at once and something will look like a winner by chance, even when nothing real changed. A live simulation of why, and what actually controls it."
+	title="Too Good to Be True"
+	description="Test twenty metrics at once and something will look like a winner. Some of those winners aren't real, and the real ones are smaller than they look. A live simulation of both traps, false discoveries and the winner's curse, and what actually fixes each."
 >
 	<HeroSection />
 	<FoundationsSection />
 	<CoreIdeaSection />
 	<LiveExperimentSection />
 	<StudySection />
-	<WinnersCurseAside />
+	<CurseCoreIdeaSection curse={curse} />
+	<CurseLiveSection />
+	<CurseStudySection byVisitors={byVisitors} byMetrics={byMetrics} />
 
 	<KeyFindings
-		lede="Short version: checking more metrics at once inflates the chance that at least one looks like a winner by chance, from under 5% at just a couple of metrics to over 80% at fifty. Bonferroni fixes that at a real cost in power; Benjamini-Hochberg controls a different, usually more useful quantity instead, and keeps meaningfully more power as the metric count grows."
+		lede={`Short version: a dashboard winner can be too good to be true twice over. Checking more metrics at once inflates the chance that at least one is a fluke, from under 5% at just a couple of metrics to over 80% at fifty. And the real winners that do clear the bar overstate their lift: ${formatLift(none.mean_observed_lift)} measured on a true ${formatLift(curse.true_lift)} with no correction, ${formatLift(bonferroni.mean_observed_lift)} under Bonferroni. Corrections fix the first trap and worsen the second; more traffic, or re-measuring a winner on fresh traffic, fixes the second.`}
 		groups={[
 			{
 				heading: "The problem",
@@ -77,12 +115,58 @@ import NextSteps from "../../components/editorial/NextSteps.astro";
 					},
 				],
 			},
+			{
+				heading: "The second trap: real winners look bigger than they are",
+				description: "Same dashboards, a different question: not whether a flagged winner is real, but how big it is.",
+				findings: [
+					{
+						label: "The real winners a rule flags overstate their lift, and a stricter rule overstates it more",
+						bars: [
+							{ label: "True lift", value: bar(curse.true_lift) },
+							{ label: "All real lifts", value: bar(curse.mean_observed_lift_all) },
+							{ label: "No correction", value: bar(none.mean_observed_lift) },
+							{ label: "BH", value: bar(bh.mean_observed_lift) },
+							{ label: "Bonferroni", value: bar(bonferroni.mean_observed_lift) },
+						],
+						detail: `Across ${formatCount(curse.dashboards)} seeded dashboards at the live defaults, every genuinely lifted metric was simulated at ${formatLift(curse.true_lift)}. Measured, flagged or not, they average ${formatLift(curse.mean_observed_lift_all)}, and that gap is ratio bias, not selection. The ones no correction flags average ${formatLift(none.mean_observed_lift)}, Benjamini-Hochberg's ${formatLift(bh.mean_observed_lift)}, Bonferroni's ${formatLift(bonferroni.mean_observed_lift)}. The bar that keeps false discoveries rare is the same bar that only lets the luckiest real draws through.`,
+					},
+					{
+						label: "Every metric you add makes Bonferroni's winners more inflated",
+						bars: [
+							{ label: "2 metrics", value: bar(m2.rules.bonferroni.mean_observed_lift) },
+							{ label: "10 metrics", value: bar(m10.rules.bonferroni.mean_observed_lift) },
+							{ label: "20 metrics", value: bar(m20.rules.bonferroni.mean_observed_lift) },
+							{ label: "50 metrics", value: bar(m50.rules.bonferroni.mean_observed_lift) },
+						],
+						detail: `Bonferroni's bar is alpha divided by the metric count, so each metric added raises it: its flagged winners average ${formatLift(m2.rules.bonferroni.mean_observed_lift)} at 2 metrics and ${formatLift(m50.rules.bonferroni.mean_observed_lift)} at 50, at ${formatCount(byMetrics.base_config.visitors_per_arm)} visitors per arm. No correction's bar never moves, so its winners stay between ${formatLift(Math.min(...noneByMetrics))} and ${formatLift(Math.max(...noneByMetrics))} at every count. Testing more metrics hurts twice: more false discoveries, and bigger exaggeration once you correct for them.`,
+					},
+					{
+						label: "Traffic is the real cure: the curse feeds on low power",
+						bars: [
+							{ label: "100/arm", value: bar(v100.rules.bonferroni.mean_observed_lift) },
+							{ label: "400/arm", value: bar(v400.rules.bonferroni.mean_observed_lift) },
+							{ label: "1,600/arm", value: bar(v1600.rules.bonferroni.mean_observed_lift) },
+							{ label: "6,400/arm", value: bar(v6400.rules.bonferroni.mean_observed_lift) },
+						],
+						detail: `At 100 visitors per arm, Bonferroni finds ${formatShare(v100.rules.bonferroni.power)} of the real lifts, and the ones it finds average ${formatLift(v100.rules.bonferroni.mean_observed_lift)} on a true ${formatLift(curse.true_lift)}. At 1,600 it finds ${formatShare(v1600.rules.bonferroni.power)}, and they average ${formatLift(v1600.rules.bonferroni.mean_observed_lift)}. Once nearly every real effect clears the bar, clearing it stops selecting for luck, and the other rules converge the same way.`,
+					},
+					{
+						label: "Re-measuring a winner on fresh traffic lands it back on the truth, and catches the fakes too",
+						bars: [
+							{ label: "Bonferroni flag", value: bar(bonferroni.mean_observed_lift) },
+							{ label: "Same, re-tested", value: bar(bonferroni.mean_retest_lift) },
+							{ label: "All real lifts", value: bar(curse.mean_observed_lift_all) },
+						],
+						detail: `Re-run every dashboard on fresh traffic and re-measure the same flagged metrics: Bonferroni's ${formatLift(bonferroni.mean_observed_lift)} winners come back at ${formatLift(bonferroni.mean_retest_lift)}, no correction's ${formatLift(none.mean_observed_lift)} winners at ${formatLift(none.mean_retest_lift)}, both on the unselected average. The re-test sorts out trap one as well: of no correction's ${formatCount(none.null_flags)} false discoveries, only ${formatCount(none.null_flags_confirmed)} (${formatShare(none.null_flags_confirmed / none.null_flags)}) clear the bar again in the same direction, against ${formatShare(none.lifted_flags_confirmed / none.lifted_flags)} of its real winners.`,
+					},
+				],
+			},
 		]}
 	/>
 
 	<Methodology
 		id="methodology"
-		intro="This section is the full construction and citations behind everything above. If you just want the intuition and the two analogies, see Why does testing more metrics find more winners? earlier on this page, each section below also opens with a one-line plain-English summary."
+		intro="This section is the full construction and citations behind everything above. If you just want the intuition, see Why does testing more metrics find more winners? and Why do real winners look bigger than they are? earlier on this page, each section below also opens with a one-line plain-English summary."
 		sections={[
 			{
 				heading: "Three rules, run on the same simulated dashboard",
@@ -105,9 +189,34 @@ import NextSteps from "../../components/editorial/NextSteps.astro";
 				body: "At each metric count in {2, 5, 10, 20, 30, 50}, 300 independent simulated dashboards are generated (1,800 total per full study run), and for each of the three rules: whether any true-null metric was falsely flagged (feeding the family-wise error rate), and what fraction of genuinely-lifted metrics were correctly flagged (feeding power). Baseline rate, the size of the real lift, and the fraction of genuinely-lifted metrics are all adjustable above.",
 			},
 			{
+				heading: "Measuring the winner's curse on the same dashboards",
+				tldr: "The same seeded dashboards and the same three rules; the curse is the average observed lift of the genuinely lifted metrics each rule flags, next to the same average over every lifted metric.",
+				body: `measureWinnersCurse runs seeds ${formatCount(curse.first_seed)} to ${formatCount(lastSeed)} at the live experiment's defaults (${CURSE_CONFIG.num_metrics} metrics, ${Math.round(CURSE_CONFIG.fraction_null * 100)}% null, ${formatLift(curse.true_lift)} on a ${Math.round(CURSE_CONFIG.baseline_rate * 100)}% baseline, ${formatCount(CURSE_CONFIG.visitors_per_arm)} visitors per arm, alpha ${curse.alpha}) through the same simulateMetricBatch and the same three rules. Observed lift is arm B's rate over arm A's, minus one. For each rule it tallies the flags, how many landed on truly null metrics (trap one), and the average observed lift of the truly lifted metrics it flagged (trap two). Selecting on significance is the whole effect: nothing about the metrics changes, only which ones get looked at. The counts reconcile with the metric-count study's power over the same seeds exactly, which the test suite checks.`,
+			},
+			{
+				heading: "Ratio bias, and why the yardstick isn't the true lift",
+				tldr: "A lift divides by a noisy rate, which biases it up a little even with no selection, so this page measures the curse against every real lift's average, not against the true lift.",
+				body: `E[rate_B / rate_A] = p_B · E[1 / rate_A], and 1/x is convex, so by Jensen's inequality E[1 / rate_A] > 1 / p_A. To first order the bias factor is 1 + (1 − p)/(n·p), which is ${formatShare(ratio.relative_bias, 2)} at a ${Math.round(CURSE_CONFIG.baseline_rate * 100)}% baseline and ${formatCount(CURSE_CONFIG.visitors_per_arm)} visitors per arm and predicts ${formatShare(ratio.expected_observed_lift)} observed; the simulation's ${formatShare(curse.mean_observed_lift_all)} sits right on it. The difference in rates has no such term: every lifted metric averages ${points(curse.mean_observed_diff_all)} percentage points against a true ${points(curse.true_diff)}. The bias shrinks with traffic, from ${formatLift(v100.mean_observed_lift_all)} unselected at 100 visitors per arm to ${formatLift(v6400.mean_observed_lift_all)} at 6,400.`,
+			},
+			{
+				heading: "The fresh-traffic re-test",
+				tldr: "Every dashboard is re-run on fresh traffic from a separate seed stream, and each flagged metric is re-measured on its own, so nothing about the second measurement was selected.",
+				body: `The re-test for dashboard seed s is the same dashboard simulated at seed ${formatCount(RETEST_SEED_OFFSET)} + s: the same metrics, the same true rates, new visitors. A flagged metric's re-test result is that same metric in the fresh run, and a re-test confirms a flag when its p-value is under ${curse.alpha} in the same direction, a single test, so no correction applies. In a product this is a holdout or a follow-up experiment, which costs traffic and time the simulation gets for free.`,
+			},
+			{
+				heading: "The winner's-curse study",
+				tldr: "The same seeded dashboards at every point, sweeping visitors per arm and the number of metrics one at a time, with every other setting at the live defaults.",
+				body: `runCurseStudy repeats measureWinnersCurse over seeds ${formatCount(byVisitors.first_seed)} to ${formatCount(byVisitors.first_seed + byVisitors.dashboards - 1)} at each of ${byVisitors.points.length} traffic levels (${byVisitors.points.map((p) => formatCount(p.x)).join(", ")} visitors per arm) and ${byMetrics.points.length} metric counts (${byMetrics.points.map((p) => p.x).join(", ")}). Traffic sets each test's power, which is what the curse feeds on. The metric count moves the corrections' bars: Bonferroni's directly, as alpha divided by the count, and Benjamini-Hochberg's through how many p-values clear their rank's line. At 2 and 5 metrics the 70/30 split rounds to one lifted metric per dashboard. Both sweeps run at build time and ship as data, so the chart draws exactly the numbers the tests pin.`,
+			},
+			{
 				heading: "What the published research says",
 				tldr: "Benjamini-Hochberg is the actual, widely-cited 1995 paper that introduced controlling the false discovery rate as an alternative to the older, more conservative family-wise corrections.",
 				body: "Benjamini, Y. and Hochberg, Y. (1995), \"Controlling the False Discovery Rate: A Practical and Powerful Approach to Multiple Testing,\" Journal of the Royal Statistical Society, Series B, is the paper this page's second correction is built from directly. Bonferroni's correction predates it by decades and remains the standard conservative baseline it's usually compared against, exactly the comparison made throughout this page.",
+			},
+			{
+				heading: "What the published research says about the winner's curse",
+				tldr: "The name comes from auction bidding; the statistical version, selecting on significance inflating the effects you find, is well documented, including in online experiments.",
+				body: "Capen, Clapp and Campbell (1971), \"Competitive Bidding in High-Risk Situations,\" Journal of Petroleum Technology 23, is where the term first appeared, from offshore oil lease auctions in the Gulf of Mexico. Gelman and Carlin (2014), \"Beyond Power Calculations: Assessing Type S (Sign) and Type M (Magnitude) Errors,\" Perspectives on Psychological Science 9(6), name the magnitude error and show it grows as power falls, the pattern this page's traffic sweep reproduces. Ioannidis (2008), \"Why Most Discovered True Associations Are Inflated,\" Epidemiology 19(5), makes the same argument for threshold-based discovery across fields. Lee and Shen (2018), \"Winner's Curse: Bias Estimation for Total Effects of Features in Online Controlled Experiments,\" KDD 2018, show the bias inflates the summed impact of features an online company launches and propose a correction. Efron (2011), \"Tweedie's Formula and Selection Bias,\" Journal of the American Statistical Association 106(496), gives the empirical-Bayes shrinkage correction this page describes but doesn't simulate. Kohavi, Tang and Xu (2020), Trustworthy Online Controlled Experiments, Cambridge University Press, devote chapter 3 to Twyman's law, the rule of thumb that a surprising result is more likely an error than a discovery.",
 			},
 		]}
 	/>
@@ -117,6 +226,10 @@ import NextSteps from "../../components/editorial/NextSteps.astro";
 			"Metrics are simulated independently of each other. Real dashboard metrics are often correlated, revenue and conversion rate tend to move together, which changes the exact false-discovery and power numbers (BH's guarantee in particular is proven under independence or a specific form of positive dependence, not arbitrary correlation). The qualitative story, naive inflates, corrections control it at a cost, is robust to this, the precise numbers here are not.",
 			"The fraction of metrics that are genuinely lifted is a known input to this simulation, so its ground-truth column can be shown at all. A real dashboard never gets to see that column, that's the actual problem this page is about, not a simplification that changes any of the numbers.",
 			"This uses the original 1995 Benjamini-Hochberg procedure. Variants exist for arbitrary dependence structures (Benjamini-Yekutieli) and other refinements: this page implements one real, representative correction, not the only correct one.",
+			"Every genuinely lifted metric here has the same true lift. Real dashboards have a spread of true effects, small ones far more common than big ones, which changes the exaggeration numbers (a spread of small effects makes the curse worse, since the small ones only clear the bar on lucky draws). The direction, selection inflates, stricter bars inflate more, traffic shrinks it, is the robust part.",
+			"Every lift on this page is a ratio of two rates, so ratio bias is in every lift number, flagged or not. The difference-in-rates check isolates it, and the winner's-curse comparisons are made against every real lift's average rather than the true lift so it doesn't get counted as curse.",
+			"The re-test here is free, a fresh seed. In a product it costs a second experiment's worth of traffic and time, and the world can change in between (novelty wearing off, seasonality), so a real re-test can disagree for reasons this simulation doesn't have.",
+			"Shrinkage isn't simulated. Empirical-Bayes shrinkage can de-bias flagged estimates without new traffic, but it needs a prior estimated from many past experiments' effects, which this page doesn't model. It's described as a fix, not demonstrated as one.",
 		]}
 	/>
 
@@ -126,11 +239,11 @@ import NextSteps from "../../components/editorial/NextSteps.astro";
 		unresolvedLabel="What a proper fix would take"
 		reflection={{
 			surprising:
-				"That Benjamini-Hochberg's own chance of any false discovery climbs with the metric count, the same failure mode as the naive rule, just slower. It's easy to assume BH \"fixes\" multiple testing the way Bonferroni does; it actually trades one guarantee for a different, usually more useful one, not a strictly stronger version of the same guarantee.",
+				`That the fix for one trap makes the other worse. Bonferroni keeps false discoveries rare, and the real winners it lets through average ${formatLift(bonferroni.mean_observed_lift)} on a true ${formatLift(curse.true_lift)}, more exaggerated than doing nothing (${formatLift(none.mean_observed_lift)}). And that Benjamini-Hochberg's own chance of any false discovery climbs with the metric count: it trades one guarantee for a different, usually more useful one, not a strictly stronger version of the same guarantee.`,
 			hardest:
-				"Getting the false discovery rate's own definition right in code: it's an average over trials where trials with zero rejections contribute exactly 0, not an average only over trials that had rejections, a subtle difference that changes the number. Confirming the observed family-wise error rate against the textbook 1-(1-alpha)^m formula also required remembering that formula only applies when every tested metric is truly null, not the total metric count in a mixed batch.",
+				`Getting the false discovery rate's own definition right in code: it's an average over trials where trials with zero rejections contribute exactly 0, not an average only over trials that had rejections, a subtle difference that changes the number. Confirming the observed family-wise error rate against the textbook 1-(1-alpha)^m formula also required remembering that formula only applies when every tested metric is truly null, not the total metric count in a mixed batch. On the winner's-curse side, it was noticing that unselected lifted metrics averaged ${formatLift(curse.mean_observed_lift_all)}, not ${formatLift(curse.true_lift)}, before blaming the curse for it: that gap is ratio bias, and the difference-in-rates check is what pins it down.`,
 			unresolved:
-				"Simulating metrics with a realistic correlation structure instead of independent ones, and implementing the Benjamini-Yekutieli variant built for that case, would be the natural next step, along with letting the fraction of genuinely-lifted metrics vary within a single dashboard rather than being fixed for a whole run.",
+				`Simulating metrics with a realistic correlation structure instead of independent ones, and implementing the Benjamini-Yekutieli variant built for that case, would be the natural next step, along with letting the fraction of genuinely-lifted metrics vary within a single dashboard rather than being fixed for a whole run. On the winner's-curse side, letting true effects vary in size instead of all being ${formatLift(curse.true_lift)}, and simulating shrinkage, an empirical-Bayes estimate built from many past dashboards, as a second fix next to the re-test.`,
 		}}
 	/>
 </BaseLayout>

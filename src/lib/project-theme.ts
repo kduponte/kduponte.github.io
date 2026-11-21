@@ -21,7 +21,7 @@ const fills: Record<Tone, Pick<ProjectTheme, "fill" | "dot">> = {
 /** Each project owns one tone, reused for its card and (Phase 3) its page theme. */
 const bySlug: Record<string, Tone> = {
 	"the-22re-restoration": "tomato",
-	"the-dashboard-problem": "bubblegum",
+	"too-good-to-be-true": "bubblegum",
 	"the-noise-problem": "lime",
 	"the-peeking-problem": "sun",
 	"the-volume-gap": "cream",

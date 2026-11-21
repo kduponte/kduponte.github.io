@@ -1,54 +1,105 @@
 ---
+// The one number here (the first-order ratio bias) comes from ratioBiasFirstOrder in
+// src/lib/stats-sim/winners-curse.ts, at the live experiment's defaults, pinned in its test.
+import { CURSE_CONFIG, formatShare, ratioBiasFirstOrder } from "../../../lib/stats-sim/winners-curse";
+
 interface Term {
 	name: string;
 	plain: string;
 	technical: string;
 }
 
-const terms: Term[] = [
+interface Group {
+	heading: string;
+	question: string;
+	terms: Term[];
+}
+
+const ratioBias = ratioBiasFirstOrder(CURSE_CONFIG);
+
+const groups: Group[] = [
 	{
-		name: "Family-wise error rate (FWER)",
-		plain: "The chance that at least one metric out of a whole batch looks like a winner purely by chance, even though nothing actually changed anywhere.",
-		technical:
-			"P(at least one false rejection among m simultaneous tests). Grows toward 1 − (1 − α)^m as m increases, even though each individual test still runs at the same α.",
+		heading: "Trap one",
+		question: "Is a flagged winner real at all?",
+		terms: [
+			{
+				name: "Family-wise error rate (FWER)",
+				plain: "The chance that at least one metric out of a whole batch looks like a winner purely by chance, even though nothing actually changed anywhere.",
+				technical:
+					"P(at least one false rejection among m simultaneous tests). Grows toward 1 − (1 − α)^m as m increases, even though each individual test still runs at the same α.",
+			},
+			{
+				name: "False discovery rate (FDR)",
+				plain: "Instead of asking \"did anything go wrong at all,\" this asks \"of the metrics I'm calling winners, what fraction are actually mistakes?\" A more forgiving, often more useful question once you're testing a lot of metrics at once.",
+				technical:
+					"E[false rejections / total rejections], with the ratio defined as 0 when nothing was rejected. Controlling FDR at α means: on average, no more than an α fraction of whatever gets flagged as significant is actually a false positive.",
+			},
+			{
+				name: "False positive, for a batch of metrics",
+				plain: "The same idea as a single false positive, a metric that looks like it moved when it actually didn't, just now happening somewhere inside a whole dashboard of metrics checked at once, not just one.",
+				technical:
+					"Rejecting the null for a metric where the null is actually true. What's different here isn't the definition, it's that it's now one event among many simultaneous tests, which is exactly what makes the at-least-one version (FWER) and the proportion version (FDR) two different, both useful, ways to measure it.",
+			},
+		],
 	},
 	{
-		name: "False discovery rate (FDR)",
-		plain: "Instead of asking \"did anything go wrong at all,\" this asks \"of the metrics I'm calling winners, what fraction are actually mistakes?\" A more forgiving, often more useful question once you're testing a lot of metrics at once.",
-		technical:
-			"E[false rejections / total rejections], with the ratio defined as 0 when nothing was rejected. Controlling FDR at α means: on average, no more than an α fraction of whatever gets flagged as significant is actually a false positive.",
-	},
-	{
-		name: "False positive, for a batch of metrics",
-		plain: "The same idea as a single false positive, a metric that looks like it moved when it actually didn't, just now happening somewhere inside a whole dashboard of metrics checked at once, not just one.",
-		technical:
-			"Rejecting the null for a metric where the null is actually true. What's different here isn't the definition, it's that it's now one event among many simultaneous tests, which is exactly what makes the at-least-one version (FWER) and the proportion version (FDR) two different, both useful, ways to measure it.",
+		heading: "Trap two",
+		question: "If it's real, how big is it?",
+		terms: [
+			{
+				name: "Winner's curse",
+				plain: "When you pick winners by how good they looked, the ones you pick tend to have looked better than they really are. Nothing's wrong with them, picking the best-looking results also picks the luckiest measurement noise.",
+				technical:
+					"E[observed effect | selected] > true effect whenever selection depends on the observed effect, here, clearing a significance bar. The name comes from auction bidding, where the winning bid tends to be the biggest overestimate.",
+			},
+			{
+				name: "Type M (magnitude) error",
+				plain: "How much a significant result overstates the true effect, on average. Small for a test with plenty of power, large for one that only clears the bar when it gets lucky.",
+				technical:
+					"Gelman and Carlin's exaggeration ratio, E[|estimate| / |true effect| given significance]. It grows as power falls, because a low-powered test only reaches significance when its noise lands far from zero.",
+			},
+			{
+				name: "Ratio bias",
+				plain: "A lift is one rate divided by another, and dividing by a noisy number runs a little high on average, even when nothing was selected. It's small, but it's why this page measures the curse against every real lift's average, not the true lift.",
+				technical: `E[p̂_B / p̂_A] = p_B · E[1 / p̂_A] > p_B / p_A, by Jensen's inequality. To first order the bias factor is 1 + (1 − p) / (n·p): ${formatShare(ratioBias.relative_bias, 2)} at a ${Math.round(CURSE_CONFIG.baseline_rate * 100)}% baseline and ${CURSE_CONFIG.visitors_per_arm} visitors per arm. The difference in rates has no such term.`,
+			},
+		],
 	},
 ];
 ---
 
 <section class="mx-auto max-w-7xl px-6 py-16 md:px-12 md:py-20">
-	<h2 class="font-anton text-4xl md:text-5xl">Before we start: three terms this page leans on</h2>
+	<h2 class="font-anton text-4xl md:text-5xl">Before we start: six terms this page leans on</h2>
 	<p class="mt-3 max-w-[65ch] text-base leading-relaxed text-ink-soft">
-		Each one gets a plain-language sentence first, that's the whole idea if you only want the whole idea, and a more
-		precise technical line underneath it for anyone who wants the exact definition.
+		Three for each trap. Each one gets a plain-language sentence first, that's the whole idea if you only want the
+		whole idea, and a more precise technical line underneath it for anyone who wants the exact definition.
 	</p>
-	<dl class="mt-8 grid grid-cols-1 gap-6 md:grid-cols-3">
-		{
-			terms.map((term) => (
-				<div class="raw-box rounded-xl bg-cream p-6">
-					<dt class="font-display text-lg font-semibold">{term.name}</dt>
-					<dd class="mt-2 text-sm leading-relaxed font-semibold text-ink">{term.plain}</dd>
-					<div class="mt-3 border-t border-line pt-3">
-						<p class="font-mono text-xs uppercase tracking-wide text-accent-blue">More precisely</p>
-						<dd class="mt-1 text-xs leading-relaxed text-ink-soft">{term.technical}</dd>
-					</div>
-				</div>
-			))
-		}
-	</dl>
-	<p class="mt-6 max-w-[65ch] text-sm leading-relaxed text-ink-soft">
-		The rest of this page is about what happens to these two numbers as you test more metrics at once, and what two
-		real corrections actually do about it.
+	{
+		groups.map((group) => (
+			<div class="mt-8">
+				<h3 class="font-mono inline-block -rotate-1 bg-black px-2.5 py-1 text-[11px] uppercase text-lime">{group.heading}</h3>
+				<p class="mt-2 font-display text-lg font-semibold">{group.question}</p>
+				<dl class="mt-4 grid grid-cols-1 gap-6 md:grid-cols-3">
+					{group.terms.map((term) => (
+						<div class="raw-box rounded-xl bg-cream p-6">
+							<dt class="font-display text-lg font-semibold">{term.name}</dt>
+							<dd class="mt-2 text-sm leading-relaxed font-semibold text-ink">{term.plain}</dd>
+							<div class="mt-3 border-t border-line pt-3">
+								<p class="font-mono text-xs uppercase tracking-wide text-accent-blue">More precisely</p>
+								<dd class="mt-1 text-xs leading-relaxed text-ink-soft">{term.technical}</dd>
+							</div>
+						</div>
+					))}
+				</dl>
+			</div>
+		))
+	}
+	<p class="mt-8 max-w-[65ch] text-base leading-relaxed text-ink">
+		That's where the name comes from. A winner on an experiment dashboard can be too good to be true in two ways. It
+		might not be real at all: test enough metrics and some will clear the bar by chance, the textbook <strong>multiple comparisons problem</strong>, or
+		multiple testing, which is the first half of this page. Or it can be real and still smaller than it looks, the <strong>winner's curse</strong>, which
+		is <a href="#winners-curse" class="text-accent-blue underline underline-offset-2">the second half</a>. Experimenters have a rule of thumb that
+		covers both, Twyman's law: the more surprising a number looks, the more likely it's a mistake rather than a
+		discovery. Kohavi, Tang and Xu give it a whole chapter in their book on online experiments.
 	</p>
 </section>

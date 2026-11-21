@@ -9,6 +9,7 @@ export default defineConfig({
 	integrations: [sitemap()],
 	redirects: {
 		'/resume': '/experience',
+		'/projects/the-dashboard-problem': '/projects/too-good-to-be-true',
 	},
 	vite: {
 		plugins: [tailwindcss()],

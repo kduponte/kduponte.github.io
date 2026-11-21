@@ -2,6 +2,8 @@
 /**
  * The Volume Gap's 3D hero: a Play-Doh blob that keeps reshaping into iconic surfboards, with
  * an HTML readout of the board on screen against the calculators' range for the default surfer.
+ * With `readout={false}` it renders the canvas box alone (still cycling, draggable and tappable,
+ * with the static fallback), transparent over whatever sits behind it, e.g. a project tile.
  * Boards: public/data/surf-volume/iconic_boards.json. Range: profile_summary.json.
  */
 import iconicData from "../../../public/data/surf-volume/iconic_boards.json";
@@ -15,11 +17,17 @@ interface Props {
 	class?: string;
 	/** Classes for the canvas box alone, e.g. negative margins to float it over a headline. */
 	canvasClass?: string;
-	/** Tailwind aspect-ratio classes for the canvas box. */
+	/**
+	 * Tailwind aspect-ratio classes for the canvas box. Defaults to 16:10, widening to 16:9 from md
+	 * up with the readout, and a fixed 16:10 without it.
+	 */
 	aspect?: string;
+	/** The readout card, range bar and to-scale caption under the canvas. False: the canvas alone. */
+	readout?: boolean;
 }
 
-const { class: className = "", canvasClass = "", aspect = "aspect-[16/10] md:aspect-[16/9]" } = Astro.props;
+const { class: className = "", canvasClass = "", readout = true } = Astro.props;
+const aspect = Astro.props.aspect ?? (readout ? "aspect-[16/10] md:aspect-[16/9]" : "aspect-[16/10]");
 
 const data = iconicData as unknown as IconicBoardData;
 const { consensus, rows, profile } = summary as unknown as ComparisonResult & { profile: { weight_lb: number; height_in?: number; skill: string } };
@@ -73,7 +81,13 @@ const surfer = `${profile.weight_lb} lb${heightLabel}, ${profile.skill}`;
 const boardList = resolved.map((r) => `${r.board.name} (${r.size.length}, ${r.size.volume_l} L)`).join(", ");
 ---
 
-<figure data-volume-blob data-readouts={JSON.stringify(readouts)} data-lo={lo} data-hi={hi} class:list={["relative w-full", className]}>
+<figure
+	data-volume-blob
+	data-readouts={readout ? JSON.stringify(readouts) : undefined}
+	data-lo={lo}
+	data-hi={hi}
+	class:list={["relative w-full", className]}
+>
 	<div
 		data-volume-blob-viewer
 		data-config={JSON.stringify(config)}
@@ -91,69 +105,71 @@ const boardList = resolved.map((r) => `${r.board.name} (${r.size.length}, ${r.si
 		</svg>
 	</div>
 
-	<figcaption class="relative z-20 ml-auto mt-2 w-full max-w-[26rem] md:-mt-2">
-		<div class="raw-box rounded-2xl bg-cream p-4 text-black">
-			<div class="flex items-center justify-between gap-3">
-				<p class="font-mono text-[10px] uppercase leading-tight" data-r-eyebrow>{first.eyebrow}</p>
-				<button
-					type="button"
-					data-r-next
-					class="font-mono raw-box shadow-hard-sm raw-press shrink-0 rounded-full bg-lime px-3 py-1 text-[10px] uppercase"
-				>
-					Next board →
-				</button>
-			</div>
-			<div class="mt-2 flex items-end justify-between gap-3">
-				<div class="min-w-0">
-					<p class="font-anton text-[1.9rem] leading-none" data-r-name>{first.name}</p>
-					<p class="mt-1 truncate text-xs font-semibold" data-r-maker>{first.maker}</p>
+	{readout && (
+		<figcaption class="relative z-20 ml-auto mt-2 w-full max-w-[26rem] md:-mt-2">
+			<div class="raw-box rounded-2xl bg-cream p-4 text-black">
+				<div class="flex items-center justify-between gap-3">
+					<p class="font-mono text-[10px] uppercase leading-tight" data-r-eyebrow>{first.eyebrow}</p>
+					<button
+						type="button"
+						data-r-next
+						class="font-mono raw-box shadow-hard-sm raw-press shrink-0 rounded-full bg-lime px-3 py-1 text-[10px] uppercase"
+					>
+						Next board →
+					</button>
 				</div>
-				<p class="font-anton shrink-0 text-[1.9rem] leading-none"><span data-r-liters>{first.liters.toFixed(1)}</span><span class="ml-1 text-base">L</span></p>
-			</div>
-			<p class="font-mono mt-2 flex justify-between gap-2 text-[10px] uppercase">
-				<span data-r-dims>{first.dims}</span>
-				<span data-r-status>{first.status} volume</span>
-			</p>
+				<div class="mt-2 flex items-end justify-between gap-3">
+					<div class="min-w-0">
+						<p class="font-anton text-[1.9rem] leading-none" data-r-name>{first.name}</p>
+						<p class="mt-1 truncate text-xs font-semibold" data-r-maker>{first.maker}</p>
+					</div>
+					<p class="font-anton shrink-0 text-[1.9rem] leading-none"><span data-r-liters>{first.liters.toFixed(1)}</span><span class="ml-1 text-base">L</span></p>
+				</div>
+				<p class="font-mono mt-2 flex justify-between gap-2 text-[10px] uppercase">
+					<span data-r-dims>{first.dims}</span>
+					<span data-r-status>{first.status} volume</span>
+				</p>
 
-			<svg viewBox={`-8 0 ${BAR_W + 16} 62`} class="mt-3 w-full overflow-visible" aria-hidden="true">
-				<!-- Calculators' spread for the default surfer: whiskers min-max, box q25-q75, median. -->
-				<line x1={X(consensus.min as number)} x2={X(consensus.max as number)} y1="22" y2="22" stroke="#111" stroke-width="2" />
-				<rect x={X(consensus.q25 as number)} y="13" width={X(consensus.q75 as number) - X(consensus.q25 as number)} height="18" fill="#c8ff3d" stroke="#111" stroke-width="2.5" />
-				<line x1={X(median)} x2={X(median)} y1="10" y2="34" stroke="#111" stroke-width="3" />
-				{points.map((p) => <circle cx={X(p)} cy="42" r="2.6" fill="#111" />)}
-				<line x1="0" x2={BAR_W} y1="50" y2="50" stroke="#111" stroke-width="1.5" />
-				{
-					ticks.map((t) => (
-						<g>
-							<line x1={X(t)} x2={X(t)} y1="50" y2="54" stroke="#111" stroke-width="1.5" />
-							<text x={X(t)} y="62" text-anchor="middle" font-size="8" font-family="Silkscreen, monospace">
-								{t}
-							</text>
-						</g>
-					))
-				}
-				<!-- The board (or blob) on screen. -->
-				<g data-r-marker transform={`translate(${X(first.liters)} 0)`}>
-					<line x1="0" x2="0" y1="6" y2="46" stroke="#ff5a1f" stroke-width="3" />
-					<path d="M-6 0 L6 0 L0 8 Z" fill="#ff5a1f" stroke="#111" stroke-width="1.5" stroke-linejoin="round" />
-				</g>
-			</svg>
-			<p class="font-mono mt-1 text-[9px] uppercase leading-snug text-black/70">
-				Dots: {n} calculators' picks for the default surfer ({surfer}). Box: middle half. Line: median {median.toFixed(1)} L.
+				<svg viewBox={`-8 0 ${BAR_W + 16} 62`} class="mt-3 w-full overflow-visible" aria-hidden="true">
+					<!-- Calculators' spread for the default surfer: whiskers min-max, box q25-q75, median. -->
+					<line x1={X(consensus.min as number)} x2={X(consensus.max as number)} y1="22" y2="22" stroke="#111" stroke-width="2" />
+					<rect x={X(consensus.q25 as number)} y="13" width={X(consensus.q75 as number) - X(consensus.q25 as number)} height="18" fill="#c8ff3d" stroke="#111" stroke-width="2.5" />
+					<line x1={X(median)} x2={X(median)} y1="10" y2="34" stroke="#111" stroke-width="3" />
+					{points.map((p) => <circle cx={X(p)} cy="42" r="2.6" fill="#111" />)}
+					<line x1="0" x2={BAR_W} y1="50" y2="50" stroke="#111" stroke-width="1.5" />
+					{
+						ticks.map((t) => (
+							<g>
+								<line x1={X(t)} x2={X(t)} y1="50" y2="54" stroke="#111" stroke-width="1.5" />
+								<text x={X(t)} y="62" text-anchor="middle" font-size="8" font-family="Silkscreen, monospace">
+									{t}
+								</text>
+							</g>
+						))
+					}
+					<!-- The board (or blob) on screen. -->
+					<g data-r-marker transform={`translate(${X(first.liters)} 0)`}>
+						<line x1="0" x2="0" y1="6" y2="46" stroke="#ff5a1f" stroke-width="3" />
+						<path d="M-6 0 L6 0 L0 8 Z" fill="#ff5a1f" stroke="#111" stroke-width="1.5" stroke-linejoin="round" />
+					</g>
+				</svg>
+				<p class="font-mono mt-1 text-[9px] uppercase leading-snug text-black/70">
+					Dots: {n} calculators' picks for the default surfer ({surfer}). Box: middle half. Line: median {median.toFixed(1)} L.
+				</p>
+				<p class="mt-2 text-[13px] font-semibold leading-snug" data-r-sentence>{first.sentence}.</p>
+				<p class="font-mono mt-2 text-[9px] uppercase" data-r-source-line>
+					Specs: <a data-r-source href={first.url} class="underline decoration-2 underline-offset-2" rel="noopener" target="_blank">{first.source}</a>
+				</p>
+			</div>
+			<p class="mt-3 text-[11px] font-medium leading-snug">
+				<strong>To scale:</strong> every board's length, width, thickness and liters, on one shared scale, and the blob always holds exactly
+				the liters of the board it's becoming. Each model is shown in its stock size nearest the {median.toFixed(1)} L median{overrides.length > 0 && <>{" "}(except {overrides.join(", ")})</>}.{" "}
+				<strong>Not to scale:</strong> the bounce, wobble and goo are animation; outlines, rocker and rails are estimated from typical designs or fitted to
+				maker photos (only length, width, thickness and liters are published); fins follow published specs where they exist; graphics are painted after
+				reference photos; logos are the makers' own brand and model marks.
 			</p>
-			<p class="mt-2 text-[13px] font-semibold leading-snug" data-r-sentence>{first.sentence}.</p>
-			<p class="font-mono mt-2 text-[9px] uppercase" data-r-source-line>
-				Specs: <a data-r-source href={first.url} class="underline decoration-2 underline-offset-2" rel="noopener" target="_blank">{first.source}</a>
-			</p>
-		</div>
-		<p class="mt-3 text-[11px] font-medium leading-snug">
-			<strong>To scale:</strong> every board's length, width, thickness and liters, on one shared scale, and the blob always holds exactly
-			the liters of the board it's becoming. Each model is shown in its stock size nearest the {median.toFixed(1)} L median{overrides.length > 0 && <>{" "}(except {overrides.join(", ")})</>}.{" "}
-			<strong>Not to scale:</strong> the bounce, wobble and goo are animation; outlines, rocker and rails are estimated from typical designs or fitted to
-			maker photos (only length, width, thickness and liters are published); fins follow published specs where they exist; graphics are painted after
-			reference photos; logos are the makers' own brand and model marks.
-		</p>
-	</figcaption>
+		</figcaption>
+	)}
 </figure>
 
 <script>
@@ -193,7 +209,8 @@ const boardList = resolved.map((r) => `${r.board.name} (${r.size.length}, ${r.si
 			"marker",
 			"next",
 		].map(el);
-		if (!host || !readouts.length) continue;
+		// Canvas-only (readout={false}): the viewer still mounts and cycles; there's just nothing to update.
+		if (!host || !readouts.length || [eyebrow, name, maker, liters, dims, status, sentence, source, sourceLine, marker].some((e) => !e)) continue;
 
 		let shownKey = "";
 		const show = ({ phase, index, liters: l }: BlobState) => {

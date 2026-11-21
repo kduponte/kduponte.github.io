@@ -31,9 +31,9 @@ export interface TruckColors {
 	hub: string;
 	/** Headlight lenses. */
 	light: string;
-	/** Front plastic bumper. */
+	/** Painted grille surround and headlight bezels (the 1989-91 US base grille is painted, not chromed). */
 	bumper: string;
-	/** Rim steel and rear step bumper. */
+	/** Rim steel, chrome bumpers and the grille letters. */
 	silver: string;
 	amber: string;
 	tail: string;
@@ -81,6 +81,26 @@ const CAB_FRONT_X = 0.7; // cowl / firewall
 const CAB_FLOOR_Y = 0.5;
 const TAIL_X = -2.64;
 const BED_FLOOR_Y = 0.665;
+
+/**
+ * The front end, from photos of 1989-91 US-market pickups. The headlights are 7x6-inch rectangular
+ * sealed beams (H6054: 200 x 142 mm); everything else is sized relative to them and the 1.64 m body.
+ */
+const FRONT = {
+	bandY: 0.78, // center of the lamp-and-grille band
+	bandH: 0.17,
+	grilleHalfW: 0.42,
+	headW: 0.2,
+	headH: 0.142,
+	headZ: 0.55,
+	cornerFaceW: 0.14,
+	cornerWrap: 0.1, // how far the amber side marker wraps back along the fender
+	bumperY: 0.58,
+	bumperH: 0.16,
+	valanceY: 0.44,
+	valanceH: 0.12,
+	turnZ: 0.66,
+} as const;
 
 /**
  * Points along a squared-off wheel arch (the upper half of a superellipse), from the right foot
@@ -173,7 +193,8 @@ export function buildToyotaTruck(colors: TruckColors = DEFAULT_TRUCK_COLORS): Tr
 	const bedFloorMat = std(shade(colors.body, 0.45), 0.5, 0.2);
 	const creaseMat = std(tint(colors.body, 0.22), 0.3, 0.35);
 	const trimMat = std(colors.trim, 0.8);
-	const bumperMat = std(colors.bumper, 0.7);
+	const grilleMat = std(colors.bumper, 0.6);
+	const chromeMat = std(tint(colors.silver, 0.3), 0.16, 0.9);
 	const dishMat = std(shade(colors.silver, 0.35), 0.5, 0.6);
 	const silverMat = std(colors.silver, 0.28, 0.85);
 	const hubMat = std(colors.hub, 0.5);
@@ -433,21 +454,58 @@ export function buildToyotaTruck(colors: TruckColors = DEFAULT_TRUCK_COLORS): Tr
 	add(steering, column, trimMat, [0.15, 0, 0], { outline: 0 });
 	group.add(steering);
 
-	// --- Front end ---
-	// Wide plastic bumper, tucked in close to the nose, with an air dam below.
-	add(group, slab(0.18, 0.24, 1.7, 0.06, 0.03), bumperMat, [NOSE_X + 0.06, 0.5, 0]);
-	add(group, slab(0.12, 0.14, 1.46, 0.04, 0.02), bumperMat, [NOSE_X, 0.37, 0], { outline: 0.02 });
-	// Grille: silver frame, three dark slats, and TOYOTA lettered across the top.
-	add(group, slab(0.06, 0.2, 0.7, 0.03, 0.01), silverMat, [NOSE_X + 0.01, 0.78, 0], { outline: 0.02 });
-	for (let i = 0; i < 3; i++) {
-		add(group, slab(0.02, 0.022, 0.62, 0.008, 0.004), trimMat, [NOSE_X + 0.045, 0.71 + i * 0.04, 0], { outline: 0 });
+	// --- Front end: the US-market 1989-91 pickup, not the Hilux sold elsewhere ---
+	// One lamp band runs the full width under the hood's leading edge: corner lamp, 7x6-inch sealed-beam
+	// headlight, a black grille with chrome TOYOTA letters, then the mirror image. Below it, a chrome
+	// bumper with amber turn lamps, and a body-color valance with slots. (The Hilux of the same years
+	// had a gray plastic bumper and all-clear corner lamps; the US truck's corner lamps carry an amber
+	// side-marker section that wraps onto the fender.)
+	const bandY = FRONT.bandY;
+	const bandX = NOSE_X + 0.012;
+	add(group, slab(0.05, FRONT.bandH, BODY_HALF_W * 2 - 0.04, 0.02, 0.01), grilleMat, [NOSE_X - 0.005, bandY, 0], { outline: 0.02 });
+	// Grille insert: five dark slots between four bars, split into thirds by two vertical posts.
+	const grilleW = FRONT.grilleHalfW * 2;
+	add(group, slab(0.02, FRONT.bandH - 0.03, grilleW, 0.006, 0.003), trimMat, [bandX + 0.004, bandY, 0], { outline: 0 });
+	for (let i = 0; i < 4; i++) {
+		const y = bandY - FRONT.bandH / 2 + 0.015 + ((i + 1) * (FRONT.bandH - 0.03)) / 5;
+		add(group, slab(0.022, 0.012, grilleW - 0.02, 0.004, 0.002), grilleMat, [bandX + 0.01, y, 0], { outline: 0 });
 	}
-	lettering("TOYOTA", [NOSE_X + 0.05, 0.835, 0], 0.035, 0.009, 1, trimMat);
+	for (const z of [-FRONT.grilleHalfW * 0.48, FRONT.grilleHalfW * 0.48]) {
+		add(group, slab(0.026, FRONT.bandH - 0.03, 0.022, 0.006, 0.003), grilleMat, [bandX + 0.012, bandY, z], { outline: 0 });
+	}
+	lettering("TOYOTA", [bandX + 0.03, bandY, 0], 0.062, 0.014, 1, silverMat);
 	pair((side) => {
-		add(group, slab(0.07, 0.17, 0.34, 0.04, 0.015), headMat, [NOSE_X + 0.005, 0.76, side * 0.56], { outline: 0.02 });
-		add(group, slab(0.04, 0.05, 0.1, 0.02, 0.008), amberMat, [NOSE_X, 0.62, side * 0.78], { outline: 0 });
-		add(group, slab(0.04, 0.08, 0.18, 0.03, 0.01), amberMat, [NOSE_X + 0.145, 0.52, side * 0.68], { outline: 0 });
+		// Sealed-beam headlight in a dark bezel, centered between the grille and the corner lamp.
+		const headZ = side * FRONT.headZ;
+		add(group, slab(0.03, FRONT.headH + 0.03, FRONT.headW + 0.03, 0.012, 0.006), grilleMat, [bandX + 0.004, bandY, headZ], { outline: 0 });
+		add(group, slab(0.04, FRONT.headH, FRONT.headW, 0.02, 0.012), headMat, [bandX + 0.014, bandY, headZ], { outline: 0.012 });
+		// Corner lamp: a clear park lamp on the face, an amber side marker wrapping round the fender.
+		const cornerZ = side * (BODY_HALF_W - FRONT.cornerFaceW / 2 - 0.005);
+		add(group, slab(0.035, FRONT.headH, FRONT.cornerFaceW * 0.55, 0.01, 0.006), headMat, [bandX + 0.008, bandY, cornerZ - side * FRONT.cornerFaceW * 0.2], {
+			outline: 0.01,
+		});
+		add(group, slab(0.035, FRONT.headH, FRONT.cornerFaceW * 0.42, 0.01, 0.006), amberMat, [bandX + 0.008, bandY, cornerZ + side * FRONT.cornerFaceW * 0.28], {
+			outline: 0.01,
+		});
+		add(group, slab(FRONT.cornerWrap, FRONT.headH, 0.03, 0.01, 0.006), amberMat, [NOSE_X - FRONT.cornerWrap / 2 + 0.01, bandY, side * (BODY_HALF_W + 0.002)], {
+			outline: 0.01,
+		});
 	});
+
+	// Chrome bumper: a pressed face that wraps back around both front corners, amber turn lamps set in it.
+	const bumperY = FRONT.bumperY;
+	add(group, slab(0.1, FRONT.bumperH, BODY_HALF_W * 2 + 0.04, 0.035, 0.02), chromeMat, [NOSE_X + 0.07, bumperY, 0], { outline: OUTLINE_SMALL });
+	pair((side) => {
+		add(group, slab(0.26, FRONT.bumperH, 0.08, 0.035, 0.02), chromeMat, [NOSE_X - 0.04, bumperY, side * (BODY_HALF_W + 0.0)], { outline: OUTLINE_SMALL });
+		add(group, slab(0.02, 0.055, 0.17, 0.012, 0.006), amberMat, [NOSE_X + 0.12, bumperY - 0.02, side * FRONT.turnZ], { outline: 0.01 });
+	});
+	// A pressed crease along the bumper face.
+	add(group, slab(0.01, 0.01, BODY_HALF_W * 2 - 0.1, 0.003, 0.002), trimMat, [NOSE_X + 0.121, bumperY + 0.035, 0], { outline: 0 });
+	// Valance under the bumper, in body color, with horizontal slots.
+	add(group, slab(0.1, FRONT.valanceH, BODY_HALF_W * 2 - 0.12, 0.03, 0.015), bodyMat, [NOSE_X + 0.02, FRONT.valanceY, 0], { outline: 0.02 });
+	for (let i = 0; i < 4; i++) {
+		add(group, slab(0.012, 0.014, 1.0, 0.005, 0.003), trimMat, [NOSE_X + 0.071, FRONT.valanceY - 0.045 + i * 0.03, 0], { outline: 0 });
+	}
 
 	// --- Rear end ---
 	add(group, slab(0.17, 0.17, 1.74, 0.05, 0.02), silverMat, [TAIL_X - 0.11, 0.45, 0]); // step bumper

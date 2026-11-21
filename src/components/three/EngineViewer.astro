@@ -1,0 +1,185 @@
+---
+// The 22R-E in 3D, colored by the forum failure data, with a readout and a legend that drive each
+// other. Every count, percentage and color here comes from failure_categories.json; the geometry
+// numbers come from engine-22re-data.ts, where each one is sourced.
+import categories from "../../../public/data/toyota-truck/failure_categories.json";
+import { OFF_ENGINE_CATEGORIES, failureTint, rampGradient, systemCounts, type CategoryCount } from "../../lib/three/engine-22re-data";
+import { ENGINE_LAYOUT as L } from "../../lib/three/engine-22re-model";
+
+interface Props {
+	/** Classes for the canvas box. */
+	class?: string;
+	/** Tailwind aspect-ratio class for the canvas box. */
+	aspect?: string;
+}
+
+const { class: className = "", aspect = "aspect-[4/3]" } = Astro.props;
+
+const rows = categories as CategoryCount[];
+const total = rows.reduce((sum, c) => sum + c.count, 0);
+const counts = systemCounts(rows);
+const max = Math.max(...counts.map((c) => c.count));
+const tints = Object.fromEntries(counts.map((c) => [c.key, failureTint(c.count, max)]));
+const sorted = [...counts].sort((a, b) => b.count - a.count);
+const offEngine = OFF_ENGINE_CATEGORIES.map((cat) => {
+	const row = rows.find((c) => c.category === cat);
+	if (!row) throw new Error(`failure_categories.json has no "${cat}"`);
+	return row;
+});
+const onEngineTotal = counts.reduce((sum, c) => sum + c.count, 0);
+const pct = (n: number) => `${((n / total) * 100).toFixed(1)}%`;
+const payload = JSON.stringify({
+	total,
+	systems: Object.fromEntries(counts.map((c) => [c.key, { label: c.label, count: c.count, pct: pct(c.count), parts: c.parts, note: c.note ?? "" }])),
+}).replace(/</g, "\\u003c");
+
+// Static fallback: the same engine seen from the passenger side, front to the right, same colors.
+const M = 600; // px per meter
+const sx = (x: number) => (x + 0.54) * M;
+const sy = (y: number) => (0.47 - y) * M;
+const rect = (x0: number, y0: number, x1: number, y1: number) => ({ x: sx(x0), y: sy(y1), width: (x1 - x0) * M, height: (y1 - y0) * M });
+const bf = L.blockFront;
+const bell = [
+	[0, 0.16],
+	[-0.03, 0.19],
+	[-0.14, 0.18],
+	[-0.19, 0.105],
+	[-0.29, 0.1],
+] as const;
+const bellPoints = [...bell.map(([dx, r]) => [-bf + dx, r]), ...[...bell].reverse().map(([dx, r]) => [-bf + dx, -r])]
+	.map(([x, y]) => `${sx(x).toFixed(1)},${sy(y).toFixed(1)}`)
+	.join(" ");
+const fallbackParts = [
+	{ ...rect(-bf + 0.005, L.panY - 0.12, bf - 0.015, L.panY), fill: tints.oil },
+	{ ...rect(-bf, L.panY, bf, L.deckY), fill: "#5d6165" },
+	{ ...rect(-bf, L.deckY, bf, L.deckY + L.gasket), fill: tints.headGasket },
+	{ ...rect(-bf, L.deckY + L.gasket, bf, L.headTop), fill: "#b9bec3" },
+	{ ...rect(-bf + 0.017, L.headTop, bf - 0.017, L.headTop + 0.063), fill: "#1f2022" },
+	{ ...rect(-0.195, L.headTop + 0.015, 0.165, L.headTop + 0.105), fill: tints.fuel },
+	{ ...rect(0.165, L.headTop + 0.024, 0.221, L.headTop + 0.096), fill: tints.fuel },
+	{ ...rect(bf, L.panY + 0.012, bf + 0.03, L.headTop - 0.008), fill: tints.timing },
+	{ ...rect(bf + 0.03, L.pumpY - 0.05, bf + 0.075, L.pumpY + 0.05), fill: tints.cooling },
+	{ ...rect(bf + 0.122, L.pumpY - 0.165, bf + 0.134, L.pumpY + 0.165), fill: tints.cooling },
+	{ ...rect(bf - 0.105, -0.055, bf + 0.025, 0.055), fill: tints.ac },
+	{ ...rect(-bf - 0.025, -0.047, -bf + 0.125, 0.037), fill: tints.electrical },
+];
+const label =
+	"A Toyota 22R-E engine, slowly turning, with its driver's side cut away to show the pistons moving. Each system's parts are colored by how many forum threads reported a problem with it, pale for few and deep red for many. Drag to spin it; tap a part to read its count.";
+---
+
+<div data-engine-root class="grid gap-6 md:grid-cols-12 md:items-start">
+	<script is:inline type="application/json" data-engine-data set:html={payload} />
+	<div
+		data-engine-viewer
+		data-tints={JSON.stringify(tints)}
+		role="img"
+		aria-label={label}
+		class:list={["relative w-full select-none md:col-span-7", aspect, className]}
+	>
+		<svg data-fallback viewBox="0 0 560 420" class="absolute inset-0 h-full w-full" aria-hidden="true">
+			<g stroke="#111" stroke-width="3" stroke-linejoin="round">
+				<polygon points={bellPoints} fill={tints.drivetrain} />
+				{fallbackParts.map((p) => <rect x={p.x} y={p.y} width={p.width} height={p.height} fill={p.fill} />)}
+			</g>
+		</svg>
+	</div>
+
+	<div class="raw-box rounded-xl bg-cream p-4 md:col-span-5">
+		<div data-engine-readout aria-live="polite" class="min-h-[8.5rem]">
+			<div class="font-mono text-[11px] uppercase tracking-wide text-ink-soft">Forum failure threads, by system</div>
+			<p class="mt-2 text-sm leading-relaxed text-ink-soft">
+				Hover or tap a part, or pick a row below. The color runs from pale (few threads) to deep red ({max}, the most of any
+				system on the model). Of the {total} threads, {onEngineTotal} land on a system drawn here.
+			</p>
+		</div>
+
+		<ul class="mt-3 divide-y-2 divide-black border-y-2 border-black">
+			{
+				sorted.map((s) => (
+					<li>
+						<button
+							type="button"
+							data-engine-system={s.key}
+							aria-pressed="false"
+							class="flex w-full items-center gap-3 py-1.5 text-left text-sm hover:bg-paper aria-pressed:bg-paper"
+						>
+							<span class="inline-block h-4 w-4 shrink-0 border-2 border-black" style={`background:${tints[s.key]}`} />
+							<span class="w-36 shrink-0 font-display font-semibold text-ink">{s.label}</span>
+							<span class="relative h-2.5 flex-1 bg-line/15">
+								<span class="absolute inset-y-0 left-0" style={`width:${(s.count / max) * 100}%;background:${tints[s.key]}`} />
+							</span>
+							<span class="w-8 shrink-0 text-right font-mono text-xs text-ink">{s.count}</span>
+						</button>
+					</li>
+				))
+			}
+		</ul>
+		<div class="mt-2 font-mono text-[11px] uppercase tracking-wide text-ink-soft">Not on the engine</div>
+		<ul class="mt-1 space-y-0.5 text-xs text-ink-soft">
+			{
+				offEngine.map((c) => (
+					<li class="flex justify-between">
+						<span>{c.category}</span>
+						<span class="font-mono">{c.count}</span>
+					</li>
+				))
+			}
+		</ul>
+		<div class="mt-3">
+			<div class="h-2.5 w-full border-2 border-black" style={`background:${rampGradient()}`} />
+			<div class="mt-1 flex justify-between font-mono text-[10px] text-ink-soft">
+				<span>0 threads</span>
+				<span>{max}</span>
+			</div>
+		</div>
+	</div>
+</div>
+
+<script>
+	import { mountViewers } from "../../scripts/three/viewer";
+	import { ENGINE_SHOW, hoverSystem, pinSystem, pinnedSystem, type EngineShowDetail } from "../../scripts/three/engine-events";
+	import type { EngineSystem } from "../../lib/three/engine-22re-data";
+
+	interface Readout {
+		total: number;
+		systems: Record<EngineSystem, { label: string; count: number; pct: string; parts: string; note: string }>;
+	}
+
+	for (const root of document.querySelectorAll<HTMLElement>("[data-engine-root]")) {
+		const data = JSON.parse(root.querySelector("[data-engine-data]")?.textContent ?? "{}") as Readout;
+		const readout = root.querySelector<HTMLElement>("[data-engine-readout]");
+		const intro = readout?.innerHTML ?? "";
+		const buttons = [...root.querySelectorAll<HTMLButtonElement>("[data-engine-system]")];
+
+		root.addEventListener(ENGINE_SHOW, (e) => {
+			const system = (e as CustomEvent<EngineShowDetail>).detail.system;
+			const pinned = pinnedSystem(root);
+			for (const b of buttons) {
+				b.setAttribute("aria-pressed", String(b.dataset.engineSystem === pinned));
+				b.classList.toggle("bg-paper", b.dataset.engineSystem === system);
+			}
+			if (!readout) return;
+			const s = system ? data.systems[system] : null;
+			if (!s) {
+				readout.innerHTML = intro;
+				return;
+			}
+			readout.innerHTML = `
+				<div class="font-mono text-[11px] uppercase tracking-wide text-ink-soft">Forum failure threads</div>
+				<div class="font-display mt-1 text-2xl font-semibold text-ink">${s.label}</div>
+				<div class="mt-1 font-mono text-sm text-ink">${s.count} of ${data.total} threads &middot; ${s.pct}</div>
+				<p class="mt-2 text-sm leading-relaxed text-ink-soft">Colored on the model: ${s.parts}.${s.note ? ` ${s.note}` : ""}</p>`;
+		});
+
+		for (const b of buttons) {
+			const key = b.dataset.engineSystem as EngineSystem;
+			b.addEventListener("click", () => pinSystem(root, key));
+			b.addEventListener("pointerenter", (e) => {
+				if (e.pointerType === "mouse") hoverSystem(root, key);
+			});
+			b.addEventListener("pointerleave", () => hoverSystem(root, null));
+		}
+	}
+
+	mountViewers("[data-engine-viewer]", () => import("../../scripts/three/subjects/engine").then((m) => m.default));
+</script>

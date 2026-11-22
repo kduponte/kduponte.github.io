@@ -1,7 +1,7 @@
 // The static stand-in for the 3D tare scale, shown until WebGL mounts and kept if it can't: the
 // same scale drawn straight on, with the last day's reading in two states (raw and tared) that the
 // readout can switch between, the same dial mapping, and the same 1,200 visitors in the bowl.
-import type { Arm } from "../stats-sim/cuped-cloud";
+import type { Arm } from "../stats-sim/cuped-visitors";
 import type { Reading, ScaleReadings } from "../stats-sim/cuped-readings";
 import { BAND_INNER, BAND_OUTER, BOWL_H, BOWL_R, DEFAULT_TARE_SCALE_COLORS, DIAL_CENTER, DIAL_R, DIAL_SWEEP, packBowl, type TareScaleColors } from "./tare-scale-model";
 

@@ -1,5 +1,5 @@
-// The Noise Problem's live experiment starts from these settings, and the hero's glass cube draws
-// the visitors of one seeded run at exactly the same settings, so the two can never drift apart.
+// The Noise Problem's live experiment starts from these settings, and the hero's tare scale plays
+// one seeded run at exactly the same settings, so the two can never drift apart.
 import type { CupedExperimentConfig } from "./cuped-experiment";
 
 /** The live experiment's opening settings (everything but the seed, which is random per run). */
@@ -12,5 +12,5 @@ export const LIVE_EXPERIMENT_DEFAULTS: Omit<CupedExperimentConfig, "seed"> = {
 	days: 20,
 };
 
-/** The hero cube's run: the live experiment's defaults with a fixed seed, so anyone can rerun it. */
-export const HERO_CUBE_SEED = 1;
+/** The hero scale's run: the live experiment's defaults with a fixed seed, so anyone can rerun it. */
+export const HERO_SEED = 1;

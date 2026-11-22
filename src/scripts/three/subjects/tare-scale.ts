@@ -12,7 +12,7 @@
  * "tarescale:tare" and "tarescale:replay".
  */
 import { Group, Vector3 } from "three";
-import { simulateCupedVisitors } from "../../../lib/stats-sim/cuped-cloud";
+import { simulateCupedVisitors } from "../../../lib/stats-sim/cuped-visitors";
 import type { CupedExperimentConfig } from "../../../lib/stats-sim/cuped-experiment";
 import { buildScaleReadings } from "../../../lib/stats-sim/cuped-readings";
 import { DEFAULT_TARE_SCALE_COLORS, buildTareScale } from "../../../lib/three/tare-scale-model";

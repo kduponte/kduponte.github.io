@@ -1,9 +1,9 @@
 import { describe, expect, it } from "vitest";
 import { buildScaleReadings, excludesZero, intervalWidth } from "../../src/lib/stats-sim/cuped-readings";
-import { HERO_CUBE_SEED, LIVE_EXPERIMENT_DEFAULTS } from "../../src/lib/stats-sim/cuped-defaults";
+import { HERO_SEED, LIVE_EXPERIMENT_DEFAULTS } from "../../src/lib/stats-sim/cuped-defaults";
 import { runCupedExperiment } from "../../src/lib/stats-sim/cuped-experiment";
 
-const config = { ...LIVE_EXPERIMENT_DEFAULTS, seed: HERO_CUBE_SEED };
+const config = { ...LIVE_EXPERIMENT_DEFAULTS, seed: HERO_SEED };
 const readings = buildScaleReadings(config);
 
 describe("buildScaleReadings (the hero run)", () => {

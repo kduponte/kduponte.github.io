@@ -41,7 +41,7 @@ import { mergeGeometries } from "three/examples/jsm/utils/BufferGeometryUtils.js
 import { frameVertically } from "./framing";
 import { createPartKit, extrude, outlineGeometry } from "./kit";
 import type { ScaleReadings } from "../stats-sim/cuped-readings";
-import type { Arm } from "../stats-sim/cuped-cloud";
+import type { Arm } from "../stats-sim/cuped-visitors";
 
 export interface TareScaleColors {
 	body: string;

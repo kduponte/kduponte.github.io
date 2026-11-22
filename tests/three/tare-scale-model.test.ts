@@ -9,10 +9,10 @@ import {
 	packBowl,
 } from "../../src/lib/three/tare-scale-model";
 import { buildScaleReadings } from "../../src/lib/stats-sim/cuped-readings";
-import { simulateCupedVisitors } from "../../src/lib/stats-sim/cuped-cloud";
-import { HERO_CUBE_SEED, LIVE_EXPERIMENT_DEFAULTS } from "../../src/lib/stats-sim/cuped-defaults";
+import { simulateCupedVisitors } from "../../src/lib/stats-sim/cuped-visitors";
+import { HERO_SEED, LIVE_EXPERIMENT_DEFAULTS } from "../../src/lib/stats-sim/cuped-defaults";
 
-const config = { ...LIVE_EXPERIMENT_DEFAULTS, seed: HERO_CUBE_SEED };
+const config = { ...LIVE_EXPERIMENT_DEFAULTS, seed: HERO_SEED };
 const readings = buildScaleReadings(config);
 const arms = simulateCupedVisitors(config).map((v) => v.arm);
 

@@ -45,10 +45,11 @@ describe("truck builder catalog", () => {
 		}
 	});
 
-	it("builds Kyle's truck in factory black on Ultra Hammers, lowered on a Belltech kit, with LED headlights", () => {
+	it("builds Kyle's truck in factory black on BBS RG-R mesh wheels, lowered on a Belltech kit, with LED headlights", () => {
 		const r = resolveBuild(KYLE_BUILD);
 		expect(r.paint.name).toBe("Black");
-		expect(r.wheel.style).toBe("hammer");
+		expect(r.wheel.style).toBe("mesh");
+		expect(r.wheel.diameterIn).toBe(17);
 		expect(r.ride.id).toBe("b444");
 		expect(r.lights.kind).toBe("led");
 		expect(r.tire.rimIn).toBe(r.wheel.diameterIn);
@@ -78,7 +79,7 @@ describe("truck builder catalog", () => {
 	});
 
 	it("round-trips a build through the share link", () => {
-		const build: Build = { ...AS_IT_SITS, paint: "8E3", ride: "b444", wheel: "hammer", tire: "205-60-15", tintRear: "5", lights: "led", bed: "tonneau", decal: "kalapana" };
+		const build: Build = { ...AS_IT_SITS, paint: "8E3", ride: "b444", wheel: "hammer", tire: "215-45-17", tintRear: "5", lights: "led", bed: "tonneau", decal: "kalapana" };
 		expect(decodeBuild(`#build=${encodeBuild(build)}`)).toEqual(build);
 	});
 

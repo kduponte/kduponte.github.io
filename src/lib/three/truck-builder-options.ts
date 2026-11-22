@@ -38,6 +38,7 @@ const SRC = {
 	reference: { label: "Rutledge Wood's '91 Pickup (Instagram)", href: "https://www.instagram.com/reel/DSOkEEVjNIz/" },
 	underground: { label: "Toyota touch-up paint, Underground 1L7", href: "https://autoparts.toyota.com/products/product/underground-00258001l721" },
 	ultra164: { label: "Ultra Wheel, Type 164 sizes", href: "https://www.ultrawheel.com/wheel/28/164" },
+	bbsRgr: { label: "BBS RG-R, 17x7.5 5x114.3 +48 (Canada Wheels)", href: "https://www.canadawheels.ca/bbs-wheels/rgr" },
 	bttf: { label: "Back to the Future wiki, Marty's Toyota", href: "https://backtothefuture.fandom.com/wiki/Toyota_Hilux" },
 	tcLongboard: { label: "T&C Makani 9'6\" longboard (Rider Shack)", href: "https://www.ridershack.com/used-96-t-c-makani-longboard-surfboard-117559.html" },
 	trueAmes: { label: "True Ames Greenough 4-A 10.5\" fin (Rider Shack)", href: "https://ridershack.com/products/true-ames-greenough-4-a-10-5-single-fin" },
@@ -62,7 +63,15 @@ export interface PaintOption extends Option {
 }
 
 export const PAINTS: PaintOption[] = [
-	{ id: "3H7", name: "Red", spec: "1991 factory, code 3H7", hex: "#c4262e", metallic: false, source: SRC.paint, note: "Kyle's truck is a factory red; the code on its door-jamb plate (C/TR) will say which." },
+	{
+		id: "3H7",
+		name: "Red",
+		spec: "1991 factory, code 3H7",
+		hex: "#c4262e",
+		metallic: false,
+		source: SRC.paint,
+		note: "Kyle's truck is a solid factory red, so this is the best guess for it; the door-jamb plate (C/TR) would confirm.",
+	},
 	{ id: "138", name: "Slate Gray Metallic", spec: "1991 factory, code 138", hex: "#4f545a", metallic: true, source: SRC.paint },
 	{ id: "147", name: "Silver Metallic", spec: "1991 factory, code 147", hex: "#b8bcc0", metallic: true, source: SRC.paint },
 	{ id: "8E3", name: "Blue Pearl Metallic", spec: "1991 factory, code 8E3", hex: "#1e2c52", metallic: true, source: SRC.paint },
@@ -120,7 +129,7 @@ export const RIDES: RideOption[] = [
 	},
 ];
 
-export type WheelStyle = "hubcap" | "steel" | "alloy" | "hammer" | "eighthole";
+export type WheelStyle = "hubcap" | "steel" | "alloy" | "hammer" | "eighthole" | "mesh";
 
 export interface WheelOption extends Option {
 	diameterIn: number;
@@ -152,14 +161,25 @@ export const WHEELS: WheelOption[] = [
 		source: SRC.stockWheel,
 	},
 	{
+		id: "bbs-rgr",
+		name: "BBS RG-R",
+		spec: '17 x 7.5", +48 mm, 5 x 114.3 (part RG744HDBK)',
+		diameterIn: 17,
+		widthIn: 7.5,
+		offsetMm: 48,
+		style: "mesh",
+		note: "BBS's classic cross-spoke mesh, in Diamond Black, sold new in this bolt pattern. The +48 mm offset tucks the wheel 28 mm further in than the factory +20.",
+		source: SRC.bbsRgr,
+	},
+	{
 		id: "hammer",
 		name: "Ultra Hammer",
-		spec: '15 x 7", +20 mm, 5 x 114.3 (size to confirm)',
-		diameterIn: 15,
+		spec: '17 x 7", +20 mm, 5 x 114.3 (estimated)',
+		diameterIn: 17,
 		widthIn: 7,
 		offsetMm: 20,
 		style: "hammer",
-		note: "90s Ultra five-slot wheels. The reference build runs a new-old-stock set (its caption names them); Ultra no longer lists the model, so the size is a placeholder until Kyle picks a set.",
+		note: "90s Ultra five-slot wheels, new-old-stock on the reference build. Ultra no longer lists them, so the size is estimated from the reference footage (the rim is about 78% of the tire's height) and the offset is assumed to be factory.",
 		source: SRC.reference,
 	},
 	{
@@ -198,6 +218,7 @@ export const TIRES: TireOption[] = [
 	{ id: "215-65-15", name: "215/65R15", spec: "", widthMm: 215, aspect: 65, rimIn: 15, note: "Factory alternate, on 15-inch wheels.", source: SRC.tireAlt },
 	{ id: "205-60-15", name: "205/60R15", spec: "", widthMm: 205, aspect: 60, rimIn: 15, note: "Not a factory size: shorter sidewall, the lowered look.", source: SRC.tireAlt },
 	{ id: "205-50-15", name: "205/50R15", spec: "", widthMm: 205, aspect: 50, rimIn: 15, note: "Low profile: a short sidewall for a lowered truck. Not a factory size.", source: SRC.tireAlt },
+	{ id: "215-45-17", name: "215/45R17", spec: "", widthMm: 215, aspect: 45, rimIn: 17, note: "Low profile for 17-inch wheels. Not a factory size.", source: SRC.tireAlt },
 	{
 		id: "33-12.5-15",
 		name: "33x12.50R15",
@@ -378,15 +399,15 @@ export const AS_IT_SITS: Build = {
 
 /**
  * Kyle's build, from his notes and the reference truck he picked: factory black, lowered a little on a
- * Belltech kit (not slammed), Ultra Hammer wheels on low-profile tires, LED headlights, 35% film all
+ * Belltech kit (not slammed), BBS RG-R mesh wheels on low-profile tires, LED headlights, 35% film all
  * round, the tailgate lettering removed, the Kalapana sticker, and a longboard in the bed.
  */
 export const KYLE_BUILD: Build = {
 	...AS_IT_SITS,
 	paint: "202",
 	ride: "b444",
-	wheel: "hammer",
-	tire: "205-50-15",
+	wheel: "bbs-rgr",
+	tire: "215-45-17",
 	tintFront: "35",
 	tintRear: "35",
 	lights: "led",

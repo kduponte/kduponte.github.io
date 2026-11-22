@@ -66,7 +66,7 @@ export interface TruckOptions {
 	/** Something to mount in the engine bay (the 22R-E), origin at its crankshaft centerline, front toward +X. */
 	engine?: Object3D;
 	/** Wheel size and look. 5 x 114.3 lug pattern, as on the 2WD truck. */
-	wheel?: { diameterIn: number; widthIn: number; offsetMm: number; style: "hubcap" | "steel" | "alloy" | "hammer" | "eighthole" };
+	wheel?: { diameterIn: number; widthIn: number; offsetMm: number; style: "hubcap" | "steel" | "alloy" | "hammer" | "eighthole" | "mesh" };
 	/** Factory 7x6 sealed beams, or LED units of the same size. */
 	headlights?: "sealed" | "led";
 	/** Tire size: the wheels sit on the ground, so a taller tire raises the whole truck. */
@@ -992,6 +992,8 @@ export function buildToyotaTruck(colors: TruckColors = DEFAULT_TRUCK_COLORS, opt
 		];
 		const capMat = std(tint(colors.silver, 0.1), 0.22, 0.9);
 		const machinedMat = std(tint(colors.silver, 0.2), 0.32, 0.85);
+		const meshBlackMat = std("#2a2d31", 0.3, 0.6);
+		const barrelMat = std("#0c0d0f", 0.7, 0.2);
 		const capGoldMat = std("#c9a24a", 0.35, 0.8);
 		for (const [x, side] of [
 			[FRONT_AXLE_X, 1],
@@ -1011,10 +1013,10 @@ export function buildToyotaTruck(colors: TruckColors = DEFAULT_TRUCK_COLORS, opt
 			};
 			// Only the outboard face shows; s points outboard.
 			const s = side;
-			// Rim lip; steel wheels and covers also get a solid face, alloys show their spokes against a dark barrel.
+			// Rim lip; steel wheels and covers also get a solid face, spoked wheels show their spokes against a dark barrel.
 			add(pivot, new TorusGeometry(rimR + 0.006, 0.016, 6, 32), silverMat, [0, 0, s * rimHalfW * 0.85], { outline: 0 });
 			const face = s * (rimHalfW * 0.85 + 0.012);
-			if (wheel.style !== "alloy") disc(rimR + 0.006, 0.02, silverMat, s * rimHalfW * 0.75);
+			if (wheel.style !== "alloy" && wheel.style !== "mesh") disc(rimR + 0.006, 0.02, silverMat, s * rimHalfW * 0.75);
 			const lugs = (z: number) => {
 				for (let i = 0; i < 5; i++) {
 					const a = (i / 5) * Math.PI * 2 + Math.PI / 5;
@@ -1040,6 +1042,29 @@ export function buildToyotaTruck(colors: TruckColors = DEFAULT_TRUCK_COLORS, opt
 						outline: 0,
 					});
 				}
+			} else if (wheel.style === "mesh") {
+				// BBS RG-R: a cross-laced mesh of twenty spokes in Diamond Black, a diamond-cut lip and a center cap,
+				// over the dark barrel.
+				disc(rimR - 0.006, 0.006, barrelMat, face - s * 0.016);
+				add(pivot, new TorusGeometry(rimR - 0.004, 0.012, 6, 36), machinedMat, [0, 0, face - s * 0.002], { outline: 0 });
+				const inner = rimR * 0.3;
+				const outer = rimR * 0.92;
+				const len = outer - inner;
+				for (let i = 0; i < 10; i++) {
+					for (const skew of [-0.32, 0.32]) {
+						const a = (i / 10) * Math.PI * 2 + skew / 2;
+						add(pivot, slab(len, 0.014, 0.014, 0.004, 0.002), meshBlackMat, [Math.cos(a) * (inner + len / 2), Math.sin(a) * (inner + len / 2), face - s * 0.006], {
+							rot: [0, 0, a + skew],
+							outline: 0,
+						});
+					}
+				}
+				const hub = new CylinderGeometry(rimR * 0.32, rimR * 0.36, 0.022, 28);
+				hub.rotateX((s * Math.PI) / 2);
+				add(pivot, hub, meshBlackMat, [0, 0, face + s * 0.002], { outline: 0 });
+				lugs(face + s * 0.014);
+				disc(0.032, 0.02, trimMat, face + s * 0.012, 18);
+				add(pivot, new TorusGeometry(0.03, 0.003, 6, 20), machinedMat, [0, 0, face + s * 0.023], { outline: 0 });
 			} else if (wheel.style === "eighthole") {
 				// Ultra 164: a polished disc with eight round holes and a raised center carrying the lugs.
 				disc(rimR + 0.004, 0.006, trimMat, face - s * 0.03);

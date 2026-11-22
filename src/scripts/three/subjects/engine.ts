@@ -7,10 +7,11 @@
 import { build22REEngine } from "../../../lib/three/engine-22re-model";
 import { crankAngleAt, type EngineSystem } from "../../../lib/three/engine-22re-data";
 import { ENGINE_SHOW, hoverSystem, pinSystem, type EngineShowDetail } from "../engine-events";
-import type { Camera } from "three";
+import type { Camera, Color } from "three";
 import type { SubjectFactory } from "../viewer";
 
-const HIGHLIGHT = 0.55;
+const HIGHLIGHT = 0.35;
+const FADE = 0.8;
 /** Under reduced motion the crank holds here: just after cylinder 1 fires, so one crown glows. */
 const STILL_ANGLE = 0.35;
 
@@ -30,12 +31,20 @@ const createEngine: SubjectFactory = ({ THREE, host, reducedMotion, requestRende
 		return (hit?.object.userData.system as EngineSystem | undefined) ?? null;
 	};
 
+	// While one system is shown, the others fade toward gray so the shown one stands alone.
+	const keys = Object.keys(engine.systemMaterials) as EngineSystem[];
+	const base = Object.fromEntries(keys.map((k) => [k, engine.systemMaterials[k].color.clone()])) as Record<EngineSystem, Color>;
+	const faded = new THREE.Color("#9a9da0");
 	let shown: EngineSystem | null = null;
 	const highlight = (system: EngineSystem | null) => {
 		if (system === shown) return;
-		if (shown) engine.systemMaterials[shown].emissiveIntensity = 0;
 		shown = system;
-		if (shown) engine.systemMaterials[shown].emissiveIntensity = HIGHLIGHT;
+		for (const k of keys) {
+			const m = engine.systemMaterials[k];
+			m.emissiveIntensity = k === shown ? HIGHLIGHT : 0;
+			m.color.copy(base[k]);
+			if (shown && k !== shown) m.color.lerp(faded, FADE);
+		}
 		requestRender();
 	};
 	const onShow = (e: Event) => highlight((e as CustomEvent<EngineShowDetail>).detail.system);
@@ -44,7 +53,7 @@ const createEngine: SubjectFactory = ({ THREE, host, reducedMotion, requestRende
 	return {
 		root: engine.group,
 		spin: engine.group,
-		framing: { target: new THREE.Vector3(-0.07, 0.1, 0), turnRadius: 0.5, halfHeight: 0.3 },
+		framing: { target: new THREE.Vector3(-0.07, 0.1, 0), turnRadius: 0.6, halfHeight: 0.33 },
 		autoSpeed: 0.22,
 		update({ t }) {
 			if (!reducedMotion) engine.setCrank(crankAngleAt(t));

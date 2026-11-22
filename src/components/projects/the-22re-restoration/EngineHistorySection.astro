@@ -38,8 +38,8 @@ const DRAWN_TO_SCALE: { label: string; value: string; detail: string; sources: S
 	},
 	{
 		label: "Displacement",
-		value: `${Math.round(displacementCc()).toLocaleString("en-US")} cc`,
-		detail: `4 cylinders x pi/4 x ${(ENGINE.bore * 100).toFixed(1)}^2 x ${(ENGINE.stroke * 100).toFixed(1)} cm`,
+		value: "2,366 cc",
+		detail: `Toyota's figure. From bore and stroke: 4 cylinders x pi/4 x ${(ENGINE.bore * 100).toFixed(1)}² x ${(ENGINE.stroke * 100).toFixed(1)} cm = ${displacementCc().toLocaleString("en-US", { maximumFractionDigits: 1 })} cc.`,
 		sources: ["wiki"],
 	},
 	{

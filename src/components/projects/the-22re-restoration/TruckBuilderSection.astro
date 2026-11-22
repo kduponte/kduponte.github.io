@@ -1,0 +1,328 @@
+---
+// The truck builder: Kyle's build, Noah's build, and one anyone can make and send in. Every option
+// is a real part, size or rule for a 1991 Toyota Pickup 2WD, listed in truck-builder-options.ts with
+// its numbers and source; the page shows both beside each choice.
+import {
+	AS_IT_SITS,
+	CATALOG,
+	KYLE_BUILD,
+	KYLE_PAINT_CANDIDATES,
+	PAINTS,
+	PICKER_GROUPS,
+	describeBuild,
+	type Option,
+	type PaintOption,
+} from "../../../lib/three/truck-builder-options";
+
+const kyleLines = describeBuild(KYLE_BUILD);
+const asItSits = describeBuild(AS_IT_SITS);
+const candidates = KYLE_PAINT_CANDIDATES.map((id) => PAINTS.find((p) => p.id === id)!);
+const groups = PICKER_GROUPS.map((g) => ({ ...g, options: CATALOG[g.key] as readonly Option[] }));
+const opener = [
+	{ key: "hood", label: "Hood" },
+	{ key: "doorLeft", label: "Driver door" },
+	{ key: "doorRight", label: "Passenger door" },
+	{ key: "tailgate", label: "Tailgate" },
+];
+const label =
+	"The 1991 Toyota pickup in 3D, built to whichever build is selected: paint, ride height, wheels, tires, window tint, grille, bed and sticker. Drag to spin it; tap the hood, a door or the tailgate to open it.";
+---
+
+<section id="truck-builder" class="mx-auto max-w-7xl px-6 py-16 md:px-12 md:py-20">
+	<h2 class="font-anton text-4xl md:text-5xl">Kyle's build, Noah's build, yours</h2>
+	<p class="mt-3 max-w-[65ch] text-base leading-relaxed text-ink-soft">
+		Where this truck could end up. Every choice below is a real part, size or rule for a 1991 Pickup 2WD, with its
+		numbers and where they come from: factory paint codes, a lowering kit and a body lift made for this truck, tire sizes
+		that set how tall it stands, and Hawaii's window-tint law. Open the hood to see the 22R-E sitting in the bay.
+	</p>
+
+	<div data-truck-builder-root data-open="" class="mt-8 grid gap-6 md:grid-cols-12 md:items-start">
+		<div class="md:sticky md:top-6 md:col-span-7">
+			<div data-truck-builder-viewer role="img" aria-label={label} class="relative aspect-[16/11] w-full select-none">
+				<svg data-fallback viewBox="0 0 560 300" class="absolute inset-0 h-full w-full" aria-hidden="true">
+					<g stroke="#111" stroke-width="6" stroke-linejoin="round">
+						<rect x="30" y="150" width="300" height="70" fill="#c4262e" />
+						<polygon points="170,150 190,90 260,90 300,150" fill="#8fd0ff" />
+						<polygon points="170,150 330,150 330,110 520,125 535,215 170,215" fill="#c4262e" />
+						<circle cx="130" cy="225" r="42" fill="#111" />
+						<circle cx="440" cy="225" r="42" fill="#111" />
+					</g>
+				</svg>
+			</div>
+			<div class="mt-3 flex flex-wrap items-center gap-2">
+				<span class="font-mono text-[11px] uppercase tracking-wide text-ink-soft">Open</span>
+				{
+					opener.map((o) => (
+						<button
+							type="button"
+							data-opener={o.key}
+							aria-pressed="false"
+							class="raw-box rounded-full bg-cream px-3 py-1 text-xs font-semibold aria-pressed:bg-lime"
+						>
+							{o.label}
+						</button>
+					))
+				}
+				<span class="text-xs text-ink-soft">or tap the part</span>
+			</div>
+		</div>
+
+		<div class="md:col-span-5">
+			<div role="tablist" aria-label="Builds" class="flex gap-2">
+				{
+					[
+						["kyle", "Kyle's build"],
+						["noah", "Noah's build"],
+						["yours", "Your build"],
+					].map(([id, name], i) => (
+						<button
+							type="button"
+							role="tab"
+							id={`tb-tab-${id}`}
+							data-tab={id}
+							aria-selected={i === 0 ? "true" : "false"}
+							aria-controls={`tb-panel-${id}`}
+							class="raw-box rounded-xl bg-cream px-3 py-2 text-sm font-semibold aria-selected:bg-sun"
+						>
+							{name}
+						</button>
+					))
+				}
+			</div>
+
+			<div id="tb-panel-kyle" role="tabpanel" aria-labelledby="tb-tab-kyle" data-panel="kyle" class="raw-box mt-4 rounded-xl bg-cream p-4">
+				<p class="text-sm leading-relaxed text-ink-soft">
+					Lowered a little, clean and OEM-plus, with the Kalapana sticker on the back. The color is still open: Kyle is
+					leaning charcoal. All three he's weighing were 1991 factory colors, so flip between them.
+				</p>
+				<div class="mt-3 flex flex-wrap gap-2">
+					{
+						candidates.map((p: PaintOption) => (
+							<button
+								type="button"
+								data-kyle-paint={p.id}
+								aria-pressed={p.id === KYLE_BUILD.paint ? "true" : "false"}
+								class="flex items-center gap-2 rounded-full border-2 border-black bg-paper px-3 py-1 text-xs font-semibold aria-pressed:bg-sun"
+							>
+								<span class="inline-block h-4 w-4 rounded-full border-2 border-black" style={`background:${p.hex}`} />
+								{p.name} ({p.id})
+							</button>
+						))
+					}
+				</div>
+				<dl data-summary="kyle" class="mt-4 divide-y-2 divide-black border-y-2 border-black text-sm">
+					{
+						kyleLines.map((l) => (
+							<div class="flex gap-3 py-1.5">
+								<dt class="w-32 shrink-0 font-mono text-[11px] uppercase tracking-wide text-ink-soft">{l.label}</dt>
+								<dd class="text-ink">{l.value}</dd>
+							</div>
+						))
+					}
+				</dl>
+				<p class="mt-3 text-xs leading-relaxed text-ink-soft">
+					Wheels aren't picked yet; the factory steel wheels stay on until Kyle chooses from the options in Your build.
+				</p>
+			</div>
+
+			<div id="tb-panel-noah" role="tabpanel" aria-labelledby="tb-tab-noah" data-panel="noah" hidden class="raw-box mt-4 rounded-xl bg-cream p-4">
+				<p class="font-display text-lg font-semibold text-ink">Noah is still deciding.</p>
+				<p class="mt-1 text-sm leading-relaxed text-ink-soft">Until he does, this is the truck as it sits in Hilo today.</p>
+				<dl class="mt-4 divide-y-2 divide-black border-y-2 border-black text-sm">
+					{
+						asItSits.map((l) => (
+							<div class="flex gap-3 py-1.5">
+								<dt class="w-32 shrink-0 font-mono text-[11px] uppercase tracking-wide text-ink-soft">{l.label}</dt>
+								<dd class="text-ink">{l.value}</dd>
+							</div>
+						))
+					}
+				</dl>
+			</div>
+
+			<div id="tb-panel-yours" role="tabpanel" aria-labelledby="tb-tab-yours" data-panel="yours" hidden class="raw-box mt-4 rounded-xl bg-cream p-4">
+				<div class="space-y-4">
+					{
+						groups.map((g) => (
+							<fieldset data-group={g.key}>
+								<legend class="font-mono text-[11px] uppercase tracking-wide text-ink-soft">{g.label}</legend>
+								<div class="mt-1.5 flex flex-wrap gap-1.5">
+									{g.options.map((o) => (
+										<button
+											type="button"
+											data-choice={o.id}
+											aria-pressed="false"
+											title={o.spec || o.name}
+											class="flex items-center gap-1.5 rounded-full border-2 border-black bg-paper px-2.5 py-1 text-xs font-semibold disabled:opacity-35 aria-pressed:bg-sun"
+										>
+											{"hex" in o && (
+												<span class="inline-block h-3.5 w-3.5 rounded-full border-2 border-black" style={`background:${(o as PaintOption).hex}`} />
+											)}
+											{"hex" in o ? `${o.id}` : o.name}
+										</button>
+									))}
+								</div>
+								<p data-detail class="mt-1 text-xs leading-relaxed text-ink-soft" />
+							</fieldset>
+						))
+					}
+				</div>
+				<div class="mt-5 border-t-2 border-black pt-4">
+					<p class="text-sm leading-relaxed text-ink-soft">
+						Like what you made? Send it over. It opens your email with the build written out and a link that rebuilds it here.
+					</p>
+					<div class="mt-3 flex flex-wrap gap-2">
+						<a data-submit href="#truck-builder" class="raw-box rounded-xl bg-lime px-4 py-2 text-sm font-semibold">Send it to Kyle and Noah</a>
+						<button type="button" data-copy class="raw-box rounded-xl bg-cream px-4 py-2 text-sm font-semibold">Copy link</button>
+					</div>
+					<p data-copy-status aria-live="polite" class="mt-2 text-xs text-ink-soft"></p>
+				</div>
+			</div>
+		</div>
+	</div>
+</section>
+
+<script>
+	import { mountViewers } from "../../../scripts/three/viewer";
+	import { OPEN_CHANGED, setPart, showBuild, type OpenDetail } from "../../../scripts/three/truck-builder-events";
+	import {
+		AS_IT_SITS,
+		CATALOG,
+		KYLE_BUILD,
+		decodeBuild,
+		describeBuild,
+		encodeBuild,
+		resolveBuild,
+		type Build,
+		type BuildKey,
+		type Option,
+	} from "../../../lib/three/truck-builder-options";
+	import type { OpenerKey } from "../../../lib/three/toyota-truck-model";
+
+	const EMAIL = "kduponte@gmail.com";
+	const root = document.querySelector<HTMLElement>("[data-truck-builder-root]");
+	const section = document.getElementById("truck-builder");
+
+	if (root && section) {
+		type Tab = "kyle" | "noah" | "yours";
+		const fromLink = location.hash.startsWith("#build=");
+		const builds: Record<Tab, Build> = {
+			kyle: { ...KYLE_BUILD },
+			noah: { ...AS_IT_SITS },
+			yours: fromLink ? decodeBuild(location.hash.slice(1)) : { ...AS_IT_SITS },
+		};
+		let tab: Tab = fromLink ? "yours" : "kyle";
+
+		const shareUrl = () => `${location.origin}${location.pathname}#build=${encodeBuild(builds.yours)}`;
+		const escapeHtml = (t: string) => t.replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]!);
+
+		const renderKyle = () => {
+			const dl = section.querySelector<HTMLElement>('[data-summary="kyle"]');
+			if (dl)
+				dl.innerHTML = describeBuild(builds.kyle)
+					.map(
+						(l) =>
+							`<div class="flex gap-3 py-1.5"><dt class="w-32 shrink-0 font-mono text-[11px] uppercase tracking-wide text-ink-soft">${l.label}</dt><dd class="text-ink">${escapeHtml(l.value)}</dd></div>`,
+					)
+					.join("");
+			for (const b of section.querySelectorAll<HTMLButtonElement>("[data-kyle-paint]")) {
+				b.setAttribute("aria-pressed", String(b.dataset.kylePaint === builds.kyle.paint));
+			}
+		};
+
+		const renderYours = () => {
+			const r = resolveBuild(builds.yours);
+			for (const fs of section.querySelectorAll<HTMLFieldSetElement>("[data-group]")) {
+				const key = fs.dataset.group as BuildKey;
+				const chosen = r[key] as Option;
+				for (const b of fs.querySelectorAll<HTMLButtonElement>("[data-choice]")) {
+					b.setAttribute("aria-pressed", String(b.dataset.choice === chosen.id));
+					// A tire only fits a wheel of its own rim size.
+					if (key === "tire") {
+						const t = (CATALOG.tire as readonly { id: string; rimIn: number }[]).find((o) => o.id === b.dataset.choice);
+						b.disabled = !!t && t.rimIn !== r.wheel.diameterIn;
+					}
+				}
+				const detail = fs.querySelector<HTMLElement>("[data-detail]");
+				if (detail) {
+					const bits = ["hex" in chosen ? `${chosen.name}, ${chosen.spec}` : chosen.spec, chosen.note].filter(Boolean).map((t) => escapeHtml(t!.replace(/\.$/, "")));
+					const src = chosen.source ? ` <a class="text-accent-blue underline underline-offset-2" href="${chosen.source.href}">${escapeHtml(chosen.source.label)}</a>` : "";
+					detail.innerHTML = bits.join(". ") + (bits.length ? "." : "") + src;
+				}
+			}
+			const lines = describeBuild(builds.yours).map((l) => `${l.label}: ${l.value}`);
+			const body = `Here's my 22RE build:\n\n${lines.join("\n")}\n\nSee it in 3D: ${shareUrl()}\n`;
+			const submit = section.querySelector<HTMLAnchorElement>("[data-submit]");
+			if (submit) submit.href = `mailto:${EMAIL}?subject=${encodeURIComponent("My 22RE build")}&body=${encodeURIComponent(body)}`;
+		};
+
+		const show = () => {
+			showBuild(root, builds[tab]);
+			for (const b of section.querySelectorAll<HTMLButtonElement>("[data-tab]")) b.setAttribute("aria-selected", String(b.dataset.tab === tab));
+			for (const p of section.querySelectorAll<HTMLElement>("[data-panel]")) p.hidden = p.dataset.panel !== tab;
+		};
+
+		for (const b of section.querySelectorAll<HTMLButtonElement>("[data-tab]")) {
+			b.addEventListener("click", () => {
+				tab = b.dataset.tab as Tab;
+				show();
+			});
+		}
+		for (const b of section.querySelectorAll<HTMLButtonElement>("[data-kyle-paint]")) {
+			b.addEventListener("click", () => {
+				builds.kyle.paint = b.dataset.kylePaint!;
+				renderKyle();
+				show();
+			});
+		}
+		for (const fs of section.querySelectorAll<HTMLFieldSetElement>("[data-group]")) {
+			const key = fs.dataset.group as BuildKey;
+			for (const b of fs.querySelectorAll<HTMLButtonElement>("[data-choice]")) {
+				b.addEventListener("click", () => {
+					builds.yours = { ...builds.yours, [key]: b.dataset.choice! };
+					// Changing the wheel diameter swaps in a tire that fits it.
+					builds.yours = decodeBuild(encodeBuild(builds.yours));
+					renderYours();
+					show();
+					history.replaceState(null, "", `#build=${encodeBuild(builds.yours)}`);
+				});
+			}
+		}
+
+		const copyStatus = section.querySelector<HTMLElement>("[data-copy-status]");
+		section.querySelector<HTMLButtonElement>("[data-copy]")?.addEventListener("click", async () => {
+			try {
+				await navigator.clipboard.writeText(shareUrl());
+				if (copyStatus) copyStatus.textContent = "Link copied.";
+			} catch {
+				if (copyStatus) copyStatus.textContent = shareUrl();
+			}
+		});
+
+		// Open buttons and taps on the truck stay in step.
+		const openButtons = [...section.querySelectorAll<HTMLButtonElement>("[data-opener]")];
+		for (const b of openButtons) {
+			b.addEventListener("click", () => {
+				const open = b.getAttribute("aria-pressed") !== "true";
+				b.setAttribute("aria-pressed", String(open));
+				setPart(root, b.dataset.opener as OpenerKey, open);
+			});
+		}
+		root.addEventListener(OPEN_CHANGED, (e) => {
+			const { key, open } = (e as CustomEvent<OpenDetail>).detail;
+			openButtons.find((b) => b.dataset.opener === key)?.setAttribute("aria-pressed", String(open));
+		});
+
+		renderKyle();
+		renderYours();
+		show();
+		if (fromLink) {
+			// A shared build link lands on the builder, not wherever the page was last scrolled to.
+			history.scrollRestoration = "manual";
+			section.scrollIntoView();
+			window.addEventListener("load", () => section.scrollIntoView(), { once: true });
+		}
+	}
+
+	mountViewers("[data-truck-builder-viewer]", () => import("../../../scripts/three/subjects/truck-builder").then((m) => m.default));
+</script>

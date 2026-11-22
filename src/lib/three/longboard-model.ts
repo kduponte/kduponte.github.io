@@ -4,7 +4,8 @@ import { createPartKit, extrude, slab } from "./kit";
 /**
  * A classic single-fin longboard, in meters, for the bed of Kyle's build: white, a black-and-white
  * yin-yang and TANAKA on the bottom, a translucent neon green fin. Sized from a T&C longboard's stock
- * dimensions and a 10.5-inch Greenough 4-A fin (see truck-builder-options.ts for the sources).
+ * dimensions and a 10.5-inch longboard fin, in the raked pivot shape Kyle picked (see
+ * truck-builder-options.ts for the sources).
  *
  * Its own frame: +X toward the nose, +Y out of the bottom (the side the fin is on), +Z across.
  */
@@ -142,16 +143,38 @@ export function buildLongboard(spec: LongboardSpec = TC_LONGBOARD): LongboardMod
 		}
 	});
 
-	// Single fin: a raked Greenough outline standing up off the bottom near the tail.
+	// Single fin, a raked "pivot" outline like the Island Fin Design fin Kyle picked: the leading edge
+	// sweeps up and back in one long curve, the broad rounded tip rakes well past the base, and the
+	// trailing edge is deeply concave. Points traced from that fin, in fractions of its height (a is
+	// distance back from the leading foot toward the tail, v is height off the board).
 	const h = spec.finHeightM;
-	const base = h * 0.6;
+	const pt = ([a, v]: [number, number]) => new Vector2(-a * h, v * h);
 	const finShape = new Shape();
 	finShape.moveTo(0, 0);
-	finShape.lineTo(base, 0);
-	finShape.quadraticCurveTo(base * 0.55, h * 0.45, -base * 0.35, h);
-	finShape.quadraticCurveTo(-base * 0.45, h * 0.55, 0, 0);
+	finShape.splineThru(
+		(
+			[
+				[0.167, 0.292],
+				[0.3125, 0.542],
+				[0.479, 0.771],
+				[0.667, 0.927],
+				[0.854, 0.99],
+				[1.042, 1.0],
+				[1.125, 0.969],
+				[1.135, 0.9375],
+				[1.021, 0.833],
+				[0.896, 0.708],
+				[0.792, 0.542],
+				[0.74, 0.375],
+				[0.723, 0.208],
+				[0.729, 0],
+			] as [number, number][]
+		).map(pt),
+	);
+	finShape.lineTo(0, 0);
 	const finGeo = extrude(finShape, 0.009, 0.003, false);
-	add(group, finGeo, fin, [-L / 2 + 0.1, face - 0.004, 0], { outline: 0.004 });
+	// Leading foot about 38 cm up from the tail, so the raked tip stays over the board.
+	add(group, finGeo, fin, [-L / 2 + 0.38, face - 0.004, 0], { outline: 0.004 });
 
 	return { group, dispose: kit.dispose };
 }

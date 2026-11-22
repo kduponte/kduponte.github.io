@@ -308,7 +308,7 @@ export const BOARDS: BoardOption[] = [
 		name: "T&C longboard, single fin",
 		spec: '9\'6" x 23 1/2" x 3 1/2", 10.5" fin',
 		board: true,
-		note: "Classic white with a yin-yang and TANAKA on the bottom, deck down so the translucent neon green fin points up, tail out over the tailgate. Sized from a T&C Makani; the fin is a 10.5\" True Ames Greenough 4-A. Needs an open bed.",
+		note: "Classic white with a yin-yang and TANAKA on the bottom, deck down so the translucent neon green fin points up, tail out over the tailgate. Sized from a T&C Makani; the fin is 10.5\" tall (a classic longboard size) in a raked pivot shape like Island Fin Design's. Needs an open bed.",
 		source: SRC.tcLongboard,
 	},
 ];

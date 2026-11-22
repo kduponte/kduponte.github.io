@@ -3,9 +3,9 @@
 // is a real part, size or rule for a 1991 Toyota Pickup 2WD, listed in truck-builder-options.ts with
 // its numbers and source; the page shows both beside each choice.
 import {
-	AS_IT_SITS,
 	CATALOG,
 	KYLE_BUILD,
+	NOAH_BUILD,
 	PICKER_GROUPS,
 	describeBuild,
 	type Option,
@@ -13,7 +13,7 @@ import {
 } from "../../../lib/three/truck-builder-options";
 
 const kyleLines = describeBuild(KYLE_BUILD);
-const asItSits = describeBuild(AS_IT_SITS);
+const noahLines = describeBuild(NOAH_BUILD);
 const groups = PICKER_GROUPS.map((g) => ({ ...g, options: CATALOG[g.key] as readonly Option[] }));
 const opener = [
 	{ key: "hood", label: "Hood" },
@@ -89,8 +89,9 @@ const label =
 
 			<div id="tb-panel-kyle" role="tabpanel" aria-labelledby="tb-tab-kyle" data-panel="kyle" class="raw-box mt-4 rounded-xl bg-cream p-4">
 				<p class="text-sm leading-relaxed text-ink-soft">
-					Factory black, lowered a little on a Belltech kit but not slammed, on a set of old-school Ultra Hammer wheels,
-					with LED headlights and the Kalapana sticker on the back. Closest to it so far:{" "}
+					Factory black, lowered a little on a Belltech kit but not slammed, on old-school Ultra Hammer wheels with
+					low-profile tires. LED headlights, 35% tint, the tailgate lettering gone so the back is all black, the
+					Kalapana sticker, and a white single-fin longboard in the bed. Closest to it so far:{" "}
 					<a href="https://www.instagram.com/reel/DSOkEEVjNIz/" class="text-accent-blue underline underline-offset-2">Rutledge Wood's '91</a>.
 				</p>
 				<dl data-summary="kyle" class="mt-4 divide-y-2 divide-black border-y-2 border-black text-sm">
@@ -109,11 +110,15 @@ const label =
 			</div>
 
 			<div id="tb-panel-noah" role="tabpanel" aria-labelledby="tb-tab-noah" data-panel="noah" hidden class="raw-box mt-4 rounded-xl bg-cream p-4">
-				<p class="font-display text-lg font-semibold text-ink">Noah is still deciding.</p>
-				<p class="mt-1 text-sm leading-relaxed text-ink-soft">Until he does, this is the truck as it sits in Hilo today.</p>
+				<p class="text-sm leading-relaxed text-ink-soft">
+					Noah wants it closer to a monster truck. His inspiration is Marty McFly's 1985 Toyota from <i>Back to the Future</i>{" "}
+					and <a href="#hawaii-culture" class="text-accent-blue underline underline-offset-2">Poi Pounder</a>, Hawaii's first
+					monster truck, built on a Toyota Pickup cab. So it gets Underground paint, which sits between dark charcoal and
+					navy; a lift; bigger tires on fatter wheels; and a McFly-style roll bar with KC spotlights on top.
+				</p>
 				<dl class="mt-4 divide-y-2 divide-black border-y-2 border-black text-sm">
 					{
-						asItSits.map((l) => (
+						noahLines.map((l) => (
 							<div class="flex gap-3 py-1.5">
 								<dt class="w-32 shrink-0 font-mono text-[11px] uppercase tracking-wide text-ink-soft">{l.label}</dt>
 								<dd class="text-ink">{l.value}</dd>
@@ -172,6 +177,7 @@ const label =
 		AS_IT_SITS,
 		CATALOG,
 		KYLE_BUILD,
+		NOAH_BUILD,
 		decodeBuild,
 		describeBuild,
 		encodeBuild,
@@ -191,7 +197,7 @@ const label =
 		const fromLink = location.hash.startsWith("#build=");
 		const builds: Record<Tab, Build> = {
 			kyle: { ...KYLE_BUILD },
-			noah: { ...AS_IT_SITS },
+			noah: { ...NOAH_BUILD },
 			yours: fromLink ? decodeBuild(location.hash.slice(1)) : { ...AS_IT_SITS },
 		};
 		let tab: Tab = fromLink ? "yours" : "kyle";
@@ -217,6 +223,8 @@ const label =
 				const chosen = r[key] as Option;
 				for (const b of fs.querySelectorAll<HTMLButtonElement>("[data-choice]")) {
 					b.setAttribute("aria-pressed", String(b.dataset.choice === chosen.id));
+					// The board needs an open bed.
+					if (key === "board") b.disabled = b.dataset.choice !== "none" && r.bed.kind !== "none";
 					// A tire only fits a wheel of its own rim size.
 					if (key === "tire") {
 						const t = (CATALOG.tire as readonly { id: string; rimIn: number }[]).find((o) => o.id === b.dataset.choice);

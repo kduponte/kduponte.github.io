@@ -1,4 +1,5 @@
 import {
+	CatmullRomCurve3,
 	CircleGeometry,
 	Color,
 	CylinderGeometry,
@@ -9,11 +10,14 @@ import {
 	MeshStandardMaterial,
 	Shape,
 	TorusGeometry,
+	TubeGeometry,
 	Vector2,
+	Vector3,
 	type Material,
 	type Object3D,
 } from "three";
 import { OUTLINE, OUTLINE_SMALL, createPartKit, extrude, shade, slab, tint } from "./kit";
+import { TC_LONGBOARD, buildLongboard } from "./longboard-model";
 
 /**
  * A stylized ~1991 Toyota regular-cab long-bed pickup (4th-gen Hilux), modeled in meters from
@@ -62,7 +66,7 @@ export interface TruckOptions {
 	/** Something to mount in the engine bay (the 22R-E), origin at its crankshaft centerline, front toward +X. */
 	engine?: Object3D;
 	/** Wheel size and look. 5 x 114.3 lug pattern, as on the 2WD truck. */
-	wheel?: { diameterIn: number; widthIn: number; offsetMm: number; style: "hubcap" | "steel" | "alloy" | "hammer" };
+	wheel?: { diameterIn: number; widthIn: number; offsetMm: number; style: "hubcap" | "steel" | "alloy" | "hammer" | "eighthole" };
 	/** Factory 7x6 sealed beams, or LED units of the same size. */
 	headlights?: "sealed" | "led";
 	/** Tire size: the wheels sit on the ground, so a taller tire raises the whole truck. */
@@ -73,10 +77,16 @@ export interface TruckOptions {
 	glassVlt?: { front: number; rear: number };
 	grille?: "painted" | "chrome";
 	bed?: "none" | "shell" | "tonneau";
-	/** The 11.5 x 3 in Kalapana bumper sticker on the rear window. */
+	/** The 7.5 x 2.5 in Kalapana sticker on the rear window. */
 	sticker?: boolean;
 	/** Metallic paint flakes catch more light than a solid color. */
 	metallicPaint?: boolean;
+	/** The factory white TOYOTA on the tailgate. Default true; false leaves the tailgate plain. */
+	tailgateLettering?: boolean;
+	/** A longboard in the open bed, deck down and fin up, tail hanging out over the tailgate. */
+	board?: boolean;
+	/** A tube roll bar in the bed behind the cab with four 6-inch KC Daylighters on top, as on Marty McFly's truck. */
+	rack?: "none" | "rollbar";
 }
 
 /** How far each hinged part swings open, radians. */
@@ -244,6 +254,11 @@ const GLYPHS: Record<string, [number, number, number, number][]> = {
 		[0.75, 0, 0.375, 1],
 		[0.17, 0.36, 0.58, 0.36],
 	],
+	C: [
+		[0.75, 1, 0, 1],
+		[0, 1, 0, 0],
+		[0, 0, 0.75, 0],
+	],
 	K: [
 		[0, 0, 0, 1],
 		[0, 0.45, 0.75, 1],
@@ -314,7 +329,10 @@ export function buildToyotaTruck(colors: TruckColors = DEFAULT_TRUCK_COLORS, opt
 	const rearGlassMat = options.glassVlt ? glassWith(options.glassVlt.rear) : glassMat;
 	const surroundMat = options.grille === "chrome" ? chromeMat : grilleMat;
 	const ledHousingMat = std("#1b1d20", 0.35, 0.4);
-	const stickerMat = std("#f6f1e4", 0.6);
+	const kcYellowMat = std("#ffd400", 0.45);
+	let boardDispose: (() => void) | null = null;
+	const stickerMat = std("#4c9a6a", 0.55);
+	const stickerInkMat = std("#f7f6f1", 0.5);
 
 	const group = new Group();
 	// Everything sprung rides in `body`, so ride height and tire size can raise, lower and pitch it over the wheels.
@@ -572,7 +590,7 @@ export function buildToyotaTruck(colors: TruckColors = DEFAULT_TRUCK_COLORS, opt
 		add(gate, slab(0.012, 0.016, pan.halfW * 2 + 0.016, 0.006, 0.003), bodyMat, [gateFace - 0.004, y - gy, 0], { outline: 0.006 });
 	}
 	pair((side) => add(gate, slab(0.012, pan.top - pan.bottom, 0.016, 0.006, 0.003), bodyMat, [gateFace - 0.004, panMidY, side * pan.halfW], { outline: 0.006 }));
-	lettering("TOYOTA", [gateFace - 0.002, 0.7 - gy, 0], 0.11, 0.024, -1, letterPaintMat, gate);
+	if (options.tailgateLettering !== false) lettering("TOYOTA", [gateFace - 0.002, 0.7 - gy, 0], 0.11, 0.024, -1, letterPaintMat, gate);
 	add(gate, slab(0.006, 0.07, 0.22, 0.02, 0.003), trimMat, [gateFace - 0.001, 0.94 - gy, 0], { outline: 0 }); // handle pocket
 	add(gate, slab(0.022, 0.032, 0.17, 0.012, 0.006), chromeMat, [gateFace - 0.008, 0.94 - gy, 0], { outline: 0.008 }); // latch handle
 
@@ -637,14 +655,74 @@ export function buildToyotaTruck(colors: TruckColors = DEFAULT_TRUCK_COLORS, opt
 		add(body, slab(0.025, 0.55, 0.025, 0.008, 0.004), trimMat, [rearGlassX(1.29), 1.29, z], { rot: [0, 0, rearRake], outline: 0 });
 	}
 	add(body, slab(0.02, 0.05, 0.05, 0.01, 0.004), silverMat, [rearGlassX(1.29) - 0.005, 1.29, 0], { rot: [0, 0, rearRake], outline: 0 });
+	if (options.rack === "rollbar") {
+		// Tube roll bar standing on the bed rails just behind the cab, braced back to the rails, with four
+		// 6-inch KC Daylighters on top in KC's yellow covers.
+		const rx = CAB_BACK_X - 0.3;
+		const railY = BELT_Y + 0.03;
+		const barTop = 1.72;
+		const tube = (pts: [number, number, number][], closed = false) =>
+			new TubeGeometry(new CatmullRomCurve3(pts.map((p) => new Vector3(...p)), closed, "catmullrom", 0.15), 48, 0.028, 10, false);
+		add(
+			body,
+			tube([
+				[rx, railY, -0.76],
+				[rx, 1.45, -0.75],
+				[rx, barTop - 0.04, -0.68],
+				[rx, barTop, -0.45],
+				[rx, barTop, 0.45],
+				[rx, barTop - 0.04, 0.68],
+				[rx, 1.45, 0.75],
+				[rx, railY, 0.76],
+			]),
+			chromeMat,
+			[0, 0, 0],
+			{ outline: 0.01 },
+		);
+		pair((side) => {
+			add(body, tube([[rx, barTop - 0.08, side * 0.7], [rx - 0.3, 1.3, side * 0.74], [rx - 0.62, railY, side * 0.76]]), chromeMat, [0, 0, 0], { outline: 0.01 });
+			add(body, slab(0.14, 0.02, 0.1, 0.006, 0.003), chromeMat, [rx - 0.3, railY - 0.01, side * 0.76], { outline: 0.006 }); // rail plate
+		});
+		const kcR = 3 * INCH; // 6-inch Daylighter
+		for (const z of [-0.51, -0.17, 0.17, 0.51]) {
+			const housing = new CylinderGeometry(kcR, kcR * 0.85, 0.08, 28);
+			housing.rotateZ(-Math.PI / 2);
+			add(body, slab(0.03, 0.06, 0.03, 0.006, 0.003), trimMat, [rx, barTop + 0.05, z], { outline: 0 }); // bracket
+			add(body, housing, trimMat, [rx, barTop + kcR + 0.04, z], { outline: 0.01 });
+			const cover = new CylinderGeometry(kcR * 1.02, kcR * 1.02, 0.014, 28);
+			cover.rotateZ(-Math.PI / 2);
+			add(body, cover, kcYellowMat, [rx + 0.046, barTop + kcR + 0.04, z], { outline: 0.006 });
+			lettering("KC", [rx + 0.054, barTop + kcR + 0.04, z], 0.05, 0.011, 1, trimMat);
+		}
+	}
+	if (options.board && options.bed !== "shell" && options.bed !== "tonneau") {
+		// The longboard rests deck-down on the bed floor near the cab and on the tailgate's top edge,
+		// fin up, its tail hanging out past the back of the truck.
+		const board = buildLongboard();
+		boardDispose = board.dispose;
+		const L = TC_LONGBOARD.lengthM;
+		const ht = TC_LONGBOARD.thicknessM / 2;
+		const noseX = CAB_BACK_X - 0.14;
+		const p1 = new Vector2(noseX - 0.3, BED_FLOOR_Y + 0.03); // deck touches the floor 30 cm back from the nose
+		const p2 = new Vector2(TAIL_X + 0.03, 1.0 + 0.005); // and the tailgate's top edge
+		const phi = Math.atan2(p1.y - p2.y, p1.x - p2.x);
+		const axis = new Vector2(Math.cos(phi), Math.sin(phi));
+		const normal = new Vector2(-Math.sin(phi), Math.cos(phi));
+		const center = p1.clone().addScaledVector(axis, -(L / 2 - 0.3)).addScaledVector(normal, ht);
+		board.group.position.set(center.x, center.y, 0.08);
+		board.group.rotation.z = phi;
+		body.add(board.group);
+	}
 	if (options.sticker) {
-		// A standard 11.5 x 3 in bumper sticker on the lower passenger-side corner of the rear glass.
+		// Aloha Got Soul's 7.5 x 2.5 in sticker, white on green, on the lower passenger-side corner of the
+		// rear glass. Only the big KALAPANA is lettered; the small "SLOW DOWN... I'M LISTENING TO" line
+		// above it would be under a millimeter tall at this scale.
 		const sticker = new Group();
 		const sy = BELT_Y + 0.085;
 		sticker.position.set(rearGlassX(sy) - 0.004, sy, 0.38);
 		sticker.rotation.z = rearRake;
-		add(sticker, slab(0.005, 3 * INCH, 11.5 * INCH, 0.004, 0.001), stickerMat, [0, 0, 0], { outline: 0.004 });
-		lettering("KALAPANA", [-0.004, 0, 0], 0.03, 0.0055, -1, trimMat, sticker);
+		add(sticker, slab(0.005, 2.5 * INCH, 7.5 * INCH, 0.004, 0.001), stickerMat, [0, 0, 0], { outline: 0.003 });
+		lettering("KALAPANA", [-0.004, -0.008, 0], 0.021, 0.0042, -1, stickerInkMat, sticker);
 		body.add(sticker);
 	}
 
@@ -962,6 +1040,21 @@ export function buildToyotaTruck(colors: TruckColors = DEFAULT_TRUCK_COLORS, opt
 						outline: 0,
 					});
 				}
+			} else if (wheel.style === "eighthole") {
+				// Ultra 164: a polished disc with eight round holes and a raised center carrying the lugs.
+				disc(rimR + 0.004, 0.006, trimMat, face - s * 0.03);
+				disc(rimR - 0.002, 0.016, silverMat, face - s * 0.006, 36);
+				for (let i = 0; i < 8; i++) {
+					const a = (i / 8) * Math.PI * 2 + Math.PI / 8;
+					const hole = new CylinderGeometry(rimR * 0.15, rimR * 0.15, 0.006, 18);
+					hole.rotateX(Math.PI / 2);
+					add(pivot, hole, trimMat, [Math.cos(a) * rimR * 0.64, Math.sin(a) * rimR * 0.64, face + s * 0.003], { outline: 0 });
+				}
+				const hub = new CylinderGeometry(rimR * 0.36, rimR * 0.4, 0.03, 28);
+				hub.rotateX((s * Math.PI) / 2);
+				add(pivot, hub, silverMat, [0, 0, face + s * 0.012], { outline: 0 });
+				lugs(face + s * 0.028);
+				disc(0.03, 0.03, silverMat, face + s * 0.024, 16);
 			} else if (wheel.style === "hammer") {
 				// Ultra Hammer: a machined aluminum disc with five trapezoid slots near the rim, a raised
 				// center cone and a small black cap, as on the NOS set in Kyle's reference build.
@@ -1024,8 +1117,12 @@ export function buildToyotaTruck(colors: TruckColors = DEFAULT_TRUCK_COLORS, opt
 	shadow.position.set(-0.25, 0.005, 0);
 	group.add(shadow);
 
+	const dispose = () => {
+		kit.dispose();
+		boardDispose?.();
+	};
 	if (!openable) {
-		return { group, wheels, parts: kit.parts, lights: { head: headMat, tail: tailMat }, dispose: kit.dispose };
+		return { group, wheels, parts: kit.parts, lights: { head: headMat, tail: tailMat }, dispose };
 	}
 	[openers.doorRight, openers.doorLeft] = doors;
 	for (const [key, pivot] of Object.entries(openers)) pivot.traverse((o) => (o.userData.opener = key));
@@ -1035,5 +1132,5 @@ export function buildToyotaTruck(colors: TruckColors = DEFAULT_TRUCK_COLORS, opt
 		else if (key === "tailgate") openers.tailgate.rotation.z = t * OPEN_ANGLES.tailgate; // top drops rearward
 		else openers[key].rotation.y = (key === "doorRight" ? 1 : -1) * t * OPEN_ANGLES.door; // swings outboard
 	};
-	return { group, wheels, parts: kit.parts, lights: { head: headMat, tail: tailMat }, openers, setOpen, dispose: kit.dispose };
+	return { group, wheels, parts: kit.parts, lights: { head: headMat, tail: tailMat }, openers, setOpen, dispose };
 }

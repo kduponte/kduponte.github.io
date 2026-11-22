@@ -5,6 +5,7 @@ import {
 	CATALOG,
 	FRONT_TINTS,
 	KYLE_BUILD,
+	NOAH_BUILD,
 	REAR_TINTS,
 	decodeBuild,
 	describeBuild,
@@ -51,6 +52,29 @@ describe("truck builder catalog", () => {
 		expect(r.ride.id).toBe("b444");
 		expect(r.lights.kind).toBe("led");
 		expect(r.tire.rimIn).toBe(r.wheel.diameterIn);
+	});
+
+	it("gives Kyle low-profile tires, 35% film, a plain tailgate and a longboard in the open bed", () => {
+		const r = resolveBuild(KYLE_BUILD);
+		expect(r.tire.aspect).toBeLessThanOrEqual(50);
+		expect([r.tintFront.vlt, r.tintRear.vlt]).toEqual([0.35, 0.35]);
+		expect(r.tailgate.lettering).toBe(false);
+		expect(r.board.board).toBe(true);
+		expect(r.bed.kind).toBe("none");
+	});
+
+	it("builds Noah's monster-truck version: Underground, lifted, 33s on 15 x 10s, McFly roll bar", () => {
+		const r = resolveBuild(NOAH_BUILD);
+		expect(r.paint.id).toBe("1L7");
+		expect(r.ride.front).toBeGreaterThan(0);
+		expect(tireDiameter(r.tire.widthMm, r.tire.aspect, r.tire.rimIn) / INCH).toBeCloseTo(33, 6);
+		expect(r.tire.widthMm / 25.4).toBeCloseTo(12.5, 6);
+		expect(r.wheel.widthIn).toBe(10);
+		expect(r.rack.kind).toBe("rollbar");
+	});
+
+	it("drops the board when a shell or cover closes the bed", () => {
+		expect(resolveBuild({ ...KYLE_BUILD, bed: "shell" }).board.board).toBe(false);
 	});
 
 	it("round-trips a build through the share link", () => {
@@ -118,6 +142,25 @@ describe("buildToyotaTruck with builder options", () => {
 		for (const m of truck.parts) if (m.userData.opener) expect(Object.keys(truck.openers!)).toContain(m.userData.opener);
 		truck.dispose();
 		shut.dispose();
+	});
+
+	it("puts the longboard's tail out past the tailgate with the fin pointing up", () => {
+		const plain = buildToyotaTruck(undefined, { bed: "none" });
+		const withBoard = buildToyotaTruck(undefined, { bed: "none", board: true });
+		const b0 = bounds(plain);
+		withBoard.group.updateMatrixWorld(true);
+		const box = new Box3().setFromObject(withBoard.group.children[0]);
+		expect(box.min.x).toBeLessThan(b0.min.x - 0.5);
+		plain.dispose();
+		withBoard.dispose();
+	});
+
+	it("stands the McFly roll bar and its KC lights above the cab roof", () => {
+		const plain = buildToyotaTruck(undefined, {});
+		const rack = buildToyotaTruck(undefined, { rack: "rollbar" });
+		expect(bounds(rack).max.y).toBeGreaterThan(bounds(plain).max.y + 0.1);
+		plain.dispose();
+		rack.dispose();
 	});
 
 	it("adds a cab-high shell whose roof sits level with the cab's", () => {

@@ -31,7 +31,16 @@ const SRC = {
 	fmvss: { label: "FMVSS 205 (49 CFR 571.205)", href: "https://www.ecfr.gov/current/title-49/subtitle-B/chapter-V/part-571/subpart-B/section-571.205" },
 	grille: { label: "1989-91 Pickup grille listings (Go-Parts)", href: "https://www.go-parts.com/toyota-pickup-grilles.html" },
 	story: { label: "Kyle's truck log, Aug 23 2026", href: "#the-story" },
+	kalapanaSticker: {
+		label: "Aloha Got Soul, Kalapana bumper sticker",
+		href: "https://alohagotsoul.com/products/slow-down-i-m-listening-to-kalapana-bumper-sticker",
+	},
 	reference: { label: "Rutledge Wood's '91 Pickup (Instagram)", href: "https://www.instagram.com/reel/DSOkEEVjNIz/" },
+	underground: { label: "Toyota touch-up paint, Underground 1L7", href: "https://autoparts.toyota.com/products/product/underground-00258001l721" },
+	ultra164: { label: "Ultra Wheel, Type 164 sizes", href: "https://www.ultrawheel.com/wheel/28/164" },
+	bttf: { label: "Back to the Future wiki, Marty's Toyota", href: "https://backtothefuture.fandom.com/wiki/Toyota_Hilux" },
+	tcLongboard: { label: "T&C Makani 9'6\" longboard (Rider Shack)", href: "https://www.ridershack.com/used-96-t-c-makani-longboard-surfboard-117559.html" },
+	trueAmes: { label: "True Ames Greenough 4-A 10.5\" fin (Rider Shack)", href: "https://ridershack.com/products/true-ames-greenough-4-a-10-5-single-fin" },
 	h6054: { label: "H6054 sealed beam, 200 mm wide (NAPA)", href: "https://www.napaonline.com/en/p/LMPH6054N" },
 } as const satisfies Record<string, Source>;
 
@@ -53,16 +62,25 @@ export interface PaintOption extends Option {
 }
 
 export const PAINTS: PaintOption[] = [
-	{ id: "3H7", name: "Red", spec: "Code 3H7", hex: "#c4262e", metallic: false, source: SRC.paint, note: "Kyle's truck is a factory red; the code on its door-jamb plate (C/TR) will say which." },
-	{ id: "138", name: "Slate Gray Metallic", spec: "Code 138", hex: "#4f545a", metallic: true, source: SRC.paint },
-	{ id: "147", name: "Silver Metallic", spec: "Code 147", hex: "#b8bcc0", metallic: true, source: SRC.paint },
-	{ id: "8E3", name: "Blue Pearl Metallic", spec: "Code 8E3", hex: "#1e2c52", metallic: true, source: SRC.paint },
-	{ id: "8H8", name: "Midam Blue Metallic", spec: "Code 8H8", hex: "#3a5683", metallic: true, source: SRC.paint },
-	{ id: "179", name: "Blue Gray Metallic", spec: "Code 179", hex: "#6c7c8b", metallic: true, source: SRC.paint },
-	{ id: "8D8", name: "Light Blue Metallic", spec: "Code 8D8", hex: "#8ea8c3", metallic: true, source: SRC.paint },
-	{ id: "6J7", name: "Forest Green Metallic", spec: "Code 6J7", hex: "#2c4838", metallic: true, source: SRC.paint },
-	{ id: "045", name: "White", spec: "Code 045", hex: "#f1efe7", metallic: false, source: SRC.paint },
-	{ id: "202", name: "Black", spec: "Code 202", hex: "#141518", metallic: false, source: SRC.paint },
+	{ id: "3H7", name: "Red", spec: "1991 factory, code 3H7", hex: "#c4262e", metallic: false, source: SRC.paint, note: "Kyle's truck is a factory red; the code on its door-jamb plate (C/TR) will say which." },
+	{ id: "138", name: "Slate Gray Metallic", spec: "1991 factory, code 138", hex: "#4f545a", metallic: true, source: SRC.paint },
+	{ id: "147", name: "Silver Metallic", spec: "1991 factory, code 147", hex: "#b8bcc0", metallic: true, source: SRC.paint },
+	{ id: "8E3", name: "Blue Pearl Metallic", spec: "1991 factory, code 8E3", hex: "#1e2c52", metallic: true, source: SRC.paint },
+	{ id: "8H8", name: "Midam Blue Metallic", spec: "1991 factory, code 8H8", hex: "#3a5683", metallic: true, source: SRC.paint },
+	{ id: "179", name: "Blue Gray Metallic", spec: "1991 factory, code 179", hex: "#6c7c8b", metallic: true, source: SRC.paint },
+	{ id: "8D8", name: "Light Blue Metallic", spec: "1991 factory, code 8D8", hex: "#8ea8c3", metallic: true, source: SRC.paint },
+	{ id: "6J7", name: "Forest Green Metallic", spec: "1991 factory, code 6J7", hex: "#2c4838", metallic: true, source: SRC.paint },
+	{ id: "045", name: "White", spec: "1991 factory, code 045", hex: "#f1efe7", metallic: false, source: SRC.paint },
+	{ id: "202", name: "Black", spec: "1991 factory, code 202", hex: "#141518", metallic: false, source: SRC.paint },
+	{
+		id: "1L7",
+		name: "Underground",
+		spec: "2020s Toyota, code 1L7",
+		hex: "#3e4651",
+		metallic: false,
+		note: "A dark gray with a blue cast, between charcoal and navy. Not offered in 1991.",
+		source: SRC.underground,
+	},
 ];
 
 /** Ride height change at each axle, meters (negative is lower). */
@@ -102,7 +120,7 @@ export const RIDES: RideOption[] = [
 	},
 ];
 
-export type WheelStyle = "hubcap" | "steel" | "alloy" | "hammer";
+export type WheelStyle = "hubcap" | "steel" | "alloy" | "hammer" | "eighthole";
 
 export interface WheelOption extends Option {
 	diameterIn: number;
@@ -145,6 +163,17 @@ export const WHEELS: WheelOption[] = [
 		source: SRC.reference,
 	},
 	{
+		id: "ultra164",
+		name: "Ultra 164",
+		spec: '15 x 10", -46 mm, 5 x 4.5 (part 164-5165P)',
+		diameterIn: 15,
+		widthIn: 10,
+		offsetMm: -46,
+		style: "eighthole",
+		note: "Fat and old-school. The -46 mm offset sets the wheel 66 mm further out than the factory +20, so the tires stick out past the fenders.",
+		source: SRC.ultra164,
+	},
+	{
 		id: "alloy15",
 		name: "15 x 7 alloy",
 		spec: '15 x 7", +38 mm, 5 x 114.3',
@@ -168,6 +197,18 @@ export const TIRES: TireOption[] = [
 	{ id: "205-75-14", name: "205/75R14", spec: "", widthMm: 205, aspect: 75, rimIn: 14, note: "Factory alternate.", source: SRC.tireAlt },
 	{ id: "215-65-15", name: "215/65R15", spec: "", widthMm: 215, aspect: 65, rimIn: 15, note: "Factory alternate, on 15-inch wheels.", source: SRC.tireAlt },
 	{ id: "205-60-15", name: "205/60R15", spec: "", widthMm: 205, aspect: 60, rimIn: 15, note: "Not a factory size: shorter sidewall, the lowered look.", source: SRC.tireAlt },
+	{ id: "205-50-15", name: "205/50R15", spec: "", widthMm: 205, aspect: 50, rimIn: 15, note: "Low profile: a short sidewall for a lowered truck. Not a factory size.", source: SRC.tireAlt },
+	{
+		id: "33-12.5-15",
+		name: "33x12.50R15",
+		spec: "",
+		// A flotation size: 33 in tall and 12.5 in wide on a 15 in rim, written as width and sidewall ratio.
+		widthMm: 12.5 * 25.4,
+		aspect: ((((33 - 15) / 2) * 25.4) / (12.5 * 25.4)) * 100,
+		rimIn: 15,
+		note: "Monster-truck rubber. Nothing I found confirms 33s on a 2WD pickup, so expect trimming and rubbing.",
+		source: SRC.tireAlt,
+	},
 ].map((t) => ({ ...t, spec: tireSpec(t.widthMm, t.aspect, t.rimIn) }));
 
 /** Overall tire diameter, meters: the rim plus two sidewalls (width x aspect ratio). */
@@ -219,6 +260,47 @@ export const LIGHTS: LightOption[] = [
 	{ id: "led", name: "7 x 6 LED", spec: "LED units in the same 200 x 142 mm opening", kind: "led", note: "As on the reference build.", source: SRC.h6054 },
 ];
 
+export interface RackOption extends Option {
+	kind: "none" | "rollbar";
+}
+
+export const RACKS: RackOption[] = [
+	{ id: "none", name: "No rack", spec: "", kind: "none" },
+	{
+		id: "rollbar",
+		name: "McFly roll bar",
+		spec: 'Tube bar behind the cab, four 6" KC Daylighters',
+		kind: "rollbar",
+		note: "Marty McFly's 1985 Toyota carried four 6-inch round KC Daylighters on its rear roll bar. Yellow KC covers (part 5202).",
+		source: SRC.bttf,
+	},
+];
+
+export interface BoardOption extends Option {
+	board: boolean;
+}
+
+export const BOARDS: BoardOption[] = [
+	{ id: "none", name: "No board", spec: "", board: false },
+	{
+		id: "longboard",
+		name: "T&C longboard, single fin",
+		spec: '9\'6" x 23 1/2" x 3 1/2", 10.5" fin',
+		board: true,
+		note: "Classic white with a yin-yang and TANAKA on the bottom, deck down so the translucent neon green fin points up, tail out over the tailgate. Sized from a T&C Makani; the fin is a 10.5\" True Ames Greenough 4-A. Needs an open bed.",
+		source: SRC.tcLongboard,
+	},
+];
+
+export interface TailgateOption extends Option {
+	lettering: boolean;
+}
+
+export const TAILGATES: TailgateOption[] = [
+	{ id: "factory", name: "White TOYOTA", spec: "Factory lettering in the indented panel", lettering: true },
+	{ id: "plain", name: "Lettering removed", spec: "The tailgate in body color only", lettering: false },
+];
+
 export type GrilleFinish = "painted" | "chrome";
 
 export interface GrilleOption extends Option {
@@ -246,18 +328,18 @@ export interface DecalOption extends Option {
 	kalapana: boolean;
 }
 
-/** A standard bumper sticker is 11.5 x 3 inches. */
-export const STICKER_SIZE = { w: 11.5 * INCH, h: 3 * INCH } as const;
+/** Aloha Got Soul's Kalapana sticker is 7.5 x 2.5 inches. */
+export const STICKER_SIZE = { w: 7.5 * INCH, h: 2.5 * INCH } as const;
 
 export const DECALS: DecalOption[] = [
 	{ id: "none", name: "No sticker", spec: "", kalapana: false, source: SRC.story },
 	{
 		id: "kalapana",
 		name: '"Slow Down, I\'m Listening to Kalapana"',
-		spec: '11.5 x 3" bumper sticker, rear window',
+		spec: '7.5 x 2.5" sticker, white on green, rear window',
 		kalapana: true,
-		note: "From Kyle's plan for the truck.",
-		source: SRC.story,
+		note: "The Aloha Got Soul sticker from Kyle's plan for the truck.",
+		source: SRC.kalapanaSticker,
 	},
 ];
 
@@ -270,7 +352,10 @@ export interface Build {
 	tintRear: string;
 	lights: string;
 	grille: string;
+	tailgate: string;
 	bed: string;
+	rack: string;
+	board: string;
 	decal: string;
 }
 
@@ -284,15 +369,44 @@ export const AS_IT_SITS: Build = {
 	tintRear: "none",
 	lights: "sealed",
 	grille: "painted",
+	tailgate: "factory",
 	bed: "none",
+	rack: "none",
+	board: "none",
 	decal: "none",
 };
 
 /**
  * Kyle's build, from his notes and the reference truck he picked: factory black, lowered a little on a
- * Belltech kit (not slammed), Ultra Hammer wheels on lower-profile tires, LED headlights, the Kalapana sticker.
+ * Belltech kit (not slammed), Ultra Hammer wheels on low-profile tires, LED headlights, 35% film all
+ * round, the tailgate lettering removed, the Kalapana sticker, and a longboard in the bed.
  */
-export const KYLE_BUILD: Build = { ...AS_IT_SITS, paint: "202", ride: "b444", wheel: "hammer", tire: "205-60-15", lights: "led", decal: "kalapana" };
+export const KYLE_BUILD: Build = {
+	...AS_IT_SITS,
+	paint: "202",
+	ride: "b444",
+	wheel: "hammer",
+	tire: "205-50-15",
+	tintFront: "35",
+	tintRear: "35",
+	lights: "led",
+	tailgate: "plain",
+	board: "longboard",
+	decal: "kalapana",
+};
+
+/**
+ * Noah's build: closer to a monster truck, after Marty McFly's Toyota and Poi Pounder. Underground
+ * paint, a body lift, 33-inch tires on fat 15 x 10 wheels, and a McFly roll bar with KC lights on top.
+ */
+export const NOAH_BUILD: Build = {
+	...AS_IT_SITS,
+	paint: "1L7",
+	ride: "pa5503m",
+	wheel: "ultra164",
+	tire: "33-12.5-15",
+	rack: "rollbar",
+};
 
 export const CATALOG = {
 	paint: PAINTS,
@@ -303,7 +417,10 @@ export const CATALOG = {
 	tintRear: REAR_TINTS,
 	lights: LIGHTS,
 	grille: GRILLES,
+	tailgate: TAILGATES,
 	bed: BEDS,
+	rack: RACKS,
+	board: BOARDS,
 	decal: DECALS,
 } as const;
 
@@ -319,6 +436,10 @@ export function resolveBuild(build: Build) {
 	let tire = pick("tire");
 	// A tire only goes on a wheel of its own rim size.
 	if (tire.rimIn !== wheel.diameterIn) tire = TIRES.find((t) => t.rimIn === wheel.diameterIn)!;
+	const bed = pick("bed");
+	// The board rides in an open bed; a shell or a cover leaves no room for it.
+	let board = pick("board");
+	if (board.board && bed.kind !== "none") board = BOARDS[0];
 	return {
 		paint: pick("paint"),
 		ride: pick("ride"),
@@ -328,14 +449,17 @@ export function resolveBuild(build: Build) {
 		tintRear: pick("tintRear"),
 		lights: pick("lights"),
 		grille: pick("grille"),
-		bed: pick("bed"),
+		tailgate: pick("tailgate"),
+		bed,
+		rack: pick("rack"),
+		board,
 		decal: pick("decal"),
 	};
 }
 
 export type ResolvedBuild = ReturnType<typeof resolveBuild>;
 
-const KEY_ORDER: BuildKey[] = ["paint", "ride", "wheel", "tire", "tintFront", "tintRear", "lights", "grille", "bed", "decal"];
+const KEY_ORDER: BuildKey[] = ["paint", "ride", "wheel", "tire", "tintFront", "tintRear", "lights", "grille", "tailgate", "bed", "rack", "board", "decal"];
 
 /** A build as a short, readable URL fragment, e.g. "paint=138&ride=b444&...". */
 export function encodeBuild(build: Build): string {
@@ -363,14 +487,17 @@ export function describeBuild(build: Build): { label: string; value: string }[] 
 		{ label: "Rear window", value: r.tintRear.name },
 		{ label: "Headlights", value: r.lights.name },
 		{ label: "Grille", value: r.grille.name },
+		{ label: "Tailgate", value: r.tailgate.name },
 		{ label: "Bed", value: r.bed.name },
+		{ label: "Rack", value: r.rack.name },
+		{ label: "Surfboard", value: r.board.board ? `${r.board.name}, ${r.board.spec}` : r.board.name },
 		{ label: "Sticker", value: r.decal.name },
 	];
 }
 
 /** Section labels for the picker, in display order. */
 export const PICKER_GROUPS: { key: BuildKey; label: string }[] = [
-	{ key: "paint", label: "Paint (1991 factory colors)" },
+	{ key: "paint", label: "Paint" },
 	{ key: "ride", label: "Ride height" },
 	{ key: "wheel", label: "Wheels" },
 	{ key: "tire", label: "Tires" },
@@ -378,7 +505,10 @@ export const PICKER_GROUPS: { key: BuildKey; label: string }[] = [
 	{ key: "tintRear", label: "Rear window" },
 	{ key: "lights", label: "Headlights" },
 	{ key: "grille", label: "Grille" },
+	{ key: "tailgate", label: "Tailgate" },
 	{ key: "bed", label: "Bed" },
+	{ key: "rack", label: "Rack and lights" },
+	{ key: "board", label: "Surfboard" },
 	{ key: "decal", label: "Sticker" },
 ];
 
@@ -397,6 +527,9 @@ export function truckSetup(build: Build) {
 			grille: r.grille.finish,
 			bed: r.bed.kind,
 			sticker: r.decal.kalapana,
+			tailgateLettering: r.tailgate.lettering,
+			rack: r.rack.kind,
+			board: r.board.board,
 		},
 	};
 }

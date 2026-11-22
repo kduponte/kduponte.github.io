@@ -11,6 +11,7 @@ import {
 	TorusGeometry,
 	Vector2,
 	type Material,
+	type Object3D,
 } from "three";
 import { OUTLINE, OUTLINE_SMALL, createPartKit, extrude, shade, slab, tint } from "./kit";
 
@@ -81,11 +82,16 @@ const CAB_FRONT_X = 0.7; // cowl / firewall
 const CAB_FLOOR_Y = 0.5;
 const TAIL_X = -2.64;
 const BED_FLOOR_Y = 0.665;
+/** Width of the hood's raised center section. */
+const HOOD_BULGE_W = 0.74;
 
 /**
  * The front end, from photos of 1989-91 US-market pickups. The headlights are 7x6-inch rectangular
  * sealed beams (H6054: 200 x 142 mm); everything else is sized relative to them and the 1.64 m body.
  */
+/** The tailgate's indented panel, meters: between the tail lamps, from just under the latch to near the bottom. */
+const GATE_PANEL = { top: 0.875, bottom: 0.56, halfW: 0.63 } as const;
+
 /** Tail lamp, per section, meters: as tall as the bed corner from just above the bumper, in photos of 1989-91 trucks. */
 const TAIL_LAMP = { top: 0.88, amber: 0.07, clear: 0.05, red: 0.21, w: 0.1 } as const;
 
@@ -96,8 +102,12 @@ const FRONT = {
 	headW: 0.2,
 	headH: 0.142,
 	headZ: 0.55,
-	cornerFaceW: 0.14,
-	cornerWrap: 0.1, // how far the amber side marker wraps back along the fender
+	// Corner lamp, US pattern: its outboard edge rakes outward toward the bottom (the Japanese Hilux's
+	// leans the other way), so the lens is wider at the bottom than the top, front and side alike.
+	cornerTopW: 0.12,
+	cornerBotW: 0.15,
+	cornerWrapTop: 0.05,
+	cornerWrapBot: 0.09,
 	bumperY: 0.58,
 	bumperH: 0.16,
 	valanceY: 0.44,
@@ -212,8 +222,9 @@ export function buildToyotaTruck(colors: TruckColors = DEFAULT_TRUCK_COLORS): Tr
 	headMat.emissive = new Color(colors.light);
 	headMat.emissiveIntensity = 0;
 	const clearLensMat = std("#f4f1ea", 0.2);
-	// Stamped letters are body metal: a touch lighter than the paint so the raised edges catch the light.
-	const stampMat = std(tint(colors.body, 0.12), 0.34, 0.35);
+	// TOYOTA is painted on in white, inside the tailgate's indent, which sits a shade darker in shadow.
+	const letterPaintMat = std("#f4f2ec", 0.5);
+	const recessMat = std(shade(colors.body, 0.14), 0.4, 0.3);
 	const tailMat = std(colors.tail, 0.35);
 	tailMat.emissive = new Color(colors.tail);
 	tailMat.emissiveIntensity = 0;
@@ -259,8 +270,34 @@ export function buildToyotaTruck(colors: TruckColors = DEFAULT_TRUCK_COLORS): Tr
 		});
 	};
 
+	/**
+	 * The hood isn't flat: a raised center section runs from the cowl toward the nose, with a stamped
+	 * crease along each edge. Placed relative to (ox, oy) so an opening hood can carry it on its hinge.
+	 */
+	function hoodDetail(parent: Object3D, ox: number, oy: number) {
+		const x0 = CAB_FRONT_X + 0.06;
+		const x1 = NOSE_X - 0.16;
+		const topAt = (x: number) => BELT_Y + ((x - CAB_FRONT_X) / (NOSE_X - CAB_FRONT_X)) * (0.9 - BELT_Y);
+		const rise = 0.016;
+		const bulge = new Shape();
+		bulge.moveTo(x0 - ox, topAt(x0) - 0.01 - oy);
+		bulge.lineTo(x0 + 0.08 - ox, topAt(x0 + 0.08) + rise - oy);
+		bulge.lineTo(x1 - 0.1 - ox, topAt(x1 - 0.1) + rise - oy);
+		bulge.lineTo(x1 - ox, topAt(x1) - 0.01 - oy);
+		add(parent, extrude(bulge, HOOD_BULGE_W, 0.012, false), bodyMat, [0, 0, 0], { outline: OUTLINE_SMALL });
+		for (const z of [-HOOD_BULGE_W / 2 - 0.012, HOOD_BULGE_W / 2 + 0.012]) {
+			const len = x1 - x0;
+			const mid = (x0 + x1) / 2;
+			add(parent, slab(len, 0.008, 0.014, 0.004, 0.002), creaseMat, [mid - ox, topAt(mid) + 0.002 - oy, z], {
+				rot: [0, 0, Math.atan2(0.9 - BELT_Y, NOSE_X - CAB_FRONT_X)],
+				outline: 0,
+			});
+		}
+	}
+
 	// --- Front clip: hood and fenders ---
 	add(group, extrude(frontClipProfile(), BODY_HALF_W * 2, 0.07, false), bodyMat, [0, 0, 0], { outline: OUTLINE });
+	hoodDetail(group, 0, 0);
 
 	// --- Cab shell: floor pan, door walls and back wall, hollow so the interior shows through the glass ---
 	const cabLen = CAB_FRONT_X - CAB_BACK_X;
@@ -341,17 +378,22 @@ export function buildToyotaTruck(colors: TruckColors = DEFAULT_TRUCK_COLORS): Tr
 		add(group, slab(0.015, 0.035, bedInnerW - 0.24, 0.01, 0.004), bodyMat, [CAB_BACK_X - 0.09, y, 0], { outline: 0.008 });
 	}
 
-	// Tailgate, flush with the walls, as on 1989-91 US trucks: ribbed inside; outside, a pressed crease
-	// under the top edge, a chrome latch handle in a recessed pocket at the top center, and TOYOTA stamped
-	// into the sheet metal in body color across the lower half (not separate chrome letters).
+	// Tailgate, flush with the walls, as on 1989-91 US trucks: ribbed inside; outside, a chrome latch
+	// handle in a recessed pocket at the top center, and below it a wide indented panel with TOYOTA
+	// painted across it in white (not stamped, not separate chrome letters).
 	add(group, slab(0.07, 0.5, BODY_HALF_W * 2 - 0.08, 0.02, 0.015), bodyMat, [TAIL_X + 0.03, 0.75, 0], { outline: OUTLINE });
 	for (const y of [0.62, 0.74, 0.86]) {
 		add(group, slab(0.012, 0.03, BODY_HALF_W * 2 - 0.3, 0.01, 0.004), bodyMat, [TAIL_X + 0.071, y, 0], { outline: 0.008 });
 	}
 	const gateFace = TAIL_X - 0.005;
-	add(group, slab(0.008, 0.016, BODY_HALF_W * 2 - 0.16, 0.004, 0.002), creaseMat, [gateFace - 0.002, 0.892, 0], { outline: 0 });
-	add(group, slab(0.006, 0.01, BODY_HALF_W * 2 - 0.16, 0.003, 0.002), trimMat, [gateFace - 0.001, 0.878, 0], { outline: 0 });
-	lettering("TOYOTA", [gateFace - 0.004, 0.71, 0], 0.12, 0.026, -1, stampMat);
+	// The indent: a shadowed panel ringed by a raised lip, so it reads as pressed in.
+	const pan = GATE_PANEL;
+	add(group, slab(0.004, pan.top - pan.bottom, pan.halfW * 2, 0.02, 0.001), recessMat, [gateFace - 0.001, (pan.top + pan.bottom) / 2, 0], { outline: 0 });
+	for (const y of [pan.top, pan.bottom]) {
+		add(group, slab(0.012, 0.016, pan.halfW * 2 + 0.016, 0.006, 0.003), bodyMat, [gateFace - 0.004, y, 0], { outline: 0.006 });
+	}
+	pair((side) => add(group, slab(0.012, pan.top - pan.bottom, 0.016, 0.006, 0.003), bodyMat, [gateFace - 0.004, (pan.top + pan.bottom) / 2, side * pan.halfW], { outline: 0.006 }));
+	lettering("TOYOTA", [gateFace - 0.002, 0.7, 0], 0.11, 0.024, -1, letterPaintMat);
 	add(group, slab(0.006, 0.07, 0.22, 0.02, 0.003), trimMat, [gateFace - 0.001, 0.94, 0], { outline: 0 }); // handle pocket
 	add(group, slab(0.022, 0.032, 0.17, 0.012, 0.006), chromeMat, [gateFace - 0.008, 0.94, 0], { outline: 0.008 }); // latch handle
 
@@ -491,17 +533,39 @@ export function buildToyotaTruck(colors: TruckColors = DEFAULT_TRUCK_COLORS): Tr
 		const headZ = side * FRONT.headZ;
 		add(group, slab(0.03, FRONT.headH + 0.03, FRONT.headW + 0.03, 0.012, 0.006), grilleMat, [bandX + 0.004, bandY, headZ], { outline: 0 });
 		add(group, slab(0.04, FRONT.headH, FRONT.headW, 0.02, 0.012), headMat, [bandX + 0.014, bandY, headZ], { outline: 0.012 });
-		// Corner lamp: a clear park lamp on the face, an amber side marker wrapping round the fender.
-		const cornerZ = side * (BODY_HALF_W - FRONT.cornerFaceW / 2 - 0.005);
-		add(group, slab(0.035, FRONT.headH, FRONT.cornerFaceW * 0.55, 0.01, 0.006), headMat, [bandX + 0.008, bandY, cornerZ - side * FRONT.cornerFaceW * 0.2], {
+		// Corner lamp: a clear lens with an amber insert running parallel to its raked outboard edge,
+		// wrapping back round the fender with a matching raked rear edge. Drawn as outlines in the lamp's
+		// own plane (u outboard from its inner edge, v up), turned to face forward on either side.
+		const h = FRONT.headH;
+		const lens = (pts: [number, number][]) => new Shape(pts.map(([u, v]) => new Vector2(u, v)));
+		const zIn = FRONT.headZ + FRONT.headW / 2 + 0.018;
+		const face = { rot: [0, -side * (Math.PI / 2), 0] as [number, number, number] };
+		add(group, extrude(lens([[0, -h / 2], [FRONT.cornerBotW, -h / 2], [FRONT.cornerTopW, h / 2], [0, h / 2]]), 0.035, 0.006, false), headMat, [bandX + 0.008, bandY, side * zIn], {
+			...face,
 			outline: 0.01,
 		});
-		add(group, slab(0.035, FRONT.headH, FRONT.cornerFaceW * 0.42, 0.01, 0.006), amberMat, [bandX + 0.008, bandY, cornerZ + side * FRONT.cornerFaceW * 0.28], {
-			outline: 0.01,
-		});
-		add(group, slab(FRONT.cornerWrap, FRONT.headH, 0.03, 0.01, 0.006), amberMat, [NOSE_X - FRONT.cornerWrap / 2 + 0.01, bandY, side * (BODY_HALF_W + 0.002)], {
-			outline: 0.01,
-		});
+		const inset = 0.012;
+		const amberW = 0.045;
+		add(
+			group,
+			extrude(
+				lens([
+					[FRONT.cornerBotW - inset - amberW, -h / 2 + inset],
+					[FRONT.cornerBotW - inset, -h / 2 + inset],
+					[FRONT.cornerTopW - inset, h / 2 - inset],
+					[FRONT.cornerTopW - inset - amberW, h / 2 - inset],
+				]),
+				0.02,
+				0.004,
+				false,
+			),
+			amberMat,
+			[bandX + 0.02, bandY, side * zIn],
+			{ ...face, outline: 0 },
+		);
+		// The wrap onto the fender side: clear, its rear edge raked the same way.
+		const wrap = lens([[0.012, -h / 2], [-FRONT.cornerWrapBot, -h / 2], [-FRONT.cornerWrapTop, h / 2], [0.012, h / 2]]);
+		add(group, extrude(wrap, 0.03, 0.006, false), headMat, [NOSE_X, bandY, side * (BODY_HALF_W + 0.002)], { outline: 0.01 });
 	});
 
 	// Chrome bumper: a pressed face that wraps back around both front corners, amber turn lamps set in it.

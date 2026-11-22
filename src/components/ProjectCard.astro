@@ -2,6 +2,7 @@
 import { projectTheme } from "../lib/project-theme";
 import { hasTilePreview, type TilePlacement } from "../lib/project-tiles";
 import TilePreview from "./three/TilePreview.astro";
+import Ripples from "./Ripples.astro";
 
 interface Props {
 	slug: string;
@@ -39,8 +40,17 @@ const placeVars = place ? ` --tile-col: ${place.column}; --tile-row: ${place.row
 		className,
 	]}
 	style={`transform: rotate(${rotate}deg); --dot: ${theme.dot}; --cell: 9px;${placeVars}`}
+	data-tone={theme.tone}
+	data-wash={theme.spot}
 >
-	<div class="halftone pointer-events-none absolute inset-0 opacity-20" aria-hidden="true"></div>
+	<div class="halftone pointer-events-none absolute inset-0 opacity-25" aria-hidden="true"></div>
+	<Ripples
+		seed={[...slug].reduce((a, c) => a * 31 + c.charCodeAt(0), 7) >>> 0}
+		cx={hasTilePreview(slug) ? 500 : 900}
+		cy={hasTilePreview(slug) ? 330 : 120}
+		rings={hasTilePreview(slug) ? 13 : 9}
+		class={`${theme.ring} opacity-50 transition-opacity duration-300 group-hover:opacity-100`}
+	/>
 	<span class="font-mono absolute -top-px right-5 rounded-b-lg bg-black px-2.5 py-1 text-[10px] uppercase text-lime">
 		{statusLabel[status]}
 	</span>

@@ -1,0 +1,38 @@
+---
+// A full-width color block with ripple rings, for a chapter break or a block of big numbers. Bands
+// give a long write-up its rhythm: paper, then a dark or colored spread, then paper again.
+import Ripples from "../Ripples.astro";
+import { toneClasses, type TileTone } from "../../lib/tile-tone";
+
+interface Props {
+	tone?: TileTone;
+	/** Where the rings center, in the 1000 × 1000 ripple box. */
+	cx?: number;
+	cy?: number;
+	/** Ring count; use fewer on bands that carry paragraph text so the rings stay clear of it. */
+	rings?: number;
+	/** A rounded tile inside the column instead of a full-width band. */
+	contained?: boolean;
+	class?: string;
+	innerClass?: string;
+}
+
+const { tone = "ink", cx = 860, cy = 500, rings = 16, contained = false, class: className = "", innerClass = "" } = Astro.props;
+const t = toneClasses(tone, Astro.url.pathname);
+const seed = [...`${Astro.url.pathname}${cx}${cy}${tone}`].reduce((a, c) => (a * 31 + c.charCodeAt(0)) >>> 0, 5);
+---
+
+<div
+	class:list={[
+		"relative overflow-hidden border-black",
+		contained ? "rounded-3xl border-[3px] shadow-hard-lg" : "border-y-[3px]",
+		t.surface,
+		className,
+	]}
+>
+	<Ripples seed={seed} cx={cx} cy={cy} rings={rings} gap={50} class={`${t.ring} opacity-50 md:opacity-100`} />
+	<div class="halftone absolute inset-0 opacity-25" aria-hidden="true"></div>
+	<div class:list={["relative", contained ? "px-6 py-10 md:px-10 md:py-12" : "mx-auto max-w-7xl px-6 py-14 md:px-12 md:py-20", innerClass]}>
+		<slot />
+	</div>
+</div>

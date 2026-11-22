@@ -1,4 +1,5 @@
 ---
+import SectionOpener from "../../editorial/SectionOpener.astro";
 // Disagreement at every break, from offshore sample points. All figures and comparative claims
 // below are computed from breaks.json at build time.
 import breakData from "../../../../public/data/surf-forecast/breaks.json";
@@ -64,8 +65,8 @@ const rMin = Math.min(...validated);
 ---
 
 <section id="break-disagreement" class="mx-auto max-w-7xl px-6 py-16 md:px-12 md:py-20">
-	<h2 class="font-anton text-4xl md:text-5xl">How much the forecasts disagree at each break</h2>
-	<div class="mt-3 max-w-[65ch] space-y-4 text-base leading-relaxed text-ink-soft">
+	<SectionOpener bare number="07" kicker="At the breaks" title={`How much the forecasts disagree at each break`} />
+	<div class="mag mt-10 max-w-[65ch]">
 		<p>
 			Disagreement needs no buoy, so unlike accuracy it can be measured at every break, including the ones no buoy can
 			speak for. Each break is sampled from a point 5 km out along the middle of its swell window, upstream of the swell
@@ -106,7 +107,7 @@ const rMin = Math.min(...validated);
 		</p>
 	</div>
 
-	<div class="mt-8 max-w-[65ch] space-y-4 text-base leading-relaxed text-ink-soft">
+	<div class="mt-8 max-w-[65ch] space-y-4 text-[17px] font-medium leading-relaxed">
 		<p>
 			{mostAgree.label} agrees most: a typical spread of {f(mostAgree.typical)} ft, about {Math.round(mostAgree.relative * 100)}%
 			of the forecast itself. {leastAgree.label} agrees least relative to its surf, with forecasts that typically span

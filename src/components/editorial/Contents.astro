@@ -1,0 +1,35 @@
+---
+// "In this issue": a magazine contents index for the sections that follow, with big numbers,
+// dotted leaders and jump links.
+interface Props {
+	title?: string;
+	items: { n: string; title: string; blurb?: string; href: string }[];
+	class?: string;
+}
+
+const { title = "In this issue", items, class: className = "" } = Astro.props;
+---
+
+<nav aria-label={title} class:list={["border-t-[3px] border-current", className]}>
+	<p class="font-mono mt-3 text-[11px] uppercase">{title}</p>
+	<ol class="mt-4">
+		{
+			items.map((it) => (
+				<li class="border-b-2 border-current">
+					<a href={it.href} class="group grid grid-cols-[4.5rem_1fr_auto] items-baseline gap-4 py-4 md:grid-cols-[6rem_1fr_auto]">
+						<span class="font-anton text-5xl leading-none text-spot md:text-6xl" style="-webkit-text-stroke: 2px var(--color-black)">
+							{it.n}
+						</span>
+						<span>
+							<span class="font-anton block text-2xl uppercase leading-none group-hover:underline md:text-3xl">{it.title}</span>
+							{it.blurb && <span class="mt-1 block text-sm font-medium leading-snug">{it.blurb}</span>}
+						</span>
+						<span class="font-mono text-xs uppercase transition-transform group-hover:translate-x-1" aria-hidden="true">
+							→
+						</span>
+					</a>
+				</li>
+			))
+		}
+	</ol>
+</nav>

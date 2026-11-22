@@ -13,9 +13,11 @@ interface Finding {
 
 interface Props {
 	finding: Finding;
+	/** Position in the list, shown as a big number. */
+	index?: number;
 }
 
-const { finding } = Astro.props;
+const { finding, index } = Astro.props;
 
 const bars =
 	finding.bars && finding.bars.length > 0
@@ -26,18 +28,27 @@ const bars =
 		: null;
 ---
 
-<li class="raw-box shadow-hard rounded-2xl bg-cream p-6">
-	<p class="font-display text-xl font-extrabold">{finding.label}</p>
+<li class="raw-box shadow-hard-lg relative rounded-2xl bg-cream p-6 text-black">
+	<div class="flex items-start gap-4">
+		{
+			index !== undefined && (
+				<span class="font-anton text-5xl leading-[0.85] text-spot" style="-webkit-text-stroke: 2px var(--color-black)">
+					{String(index).padStart(2, "0")}
+				</span>
+			)
+		}
+		<p class="font-anton text-2xl uppercase leading-[1] md:text-[1.7rem]">{finding.label}</p>
+	</div>
 	{
 		bars && (
-			<div class="mt-3 space-y-1.5">
+			<div class="mt-4 space-y-2">
 				{bars.map((bar) => (
-					<div class="flex items-center gap-2 font-mono text-xs">
-						<span class="w-32 shrink-0 truncate text-ink-soft">{bar.label}</span>
-						<span class="h-2 flex-1 border border-black bg-black/10">
-							<span class="block h-2 bg-cobalt" style={`width: ${bar.pct}%`} />
+					<div class="flex items-center gap-2 text-xs">
+						<span class="font-mono w-32 shrink-0 truncate text-[10px] uppercase">{bar.label}</span>
+						<span class="h-3.5 flex-1 rounded-sm border-2 border-black bg-black/5">
+							<span class="block h-full bg-spot" style={`width: ${bar.pct}%`} />
 						</span>
-						<span class="w-14 shrink-0 text-right text-ink">
+						<span class="w-14 shrink-0 text-right font-bold">
 							{bar.value}
 							{bar.unit ?? "%"}
 						</span>
@@ -46,5 +57,5 @@ const bars =
 			</div>
 		)
 	}
-	<p class="mt-2 text-sm leading-relaxed text-ink-soft">{finding.detail}</p>
+	<p class="mt-3 text-[15px] font-medium leading-relaxed">{finding.detail}</p>
 </li>

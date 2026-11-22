@@ -1,6 +1,7 @@
 ---
 import Chip from "../Chip.astro";
 import { projectTheme } from "../../lib/project-theme";
+import Ripples from "../Ripples.astro";
 
 interface Props {
 	eyebrow?: string;
@@ -24,7 +25,8 @@ const eyebrowText = eyebrow?.replace(/^\[\s*|\s*\]$/g, "");
 	class:list={["relative overflow-hidden border-y-[3px] border-black", theme.fill]}
 	style={`--dot: ${theme.dot}; --cell: 14px;`}
 >
-	<div class="halftone absolute inset-0 opacity-20" aria-hidden="true"></div>
+	<Ripples seed={slug.length * 97 + 13} cx={780} cy={420} rings={16} gap={50} class={`${theme.ring} opacity-70`} />
+	<div class="halftone absolute inset-0 opacity-25" aria-hidden="true"></div>
 	<div class="relative mx-auto grid max-w-7xl grid-cols-1 gap-8 px-6 pb-14 pt-10 md:grid-cols-12 md:px-12 md:pb-20 md:pt-14">
 		<div class="md:col-span-12">
 			{

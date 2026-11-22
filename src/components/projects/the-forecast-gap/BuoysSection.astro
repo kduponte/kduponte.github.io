@@ -1,4 +1,5 @@
 ---
+import SectionOpener from "../../editorial/SectionOpener.astro";
 // "The twelve buoys": what each instrument behind the results is, where it sits and what it
 // recorded, with all twelve drawn at true size in one 3D view. One buoy's details show at a time,
 // beside the view: pick a name under the view (its rows are the view's rows) or tap the view to step
@@ -92,8 +93,8 @@ const label = `${countWord(n, true)} wave buoys at true size on a slowly turning
 ---
 
 <section id="buoys" class="mx-auto max-w-7xl px-6 py-16 md:px-12 md:py-20">
-	<h2 class="font-anton text-4xl md:text-5xl">The {countWord(n)} buoys</h2>
-	<p class="mt-3 max-w-[65ch] text-base leading-relaxed text-ink-soft">
+	<SectionOpener bare number="11" kicker="The buoys" title={`The ${countWord(n)} buoys`} />
+	<p class="mt-10 max-w-[58ch] text-xl font-semibold leading-snug md:text-2xl">
 		Every accuracy figure above is a comparison with one of these {countWord(n)} instruments. {countWord(waveriders.length, true)} are
 		Datawell Waverider buoys, {WAVERIDER_DIAMETER_M} m spheres that ride the surface and record its motion; the {countWord(pacioos.length)} in Hawaii
 		belong to the {pacioos[0]?.page.owner}, and {viaScripps.length === waveriders.length ? `all ${countWord(viaScripps.length)}` : countWord(viaScripps.length)} report
@@ -241,14 +242,14 @@ const label = `${countWord(n, true)} wave buoys at true size on a slowly turning
 					))
 				}
 			</div>
-			<p class="mt-5 text-sm leading-relaxed text-ink-soft">
+			<p class="mt-5 text-[15px] font-medium leading-relaxed">
 				Mean miss is each system's average wave height error at the buoy, {PROFILE_LEAD_DAYS} days out, over the hours the buoy reported
 				({metadata.window.start} to {metadata.window.end}). Every buoy's bars share one scale, so they compare across buoys as well as systems.
 				The record bars show each month's share of the analysis's {metadata.grid} hours with a wave height reading.
 			</p>
 		</div>
 
-		<p class="text-sm leading-relaxed text-ink-soft lg:col-span-7 lg:row-start-2">
+		<p class="text-[15px] font-medium leading-relaxed lg:col-span-7 lg:row-start-2">
 			All {countWord(n)} at true size and one scale, on a cut of still water {blockDepth.toFixed(1)} m deep: each hull floats at its own
 			waterline, and the water is see-through so the part below it shows. Back to front, {rowText}; each row runs west to east, as the
 			names above do. The steps along the plinth's front edge are {FLEET_SCALE_STEP_M} m. {other.name}'s anemometers stand

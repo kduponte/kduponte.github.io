@@ -1,4 +1,5 @@
 ---
+import SectionOpener from "../../editorial/SectionOpener.astro";
 import type { RegressionOutput } from "../../../lib/surf-volume/types";
 import modelOutputs from "../../../../public/data/surf-volume/model_outputs.json";
 
@@ -6,9 +7,9 @@ const regression = modelOutputs as RegressionOutput;
 ---
 
 <section id="consensus-model" class="mx-auto max-w-7xl px-6 py-16 md:px-12 md:py-20">
-	<h2 class="font-anton text-4xl md:text-5xl">The consensus model</h2>
+	<SectionOpener bare number="07" kicker="Consensus" title={`The consensus model`} />
 	<div class="mt-6 grid grid-cols-1 gap-10 md:grid-cols-2">
-		<div class="max-w-[60ch] space-y-4 text-sm leading-relaxed text-ink-soft">
+		<div class="max-w-[60ch] space-y-4 text-[15px] font-medium leading-relaxed">
 			<p>
 				The consensus shown throughout this project is the <strong class="text-ink">median</strong> recommended volume
 				across directly comparable systems for a given profile, not an average, and not any single system's answer.

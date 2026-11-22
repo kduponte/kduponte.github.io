@@ -1,12 +1,17 @@
 ---
+import SectionOpener from "../../editorial/SectionOpener.astro";
+import Band from "../../editorial/Band.astro";
+import StatSpread from "../../editorial/StatSpread.astro";
+// Var(Y_cuped) = Var(Y)·(1 − r²), so the share of variance removed is exactly r².
+const removed = [0.3, 0.5, 0.7].map((r) => ({ value: `${Math.round(r * r * 100)}%`, label: `Variance removed at a correlation of ${r}` }));
 // Static, hand-drawn illustrative diagrams, generated from a real, honestly-fit example (a small
 // sample regression, not simulated live data, the live tool below computes for real). Labeled as
 // sketches so they're never mistaken for the actual computed output.
 ---
 
 <section id="core-idea" class="mx-auto max-w-7xl px-6 py-16 md:px-12 md:py-20">
-	<h2 class="font-anton text-4xl md:text-5xl">Why does removing noise help?</h2>
-	<p class="mt-3 max-w-[65ch] text-base leading-relaxed text-ink">
+	<SectionOpener bare number="02" kicker="The idea" title={`Why does removing noise help?`} />
+	<p class="mt-10 max-w-[58ch] text-xl font-semibold leading-snug md:text-2xl">
 		Think of a kitchen scale's <strong>tare</strong> button. Before you weigh an ingredient, you set the bowl on the
 		scale and press tare, it subtracts the bowl's weight so the reading shows only the ingredient. The bowl's weight
 		was never what you cared about, it was just noise sitting on top of the number you actually wanted. CUPED does
@@ -14,13 +19,18 @@
 		predictable from what you knew about them before the experiment even started, so what's left reflects the
 		treatment more clearly.
 	</p>
-	<p class="mt-3 max-w-[65ch] text-base leading-relaxed text-ink-soft">
+	<p class="mt-3 max-w-[65ch] text-[17px] font-medium leading-relaxed">
 		It's a personalized tare, though, not a flat one. A <strong>golf handicap</strong> is the closer analogy for that
 		part: a handicap doesn't subtract the same number of strokes from everyone, it adjusts each player against their
 		own known baseline, so a beginner's 95 and a scratch golfer's 78 can both be judged as "how much did you improve
 		today," not just "who shot the lower number." CUPED adjusts each visitor against their own pre-period baseline,
 		not a single number for the whole experiment.
 	</p>
+
+	<Band tone="field" contained class="mt-10" cx={140} cy={500} rings={9}>
+		<p class="font-mono text-[11px] uppercase">The tare, by the numbers: variance removed is exactly correlation²</p>
+		<StatSpread class="mt-4" items={removed} />
+	</Band>
 
 	<div class="mt-10 grid grid-cols-1 gap-10 lg:grid-cols-2">
 		<figure>
@@ -43,7 +53,7 @@
 				<text x="85" y="185" text-anchor="middle" class="font-mono" font-size="10" fill="var(--color-ink-soft)">A</text>
 				<text x="215" y="185" text-anchor="middle" class="font-mono" font-size="10" fill="var(--color-accent-blue)">B</text>
 			</svg>
-			<p class="mt-3 text-sm leading-relaxed text-ink-soft">
+			<p class="mt-3 text-[15px] font-medium leading-relaxed">
 				Same two arms, same real gap between them. Before adjustment the two distributions are wide enough to
 				overlap heavily, hard to tell apart. After adjustment they're narrower, the same real difference just
 				became much easier to see.
@@ -82,7 +92,7 @@
 					}
 				</g>
 			</svg>
-			<p class="mt-3 text-sm leading-relaxed text-ink-soft">
+			<p class="mt-3 text-[15px] font-medium leading-relaxed">
 				A real (small-sample) example: pre-period value clearly predicts the outcome, that diagonal trend. Fit and
 				subtract it, and what's left has no trend at all, only the part of the outcome pre-period data couldn't
 				have told you, less spread out than the raw outcome was.
@@ -92,7 +102,7 @@
 
 	<div class="mt-10 raw-box rounded-xl bg-cream p-6">
 		<p class="font-mono text-xs uppercase tracking-wide text-accent-blue">Why this doesn't cheat</p>
-		<p class="mt-2 max-w-[65ch] text-sm leading-relaxed text-ink-soft">
+		<p class="mt-2 max-w-[65ch] text-[15px] font-medium leading-relaxed">
 			The adjustment subtracts a constant (each visitor's covariate compared to the overall average covariate),
 			the same rule for every visitor regardless of which arm they're in. Subtracting the same rule from both arms
 			can't manufacture a difference that wasn't there, or hide one that was, it only removes variation the

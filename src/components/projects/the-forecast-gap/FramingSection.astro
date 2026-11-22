@@ -1,4 +1,5 @@
 ---
+import SectionOpener from "../../editorial/SectionOpener.astro";
 // Short framing before any result: what a buoy can and cannot tell you about a surf break.
 import metadata from "../../../../public/data/surf-forecast/metadata.json";
 import { SURF_BREAKS, uniqueBuoyStations } from "../../../lib/surf-forecast/spots";
@@ -8,8 +9,8 @@ const pairs = metadata.model_pairs.toLocaleString();
 ---
 
 <section id="approach" class="mx-auto max-w-7xl px-6 py-16 md:px-12 md:py-20">
-	<h2 class="font-anton text-4xl md:text-5xl">A buoy is not a surf break</h2>
-	<div class="mt-3 max-w-[65ch] space-y-4 text-base leading-relaxed text-ink-soft">
+	<SectionOpener bare number="02" kicker="The caveat" title={`A buoy is not a surf break`} />
+	<div class="mag mt-10 max-w-[65ch]">
 		<p>
 			This is the limitation worth stating before any result, not after. A buoy floats in deep water kilometres
 			offshore and measures open-ocean swell. What you actually ride depends on refraction, bathymetry, shadowing

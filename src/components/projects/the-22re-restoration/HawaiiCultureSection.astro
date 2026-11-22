@@ -1,4 +1,8 @@
 ---
+import SectionOpener from "../../editorial/SectionOpener.astro";
+import Selections from "../../editorial/Selections.astro";
+import Band from "../../editorial/Band.astro";
+
 // Servco's "sole distributor since 1958" claim from the earlier draft turned out misleading:
 // Big Island Toyota was independently owned by the DeLuz/Correira/Higashi families from 1962
 // until Servco acquired it in December 2024 (Kyle's own father-in-law worked there), so "sole"
@@ -85,47 +89,51 @@ const CULTURAL_HIGHLIGHTS = [
 ];
 ---
 
-<section id="hawaii-culture" class="mx-auto max-w-7xl px-6 py-16 md:px-12 md:py-20">
-	<h2 class="font-anton text-4xl md:text-5xl">Toyota, trucks, and Hawaii</h2>
-	<p class="mt-3 max-w-[65ch] text-base leading-relaxed text-ink-soft">
-		This truck is a Toyota, and in Hawaii that's never just a brand. It's woven into how the place talks about
-		itself, well beyond how many of them get sold.
-	</p>
+<section id="hawaii-culture" class="py-16 md:py-24">
+	<SectionOpener
+		number="05"
+		kicker="Hawaii"
+		title="Toyota, trucks, and Hawaii"
+		deck="This truck is a Toyota, and in Hawaii that's never just a brand. It's woven into how the place talks about itself, well beyond how many of them get sold."
+	/>
 
-	<div class="mt-8 flex max-w-3xl flex-col gap-6 sm:flex-row sm:items-center">
-		<div class="shrink-0 raw-box rounded-xl bg-cream p-6 text-center sm:w-56">
-			<div class="font-display text-5xl font-semibold text-accent-blue">27.6%</div>
-			<div class="mt-2 text-xs uppercase tracking-wide text-ink-soft">of Hawaii's new-vehicle market, 2024</div>
-			<div class="mt-1 text-xs text-ink-soft">the single largest share of any brand</div>
+	<Band tone="field" class="mt-14" cx={180} cy={560} rings={8} innerClass="grid grid-cols-1 items-end gap-8 md:grid-cols-12">
+		<div class="md:col-span-7">
+			<p
+				class="font-anton text-[clamp(6rem,19vw,15rem)] leading-[0.8] text-spot"
+				style="-webkit-text-stroke: 3px var(--color-black); text-shadow: 7px 7px 0 var(--color-black)"
+			>
+				27.6%
+			</p>
 		</div>
-		<p class="text-sm leading-relaxed text-ink-soft">
-			A number like that, confirmed for 2024 by Hawaii Auto Outlook's own reporting, doesn't happen by
-			accident, and it shows up in more than sales charts.
-		</p>
+		<div class="border-t-[3px] border-current pt-3 md:col-span-5">
+			<p class="font-mono text-[11px] uppercase">Toyota's share of Hawaii's new-vehicle market, 2024</p>
+			<p class="mt-2 text-lg font-bold leading-snug">The single largest share of any brand.</p>
+			<p class="mt-2 text-sm font-medium leading-relaxed">
+				A number like that, confirmed for 2024 by Hawaii Auto Outlook's own reporting, doesn't happen by accident, and
+				it shows up in more than sales charts.
+			</p>
+		</div>
+	</Band>
+
+	<div class="mx-auto mt-14 max-w-7xl px-6 md:px-12">
+		<Selections items={CULTURAL_HIGHLIGHTS} />
 	</div>
 
-	<div class="mt-8 grid max-w-4xl gap-4 sm:grid-cols-2">
-		{
-			CULTURAL_HIGHLIGHTS.map((item) => (
-				<div class="raw-box rounded-xl bg-cream p-4">
-					<div class="font-display text-sm font-semibold text-ink">{item.label}</div>
-					<p class="mt-2 text-sm leading-relaxed text-ink-soft">{item.body}</p>
-				</div>
-			))
-		}
-	</div>
-
-	<div class="mt-8 max-w-[65ch] space-y-6">
-		<p class="text-sm leading-relaxed text-ink-soft">
-			Nationally, the truck and SUV accessory aftermarket, lift kits, wheels, suspension work, the whole
-			modified-truck ecosystem, is a real, sizable industry by SEMA's own market data, not a niche hobby.
-			Whether it adds up to a genuinely distinct Hawaii scene is still hard to prove with a real dataset, but
-			it's not just vendor marketing copy either. Enthusiasts and outlets have a name for it: "island style,"
-			solid-axle-swapped, aggressively lifted Toyotas on oversized wheels, a look that's reportedly been around
-			since the 1980s. DrivingLine profiled a real, named example: Chris Santos, a Big Island engine-shop owner,
-			built a solid-axle-swapped Tacoma with a custom four-link suspension as what he calls his "crown jewel."
-			One documented build isn't a census. But it's a real, named example of the thing anyone who's driven
-			around Oahu or the Big Island already assumes is true.
-		</p>
+	<div class="mx-auto mt-14 max-w-7xl px-6 md:px-12">
+		<div class="mag max-w-[65ch]">
+			<h3>Island style</h3>
+			<p>
+				Nationally, the truck and SUV accessory aftermarket, lift kits, wheels, suspension work, the whole
+				modified-truck ecosystem, is a real, sizable industry by SEMA's own market data, not a niche hobby.
+				Whether it adds up to a genuinely distinct Hawaii scene is still hard to prove with a real dataset, but
+				it's not just vendor marketing copy either. Enthusiasts and outlets have a name for it: "island style,"
+				solid-axle-swapped, aggressively lifted Toyotas on oversized wheels, a look that's reportedly been around
+				since the 1980s. DrivingLine profiled a real, named example: Chris Santos, a Big Island engine-shop owner,
+				built a solid-axle-swapped Tacoma with a custom four-link suspension as what he calls his "crown jewel."
+				One documented build isn't a census. But it's a real, named example of the thing anyone who's driven
+				around Oahu or the Big Island already assumes is true.
+			</p>
+		</div>
 	</div>
 </section>

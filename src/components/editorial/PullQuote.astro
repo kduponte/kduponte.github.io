@@ -1,0 +1,31 @@
+---
+// A full-width pull quote band: the line in big serif italic over the project's ripple rings.
+// Pull quotes repeat words already on the page, so `echo` (the default) hides it from screen
+// readers to avoid reading the same sentence twice.
+import Ripples from "../Ripples.astro";
+import { projectTheme } from "../../lib/project-theme";
+
+interface Props {
+	cite?: string;
+	echo?: boolean;
+	class?: string;
+}
+
+const { cite, echo = true, class: className = "" } = Astro.props;
+const slug = Astro.url.pathname.split("/").filter(Boolean).pop() ?? "";
+const theme = projectTheme(slug);
+---
+
+<figure
+	class:list={["relative overflow-hidden border-y-[3px] border-black", theme.fill, className]}
+	aria-hidden={echo ? "true" : undefined}
+>
+	<Ripples seed={slug.length * 131 + 7} cx={120} cy={500} rings={18} gap={48} class={`${theme.ring} opacity-80`} />
+	<div class="halftone absolute inset-0 opacity-25" aria-hidden="true"></div>
+	<div class="relative mx-auto max-w-5xl px-6 py-16 md:px-12 md:py-24">
+		<blockquote class="text-[clamp(2.2rem,5.4vw,4.6rem)] leading-[1.02]" style="font-family: var(--font-serif-accent); font-style: italic">
+			<span class="font-anton not-italic text-spot" style="-webkit-text-stroke: 2px var(--color-black)">“</span><slot /><span class="font-anton not-italic text-spot" style="-webkit-text-stroke: 2px var(--color-black)">”</span>
+		</blockquote>
+		{cite && <figcaption class="font-mono mt-6 text-[11px] uppercase">{cite}</figcaption>}
+	</div>
+</figure>

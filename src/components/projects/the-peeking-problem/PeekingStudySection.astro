@@ -1,16 +1,32 @@
 ---
+import SectionOpener from "../../editorial/SectionOpener.astro";
+import Band from "../../editorial/Band.astro";
+import StatSpread from "../../editorial/StatSpread.astro";
 // Markup + mount points only; all behavior lives in src/scripts/peeking-problem/peeking-study-chart.ts.
+// The band repeats the study's default-settings results as the page's Key findings report them.
 ---
 
 <section id="peeking-study" class="mx-auto max-w-7xl px-6 py-16 md:px-12 md:py-20">
-	<h2 class="font-anton text-4xl md:text-5xl">What peeking actually costs you, and doesn't</h2>
-	<p class="mt-3 max-w-[65ch] text-base leading-relaxed text-ink-soft">
+	<SectionOpener bare number="05" kicker="The study" title={`What peeking actually costs you, and doesn't`} />
+	<p class="mt-10 max-w-[58ch] text-xl font-semibold leading-snug md:text-2xl">
 		Simulate hundreds of independent experiments where there is truly no difference between A and B, and count how
 		often each of the three methods would have declared a winner: checking once at a fixed end date, versus checking
 		every single day and stopping the moment any of them looked convincing. This is the wandering-statistic-vs-fair-game
 		story from <a href="#core-idea" class="text-accent-blue underline underline-offset-2">Can you actually peek safely?</a>, run
 		hundreds of times over.
 	</p>
+
+	<Band tone="ink" contained class="mt-10" cx={900} cy={500} rings={10}>
+		<p class="font-mono text-[11px] uppercase">False positives with no real effect, at the default settings</p>
+		<StatSpread
+			class="mt-4"
+			items={[
+				{ value: "5.1%", label: "Frequentist, checked once at the end" },
+				{ value: "27.2%", label: "Frequentist, checked every day" },
+				{ value: "34.6%", label: "Fixed Bayesian threshold, checked every day" },
+			]}
+		/>
+	</Band>
 
 	<form id="pp-study-controls" class="mt-8 grid grid-cols-2 gap-4 raw-box rounded-xl bg-cream p-6 md:grid-cols-5">
 		<label class="flex flex-col gap-1 text-sm">

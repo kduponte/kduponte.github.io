@@ -1,4 +1,6 @@
 ---
+// The closing reflection as a magazine Q&A: each prompt in big serif italic over its answer, then
+// the next steps as a numbered list.
 interface Reflection {
 	surprising: string;
 	hardest: string;
@@ -22,41 +24,48 @@ const {
 	hardestLabel = "Easiest vs. hardest to compare",
 	unresolvedLabel = "What real surfer outcomes would take",
 } = Astro.props;
+
+const qa = reflection
+	? [
+			{ q: surprisingLabel, a: reflection.surprising },
+			{ q: hardestLabel, a: reflection.hardest },
+			{ q: unresolvedLabel, a: reflection.unresolved },
+		]
+	: [];
 ---
 
 <section class="mx-auto max-w-7xl px-6 py-16 md:px-12 md:py-28">
-	<h2 class="font-anton text-4xl md:text-5xl">{title}</h2>
+	<div class="font-mono flex items-center gap-3 border-b-[3px] border-black pb-2 text-[11px] uppercase">
+		<span class="bg-black px-2 py-0.5 text-spot">Looking back</span>
+	</div>
+	<h2 class="font-anton mt-8 max-w-4xl text-6xl leading-[0.9] md:text-7xl">{title}</h2>
 	{
-		reflection && (
-			<dl class="mt-8 grid max-w-[65ch] grid-cols-1 gap-6">
-				<div>
-					<dt class="font-mono text-xs uppercase text-cobalt">{surprisingLabel}</dt>
-					<dd class="mt-1 text-sm leading-relaxed text-ink-soft">{reflection.surprising}</dd>
-				</div>
-				<div>
-					<dt class="font-mono text-xs uppercase text-cobalt">{hardestLabel}</dt>
-					<dd class="mt-1 text-sm leading-relaxed text-ink-soft">{reflection.hardest}</dd>
-				</div>
-				<div>
-					<dt class="font-mono text-xs uppercase text-cobalt">{unresolvedLabel}</dt>
-					<dd class="mt-1 text-sm leading-relaxed text-ink-soft">{reflection.unresolved}</dd>
-				</div>
+		qa.length > 0 && (
+			<dl class="mt-12 grid grid-cols-1 gap-x-10 gap-y-10 md:grid-cols-3">
+				{qa.map(({ q, a }) => (
+					<div class="border-t-[3px] border-black pt-5">
+						<dt class="text-3xl leading-[1.05]" style="font-family: var(--font-serif-accent); font-style: italic">
+							{q}
+						</dt>
+						<dd class="mt-4 text-[15px] font-medium leading-relaxed">{a}</dd>
+					</div>
+				))}
 			</dl>
 		)
 	}
 	{
 		nextSteps && nextSteps.length > 0 && (
-			<div class="mt-10 max-w-[65ch]">
-				<p class="font-mono text-xs uppercase tracking-wide text-ink-soft">Next highest-value improvements</p>
-				<ol class="mt-3 space-y-2">
-					{
-						nextSteps.map((step, i) => (
-							<li class="flex gap-3 text-sm leading-relaxed text-ink">
-								<span class="font-mono text-ink-soft">{i + 1}.</span>
-								<span>{step}</span>
-							</li>
-						))
-					}
+			<div class="raw-box shadow-hard-lg mt-16 rounded-2xl bg-sand p-6 md:p-8">
+				<p class="font-anton text-3xl uppercase leading-none">Next highest-value improvements</p>
+				<ol class="mt-6 grid grid-cols-1 gap-x-10 md:grid-cols-2">
+					{nextSteps.map((step, i) => (
+						<li class="grid grid-cols-[2.8rem_1fr] gap-3 border-t-2 border-black py-4">
+							<span class="font-anton text-3xl leading-none text-spot" style="-webkit-text-stroke: 1.5px var(--color-black)">
+								{String(i + 1).padStart(2, "0")}
+							</span>
+							<span class="text-[15px] font-medium leading-relaxed">{step}</span>
+						</li>
+					))}
 				</ol>
 			</div>
 		)

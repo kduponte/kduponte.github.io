@@ -6,6 +6,7 @@ import Widget from "../components/Widget.astro";
 import Chip from "../components/Chip.astro";
 import SectionHeading from "../components/SectionHeading.astro";
 import ProjectCard from "../components/ProjectCard.astro";
+import Ripples from "../components/Ripples.astro";
 import { hasTilePreview, layoutTiles } from "../lib/project-tiles";
 
 const projects = (await getCollection("projects"))
@@ -27,12 +28,13 @@ const tilts = [-0.8, 1, 0.8, -0.5];
 	theme="cobalt"
 	description="Kyle DuPonte, Staff Data Scientist. 10+ years in FinTech, working across full-stack analytics and experimentation."
 >
-	<section class="relative overflow-hidden border-y-[3px] border-black">
-		<div class="halftone absolute inset-0 opacity-40" style="--dot: #ff5a1f; --cell: 16px" aria-hidden="true"></div>
+	<section class="relative overflow-hidden border-y-[3px] border-black bg-black">
+		<Ripples seed={1991} cx={760} cy={420} rings={16} gap={52} class="text-cornflower" />
+		<div class="halftone absolute inset-0 opacity-40" aria-hidden="true"></div>
 		<div class="relative mx-auto max-w-7xl px-6 pb-16 pt-10 md:px-12 md:pb-24 md:pt-14">
 			<h1
-				class="text-[clamp(5.5rem,26vw,22rem)] text-lime"
-				style="text-shadow: 6px 6px 0 #111; -webkit-text-stroke: 2px #111"
+				class="text-[clamp(5.5rem,26vw,22rem)] text-cream"
+				style="text-shadow: 6px 6px 0 var(--color-tomato)"
 			>
 				Kyle<br />DuPonte
 			</h1>
@@ -45,7 +47,7 @@ const tilts = [-0.8, 1, 0.8, -0.5];
 					</p>
 					<div class="mt-5 flex flex-wrap gap-3">
 						<Chip tone="lime">SF Bay Area</Chip>
-						<Chip tone="sky">Experimentation</Chip>
+						<Chip tone="sun">Experimentation</Chip>
 						<Chip as="a" href="/experience" tone="black" interactive>Experience →</Chip>
 					</div>
 				</div>
@@ -88,7 +90,7 @@ const tilts = [-0.8, 1, 0.8, -0.5];
 		</div>
 	</section>
 
-	<section class="border-b-[3px] border-black bg-sky text-black">
+	<section class="border-b-[3px] border-black bg-sand text-black">
 		<div class="mx-auto max-w-7xl px-6 py-20 md:px-12 md:py-28">
 			<div class="flex flex-wrap items-end justify-between gap-4">
 				<SectionHeading eyebrow="Projects" title="Portfolio, in progress." />

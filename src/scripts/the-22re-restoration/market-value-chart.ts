@@ -38,7 +38,7 @@ async function render() {
 	const maxYear = Math.max(...sales.map((s) => s.year));
 	summaryEl.innerHTML = `
 		<span class="font-display text-2xl text-ink">$${minPrice.toLocaleString()} - $${maxPrice.toLocaleString()}</span>
-		<span class="ml-2 text-sm text-ink-soft">${sales.length} individually-traceable real sales, ${minYear}-${maxYear} &middot; plus ${valueByYear.length} Hagerty guide-value points, ${Math.min(...valueByYear.map((v) => v.year))}-${Math.max(...valueByYear.map((v) => v.year))}</span>
+		<span class="ml-2 text-sm text-ink-soft">individual sales checked against their listings, ${minYear}-${maxYear} &middot; plus ${valueByYear.length} Hagerty guide-value points, ${Math.min(...valueByYear.map((v) => v.year))}-${Math.max(...valueByYear.map((v) => v.year))}</span>
 	`;
 
 	// One shared color scale covering both layers, so the legend actually explains what the pale

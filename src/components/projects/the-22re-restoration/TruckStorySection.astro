@@ -1,13 +1,53 @@
 ---
 import { getCollection, render } from "astro:content";
+import SectionOpener from "../../editorial/SectionOpener.astro";
+import FactFile from "../../editorial/FactFile.astro";
+import PullQuote from "../../editorial/PullQuote.astro";
 
 const entries = await getCollection("truckLog");
 const storyEntry = entries.find((entry) => entry.data.system === "story");
 const rendered = storyEntry ? await render(storyEntry) : null;
 const Content = rendered?.Content;
+
+// Every row is stated in the story itself; the box only gathers them.
+const facts = [
+	{ k: "Truck", v: "Early-'90s Toyota Pickup" },
+	{ k: "Engine", v: "22R-E" },
+	{ k: "Home", v: "Hilo, Hawai'i" },
+	{ k: "First sold by", v: "My father-in-law, early in his career" },
+	{ k: "His years at Toyota", v: "35+" },
+	{ k: "Weekly drive", v: "Coffee and a cruise through Keaukaha" },
+	{ k: "Needs", v: "Fuel tank, paint, bumpers tied on with rope" },
+	{ k: "Runs", v: "Perfectly fine" },
+	{ k: "Crew", v: (storyEntry?.data.people ?? ["Kyle", "Noah"]).join(" and ") },
+];
 ---
 
-<section id="the-story" class="mx-auto max-w-4xl px-6 py-20 md:px-12 md:py-28">
-	<h2 class="font-display text-3xl font-semibold tracking-tight md:text-4xl">{storyEntry?.data.title ?? "The story"}</h2>
-	<div class="font-display mt-8 max-w-[65ch] space-y-6 font-medium text-lg leading-relaxed text-ink md:text-xl">{Content && <Content />}</div>
+<section id="the-story" class="pt-20 md:pt-28">
+	<SectionOpener
+		number="01"
+		kicker="The story"
+		title={storyEntry?.data.title ?? "The story"}
+		deck="A red Toyota pickup, a father-in-law who sold Toyotas for 35 years, and a five-year-old about to learn which socket Dad needs."
+	/>
+	<div class="mx-auto mt-14 grid max-w-7xl grid-cols-1 gap-12 px-6 md:grid-cols-12 md:px-12">
+		<div class="mag md:col-span-7">{Content && <Content />}</div>
+		<aside class="md:col-span-4 md:col-start-9" aria-label="About the truck">
+			<div class="space-y-10 md:sticky md:top-24">
+				<FactFile rows={facts} tone="ink" note="Every line above comes from the story." />
+				<figure class="flex flex-col items-center gap-3">
+					<div
+						class="raw-box shadow-hard rounded-md bg-spot px-5 py-3 text-center font-extrabold uppercase leading-tight text-black"
+						style="transform: rotate(-4deg)"
+					>
+						Slow down, I'm listening to Kalapana
+					</div>
+					<figcaption class="font-mono text-[10px] uppercase">↑ The bumper sticker it's getting</figcaption>
+				</figure>
+			</div>
+		</aside>
+	</div>
+	<PullQuote class="mt-20" cite="From the story above">
+		It is the stories it holds and will continue to help build for my family.
+	</PullQuote>
 </section>

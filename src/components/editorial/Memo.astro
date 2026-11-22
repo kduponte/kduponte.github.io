@@ -1,0 +1,26 @@
+---
+// A tabbed side note for asides that interrupt the main argument: a methodology caveat, a judgment
+// call, a limit of the data. Keeps them visible without breaking the flow of the main text.
+import { toneClasses, type TileTone } from "../../lib/tile-tone";
+
+interface Props {
+	title: string;
+	tone?: TileTone;
+	class?: string;
+}
+
+const { title, tone = "paper", class: className = "" } = Astro.props;
+const t = toneClasses(tone, Astro.url.pathname);
+---
+
+<aside
+	class:list={[
+		"relative rounded-2xl border-[3px] border-black p-5 pt-8 text-[15px] font-medium leading-relaxed",
+		t.surface,
+		t.shadow,
+		className,
+	]}
+>
+	<span class:list={["font-mono absolute -top-px left-5 rounded-b-lg px-2.5 py-1 text-[10px] uppercase", t.tab]}>{title}</span>
+	<div class="space-y-3"><slot /></div>
+</aside>

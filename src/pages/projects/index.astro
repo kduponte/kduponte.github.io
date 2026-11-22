@@ -45,3 +45,18 @@ const places = layoutTiles(projects.map((p) => hasTilePreview(p.id)));
 		</div>
 	</div>
 </BaseLayout>
+
+<script>
+	// Hovering a card washes the page in that project's accent (its light partner color), like a
+	// print proof under a gel.
+	const body = document.body;
+	const reset = () => body.style.removeProperty("--page-field");
+	document.querySelectorAll<HTMLElement>("article[data-wash]").forEach((card) => {
+		card.addEventListener("pointerenter", () => {
+			const wash = card.dataset.wash;
+			if (!wash || card.dataset.tone === "sand" || card.dataset.tone === "bone") return reset();
+			body.style.setProperty("--page-field", `color-mix(in srgb, var(--color-${wash}) 40%, var(--color-cream))`);
+		});
+		card.addEventListener("pointerleave", reset);
+	});
+</script>

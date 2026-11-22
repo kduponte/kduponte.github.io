@@ -1,0 +1,23 @@
+---
+// Organic ripple rings as a texture layer (see lib/patterns/ripples.ts). Color comes from the
+// text color, so set it with a `text-*` class, e.g. "text-black/15".
+import { ripplePaths, type RippleOptions } from "../lib/patterns/ripples";
+
+interface Props extends RippleOptions {
+	class?: string;
+}
+
+const { class: className = "", ...opts } = Astro.props;
+const paths = ripplePaths(opts);
+---
+
+<svg
+	class:list={["pointer-events-none absolute inset-0 h-full w-full", className]}
+	viewBox="0 0 1000 1000"
+	preserveAspectRatio="xMidYMid slice"
+	aria-hidden="true"
+>
+	<g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+		{paths.map((p) => <path d={p.d} stroke-width={p.width} stroke-dasharray={p.dash} />)}
+	</g>
+</svg>

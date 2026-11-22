@@ -1,0 +1,38 @@
+---
+// Brutus-style big numbers: two to four figures from the text set as huge outlined numerals in the
+// page accent, each with a mono label. Use only figures the surrounding prose states and sources.
+interface Props {
+	items: { value: string; label: string; note?: string }[];
+	/** Set between two figures that are being compared, e.g. "vs". */
+	joiner?: string;
+	/** Text-color class for the big numerals; defaults to the page accent. */
+	numeral?: string;
+	class?: string;
+}
+
+const { items, joiner, numeral = "text-spot", class: className = "" } = Astro.props;
+---
+
+<div class:list={["flex flex-col gap-8 border-y-[3px] border-current py-8 md:flex-row md:items-end md:gap-10", className]}>
+	{
+		items.map((it, i) => (
+			<>
+				{i > 0 && joiner && (
+					<span class="chip-serif self-start text-3xl md:mb-14 md:self-end md:text-4xl" aria-hidden="true">
+						{joiner}
+					</span>
+				)}
+				<div class="min-w-0 flex-1">
+					<p
+						class:list={["font-anton whitespace-nowrap text-[clamp(3.2rem,7vw,6.5rem)] leading-[0.85]", numeral]}
+						style="-webkit-text-stroke: 2.5px var(--color-black); text-shadow: 5px 5px 0 var(--color-black)"
+					>
+						{it.value}
+					</p>
+					<p class="font-mono mt-3 text-[11px] uppercase leading-relaxed">{it.label}</p>
+					{it.note && <p class="mt-1 text-sm font-medium leading-snug">{it.note}</p>}
+				</div>
+			</>
+		))
+	}
+</div>

@@ -27,27 +27,30 @@ const METHOD_LABEL: Record<CollectionMethod, string> = {
 ---
 
 <section class="mx-auto max-w-7xl px-6 py-16 md:px-12 md:py-20">
-	<h2 class="font-anton text-4xl md:text-5xl">{title}</h2>
-	<div class="mt-8 overflow-x-auto">
-		<table class="w-full max-w-4xl border-collapse text-sm">
+	<div class="font-mono flex items-center gap-3 border-b-[3px] border-black pb-2 text-[11px] uppercase">
+		<span class="bg-black px-2 py-0.5 text-spot">Credits</span>
+	</div>
+	<h2 class="font-anton mt-8 text-6xl leading-[0.9] md:text-7xl">{title}</h2>
+	<div class="raw-box shadow-hard-lg mt-10 overflow-x-auto rounded-2xl bg-cream">
+		<table class="w-full border-collapse text-[15px]">
 			<thead>
-				<tr class="border-b border-line text-left font-mono text-xs uppercase tracking-wide text-ink-soft">
-					<th class="py-2 pr-4">Source</th>
-					<th class="py-2 pr-4">Collected</th>
-					<th class="py-2">Method</th>
+				<tr class="font-mono border-b-[3px] border-black bg-black text-left text-[10px] uppercase text-spot">
+					<th class="px-4 py-3">Source</th>
+					<th class="px-4 py-3">Collected</th>
+					<th class="px-4 py-3">Method</th>
 				</tr>
 			</thead>
 			<tbody>
 				{
 					sources.map((s) => (
-						<tr class="border-b border-line/60">
-							<td class="py-2 pr-4">
-								<a href={s.url} class="text-accent-blue hover:underline" target="_blank" rel="noopener noreferrer">
+						<tr class="border-b-2 border-black/80 last:border-b-0">
+							<td class="px-4 py-3 font-semibold">
+								<a href={s.url} class="underline decoration-2 underline-offset-2" target="_blank" rel="noopener noreferrer">
 									{s.name}
 								</a>
 							</td>
-							<td class="py-2 pr-4 text-ink-soft">{s.collectedAt}</td>
-							<td class="py-2 text-ink-soft">{METHOD_LABEL[s.method]}</td>
+							<td class="font-mono px-4 py-3 text-[11px] uppercase">{s.collectedAt}</td>
+							<td class="px-4 py-3 font-medium">{METHOD_LABEL[s.method]}</td>
 						</tr>
 					))
 				}

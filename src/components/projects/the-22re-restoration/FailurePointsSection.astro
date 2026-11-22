@@ -1,46 +1,98 @@
 ---
 // Markup + mount point only; the chart fetches the frozen public/data/toyota-truck/*.json at
 // runtime and renders it. See src/scripts/the-22re-restoration/failure-chart.ts.
+import SectionOpener from "../../editorial/SectionOpener.astro";
+import FactFile from "../../editorial/FactFile.astro";
+import StatSpread from "../../editorial/StatSpread.astro";
+import Kicker from "../../editorial/Kicker.astro";
+import Memo from "../../editorial/Memo.astro";
+import Band from "../../editorial/Band.astro";
 ---
 
-<section id="failure-points" class="mx-auto max-w-7xl px-6 py-16 md:px-12 md:py-20">
-	<h2 class="font-anton text-4xl md:text-5xl">What breaks on a 22RE truck</h2>
-	<p class="mt-3 max-w-[65ch] text-base leading-relaxed text-ink-soft">
-		270 threads, pulled from three Toyota-truck communities: YotaTech, IH8MUD, and TacomaWorld. 47 got dropped
-		before analysis, forum sign-ups, rules threads, FAQ links, and threads that turned out to be about a different
-		engine or a later truck generation entirely. The 223 that were left got categorized by which system the
-		reported problem was actually about. This isn't just curiosity. It's a checklist for what to inspect before
-		something like the gas tank surprises us again.
-	</p>
-	<div id="pp-failure-summary" class="mt-6 raw-box rounded-xl bg-cream p-4 font-mono text-sm"></div>
-	<div id="pp-failure-chart" class="mt-4"></div>
-	<script src="../../../scripts/the-22re-restoration/failure-chart.ts"></script>
+<section id="failure-points" class="py-16 md:py-24">
+	<SectionOpener
+		number="03"
+		kicker="What breaks"
+		title="What breaks on a 22RE truck"
+		deck="223 real forum threads, sorted by which system each problem was actually about. A checklist for what to inspect before something like the gas tank surprises us again."
+	/>
 
-	<h3 class="font-display mt-14 text-lg font-semibold">Does the mix look different per forum?</h3>
-	<p class="mt-2 max-w-[65ch] text-sm leading-relaxed text-ink-soft">
-		Yes, visibly. TacomaWorld's general catchall subforum lands in "Other / uncategorized" for 47.7% of its threads,
-		against 30.1% for IH8MUD and 16.5% for YotaTech's dedicated subforum. That's not the categorizer failing on
-		TacomaWorld specifically. The source material genuinely is less on-topic there: TacomaWorld's own dedicated
-		generation coverage starts in 1995, right where this truck's engine stops being used.
-	</p>
-	<div id="pp-failure-by-source-chart" class="mt-4"></div>
-	<script src="../../../scripts/the-22re-restoration/failure-by-source-chart.ts"></script>
+	<div class="mx-auto mt-12 max-w-7xl px-6 md:px-12">
+		<div class="grid grid-cols-1 gap-10 md:grid-cols-12">
+			<div class="mag md:col-span-7">
+				<p>
+					270 threads, pulled from three Toyota-truck communities: YotaTech, IH8MUD, and TacomaWorld. 47 got dropped
+					before analysis, forum sign-ups, rules threads, FAQ links, and threads that turned out to be about a different
+					engine or a later truck generation entirely. The 223 that were left got categorized by which system the
+					reported problem was actually about. This isn't just curiosity. It's a checklist for what to inspect before
+					something like the gas tank surprises us again.
+				</p>
+			</div>
+			<FactFile
+				title="The sample"
+				class="md:col-span-4 md:col-start-9"
+				rows={[
+					{ k: "Threads pulled", v: "270" },
+					{ k: "Dropped", v: "47" },
+					{ k: "Analyzed", v: "223" },
+					{ k: "Sources", v: "YotaTech, IH8MUD, TacomaWorld" },
+				]}
+				note="Dropped: sign-ups, rules threads, FAQ links, wrong engine or generation."
+			/>
+		</div>
 
-	<div class="mt-10 max-w-[65ch] space-y-4">
-		<p class="text-sm leading-relaxed text-ink-soft">
-			One thing about TacomaWorld: its robots.txt blocks "ClaudeBot" by name. I scraped it anyway. That was a
-			deliberate call, not an oversight. The output only ever gets used in anonymized, aggregated form, a
-			category count, never a republished post, and the other two sources alone weren't enough breadth to
-			trust the comparison.
-		</p>
-		<p class="text-sm leading-relaxed text-ink-soft">
-			The most surprising thing in this data: transmission and drivetrain complaints (15.7% combined) still
-			outnumbered cooling and timing-chain issues combined (8.5%), even though "the timing chain guides fail
-			and it overheats" is the most commonly repeated 22RE reliability story online. That gap held up across
-			all three sources. It doesn't mean the timing chain story is wrong, but it's a reason to check the
-			drivetrain just as closely as the engine. AC and climate control turned out to be a real, recurring
-			category too, 12 threads, 5.4%, once I tracked it separately. That one never came up in the questions I
-			set out to answer, so now it's on the list.
-		</p>
+		<div id="pp-failure-summary" class="mt-10 raw-box rounded-xl bg-cream p-4 font-mono text-sm"></div>
+		<div id="pp-failure-chart" class="mt-4"></div>
+		<script src="../../../scripts/the-22re-restoration/failure-chart.ts"></script>
+
+	</div>
+
+	<Band tone="field" class="mt-14" cx={140} cy={500} rings={8} innerClass="grid grid-cols-1 gap-10 md:grid-cols-12">
+
+			<StatSpread
+				class="md:col-span-6"
+				joiner="vs"
+				items={[
+					{ value: "15.7%", label: "Transmission and drivetrain threads" },
+					{ value: "8.5%", label: "Cooling and timing-chain threads" },
+				]}
+			/>
+			<div class="mag md:col-span-6">
+				<h3>Drivetrain beats the timing chain</h3>
+				<p>
+					The most surprising thing in this data: transmission and drivetrain complaints (15.7% combined) still
+					outnumbered cooling and timing-chain issues combined (8.5%), even though "the timing chain guides fail
+					and it overheats" is the most commonly repeated 22RE reliability story online. That gap held up across
+					all three sources.
+				</p>
+				<p>
+					It doesn't mean the timing chain story is wrong, but it's a reason to check the drivetrain just as closely
+					as the engine. AC and climate control turned out to be a real, recurring category too, 12 threads, 5.4%,
+					once I tracked it separately. That one never came up in the questions I set out to answer, so now it's on
+					the list.
+				</p>
+			</div>
+	</Band>
+
+	<div class="mx-auto max-w-7xl px-6 md:px-12">
+		<Kicker tab="03.1" class="mt-16">Does the mix look different per forum?</Kicker>
+		<div class="mt-6 grid grid-cols-1 gap-10 md:grid-cols-12">
+			<p class="text-[17px] font-medium leading-relaxed md:col-span-7">
+				Yes, visibly. TacomaWorld's general catchall subforum lands in "Other / uncategorized" for 47.7% of its threads,
+				against 30.1% for IH8MUD and 16.5% for YotaTech's dedicated subforum. That's not the categorizer failing on
+				TacomaWorld specifically. The source material genuinely is less on-topic there: TacomaWorld's own dedicated
+				generation coverage starts in 1995, right where this truck's engine stops being used.
+			</p>
+			<Memo title="A note on scraping" tone="ink" class="md:col-span-4 md:col-start-9">
+				<p>
+					One thing about TacomaWorld: its robots.txt blocks "ClaudeBot" by name. I scraped it anyway. That was a
+					deliberate call, not an oversight. The output only ever gets used in anonymized, aggregated form, a
+					category count, never a republished post, and the other two sources alone weren't enough breadth to
+					trust the comparison.
+				</p>
+			</Memo>
+		</div>
+		<div id="pp-failure-by-source-chart" class="mt-6"></div>
+		<script src="../../../scripts/the-22re-restoration/failure-by-source-chart.ts"></script>
 	</div>
 </section>

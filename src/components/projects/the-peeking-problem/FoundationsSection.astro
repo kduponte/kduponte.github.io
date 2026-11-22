@@ -1,4 +1,5 @@
 ---
+import SectionOpener from "../../editorial/SectionOpener.astro";
 interface Term {
 	name: string;
 	plain: string;
@@ -40,8 +41,8 @@ const terms: Term[] = [
 ---
 
 <section class="mx-auto max-w-7xl px-6 py-16 md:px-12 md:py-20">
-	<h2 class="font-anton text-4xl md:text-5xl">Before we start: five terms this page leans on</h2>
-	<p class="mt-3 max-w-[65ch] text-base leading-relaxed text-ink-soft">
+	<SectionOpener bare number="01" kicker="Terms" title={`Before we start: five terms this page leans on`} />
+	<p class="mt-10 max-w-[58ch] text-xl font-semibold leading-snug md:text-2xl">
 		Everything below uses these five words a lot. Each one gets a plain-language sentence first, that's the whole idea if
 		you only want the whole idea, and a more precise technical line underneath it for anyone who wants the exact
 		definition.
@@ -60,7 +61,7 @@ const terms: Term[] = [
 			))
 		}
 	</dl>
-	<p class="mt-6 max-w-[65ch] text-sm leading-relaxed text-ink-soft">
+	<p class="mt-6 max-w-[65ch] text-[15px] font-medium leading-relaxed">
 		The rest of this page is about what checking early does to each of these numbers, and whether there's a way to
 		check early safely.
 	</p>

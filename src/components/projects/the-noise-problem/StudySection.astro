@@ -1,10 +1,11 @@
 ---
+import SectionOpener from "../../editorial/SectionOpener.astro";
 // Markup + mount points only; all behavior lives in src/scripts/the-noise-problem/study-chart.ts.
 ---
 
 <section id="speed-study" class="mx-auto max-w-7xl px-6 py-16 md:px-12 md:py-20">
-	<h2 class="font-anton text-4xl md:text-5xl">How much faster, really?</h2>
-	<p class="mt-3 max-w-[65ch] text-base leading-relaxed text-ink-soft">
+	<SectionOpener bare number="04" kicker="The study" title={`How much faster, really?`} />
+	<p class="mt-10 max-w-[58ch] text-xl font-semibold leading-snug md:text-2xl">
 		Simulate hundreds of independent experiments at a given correlation and traffic level, and measure two separate
 		things: whether a fixed, pre-planned final look finds a real effect (only meaningful when one exists), and, when
 		it does, how many days it took to first become visible.

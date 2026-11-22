@@ -156,6 +156,21 @@ describe("buildToyotaTruck with builder options", () => {
 		withBoard.dispose();
 	});
 
+	it("rests the rockered longboard on the bed floor without sinking through it", () => {
+		const truck = buildToyotaTruck(undefined, { bed: "none", board: true });
+		truck.group.updateMatrixWorld(true);
+		const boardBox = new Box3();
+		// The board is built by its own kit, so find its white body by walking the scene.
+		truck.group.traverse((o) => {
+			const hex = ((o as { material?: { color?: { getHexString(): string } } }).material?.color)?.getHexString();
+			if (hex === "f6f5f0") boardBox.expandByObject(o);
+		});
+		// The bed floor's top sits at 0.665 m; the nose tip should touch it, not go under it.
+		expect(boardBox.min.y).toBeGreaterThan(0.66);
+		expect(boardBox.min.y).toBeLessThan(0.72);
+		truck.dispose();
+	});
+
 	it("stands the McFly roll bar and its KC lights above the cab roof", () => {
 		const plain = buildToyotaTruck(undefined, {});
 		const rack = buildToyotaTruck(undefined, { rack: "rollbar" });

@@ -17,7 +17,7 @@ import {
 	type Object3D,
 } from "three";
 import { OUTLINE, OUTLINE_SMALL, createPartKit, extrude, shade, slab, tint } from "./kit";
-import { TC_LONGBOARD, buildLongboard } from "./longboard-model";
+import { TC_LONGBOARD, buildLongboard, deckOffsetAt } from "./longboard-model";
 
 /**
  * A stylized ~1991 Toyota regular-cab long-bed pickup (4th-gen Hilux), modeled in meters from
@@ -696,19 +696,27 @@ export function buildToyotaTruck(colors: TruckColors = DEFAULT_TRUCK_COLORS, opt
 		}
 	}
 	if (options.board && options.bed !== "shell" && options.bed !== "tonneau") {
-		// The longboard rests deck-down on the bed floor near the cab and on the tailgate's top edge,
-		// fin up, its tail hanging out past the back of the truck.
+		// The longboard rests deck-down with its nose tip on the bed floor just behind the cab and its deck on
+		// the tailgate's top edge, fin up, tail hanging out past the back of the truck. Its rocker and foil
+		// put the deck a different distance below its straight axis at each station, so the two contacts
+		// are solved together.
 		const board = buildLongboard();
 		boardDispose = board.dispose;
 		const L = TC_LONGBOARD.lengthM;
-		const ht = TC_LONGBOARD.thicknessM / 2;
-		const noseX = CAB_BACK_X - 0.14;
-		const p1 = new Vector2(noseX - 0.3, BED_FLOOR_Y + 0.03); // deck touches the floor 30 cm back from the nose
-		const p2 = new Vector2(TAIL_X + 0.03, 1.0 + 0.005); // and the tailgate's top edge
-		const phi = Math.atan2(p1.y - p2.y, p1.x - p2.x);
+		const p1 = new Vector2(CAB_BACK_X - 0.14, BED_FLOOR_Y + 0.03); // nose tip on the floor
+		const p2 = new Vector2(TAIL_X + 0.03, 1.0 + 0.005); // deck on the tailgate's top edge
+		const f1 = 0.995;
+		let phi = Math.atan2(p1.y - p2.y, p1.x - p2.x);
+		let c1 = p1.clone();
+		for (let i = 0; i < 4; i++) {
+			const n = new Vector2(-Math.sin(phi), Math.cos(phi));
+			const f2 = f1 - p1.distanceTo(p2) / L;
+			c1 = p1.clone().addScaledVector(n, deckOffsetAt(f1));
+			const c2 = p2.clone().addScaledVector(n, deckOffsetAt(f2));
+			phi = Math.atan2(c1.y - c2.y, c1.x - c2.x);
+		}
 		const axis = new Vector2(Math.cos(phi), Math.sin(phi));
-		const normal = new Vector2(-Math.sin(phi), Math.cos(phi));
-		const center = p1.clone().addScaledVector(axis, -(L / 2 - 0.3)).addScaledVector(normal, ht);
+		const center = c1.clone().addScaledVector(axis, -(f1 - 0.5) * L);
 		board.group.position.set(center.x, center.y, 0.08);
 		board.group.rotation.z = phi;
 		body.add(board.group);

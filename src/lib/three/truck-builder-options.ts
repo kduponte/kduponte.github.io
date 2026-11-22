@@ -40,7 +40,7 @@ const SRC = {
 	ultra164: { label: "Ultra Wheel, Type 164 sizes", href: "https://www.ultrawheel.com/wheel/28/164" },
 	bbsRgr: { label: "BBS RG-R, 17x7.5 5x114.3 +48 (Canada Wheels)", href: "https://www.canadawheels.ca/bbs-wheels/rgr" },
 	bttf: { label: "Back to the Future wiki, Marty's Toyota", href: "https://backtothefuture.fandom.com/wiki/Toyota_Hilux" },
-	tcLongboard: { label: "T&C Makani 9'6\" longboard (Rider Shack)", href: "https://www.ridershack.com/used-96-t-c-makani-longboard-surfboard-117559.html" },
+	tcLongboard: { label: "T&C Surf Designs, Tommy Tanaka Beach Boy", href: "https://tcsurf.com/collections/tommy-tanaka/products/beach-boy" },
 	trueAmes: { label: "True Ames Greenough 4-A 10.5\" fin (Rider Shack)", href: "https://ridershack.com/products/true-ames-greenough-4-a-10-5-single-fin" },
 	h6054: { label: "H6054 sealed beam, 200 mm wide (NAPA)", href: "https://www.napaonline.com/en/p/LMPH6054N" },
 } as const satisfies Record<string, Source>;
@@ -305,10 +305,10 @@ export const BOARDS: BoardOption[] = [
 	{ id: "none", name: "No board", spec: "", board: false },
 	{
 		id: "longboard",
-		name: "T&C longboard, single fin",
-		spec: '9\'6" x 23 1/2" x 3 1/2", 10.5" fin',
+		name: "Tanaka Beach Boy (T&C)",
+		spec: '9\'4" x 23 1/2" x 3", single 10.5" fin',
 		board: true,
-		note: "Classic white with a yin-yang and TANAKA on the bottom, deck down so the translucent neon green fin points up, tail out over the tailgate. Sized from a T&C Makani; the fin is 10.5\" tall (a classic longboard size) in a raked pivot shape like Island Fin Design's. Needs an open bed.",
+		note: "Tommy Tanaka's single-fin noserider for T&C, in classic white with the Town & Country Hawaii disc and the Tanaka script near the nose. It rides deck down so the translucent neon green pivot fin points up, its tail out over the tailgate. Needs an open bed.",
 		source: SRC.tcLongboard,
 	},
 ];

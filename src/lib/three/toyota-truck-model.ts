@@ -86,6 +86,9 @@ const BED_FLOOR_Y = 0.665;
  * The front end, from photos of 1989-91 US-market pickups. The headlights are 7x6-inch rectangular
  * sealed beams (H6054: 200 x 142 mm); everything else is sized relative to them and the 1.64 m body.
  */
+/** Tail lamp, per section, meters: as tall as the bed corner from just above the bumper, in photos of 1989-91 trucks. */
+const TAIL_LAMP = { top: 0.88, amber: 0.07, clear: 0.05, red: 0.21, w: 0.1 } as const;
+
 const FRONT = {
 	bandY: 0.78, // center of the lamp-and-grille band
 	bandH: 0.17,
@@ -208,6 +211,9 @@ export function buildToyotaTruck(colors: TruckColors = DEFAULT_TRUCK_COLORS): Tr
 	const headMat = std(colors.light, 0.2);
 	headMat.emissive = new Color(colors.light);
 	headMat.emissiveIntensity = 0;
+	const clearLensMat = std("#f4f1ea", 0.2);
+	// Stamped letters are body metal: a touch lighter than the paint so the raised edges catch the light.
+	const stampMat = std(tint(colors.body, 0.12), 0.34, 0.35);
 	const tailMat = std(colors.tail, 0.35);
 	tailMat.emissive = new Color(colors.tail);
 	tailMat.emissiveIntensity = 0;
@@ -335,13 +341,19 @@ export function buildToyotaTruck(colors: TruckColors = DEFAULT_TRUCK_COLORS): Tr
 		add(group, slab(0.015, 0.035, bedInnerW - 0.24, 0.01, 0.004), bodyMat, [CAB_BACK_X - 0.09, y, 0], { outline: 0.008 });
 	}
 
-	// Tailgate, flush with the walls: ribbed inside, raised TOYOTA letters and a latch handle outside.
+	// Tailgate, flush with the walls, as on 1989-91 US trucks: ribbed inside; outside, a pressed crease
+	// under the top edge, a chrome latch handle in a recessed pocket at the top center, and TOYOTA stamped
+	// into the sheet metal in body color across the lower half (not separate chrome letters).
 	add(group, slab(0.07, 0.5, BODY_HALF_W * 2 - 0.08, 0.02, 0.015), bodyMat, [TAIL_X + 0.03, 0.75, 0], { outline: OUTLINE });
 	for (const y of [0.62, 0.74, 0.86]) {
 		add(group, slab(0.012, 0.03, BODY_HALF_W * 2 - 0.3, 0.01, 0.004), bodyMat, [TAIL_X + 0.071, y, 0], { outline: 0.008 });
 	}
-	lettering("TOYOTA", [TAIL_X - 0.012, 0.75, 0], 0.13, 0.03, -1, silverMat);
-	add(group, slab(0.02, 0.05, 0.16, 0.015, 0.006), trimMat, [TAIL_X - 0.015, 0.93, 0], { outline: 0 });
+	const gateFace = TAIL_X - 0.005;
+	add(group, slab(0.008, 0.016, BODY_HALF_W * 2 - 0.16, 0.004, 0.002), creaseMat, [gateFace - 0.002, 0.892, 0], { outline: 0 });
+	add(group, slab(0.006, 0.01, BODY_HALF_W * 2 - 0.16, 0.003, 0.002), trimMat, [gateFace - 0.001, 0.878, 0], { outline: 0 });
+	lettering("TOYOTA", [gateFace - 0.004, 0.71, 0], 0.12, 0.026, -1, stampMat);
+	add(group, slab(0.006, 0.07, 0.22, 0.02, 0.003), trimMat, [gateFace - 0.001, 0.94, 0], { outline: 0 }); // handle pocket
+	add(group, slab(0.022, 0.032, 0.17, 0.012, 0.006), chromeMat, [gateFace - 0.008, 0.94, 0], { outline: 0.008 }); // latch handle
 
 	// --- Flared lips on every wheel opening ---
 	pair((side) => {
@@ -508,10 +520,23 @@ export function buildToyotaTruck(colors: TruckColors = DEFAULT_TRUCK_COLORS): Tr
 	}
 
 	// --- Rear end ---
-	add(group, slab(0.17, 0.17, 1.74, 0.05, 0.02), silverMat, [TAIL_X - 0.11, 0.45, 0]); // step bumper
-	add(group, slab(0.02, 0.1, 0.22, 0.02, 0.008), headlinerMat, [TAIL_X - 0.2, 0.45, 0], { outline: 0.01 }); // plate
+	// Chrome step bumper wrapping round the corners, the plate recessed in its center.
+	add(group, slab(0.17, 0.17, 1.74, 0.05, 0.02), chromeMat, [TAIL_X - 0.11, 0.45, 0]);
+	pair((side) => add(group, slab(0.2, 0.17, 0.08, 0.05, 0.02), chromeMat, [TAIL_X - 0.04, 0.45, side * 0.85], { outline: OUTLINE_SMALL }));
+	add(group, slab(0.02, 0.12, 0.34, 0.02, 0.008), trimMat, [TAIL_X - 0.196, 0.45, 0], { outline: 0 }); // plate recess
+	add(group, slab(0.02, 0.1, 0.3, 0.02, 0.008), headlinerMat, [TAIL_X - 0.2, 0.45, 0], { outline: 0.01 }); // plate
 	pair((side) => {
-		add(group, slab(0.04, 0.2, 0.14, 0.03, 0.01), tailMat, [TAIL_X - 0.005, 0.8, side * 0.74], { outline: 0.02 });
+		// Tall tail lamp on each bed corner: amber turn signal on top, clear reverse lamp, then the big red tail/stop lens.
+		const lampZ = side * (BODY_HALF_W - 0.045);
+		const lampX = TAIL_X - 0.012;
+		const lampH = TAIL_LAMP.amber + TAIL_LAMP.clear + TAIL_LAMP.red;
+		// Dark bezel round the whole lamp, so the red lens stands off red paint.
+		add(group, slab(0.024, lampH + 0.024, TAIL_LAMP.w + 0.024, 0.01, 0.004), trimMat, [lampX + 0.006, TAIL_LAMP.top - lampH / 2, lampZ], { outline: 0 });
+		add(group, slab(0.03, TAIL_LAMP.amber, TAIL_LAMP.w, 0.008, 0.004), amberMat, [lampX, TAIL_LAMP.top - TAIL_LAMP.amber / 2, lampZ], { outline: 0.01 });
+		add(group, slab(0.03, TAIL_LAMP.clear, TAIL_LAMP.w, 0.004, 0.003), clearLensMat, [lampX, TAIL_LAMP.top - TAIL_LAMP.amber - TAIL_LAMP.clear / 2, lampZ], { outline: 0.01 });
+		add(group, slab(0.03, TAIL_LAMP.red, TAIL_LAMP.w, 0.008, 0.004), tailMat, [lampX, TAIL_LAMP.top - TAIL_LAMP.amber - TAIL_LAMP.clear - TAIL_LAMP.red / 2, lampZ], {
+			outline: 0.01,
+		});
 		// Mudflaps behind the rear and front wheels.
 		add(group, slab(0.03, 0.24, 0.2, 0.01, 0.005), trimMat, [REAR_AXLE_X - 0.5, 0.28, side * 0.76], { outline: 0 });
 		add(group, slab(0.03, 0.22, 0.2, 0.01, 0.005), trimMat, [FRONT_AXLE_X - 0.5, 0.28, side * 0.76], { outline: 0 });

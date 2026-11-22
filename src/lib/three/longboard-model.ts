@@ -46,16 +46,36 @@ const GLYPHS: Record<string, [number, number, number, number][]> = {
 
 /**
  * Half the board's width at a fraction of its length from the tail (0) to the nose (1): a classic
- * longboard plan with its wide point just forward of center, a broad round nose and a squarish tail.
+ * longboard plan, widest just forward of center, about 14.5 in across a foot up from the tail and
+ * 17.5 in a foot back from the nose, finishing in a rounded square tail and a round nose.
  */
 export function halfWidthAt(f: number, spec: LongboardSpec = TC_LONGBOARD): number {
 	const w = spec.widthM / 2;
-	if (f <= 0) return w * 0.6; // tail block, about 14 in across
+	if (f <= 0) return w * 0.33;
 	if (f >= 1) return 0;
-	if (f > 0.9) return w * 0.78 * Math.sqrt(1 - ((f - 0.9) / 0.1) ** 2); // round nose
-	const curve = 1 - ((f - 0.52) / 0.52) ** 2;
-	return w * (0.6 + 0.4 * Math.max(0, curve));
+	const tailSide = (x: number) => w * (1 - 0.575 * ((0.52 - x) / 0.52) ** 1.84);
+	if (f < 0.03) {
+		// Rounded tail corners: an elliptical pull-in over the last few inches.
+		const edge = tailSide(0.03);
+		return w * 0.33 + (edge - w * 0.33) * Math.sqrt(1 - (1 - f / 0.03) ** 2);
+	}
+	if (f <= 0.52) return tailSide(f);
+	const noseSide = (x: number) => w * (1 - 0.415 * ((x - 0.52) / 0.48) ** 2);
+	if (f <= 0.9) return noseSide(f);
+	return noseSide(0.9) * Math.sqrt(1 - ((f - 0.9) / 0.1) ** 2); // round nose
 }
+
+/**
+ * Thickness as a fraction of the full 3.5 in: full through the middle, foiled down to about half at
+ * the tail and a little more at the nose, the way a longboard thins toward its ends.
+ */
+export function foilAt(f: number): number {
+	const x = Math.max(0, Math.min(1, f));
+	return x < 0.5 ? 1 - 0.5 * ((0.5 - x) / 0.5) ** 2.5 : 1 - 0.45 * ((x - 0.5) / 0.5) ** 2.5;
+}
+
+/** A standard single-fin box: 10 in long, 3/4 in wide, set on the stringer. */
+export const FIN_BOX = { lengthM: 10 * INCH, widthM: 0.75 * INCH } as const;
 
 export interface LongboardModel {
 	group: Group;
@@ -67,6 +87,9 @@ export function buildLongboard(spec: LongboardSpec = TC_LONGBOARD): LongboardMod
 	const { add, std } = kit;
 	const white = std("#f5f4ef", 0.3, 0.05);
 	const black = std("#141414", 0.4);
+	const wood = std("#8b5a2b", 0.6);
+	const boxMat = std("#26282b", 0.5, 0.2);
+	const screwMat = std("#cfd3d6", 0.3, 0.8);
 	const fin = kit.material(
 		new MeshStandardMaterial({ color: new Color("#5cff2e"), roughness: 0.15, metalness: 0, transparent: true, opacity: 0.72, emissive: new Color("#2a8a10"), emissiveIntensity: 0.25 }),
 	);
@@ -87,15 +110,35 @@ export function buildLongboard(spec: LongboardSpec = TC_LONGBOARD): LongboardMod
 		pts.push(new Vector2(-L / 2 + f * L, -halfWidthAt(f, spec)));
 	}
 	const outline = new Shape(pts);
+	/** Thin a geometry toward the nose and tail: scale each vertex's height by the foil at its station. */
+	const foil = (geo: ReturnType<typeof extrude>) => {
+		const pos = geo.getAttribute("position");
+		for (let i = 0; i < pos.count; i++) pos.setY(i, pos.getY(i) * foilAt((pos.getX(i) + L / 2) / L));
+		pos.needsUpdate = true;
+		geo.computeVertexNormals();
+		return geo;
+	};
 	const body = extrude(outline, t, t * 0.42, true);
 	body.rotateX(-Math.PI / 2); // across -> Z, thickness -> Y
-	add(group, body, white, [0, 0, 0], { outline: 0.012 });
-	const face = t / 2 + 0.001;
+	add(group, foil(body), white, [0, 0, 0], { outline: 0.012 });
+	/** Height of the bottom face (it faces up, deck down) at a distance x from the board's center. */
+	const faceAt = (x: number) => (t / 2) * foilAt((x + L / 2) / L) + 0.001;
+	const face = faceAt(0);
+
+	// Wood stringer down the center line, through the board and just proud of both faces.
+	const stringerW = 0.25 * INCH;
+	// Many stations along its length, so the foil bends it with the board instead of cutting a chord.
+	const run: Vector2[] = [];
+	for (let i = 0; i <= 60; i++) run.push(new Vector2(-L / 2 + 0.03 + (i / 60) * (L - 0.06), -stringerW / 2));
+	for (let i = 60; i >= 0; i--) run.push(new Vector2(-L / 2 + 0.03 + (i / 60) * (L - 0.06), stringerW / 2));
+	const stringer = extrude(new Shape(run), t + 0.003, 0, true);
+	stringer.rotateX(-Math.PI / 2);
+	add(group, foil(stringer), wood, [0, 0, 0], { outline: 0 });
 
 	// Yin-yang, about 6 in across, toward the tail on the bottom.
 	const r = 3 * INCH;
 	const yy = new Group();
-	yy.position.set(-L * 0.18, face, 0);
+	yy.position.set(-L * 0.18, faceAt(-L * 0.18), 0);
 	const disc = new CylinderGeometry(r, r, 0.002, 40);
 	add(yy, disc, white, [0, 0, 0], { outline: 0.004 });
 	const dark = new Shape();
@@ -126,7 +169,7 @@ export function buildLongboard(spec: LongboardSpec = TC_LONGBOARD): LongboardMod
 	const cellW = 0.75 * letterH;
 	const gap = 0.3 * letterH;
 	const total = text.length * cellW + (text.length - 1) * gap;
-	const start = new Vector3(L * 0.08, face + 0.002, 0);
+	const start = new Vector3(L * 0.08, faceAt(L * 0.08) + 0.002, 0);
 	[...text].forEach((ch, i) => {
 		const left = -total / 2 + i * (cellW + gap);
 		for (const [u0, v0, u1, v1] of GLYPHS[ch]) {
@@ -173,8 +216,15 @@ export function buildLongboard(spec: LongboardSpec = TC_LONGBOARD): LongboardMod
 	);
 	finShape.lineTo(0, 0);
 	const finGeo = extrude(finShape, 0.009, 0.003, false);
-	// Leading foot about 38 cm up from the tail, so the raked tip stays over the board.
-	add(group, finGeo, fin, [-L / 2 + 0.38, face - 0.004, 0], { outline: 0.004 });
+	// Leading foot about 38 cm up from the tail, so the raked tip stays over the board; the fin sits in
+	// its box, which runs a little past the fin's base at both ends, with the screw plate at the back.
+	const finLead = -L / 2 + 0.38;
+	const baseMid = finLead - 0.729 * h * 0.5;
+	const boxMid = baseMid + 0.01;
+	add(group, slab(FIN_BOX.lengthM, 0.004, FIN_BOX.widthM + 0.008, 0.008, 0.001), boxMat, [boxMid, faceAt(boxMid) + 0.002, 0], { outline: 0.003 });
+	const screw = new CylinderGeometry(0.006, 0.006, 0.004, 14);
+	add(group, screw, screwMat, [boxMid - FIN_BOX.lengthM / 2 + 0.012, faceAt(boxMid) + 0.004, 0], { outline: 0 });
+	add(group, finGeo, fin, [finLead, faceAt(baseMid) - 0.002, 0], { outline: 0.004 });
 
 	return { group, dispose: kit.dispose };
 }

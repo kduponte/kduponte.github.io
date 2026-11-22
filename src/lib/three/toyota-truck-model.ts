@@ -102,8 +102,8 @@ const FRONT = {
 	headW: 0.2,
 	headH: 0.142,
 	headZ: 0.55,
-	// Corner lamp, US pattern: its outboard edge rakes outward toward the bottom (the Japanese Hilux's
-	// leans the other way), so the lens is wider at the bottom than the top, front and side alike.
+	// Corner lamp, US pattern: the line between its clear and amber sections rakes outward toward the
+	// bottom (the Japanese Hilux's leans the other way), and the amber wraps round onto the fender.
 	cornerTopW: 0.12,
 	cornerBotW: 0.15,
 	cornerWrapTop: 0.05,
@@ -271,28 +271,28 @@ export function buildToyotaTruck(colors: TruckColors = DEFAULT_TRUCK_COLORS): Tr
 	};
 
 	/**
-	 * The hood isn't flat: a raised center section runs from the cowl toward the nose, with a stamped
-	 * crease along each edge. Placed relative to (ox, oy) so an opening hood can carry it on its hinge.
+	 * The hood isn't flat: its center section stands proud of the rest, with sloped sides that run from
+	 * the cowl toward the nose. Built as a trapezoid cross-section swept along the hood's slope, placed
+	 * relative to (ox, oy) so an opening hood can carry it on its hinge.
 	 */
 	function hoodDetail(parent: Object3D, ox: number, oy: number) {
-		const x0 = CAB_FRONT_X + 0.06;
-		const x1 = NOSE_X - 0.16;
+		const x0 = CAB_FRONT_X + 0.08;
+		const x1 = NOSE_X - 0.12;
 		const topAt = (x: number) => BELT_Y + ((x - CAB_FRONT_X) / (NOSE_X - CAB_FRONT_X)) * (0.9 - BELT_Y);
-		const rise = 0.016;
-		const bulge = new Shape();
-		bulge.moveTo(x0 - ox, topAt(x0) - 0.01 - oy);
-		bulge.lineTo(x0 + 0.08 - ox, topAt(x0 + 0.08) + rise - oy);
-		bulge.lineTo(x1 - 0.1 - ox, topAt(x1 - 0.1) + rise - oy);
-		bulge.lineTo(x1 - ox, topAt(x1) - 0.01 - oy);
-		add(parent, extrude(bulge, HOOD_BULGE_W, 0.012, false), bodyMat, [0, 0, 0], { outline: OUTLINE_SMALL });
-		for (const z of [-HOOD_BULGE_W / 2 - 0.012, HOOD_BULGE_W / 2 + 0.012]) {
-			const len = x1 - x0;
-			const mid = (x0 + x1) / 2;
-			add(parent, slab(len, 0.008, 0.014, 0.004, 0.002), creaseMat, [mid - ox, topAt(mid) + 0.002 - oy, z], {
-				rot: [0, 0, Math.atan2(0.9 - BELT_Y, NOSE_X - CAB_FRONT_X)],
-				outline: 0,
-			});
-		}
+		const rise = 0.03;
+		const section = new Shape(
+			[
+				[-HOOD_BULGE_W / 2, 0],
+				[HOOD_BULGE_W / 2, 0],
+				[HOOD_BULGE_W / 2 - 0.08, rise],
+				[-HOOD_BULGE_W / 2 + 0.08, rise],
+			].map(([u, v]) => new Vector2(u, v)),
+		);
+		const geo = extrude(section, x1 - x0, 0.02, true);
+		geo.rotateY(Math.PI / 2); // sweep along X
+		geo.rotateZ(Math.atan2(0.9 - BELT_Y, NOSE_X - CAB_FRONT_X)); // follow the hood's fall toward the nose
+		const mid = (x0 + x1) / 2;
+		add(parent, geo, bodyMat, [mid - ox, topAt(mid) + rise / 2 - 0.006 - oy, 0], { outline: OUTLINE_SMALL });
 	}
 
 	// --- Front clip: hood and fenders ---
@@ -540,32 +540,21 @@ export function buildToyotaTruck(colors: TruckColors = DEFAULT_TRUCK_COLORS): Tr
 		const lens = (pts: [number, number][]) => new Shape(pts.map(([u, v]) => new Vector2(u, v)));
 		const zIn = FRONT.headZ + FRONT.headW / 2 + 0.018;
 		const face = { rot: [0, -side * (Math.PI / 2), 0] as [number, number, number] };
-		add(group, extrude(lens([[0, -h / 2], [FRONT.cornerBotW, -h / 2], [FRONT.cornerTopW, h / 2], [0, h / 2]]), 0.035, 0.006, false), headMat, [bandX + 0.008, bandY, side * zIn], {
+		// Clear lens inboard; amber from the raked line out to the corner, continuing round onto the side.
+		const amberW = 0.045;
+		const uSide = BODY_HALF_W + 0.004 - zIn;
+		const lensX = bandX + 0.008;
+		add(group, extrude(lens([[0, -h / 2], [FRONT.cornerBotW - amberW, -h / 2], [FRONT.cornerTopW - amberW, h / 2], [0, h / 2]]), 0.035, 0.006, false), headMat, [lensX, bandY, side * zIn], {
 			...face,
 			outline: 0.01,
 		});
-		const inset = 0.012;
-		const amberW = 0.045;
-		add(
-			group,
-			extrude(
-				lens([
-					[FRONT.cornerBotW - inset - amberW, -h / 2 + inset],
-					[FRONT.cornerBotW - inset, -h / 2 + inset],
-					[FRONT.cornerTopW - inset, h / 2 - inset],
-					[FRONT.cornerTopW - inset - amberW, h / 2 - inset],
-				]),
-				0.02,
-				0.004,
-				false,
-			),
-			amberMat,
-			[bandX + 0.02, bandY, side * zIn],
-			{ ...face, outline: 0 },
-		);
-		// The wrap onto the fender side: clear, its rear edge raked the same way.
-		const wrap = lens([[0.012, -h / 2], [-FRONT.cornerWrapBot, -h / 2], [-FRONT.cornerWrapTop, h / 2], [0.012, h / 2]]);
-		add(group, extrude(wrap, 0.03, 0.006, false), headMat, [NOSE_X, bandY, side * (BODY_HALF_W + 0.002)], { outline: 0.01 });
+		add(group, extrude(lens([[FRONT.cornerBotW - amberW, -h / 2], [uSide, -h / 2], [uSide, h / 2], [FRONT.cornerTopW - amberW, h / 2]]), 0.035, 0.006, false), amberMat, [lensX, bandY, side * zIn], {
+			...face,
+			outline: 0.01,
+		});
+		// The amber side marker wraps back along the fender from the front lens, its rear edge raked the same way.
+		const wrap = lens([[lensX + 0.0175 - NOSE_X, -h / 2], [-FRONT.cornerWrapBot, -h / 2], [-FRONT.cornerWrapTop, h / 2], [lensX + 0.0175 - NOSE_X, h / 2]]);
+		add(group, extrude(wrap, 0.03, 0.006, false), amberMat, [NOSE_X, bandY, side * (BODY_HALF_W + 0.006)], { outline: 0.01 });
 	});
 
 	// Chrome bumper: a pressed face that wraps back around both front corners, amber turn lamps set in it.

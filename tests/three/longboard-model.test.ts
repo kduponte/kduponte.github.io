@@ -8,7 +8,7 @@ const widthAt = (inchesFromTail: number) => (2 * halfWidthAt((inchesFromTail * I
 
 describe("longboard outline", () => {
 	it("is 23.5 in at its wide point, just forward of center", () => {
-		expect(widthAt(0.52 * 114)).toBeCloseTo(23.5, 6);
+		expect(widthAt(0.52 * 112)).toBeCloseTo(23.5, 6);
 		for (const f of [0.3, 0.45, 0.6, 0.75]) expect(halfWidthAt(f)).toBeLessThanOrEqual(halfWidthAt(0.52) + 1e-9);
 	});
 
@@ -20,9 +20,9 @@ describe("longboard outline", () => {
 	});
 
 	it("carries a wider nose than tail, about 17.5 in a foot back, rounding to a point", () => {
-		expect(widthAt(114 - 12)).toBeGreaterThan(16.5);
-		expect(widthAt(114 - 12)).toBeLessThan(18.5);
-		expect(widthAt(114 - 12)).toBeGreaterThan(widthAt(12));
+		expect(widthAt(112 - 12)).toBeGreaterThan(16.5);
+		expect(widthAt(112 - 12)).toBeLessThan(18.5);
+		expect(widthAt(112 - 12)).toBeGreaterThan(widthAt(12));
 		expect(halfWidthAt(1)).toBe(0);
 	});
 });
@@ -37,7 +37,7 @@ describe("longboard foil", () => {
 });
 
 describe("buildLongboard", () => {
-	it("is 9'6\" long, thins toward the tail, and disposes cleanly", () => {
+	it("is 9'4\" long, thins toward the tail, and disposes cleanly", () => {
 		const board = buildLongboard();
 		board.group.updateMatrixWorld(true);
 		const size = new Box3().setFromObject(board.group).getSize(new Vector3());

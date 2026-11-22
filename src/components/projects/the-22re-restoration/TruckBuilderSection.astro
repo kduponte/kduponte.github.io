@@ -6,8 +6,6 @@ import {
 	AS_IT_SITS,
 	CATALOG,
 	KYLE_BUILD,
-	KYLE_PAINT_CANDIDATES,
-	PAINTS,
 	PICKER_GROUPS,
 	describeBuild,
 	type Option,
@@ -16,7 +14,6 @@ import {
 
 const kyleLines = describeBuild(KYLE_BUILD);
 const asItSits = describeBuild(AS_IT_SITS);
-const candidates = KYLE_PAINT_CANDIDATES.map((id) => PAINTS.find((p) => p.id === id)!);
 const groups = PICKER_GROUPS.map((g) => ({ ...g, options: CATALOG[g.key] as readonly Option[] }));
 const opener = [
 	{ key: "hood", label: "Hood" },
@@ -92,24 +89,10 @@ const label =
 
 			<div id="tb-panel-kyle" role="tabpanel" aria-labelledby="tb-tab-kyle" data-panel="kyle" class="raw-box mt-4 rounded-xl bg-cream p-4">
 				<p class="text-sm leading-relaxed text-ink-soft">
-					Lowered a little, clean and OEM-plus, with the Kalapana sticker on the back. The color is still open: Kyle is
-					leaning charcoal. All three he's weighing were 1991 factory colors, so flip between them.
+					Factory black, lowered a little on a Belltech kit but not slammed, on a set of old-school Ultra Hammer wheels,
+					with LED headlights and the Kalapana sticker on the back. Closest to it so far:{" "}
+					<a href="https://www.instagram.com/reel/DSOkEEVjNIz/" class="text-accent-blue underline underline-offset-2">Rutledge Wood's '91</a>.
 				</p>
-				<div class="mt-3 flex flex-wrap gap-2">
-					{
-						candidates.map((p: PaintOption) => (
-							<button
-								type="button"
-								data-kyle-paint={p.id}
-								aria-pressed={p.id === KYLE_BUILD.paint ? "true" : "false"}
-								class="flex items-center gap-2 rounded-full border-2 border-black bg-paper px-3 py-1 text-xs font-semibold aria-pressed:bg-sun"
-							>
-								<span class="inline-block h-4 w-4 rounded-full border-2 border-black" style={`background:${p.hex}`} />
-								{p.name} ({p.id})
-							</button>
-						))
-					}
-				</div>
 				<dl data-summary="kyle" class="mt-4 divide-y-2 divide-black border-y-2 border-black text-sm">
 					{
 						kyleLines.map((l) => (
@@ -121,7 +104,7 @@ const label =
 					}
 				</dl>
 				<p class="mt-3 text-xs leading-relaxed text-ink-soft">
-					Wheels aren't picked yet; the factory steel wheels stay on until Kyle chooses from the options in Your build.
+					Ultra doesn't list the Hammer anymore, so the wheel size is a placeholder until Kyle finds a set.
 				</p>
 			</div>
 
@@ -225,9 +208,6 @@ const label =
 							`<div class="flex gap-3 py-1.5"><dt class="w-32 shrink-0 font-mono text-[11px] uppercase tracking-wide text-ink-soft">${l.label}</dt><dd class="text-ink">${escapeHtml(l.value)}</dd></div>`,
 					)
 					.join("");
-			for (const b of section.querySelectorAll<HTMLButtonElement>("[data-kyle-paint]")) {
-				b.setAttribute("aria-pressed", String(b.dataset.kylePaint === builds.kyle.paint));
-			}
 		};
 
 		const renderYours = () => {
@@ -265,13 +245,6 @@ const label =
 		for (const b of section.querySelectorAll<HTMLButtonElement>("[data-tab]")) {
 			b.addEventListener("click", () => {
 				tab = b.dataset.tab as Tab;
-				show();
-			});
-		}
-		for (const b of section.querySelectorAll<HTMLButtonElement>("[data-kyle-paint]")) {
-			b.addEventListener("click", () => {
-				builds.kyle.paint = b.dataset.kylePaint!;
-				renderKyle();
 				show();
 			});
 		}

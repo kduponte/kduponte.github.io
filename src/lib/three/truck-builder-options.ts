@@ -31,6 +31,8 @@ const SRC = {
 	fmvss: { label: "FMVSS 205 (49 CFR 571.205)", href: "https://www.ecfr.gov/current/title-49/subtitle-B/chapter-V/part-571/subpart-B/section-571.205" },
 	grille: { label: "1989-91 Pickup grille listings (Go-Parts)", href: "https://www.go-parts.com/toyota-pickup-grilles.html" },
 	story: { label: "Kyle's truck log, Aug 23 2026", href: "#the-story" },
+	reference: { label: "Rutledge Wood's '91 Pickup (Instagram)", href: "https://www.instagram.com/reel/DSOkEEVjNIz/" },
+	h6054: { label: "H6054 sealed beam, 200 mm wide (NAPA)", href: "https://www.napaonline.com/en/p/LMPH6054N" },
 } as const satisfies Record<string, Source>;
 
 const INCH = 0.0254;
@@ -100,7 +102,7 @@ export const RIDES: RideOption[] = [
 	},
 ];
 
-export type WheelStyle = "hubcap" | "steel" | "alloy";
+export type WheelStyle = "hubcap" | "steel" | "alloy" | "hammer";
 
 export interface WheelOption extends Option {
 	diameterIn: number;
@@ -130,6 +132,17 @@ export const WHEELS: WheelOption[] = [
 		style: "steel",
 		note: "The same wheel with its center cap popped off.",
 		source: SRC.stockWheel,
+	},
+	{
+		id: "hammer",
+		name: "Ultra Hammer",
+		spec: '15 x 7", +20 mm, 5 x 114.3 (size to confirm)',
+		diameterIn: 15,
+		widthIn: 7,
+		offsetMm: 20,
+		style: "hammer",
+		note: "90s Ultra five-slot wheels. The reference build runs a new-old-stock set (its caption names them); Ultra no longer lists the model, so the size is a placeholder until Kyle picks a set.",
+		source: SRC.reference,
 	},
 	{
 		id: "alloy15",
@@ -197,6 +210,15 @@ export const FRONT_TINTS: TintOption[] = [NO_TINT, tint(50), tint(35, "Hawaii's 
 /** Hawaii exempts a truck's rear window, so any film is legal there. */
 export const REAR_TINTS: TintOption[] = [NO_TINT, tint(50), tint(35), tint(20, "Legal on a truck's rear window only."), tint(5, "Legal on a truck's rear window only.")];
 
+export interface LightOption extends Option {
+	kind: "sealed" | "led";
+}
+
+export const LIGHTS: LightOption[] = [
+	{ id: "sealed", name: "Factory sealed beams", spec: "7 x 6 in, H6054 (200 x 142 mm)", kind: "sealed", source: SRC.h6054 },
+	{ id: "led", name: "7 x 6 LED", spec: "LED units in the same 200 x 142 mm opening", kind: "led", note: "As on the reference build.", source: SRC.h6054 },
+];
+
 export type GrilleFinish = "painted" | "chrome";
 
 export interface GrilleOption extends Option {
@@ -246,6 +268,7 @@ export interface Build {
 	tire: string;
 	tintFront: string;
 	tintRear: string;
+	lights: string;
 	grille: string;
 	bed: string;
 	decal: string;
@@ -259,15 +282,17 @@ export const AS_IT_SITS: Build = {
 	tire: "195-75-14",
 	tintFront: "none",
 	tintRear: "none",
+	lights: "sealed",
 	grille: "painted",
 	bed: "none",
 	decal: "none",
 };
 
-/** Kyle's plan, from his story and his answers: lowered, OEM-plus, a Kalapana sticker, leaning charcoal. */
-export const KYLE_BUILD: Build = { ...AS_IT_SITS, paint: "138", ride: "b444", decal: "kalapana" };
-/** The other colors Kyle is still weighing; all three were 1991 factory colors. */
-export const KYLE_PAINT_CANDIDATES = ["138", "147", "8E3"] as const;
+/**
+ * Kyle's build, from his notes and the reference truck he picked: factory black, lowered a little on a
+ * Belltech kit (not slammed), Ultra Hammer wheels on lower-profile tires, LED headlights, the Kalapana sticker.
+ */
+export const KYLE_BUILD: Build = { ...AS_IT_SITS, paint: "202", ride: "b444", wheel: "hammer", tire: "205-60-15", lights: "led", decal: "kalapana" };
 
 export const CATALOG = {
 	paint: PAINTS,
@@ -276,6 +301,7 @@ export const CATALOG = {
 	tire: TIRES,
 	tintFront: FRONT_TINTS,
 	tintRear: REAR_TINTS,
+	lights: LIGHTS,
 	grille: GRILLES,
 	bed: BEDS,
 	decal: DECALS,
@@ -300,6 +326,7 @@ export function resolveBuild(build: Build) {
 		tire,
 		tintFront: pick("tintFront"),
 		tintRear: pick("tintRear"),
+		lights: pick("lights"),
 		grille: pick("grille"),
 		bed: pick("bed"),
 		decal: pick("decal"),
@@ -308,7 +335,7 @@ export function resolveBuild(build: Build) {
 
 export type ResolvedBuild = ReturnType<typeof resolveBuild>;
 
-const KEY_ORDER: BuildKey[] = ["paint", "ride", "wheel", "tire", "tintFront", "tintRear", "grille", "bed", "decal"];
+const KEY_ORDER: BuildKey[] = ["paint", "ride", "wheel", "tire", "tintFront", "tintRear", "lights", "grille", "bed", "decal"];
 
 /** A build as a short, readable URL fragment, e.g. "paint=138&ride=b444&...". */
 export function encodeBuild(build: Build): string {
@@ -334,6 +361,7 @@ export function describeBuild(build: Build): { label: string; value: string }[] 
 		{ label: "Tires", value: `${r.tire.name}, ${r.tire.spec}` },
 		{ label: "Front side windows", value: r.tintFront.name },
 		{ label: "Rear window", value: r.tintRear.name },
+		{ label: "Headlights", value: r.lights.name },
 		{ label: "Grille", value: r.grille.name },
 		{ label: "Bed", value: r.bed.name },
 		{ label: "Sticker", value: r.decal.name },
@@ -348,6 +376,7 @@ export const PICKER_GROUPS: { key: BuildKey; label: string }[] = [
 	{ key: "tire", label: "Tires" },
 	{ key: "tintFront", label: "Front side windows" },
 	{ key: "tintRear", label: "Rear window" },
+	{ key: "lights", label: "Headlights" },
 	{ key: "grille", label: "Grille" },
 	{ key: "bed", label: "Bed" },
 	{ key: "decal", label: "Sticker" },
@@ -364,6 +393,7 @@ export function truckSetup(build: Build) {
 			wheel: { diameterIn: r.wheel.diameterIn, widthIn: r.wheel.widthIn, offsetMm: r.wheel.offsetMm, style: r.wheel.style },
 			tire: { widthMm: r.tire.widthMm, aspect: r.tire.aspect, rimIn: r.tire.rimIn },
 			glassVlt: { front: r.tintFront.vlt, rear: r.tintRear.vlt },
+			headlights: r.lights.kind,
 			grille: r.grille.finish,
 			bed: r.bed.kind,
 			sticker: r.decal.kalapana,

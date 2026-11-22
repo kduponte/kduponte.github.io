@@ -62,7 +62,9 @@ export interface TruckOptions {
 	/** Something to mount in the engine bay (the 22R-E), origin at its crankshaft centerline, front toward +X. */
 	engine?: Object3D;
 	/** Wheel size and look. 5 x 114.3 lug pattern, as on the 2WD truck. */
-	wheel?: { diameterIn: number; widthIn: number; offsetMm: number; style: "hubcap" | "steel" | "alloy" };
+	wheel?: { diameterIn: number; widthIn: number; offsetMm: number; style: "hubcap" | "steel" | "alloy" | "hammer" };
+	/** Factory 7x6 sealed beams, or LED units of the same size. */
+	headlights?: "sealed" | "led";
 	/** Tire size: the wheels sit on the ground, so a taller tire raises the whole truck. */
 	tire?: { widthMm: number; aspect: number; rimIn: number };
 	/** Ride-height change at each axle, meters (negative is lower). */
@@ -311,6 +313,7 @@ export function buildToyotaTruck(colors: TruckColors = DEFAULT_TRUCK_COLORS, opt
 	const sideGlassMat = options.glassVlt ? glassWith(options.glassVlt.front) : glassMat;
 	const rearGlassMat = options.glassVlt ? glassWith(options.glassVlt.rear) : glassMat;
 	const surroundMat = options.grille === "chrome" ? chromeMat : grilleMat;
+	const ledHousingMat = std("#1b1d20", 0.35, 0.4);
 	const stickerMat = std("#f6f1e4", 0.6);
 
 	const group = new Group();
@@ -758,7 +761,19 @@ export function buildToyotaTruck(colors: TruckColors = DEFAULT_TRUCK_COLORS, opt
 		// Sealed-beam headlight in a dark bezel, centered between the grille and the corner lamp.
 		const headZ = side * FRONT.headZ;
 		add(body, slab(0.03, FRONT.headH + 0.03, FRONT.headW + 0.03, 0.012, 0.006), surroundMat, [bandX + 0.004, bandY, headZ], { outline: 0 });
-		add(body, slab(0.04, FRONT.headH, FRONT.headW, 0.02, 0.012), headMat, [bandX + 0.014, bandY, headZ], { outline: 0.012 });
+		if (options.headlights === "led") {
+			// A 7x6 LED unit in the same opening: dark housing, three rows of five LED lenses.
+			add(body, slab(0.04, FRONT.headH, FRONT.headW, 0.02, 0.012), ledHousingMat, [bandX + 0.014, bandY, headZ], { outline: 0.012 });
+			for (let r = 0; r < 3; r++) {
+				for (let c = 0; c < 5; c++) {
+					const dot = new CylinderGeometry(0.011, 0.011, 0.008, 12);
+					dot.rotateZ(Math.PI / 2);
+					add(body, dot, headMat, [bandX + 0.036, bandY + (r - 1) * 0.038, headZ + (c - 2) * 0.034], { outline: 0 });
+				}
+			}
+		} else {
+			add(body, slab(0.04, FRONT.headH, FRONT.headW, 0.02, 0.012), headMat, [bandX + 0.014, bandY, headZ], { outline: 0.012 });
+		}
 		// Corner lamp: a clear lens with an amber insert running parallel to its raked outboard edge,
 		// wrapping back round the fender with a matching raked rear edge. Drawn as outlines in the lamp's
 		// own plane (u outboard from its inner edge, v up), turned to face forward on either side.
@@ -909,6 +924,8 @@ export function buildToyotaTruck(colors: TruckColors = DEFAULT_TRUCK_COLORS, opt
 			new Vector2(rimR - 0.012, halfW * 0.92),
 		];
 		const capMat = std(tint(colors.silver, 0.1), 0.22, 0.9);
+		const machinedMat = std(tint(colors.silver, 0.2), 0.32, 0.85);
+		const capGoldMat = std("#c9a24a", 0.35, 0.8);
 		for (const [x, side] of [
 			[FRONT_AXLE_X, 1],
 			[FRONT_AXLE_X, -1],
@@ -956,6 +973,29 @@ export function buildToyotaTruck(colors: TruckColors = DEFAULT_TRUCK_COLORS, opt
 						outline: 0,
 					});
 				}
+			} else if (wheel.style === "hammer") {
+				// Ultra Hammer: a machined aluminum disc with five trapezoid slots near the rim, a raised
+				// center cone and a small black cap, as on the NOS set in Kyle's reference build.
+				disc(rimR + 0.004, 0.006, trimMat, face - s * 0.03);
+				disc(rimR - 0.002, 0.016, machinedMat, face - s * 0.006, 36);
+				for (let i = 0; i < 5; i++) {
+					const a = (i / 5) * Math.PI * 2 + Math.PI / 2;
+					const slot = new Shape(
+						[
+							[rimR * 0.5, -0.032],
+							[rimR * 0.9, -0.05],
+							[rimR * 0.9, 0.05],
+							[rimR * 0.5, 0.032],
+						].map(([u, v]) => new Vector2(u, v)),
+					);
+					const g = extrude(slot, 0.006, 0.002, false);
+					add(pivot, g, trimMat, [0, 0, face + s * 0.004], { rot: [0, 0, a], outline: 0 });
+				}
+				const cone = new CylinderGeometry(0.05, 0.085, 0.024, 28);
+				cone.rotateX((s * Math.PI) / 2);
+				add(pivot, cone, machinedMat, [0, 0, face + s * 0.012], { outline: 0 });
+				disc(0.034, 0.03, trimMat, face + s * 0.016, 18);
+				add(pivot, new TorusGeometry(0.03, 0.003, 6, 20), capGoldMat, [0, 0, face + s * 0.032], { outline: 0 });
 			} else {
 				// Alloy: five spokes from a center cap out to the rim (a plain stand-in until a real wheel is picked).
 				disc(rimR + 0.004, 0.006, trimMat, face - s * 0.03);

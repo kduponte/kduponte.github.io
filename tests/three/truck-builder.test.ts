@@ -5,7 +5,6 @@ import {
 	CATALOG,
 	FRONT_TINTS,
 	KYLE_BUILD,
-	KYLE_PAINT_CANDIDATES,
 	REAR_TINTS,
 	decodeBuild,
 	describeBuild,
@@ -45,13 +44,17 @@ describe("truck builder catalog", () => {
 		}
 	});
 
-	it("gives Kyle three candidate colors, all of them 1991 factory paints", () => {
-		for (const id of KYLE_PAINT_CANDIDATES) expect(CATALOG.paint.some((p) => p.id === id)).toBe(true);
-		expect(KYLE_PAINT_CANDIDATES).toContain(KYLE_BUILD.paint);
+	it("builds Kyle's truck in factory black on Ultra Hammers, lowered on a Belltech kit, with LED headlights", () => {
+		const r = resolveBuild(KYLE_BUILD);
+		expect(r.paint.name).toBe("Black");
+		expect(r.wheel.style).toBe("hammer");
+		expect(r.ride.id).toBe("b444");
+		expect(r.lights.kind).toBe("led");
+		expect(r.tire.rimIn).toBe(r.wheel.diameterIn);
 	});
 
 	it("round-trips a build through the share link", () => {
-		const build: Build = { ...AS_IT_SITS, paint: "8E3", ride: "b444", wheel: "alloy15", tire: "205-60-15", tintRear: "5", bed: "tonneau", decal: "kalapana" };
+		const build: Build = { ...AS_IT_SITS, paint: "8E3", ride: "b444", wheel: "hammer", tire: "205-60-15", tintRear: "5", lights: "led", bed: "tonneau", decal: "kalapana" };
 		expect(decodeBuild(`#build=${encodeBuild(build)}`)).toEqual(build);
 	});
 
@@ -84,7 +87,7 @@ describe("buildToyotaTruck with builder options", () => {
 
 	it("lowers the body by the kit's drop at each axle", () => {
 		const stock = buildToyotaTruck(undefined, truckSetup(AS_IT_SITS).options);
-		const low = buildToyotaTruck(undefined, truckSetup(KYLE_BUILD).options);
+		const low = buildToyotaTruck(undefined, truckSetup({ ...AS_IT_SITS, ride: "b444" }).options);
 		// Belltech 444: 2 in at the front axle, 3 in at the rear.
 		const atX = (t: TruckModel, x: number) => {
 			t.group.updateMatrixWorld(true);

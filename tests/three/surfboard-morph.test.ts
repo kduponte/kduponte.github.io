@@ -12,11 +12,13 @@ import {
 	bounds,
 	calibrateBoard,
 	createTopology,
+	dropRadius,
 	halfWidthIn,
 	litersOf,
 	meshVolume,
 	prepareBoard,
 	scaleToLiters,
+	splitLiters,
 	writeBlobPositions,
 	writeGridNormals,
 	writeShellPositions,
@@ -157,6 +159,25 @@ describe("the blob", () => {
 		}
 	});
 
+	it("keeps its liters and its footing while it leans, oozes and reaches out", () => {
+		const reach = { dir: [0.8, 0.6, 0] as [number, number, number], amount: 0.55 };
+		writeBlobPositions(pos, { liters: 43.3, time: 1.1, wobble: 0.2, squash: 0.58, lean: [-0.37, 0.1], spread: 0.25, bulges: [reach], offset: [0.3, 0.05, 0] });
+		expect(litersOf(pos)).toBeCloseTo(43.3, 3);
+		expect(bounds(pos)[1]).toBeCloseTo(0.05, 6);
+	});
+
+	it("reaches out toward a bulge, and reports its tip as the farthest point that way", () => {
+		const dir: [number, number, number] = [0, 0.6, 0.8];
+		const along = (p: Float32Array) => Math.max(...Array.from({ length: VERTEX_COUNT }, (_, i) => p[i * 3 + 1] * dir[1] + p[i * 3 + 2] * dir[2]));
+		writeBlobPositions(pos, { liters: 40 });
+		const plain = along(pos);
+		const tips = new Float32Array(3);
+		writeBlobPositions(pos, { liters: 40, bulges: [{ dir, amount: 0.5 }], tips });
+		const reached = along(pos);
+		expect(reached).toBeGreaterThan(plain * 1.2);
+		expect(tips[1] * dir[1] + tips[2] * dir[2]).toBeCloseTo(reached, 6);
+	});
+
 	it("grows with its liters by the cube root", () => {
 		writeBlobPositions(pos, { liters: 30 });
 		const small = bounds(pos);
@@ -227,5 +248,21 @@ describe("true relative scale", () => {
 			expect(cal.positions.every(Number.isFinite)).toBe(true);
 			expect(Object.values(prepareBoard(cal.prepared.shape)).every((v) => typeof v !== "number" || Number.isFinite(v))).toBe(true);
 		}
+	});
+});
+
+describe("drops of goo", () => {
+	it("are spheres of the liters they carry", () => {
+		for (const liters of [0.5, 4.88, 6]) expect(((4 / 3) * Math.PI * dropRadius(liters) ** 3 * 1000)).toBeCloseTo(liters, 9);
+	});
+
+	it("split a change into the fewest equal drops under the cap", () => {
+		expect(splitLiters(0, 6)).toEqual([]);
+		expect(splitLiters(-0.5, 6)).toEqual([0.5]);
+		expect(splitLiters(6, 6)).toEqual([6]);
+		const drops = splitLiters(-24.4, 6);
+		expect(drops).toHaveLength(5);
+		expect(drops.reduce((a, b) => a + b, 0)).toBeCloseTo(24.4, 9);
+		for (const d of drops) expect(d).toBeCloseTo(4.88, 9);
 	});
 });

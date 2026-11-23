@@ -470,6 +470,16 @@ export function wobble(dx: number, dy: number, dz: number, time: number): number
 	return v * WOBBLE_NORM;
 }
 
+/** A pseudopod: the goo reaching out toward (or pinching off) a drop. */
+export interface BlobBulge {
+	/** Unit direction it reaches in, in the blob's frame (meters, y up). */
+	dir: [number, number, number];
+	/** How far it reaches, as a fraction of the radius; negative dents the surface. */
+	amount: number;
+	/** Higher is a thinner reach. */
+	sharpness?: number;
+}
+
 export interface BlobOptions {
 	liters: number;
 	/** Seconds, drives the wobble. */
@@ -478,6 +488,13 @@ export interface BlobOptions {
 	wobble?: number;
 	/** Vertical squash (< 1) or stretch (> 1); the other axes compensate to keep volume. */
 	squash?: number;
+	/** Shear per meter of height in x and z: the top trailing the bottom as the goo moves. */
+	lean?: [number, number];
+	/** How far the bottom oozes out on the floor, as a fraction of its width. */
+	spread?: number;
+	bulges?: BlobBulge[];
+	/** Filled with each bulge's tip (the surface's farthest point along its direction), xyz in meters. */
+	tips?: Float32Array;
 	/** Where the blob's bottom center sits, meters. */
 	offset?: [number, number, number];
 }
@@ -487,18 +504,29 @@ const BLOB_RX = 1.18;
 const BLOB_RY = 0.82;
 const BLOB_RZ = 1;
 const BLOB_FLAT_BOTTOM = 0.62;
+const BULGE_SHARPNESS = 12;
 
 /**
  * Fill `out` with blob positions (meters) holding exactly `liters`. The blob is an ellipsoid on
- * the shared grid, wobbled by low-frequency noise, squashed about its bottom, then scaled so its
- * mesh volume matches; its bottom center sits at `offset`.
+ * the shared grid, wobbled by low-frequency noise, pulled out into any bulges, squashed about its
+ * bottom, leaned and oozed out at the foot, then scaled so its mesh volume matches; its bottom
+ * center sits at `offset`.
  */
 export function writeBlobPositions(out: Float32Array, opts: BlobOptions): Float32Array {
 	const topo = createTopology();
-	const { liters, time = 0, wobble: amp = 0, squash = 1, offset = [0, 0, 0] } = opts;
+	const { liters, time = 0, wobble: amp = 0, squash = 1, lean = [0, 0], spread = 0, bulges = [], tips, offset = [0, 0, 0] } = opts;
 	const sy = squash;
 	const sxz = 1 / Math.sqrt(sy);
+	// Each bulge's direction on the unit sphere the ellipsoid is stretched from.
+	const unit = bulges.map(({ dir: [x, y, z] }) => {
+		const ux = x / (BLOB_RX * sxz);
+		const uy = y / (BLOB_RY * sy * (y < 0 ? BLOB_FLAT_BOTTOM : 1));
+		const uz = z / (BLOB_RZ * sxz);
+		const n = Math.hypot(ux, uy, uz) || 1;
+		return [ux / n, uy / n, uz / n];
+	});
 	let minY = Infinity;
+	let maxY = -Infinity;
 	for (let i = 0; i < STATIONS; i++) {
 		const theta = Math.PI * topo.s[i];
 		const ct = Math.cos(theta);
@@ -508,16 +536,28 @@ export function writeBlobPositions(out: Float32Array, opts: BlobOptions): Float3
 			const dx = ct;
 			const dy = st * sp;
 			const dz = st * topo.t[j];
-			const r = 1 + amp * wobble(dx, dy, dz, time);
+			let r = 1 + amp * wobble(dx, dy, dz, time);
+			for (let b = 0; b < bulges.length; b++) {
+				const c = dx * unit[b][0] + dy * unit[b][1] + dz * unit[b][2];
+				if (c > 0) r += bulges[b].amount * c ** (bulges[b].sharpness ?? BULGE_SHARPNESS);
+			}
 			const k = (i * RING_STRIDE + j) * 3;
 			out[k] = dx * BLOB_RX * r * sxz;
 			out[k + 1] = dy * BLOB_RY * (dy < 0 ? BLOB_FLAT_BOTTOM : 1) * r * sy;
 			out[k + 2] = dz * BLOB_RZ * r * sxz;
 			if (out[k + 1] < minY) minY = out[k + 1];
+			if (out[k + 1] > maxY) maxY = out[k + 1];
 		}
 	}
-	// Sit on the bottom, size to the liters, then move into place.
-	for (let k = 1; k < out.length; k += 3) out[k] -= minY;
+	// Sit on the bottom, ooze the foot out and lean (neither moves the bottom), size to the liters,
+	// then move into place.
+	const h = maxY - minY || 1;
+	for (let k = 0; k < out.length; k += 3) {
+		const y = (out[k + 1] -= minY);
+		const foot = 1 + spread * (1 - y / h) ** 4;
+		out[k] = out[k] * foot + lean[0] * y;
+		out[k + 2] = out[k + 2] * foot + lean[1] * y;
+	}
 	scaleToLiters(out, liters, [0, 0, 0]);
 	const [ox, oy, oz] = offset;
 	for (let k = 0; k < out.length; k += 3) {
@@ -525,7 +565,33 @@ export function writeBlobPositions(out: Float32Array, opts: BlobOptions): Float3
 		out[k + 1] += oy;
 		out[k + 2] += oz;
 	}
+	if (tips) {
+		for (let b = 0; b < bulges.length; b++) {
+			const [x, y, z] = bulges[b].dir;
+			let best = -Infinity;
+			for (let k = 0; k < out.length; k += 3) {
+				const d = out[k] * x + out[k + 1] * y + out[k + 2] * z;
+				if (d > best) {
+					best = d;
+					tips[b * 3] = out[k];
+					tips[b * 3 + 1] = out[k + 1];
+					tips[b * 3 + 2] = out[k + 2];
+				}
+			}
+		}
+	}
 	return out;
+}
+
+/** Radius in meters of a sphere of goo holding `liters`. */
+export const dropRadius = (liters: number) => Math.cbrt((3 * liters) / (4 * Math.PI * 1000));
+
+/** A change in liters split into the fewest equal drops of at most `maxDrop` liters each. */
+export function splitLiters(change: number, maxDrop: number): number[] {
+	const total = Math.abs(change);
+	if (total < 1e-6) return [];
+	const n = Math.ceil(total / maxDrop - 1e-9);
+	return Array.from({ length: n }, () => total / n);
 }
 
 /** out = a + (b - a) * w. w may overshoot past 1 for a jelly wobble. */

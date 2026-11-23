@@ -24,8 +24,8 @@ import { COLS, DEFAULT_CONSOLE_COLORS, DIAL_HALF_SWEEP, DIAL_Z_MAX, ROWS, dialAn
  * - Needle: the metric's signed z statistic, on a dial from -5 to +5 (ticks every 1, halves between).
  * - Red zones at both ends: the decision rule's two-sided threshold |z| (the redline), shared by
  *   every dial because every rule applies one threshold to the whole dashboard.
- * - Lamp under the hub: lit when the needle is in the red (the rule flags the metric), lime if the
- *   metric truly moved, orange if it was truly null (a false discovery).
+ * - Lamp under the hub: lit when the needle is in the red (the rule flags the metric), blue if the
+ *   metric truly moved, blinking coral if it was truly null (a false discovery).
  * - Pixel numerals: the metric's number, as the live experiment's table numbers them.
  *
  * Pure: no renderer or DOM, so it is unit tested in Node. Units are arbitrary (a dial is 0.6 wide).

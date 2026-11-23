@@ -14,6 +14,8 @@ import { DEFAULT_CONSOLE_COLORS } from "../../src/lib/three/gauge-dial";
 import { shade } from "../../src/lib/three/kit";
 import { DEFAULT_TRUCK_COLORS } from "../../src/lib/three/toyota-truck-model";
 import { HERO_SEEDS, runGaugeDashboard } from "../../src/lib/stats-sim/dashboard-runs";
+import { DARK_INK, SEASON, contrast, seasonFor } from "../../src/lib/project-theme";
+import { readFileSync } from "node:fs";
 
 function bounds(model: GaugeConsole): Box3 {
 	model.group.updateMatrixWorld(true);
@@ -93,6 +95,30 @@ describe("buildGaugeConsole", () => {
 		expect(DEFAULT_CONSOLE_COLORS.dash).toBe(shade(DEFAULT_TRUCK_COLORS.interior, 0.35));
 	});
 
+	it("takes its data colors from the page's Signal palette", () => {
+		const c = DEFAULT_CONSOLE_COLORS;
+		const css = readFileSync("src/styles/global.css", "utf8");
+		const token = (name: string) => css.match(new RegExp(`--color-${name}:\\s*(#[0-9a-f]{6})`))?.[1];
+		const coral = seasonFor("too-good-to-be-true")!;
+		expect(coral.id).toBe("coral");
+		// Truly moved: the live experiment's accent blue. Truly null: the page's season coral.
+		expect(c.lift).toBe(token("accent-blue"));
+		expect(c.null).toBe(coral.ring);
+		expect(c.face).toBe(DARK_INK);
+		expect(c.lampOff).toBe(SEASON.find((p) => p.id === "signal")!.ground);
+		// The red zones are coral too, deep enough to read against the face (3:1 for graphics).
+		expect(contrast(c.redline, c.face)).toBeGreaterThanOrEqual(3);
+		expect(contrast(coral.ring, c.face)).toBeLessThan(3);
+		// The two lit lamps differ in brightness as well as hue, and both stand out from an unlit one.
+		expect(contrast(c.lift, c.null)).toBeGreaterThan(1.5);
+		expect(contrast(c.lift, c.lampOff)).toBeGreaterThan(2.5);
+		expect(contrast(c.null, c.lampOff)).toBeGreaterThan(2.5);
+		// Safety orange means "clickable" on the site, so no data color may be it, and lime is gone.
+		const all = Object.values(c).map((x) => x.toLowerCase());
+		expect(all).not.toContain(token("pop"));
+		expect(all).not.toContain("#c8ff3d");
+	});
+
 	it("has one numbered gauge per metric, in reading order", () => {
 		expect(model.gauges).toHaveLength(20);
 		expect(model.gauges.map((g) => g.number)).toEqual(Array.from({ length: 20 }, (_, i) => i + 1));
@@ -143,9 +169,9 @@ describe("buildGaugeConsole", () => {
 		model.setLamp(0, "null");
 		const lit = model.gauges[0].lampMaterial;
 		expect(lit.emissiveIntensity).toBeGreaterThan(0);
-		expect(`#${lit.emissive.getHexString()}`).toBe("#ff5a1f");
+		expect(`#${lit.emissive.getHexString()}`).toBe(DEFAULT_CONSOLE_COLORS.null);
 		model.setLamp(1, "lift", 0.5);
-		expect(`#${model.gauges[1].lampMaterial.emissive.getHexString()}`).toBe("#c8ff3d");
+		expect(`#${model.gauges[1].lampMaterial.emissive.getHexString()}`).toBe(DEFAULT_CONSOLE_COLORS.lift);
 		expect(model.gauges[1].lampMaterial.emissiveIntensity).toBeLessThan(lit.emissiveIntensity);
 		model.setLamp(0, "off");
 		expect(lit.emissiveIntensity).toBe(0);

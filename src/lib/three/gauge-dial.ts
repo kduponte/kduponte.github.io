@@ -6,24 +6,30 @@ export interface ConsoleColors {
 	dash: string;
 	/** Bezels, hubs and outlines. */
 	trim: string;
+	/** Dial faces: the site's off-white (dark-ink). */
 	face: string;
 	ink: string;
+	/** Red zones: the page's coral (its season ring), deepened to clear 3:1 against the face. */
 	redline: string;
-	/** Lamp colors: a flagged metric that truly moved, and a flagged metric that was truly null. */
+	/**
+	 * Lamp colors, the page's own encoding: a flagged metric that truly moved is accent blue (the live
+	 * experiment's "flagged" text); one that was truly null is the season coral, and blinks.
+	 */
 	lift: string;
 	null: string;
+	/** An unlit lamp: Signal graphite. */
 	lampOff: string;
 }
 
 export const DEFAULT_CONSOLE_COLORS: ConsoleColors = {
 	dash: "#575b60",
 	trim: "#111111",
-	face: "#f6f1e4",
+	face: "#f5f5f3",
 	ink: "#111111",
-	redline: "#d62828",
-	lift: "#c8ff3d",
-	null: "#ff5a1f",
-	lampOff: "#2c2e31",
+	redline: "#e8574a",
+	lift: "#2a70c8",
+	null: "#f47468",
+	lampOff: "#2b2d30",
 };
 
 /** Dial range and sweep: +/-5 z across 240 degrees, so 24 degrees per unit of z. */

@@ -3,7 +3,7 @@
  * Too Good to Be True's 3D hero: a 1980s instrument cluster with one center-zero gauge per
  * metric, driven by seeded runs of the page's own simulation at the live experiment's defaults.
  * Needles are z statistics, red zones are the chosen rule's redline, lamps light for flagged
- * metrics (lime: truly lifted; orange: truly null). Tap (or Next) runs the next seed; the
+ * metrics (blue: truly lifted; blinking coral: truly null). Tap (or Next) runs the next seed; the
  * correction switch moves the redline. The readout under the canvas spells out every number,
  * including the winner's curse: how much bigger the real lifts in the red look than the truth.
  *
@@ -142,8 +142,8 @@ const ariaLabel = (sentence: string) =>
 				<strong>Every needle is real:</strong> one metric's two-proportion z statistic from this page's own simulation, at the live experiment's
 				defaults: {first.metrics.length} metrics, {nNull} truly unchanged (#1–{lastNull}) and {nLift} truly lifted
 				(+{pct(HERO_CONFIG.relative_lift)} on a {pct(HERO_CONFIG.baseline_rate)} baseline), {HERO_CONFIG.visitors_per_arm} visitors per arm, two-sided
-				at α = {HERO_ALPHA}. Dials run from z −5 to +5, a tick per unit. Red zones: the rule's redline. Lamps: lit in the red, lime if the metric
-				truly moved, orange if it didn't. Seeds run 1 to {HERO_SEEDS.length} in order, none skipped; across all {tally.runs}, a truly unchanged metric
+				at α = {HERO_ALPHA}. Dials run from z −5 to +5, a tick per unit. Red zones: the rule's redline. Lamps: lit in the red, blue if the metric
+				truly moved, blinking coral if it didn't. Seeds run 1 to {HERO_SEEDS.length} in order, none skipped; across all {tally.runs}, a truly unchanged metric
 				reached the red in {tally.anyFalse.none} runs uncorrected, {tally.anyFalse.bonferroni} under Bonferroni and {tally.anyFalse.bh} under
 				Benjamini-Hochberg. <strong>Winner's curse:</strong> {curseCaption} <strong>Not data:</strong> the needle swing, the sway and the blinking.
 			</p>

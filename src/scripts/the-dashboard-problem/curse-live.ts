@@ -25,7 +25,8 @@ const X_MAX = 3;
 const BIN = 0.05;
 const THRESHOLDS = Array.from({ length: Math.round((X_MAX - X_MIN) / BIN) + 1 }, (_, i) => X_MIN + i * BIN);
 
-const FALSE_COLOR = "#b83a0a";
+/** False discoveries: the page's coral (the hero's blinking lamp), darkened to 5.3:1 on white for text. */
+const FALSE_COLOR = "#c6372a";
 /** Neutral grey (the Signal "Concrete" ground); the site's --color-line is black. */
 const NOT_FLAGGED_COLOR = "#cfcfca";
 const NOT_FLAGGED = "Not flagged";

@@ -39,8 +39,9 @@ export const FLEET_PLINTH_H_M = 0.3;
 export const FLEET_SCALE_STEP_M = 1;
 /** Lantern glow on the selected buoy (the hero's hover glow), and how fast it eases, per second. */
 const LANTERN_ON = 1.8;
-/** The site's lime, which also marks the picked name and the details header. */
-export const SELECTION_COLOR = "#c8ff3d";
+/** Safety orange, the site's color for what you can click; it also marks the picked name and the
+ * details header. */
+export const SELECTION_COLOR = "#ff5b1f";
 const LANTERN_EASE = 6;
 
 export interface FleetLayout {
@@ -177,7 +178,7 @@ export function buildBuoyFleet(stations: FleetStation[], startIndex = 0): BuoyFl
 	}
 
 	// The buoys, each split at its waterline for the translucent water, and a ring for the selection:
-	// the picked name's lime, edged in black so it reads on pale water.
+	// the picked name's orange, edged in black so it reads on pale water.
 	const splits: WaterSplit[] = [];
 	const ringEdge = kit.material(new MeshBasicMaterial({ color: colors.outline, transparent: true }));
 	const ringFill = kit.material(new MeshBasicMaterial({ color: SELECTION_COLOR, transparent: true }));

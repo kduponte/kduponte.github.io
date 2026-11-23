@@ -53,7 +53,7 @@ export const DEFAULT_TRUCK_COLORS: TruckColors = {
 	body: "#c4262e",
 	trim: "#111111",
 	glass: "#bfe6ff",
-	hub: "#c8ff3d",
+	hub: "#b9bec3",
 	light: "#fff4c7",
 	bumper: "#3a3d40",
 	silver: "#dfe3e6",
@@ -1159,7 +1159,7 @@ export function buildToyotaTruck(colors: TruckColors = DEFAULT_TRUCK_COLORS, opt
 				add(pivot, new TorusGeometry(0.185, 0.02, 6, 28), silverMat, [0, 0, s * 0.094], { outline: 0 }); // rim lip
 				disc(0.15, 0.012, dishMat, 0.1); // recessed dish
 				disc(0.06, 0.03, silverMat, 0.106, 16); // hub cap
-				disc(0.028, 0.034, hubMat, 0.108, 12); // brand-colored center
+				disc(0.028, 0.034, hubMat, 0.108, 12); // chrome center of the cap
 				for (let i = 0; i < 5; i++) {
 					const a = (i / 5) * Math.PI * 2 + Math.PI / 5;
 					const lug = new CylinderGeometry(0.014, 0.014, 0.03, 6);

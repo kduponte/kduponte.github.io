@@ -2,6 +2,7 @@
 // The truck builder: Kyle's build, Noah's build, and one anyone can make and send in. Every option
 // is a real part, size or rule for a 1991 Toyota Pickup 2WD, listed in truck-builder-options.ts with
 // its numbers and source; the page shows both beside each choice.
+import SectionOpener from "../../editorial/SectionOpener.astro";
 import {
 	CATALOG,
 	KYLE_BUILD,
@@ -25,15 +26,15 @@ const label =
 	"The 1991 Toyota pickup in 3D, built to whichever build is selected: paint, ride height, wheels, tires, window tint, grille, bed and sticker. Drag to spin it; tap the hood, a door or the tailgate to open it.";
 ---
 
-<section id="truck-builder" class="mx-auto max-w-7xl px-6 py-16 md:px-12 md:py-20">
-	<h2 class="font-anton text-4xl md:text-5xl">Kyle's build, Noah's build, yours</h2>
-	<p class="mt-3 max-w-[65ch] text-base leading-relaxed text-ink-soft">
-		Where this truck could end up. Every choice below is a real part, size or rule for a 1991 Pickup 2WD, with its
-		numbers and where they come from: factory paint codes, a lowering kit and a body lift made for this truck, tire sizes
-		that set how tall it stands, and Hawaii's window-tint law. Open the hood to see the 22R-E sitting in the bay.
-	</p>
+<section id="truck-builder" class="py-16 md:py-24">
+	<SectionOpener
+		number="06"
+		kicker="The builds"
+		title="Kyle's build, Noah's build, yours"
+		deck="Where this truck could end up. Every choice below is a real part, size or rule for a 1991 Pickup 2WD, with its numbers and where they come from: factory paint codes, lift and lowering kits made for this truck, tire sizes that set how tall it stands, and Hawaii's tint and lift laws. Open the hood to see the 22R-E sitting in the bay."
+	/>
 
-	<div data-truck-builder-root data-open="" class="mt-8 grid gap-6 md:grid-cols-12 md:items-start">
+	<div data-truck-builder-root data-open="" class="mx-auto mt-12 grid max-w-7xl gap-6 px-6 md:grid-cols-12 md:items-start md:px-12">
 		<div class="md:sticky md:top-6 md:col-span-7">
 			<div data-truck-builder-viewer role="img" aria-label={label} class="relative aspect-[16/11] w-full select-none">
 				<svg data-fallback viewBox="0 0 560 300" class="absolute inset-0 h-full w-full" aria-hidden="true">
@@ -47,14 +48,14 @@ const label =
 				</svg>
 			</div>
 			<div class="mt-3 flex flex-wrap items-center gap-2">
-				<span class="font-mono text-[11px] uppercase tracking-wide text-ink-soft">Open</span>
+				<span class="font-mono text-[11px] uppercase">Open</span>
 				{
 					opener.map((o) => (
 						<button
 							type="button"
 							data-opener={o.key}
 							aria-pressed="false"
-							class="raw-box rounded-full bg-cream px-3 py-1 text-xs font-semibold aria-pressed:bg-lime"
+							class="btn btn-sm btn-ghost"
 						>
 							{o.label}
 						</button>
@@ -65,7 +66,7 @@ const label =
 		</div>
 
 		<div class="md:col-span-5">
-			<div role="tablist" aria-label="Builds" class="flex gap-2">
+			<div role="tablist" aria-label="Builds" class="flex flex-wrap gap-2">
 				{
 					[
 						["kyle", "Kyle's build"],
@@ -79,7 +80,7 @@ const label =
 							data-tab={id}
 							aria-selected={i === 0 ? "true" : "false"}
 							aria-controls={`tb-panel-${id}`}
-							class="raw-box rounded-xl bg-cream px-3 py-2 text-sm font-semibold aria-selected:bg-sun"
+							class="btn btn-sm btn-ghost aria-selected:bg-pop aria-selected:text-pop-ink"
 						>
 							{name}
 						</button>
@@ -94,7 +95,7 @@ const label =
 					other contender) with low-profile tires. LED headlights, 20% film on every window including the windshield (darker
 					than Hawaii allows up front), the tailgate lettering gone so the back is all black, a plain chrome exhaust tip, the
 					Kalapana sticker, and a white single-fin longboard in the bed. Closest to it so far:{" "}
-					<a href="https://www.instagram.com/reel/DSOkEEVjNIz/" class="text-accent-blue underline underline-offset-2">Rutledge Wood's '91</a>.
+					<a href="https://www.instagram.com/reel/DSOkEEVjNIz/" class="link">Rutledge Wood's '91</a>.
 				</p>
 				<dl data-summary="kyle" class="mt-4 divide-y-2 divide-black border-y-2 border-black text-sm">
 					{
@@ -115,7 +116,7 @@ const label =
 			<div id="tb-panel-noah" role="tabpanel" aria-labelledby="tb-tab-noah" data-panel="noah" hidden class="raw-box mt-4 rounded-xl bg-cream p-4">
 				<p class="text-sm leading-relaxed text-ink-soft">
 					Noah wants it closer to a monster truck. His inspiration is Marty McFly's 1985 Toyota from <i>Back to the Future</i>{" "}
-					and <a href="#hawaii-culture" class="text-accent-blue underline underline-offset-2">Poi Pounder</a>, Hawaii's first
+					and <a href="#hawaii-culture" class="link">Poi Pounder</a>, Hawaii's first
 					monster truck, built on a Toyota Pickup cab. He wants it closer to navy than gray, so it gets Blue Pearl, a navy
 					Toyota sold on this truck in 1991. Then 6.5 inches of lift, 35-inch Super Swamper mud tires on fatter wheels
 					for a little more height, dual front shocks stood up on hoops where you can see them, step bars to climb in, twin
@@ -138,7 +139,7 @@ const label =
 					{
 						groups.map((g) => (
 							<fieldset data-group={g.key}>
-								<legend class="font-mono text-[11px] uppercase tracking-wide text-ink-soft">{g.label}</legend>
+								<legend class="font-mono text-[11px] uppercase">{g.label}</legend>
 								<div class="mt-1.5 flex flex-wrap gap-1.5">
 									{g.options.map((o) => (
 										<button
@@ -146,7 +147,7 @@ const label =
 											data-choice={o.id}
 											aria-pressed="false"
 											title={o.spec || o.name}
-											class="flex items-center gap-1.5 rounded-full border-2 border-black bg-paper px-2.5 py-1 text-xs font-semibold disabled:opacity-35 aria-pressed:bg-sun"
+											class="btn btn-sm btn-ghost whitespace-normal text-left"
 										>
 											{"hex" in o && (
 												<span class="inline-block h-3.5 w-3.5 rounded-full border-2 border-black" style={`background:${(o as PaintOption).hex}`} />
@@ -165,8 +166,8 @@ const label =
 						Like what you made? Send it over. It opens your email with the build written out and a link that rebuilds it here.
 					</p>
 					<div class="mt-3 flex flex-wrap gap-2">
-						<a data-submit href="#truck-builder" class="raw-box rounded-xl bg-lime px-4 py-2 text-sm font-semibold">Send it to Kyle and Noah</a>
-						<button type="button" data-copy class="raw-box rounded-xl bg-cream px-4 py-2 text-sm font-semibold">Copy link</button>
+						<a data-submit href="#truck-builder" class="btn">Send it to Kyle and Noah</a>
+						<button type="button" data-copy class="btn btn-ghost">Copy link</button>
 					</div>
 					<p data-copy-status aria-live="polite" class="mt-2 text-xs text-ink-soft"></p>
 				</div>
@@ -239,7 +240,7 @@ const label =
 				const detail = fs.querySelector<HTMLElement>("[data-detail]");
 				if (detail) {
 					const bits = ["hex" in chosen ? `${chosen.name}, ${chosen.spec}` : chosen.spec, chosen.note].filter(Boolean).map((t) => escapeHtml(t!.replace(/\.$/, "")));
-					const src = chosen.source ? ` <a class="text-accent-blue underline underline-offset-2" href="${chosen.source.href}">${escapeHtml(chosen.source.label)}</a>` : "";
+					const src = chosen.source ? ` <a class="link" href="${chosen.source.href}">${escapeHtml(chosen.source.label)}</a>` : "";
 					detail.innerHTML = bits.join(". ") + (bits.length ? "." : "") + src;
 				}
 			}

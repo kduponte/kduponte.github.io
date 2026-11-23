@@ -12,5 +12,16 @@ export default defineConfig({
 	},
 	vite: {
 		plugins: [tailwindcss()],
+		// Pre-bundle the lazily imported 3D and chart libraries when the dev server starts. Otherwise
+		// Vite discovers them one page at a time, re-optimizes, and serves "504 Outdated Optimize Dep"
+		// to tabs that are already open, which leaves the 3D viewers on their static fallbacks.
+		optimizeDeps: {
+			include: [
+				'three',
+				'three/examples/jsm/environments/RoomEnvironment.js',
+				'three/examples/jsm/utils/BufferGeometryUtils.js',
+				'@observablehq/plot',
+			],
+		},
 	},
 });

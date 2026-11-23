@@ -92,7 +92,7 @@ export async function initBoardRack(root: HTMLElement) {
 		const ticks = Array.from({ length: (hi - lo) / 10 + 1 }, (_, i) => lo + i * 10);
 		bar.innerHTML = `
 			<line x1="${X(c.min)}" x2="${X(c.max)}" y1="26" y2="26" stroke="#111" stroke-width="2" />
-			<rect x="${X(c.q25)}" y="17" width="${(Number(X(c.q75)) - Number(X(c.q25))).toFixed(1)}" height="18" fill="#c8ff3d" stroke="#111" stroke-width="2.5" />
+			<rect x="${X(c.q25)}" y="17" width="${(Number(X(c.q75)) - Number(X(c.q25))).toFixed(1)}" height="18" fill="#cfcfca" stroke="#111" stroke-width="2.5" />
 			<line x1="${X(c.median)}" x2="${X(c.median)}" y1="14" y2="38" stroke="#111" stroke-width="3" />
 			${points.map((p) => `<circle cx="${X(p)}" cy="46" r="2.6" fill="#111" />`).join("")}
 			<line x1="0" x2="${BAR_W}" y1="54" y2="54" stroke="#111" stroke-width="1.5" />

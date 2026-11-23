@@ -1,9 +1,30 @@
-<section id="the-data" class="mx-auto max-w-4xl px-6 py-16 md:px-12 md:py-20">
-	<p class="font-display max-w-[65ch] text-lg font-medium leading-relaxed text-ink">
-		That's the truck's story. I'm also the kind of person who wants to actually understand what I'm getting into,
-		not just feel good about it. So alongside the wrenching, here's what I dug into: what the engine actually is
-		and where it came from. What actually tends to break on a 22RE, pulled from hundreds of real forum threads.
-		What the market for this era of Toyota trucks has actually looked like. And why, beyond my own family's story, this truck and this
-		brand mean something specific in Hawaii.
-	</p>
+---
+import Contents from "../../editorial/Contents.astro";
+import Band from "../../editorial/Band.astro";
+
+const sections = [
+	{ n: "02", title: "The engine", blurb: "What the 22R-E actually is and where it came from.", href: "#engine-history" },
+	{ n: "03", title: "What breaks", blurb: "What tends to fail on a 22RE, from hundreds of real forum threads.", href: "#failure-points" },
+	{ n: "04", title: "The market", blurb: "What this era of Toyota truck has actually sold for.", href: "#market-value" },
+	{ n: "05", title: "Hawaii", blurb: "Why this truck and this brand mean something specific here.", href: "#hawaii-culture" },
+];
+---
+
+<section id="the-data">
+	<Band tone="ink" cx={120} cy={560} innerClass="grid grid-cols-1 gap-10 md:grid-cols-12">
+		<div class="md:col-span-5">
+			<p class="font-mono inline-block -rotate-1 bg-spot px-2.5 py-1 text-[11px] uppercase text-black">Part two: the data</p>
+			<p class="font-display mt-6 text-xl font-semibold leading-snug md:text-2xl">
+				That's the truck's story. I'm also the kind of person who wants to actually understand what I'm getting into,
+				not just feel good about it.
+			</p>
+			<p class="mt-4 text-base font-medium leading-relaxed">
+				So alongside the wrenching, here's what I dug into: what the engine actually is and where it came from. What
+				actually tends to break on a 22RE, pulled from hundreds of real forum threads. What the market for this era of
+				Toyota trucks has actually looked like. And why, beyond my own family's story, this truck and this brand mean
+				something specific in Hawaii.
+			</p>
+		</div>
+		<Contents items={sections} class="md:col-span-6 md:col-start-7" />
+	</Band>
 </section>

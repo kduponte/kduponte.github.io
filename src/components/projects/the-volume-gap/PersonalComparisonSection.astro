@@ -1,15 +1,37 @@
 ---
+import SectionOpener from "../../editorial/SectionOpener.astro";
+import Band from "../../editorial/Band.astro";
+import StatSpread from "../../editorial/StatSpread.astro";
+import summary from "../../../../public/data/surf-volume/profile_summary.json";
+import { formatLengthIn } from "../../../lib/surf-volume/iconic-boards";
+
+// The default surfer's spread of answers, straight from profile_summary.json.
+const { consensus, profile } = summary;
+const L = (v: number) => `${v.toFixed(1)} L`;
+const who = `${profile.weight_lb} lb, ${formatLengthIn(profile.height_in)}, ${profile.skill}`;
 // Visualization 1 (brief §17) — the hero interaction. Markup + mount points only; all
 // behavior lives in src/scripts/surf-volume/{profile-form,hero-comparison-chart}.ts.
 ---
 
 <section id="personal-comparison" class="mx-auto max-w-7xl px-6 py-16 md:px-12 md:py-20">
-	<h2 class="font-anton text-4xl md:text-5xl">One surfer, many answers</h2>
-	<p class="mt-3 max-w-[65ch] text-base leading-relaxed text-ink-soft">
+	<SectionOpener bare number="01" kicker="One surfer" title={`One surfer, many answers`} />
+	<p class="mt-10 max-w-[58ch] text-xl font-semibold leading-snug md:text-2xl">
 		Enter a profile and see what every system in this comparison recommends for it, including where a system's
 		answer is directly observed, interpolated between collected data points, or a community heuristic rather than a
 		branded calculator.
 	</p>
+
+	<Band tone="field" contained class="mt-10" cx={140} cy={500}>
+		<p class="font-mono text-[11px] uppercase">The default surfer ({who}), {consensus.n_contributing_systems} systems</p>
+		<StatSpread
+			class="mt-4"
+			items={[
+				{ value: L(consensus.min), label: "The lowest recommendation" },
+				{ value: L(consensus.median), label: "The median, this project's consensus" },
+				{ value: L(consensus.max), label: "The highest recommendation" },
+			]}
+		/>
+	</Band>
 
 	<form id="vg-profile-form" class="mt-8 grid grid-cols-2 gap-4 raw-box rounded-xl bg-cream p-6 md:grid-cols-5">
 		<label class="flex flex-col gap-1 text-sm">
@@ -56,7 +78,7 @@
 	<div id="vg-hero-comparison" class="mt-6">
 		<div data-vg-summary class="raw-box rounded-xl bg-cream p-4 font-mono text-sm"></div>
 		<div class="mt-4 flex justify-end">
-			<button type="button" data-vg-table-toggle class="font-mono text-xs uppercase tracking-wide text-accent-blue" aria-pressed="false">
+			<button type="button" data-vg-table-toggle class="btn btn-sm btn-ghost" aria-pressed="false">
 				View as table
 			</button>
 		</div>

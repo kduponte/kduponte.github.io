@@ -13,12 +13,12 @@
 	<form id="pp-controls" class="mt-8 grid grid-cols-2 gap-4 raw-box rounded-xl bg-cream p-6 md:grid-cols-5">
 		<label class="flex flex-col gap-1 text-sm">
 			<span class="font-mono text-xs uppercase tracking-wide text-ink-soft">Number of metrics</span>
-			<input id="pp-num-metrics" type="range" min="2" max="50" step="1" class="accent-accent-blue w-full" />
+			<input id="pp-num-metrics" type="range" min="2" max="50" step="1" class="accent-pop w-full" />
 			<span id="pp-num-metrics-value" class="font-mono text-xs text-ink-soft"></span>
 		</label>
 		<label class="flex flex-col gap-1 text-sm">
 			<span class="font-mono text-xs uppercase tracking-wide text-ink-soft">Fraction genuinely lifted</span>
-			<input id="pp-fraction-lifted" type="range" min="0" max="0.6" step="0.05" class="accent-accent-blue w-full" />
+			<input id="pp-fraction-lifted" type="range" min="0" max="0.6" step="0.05" class="accent-pop w-full" />
 			<span id="pp-fraction-lifted-value" class="font-mono text-xs text-ink-soft"></span>
 		</label>
 		<label class="flex flex-col gap-1 text-sm">
@@ -37,7 +37,7 @@
 			<button
 				type="button"
 				id="pp-run-button"
-				class="w-full border border-ink bg-ink px-5 py-2.5 font-mono text-xs uppercase tracking-wide text-paper transition-colors hover:border-accent-blue hover:bg-accent-blue md:w-auto"
+				class="btn w-full justify-center md:w-auto"
 			>
 				Run new dashboard
 			</button>

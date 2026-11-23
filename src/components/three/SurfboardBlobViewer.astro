@@ -107,13 +107,13 @@ const boardList = resolved.map((r) => `${r.board.name} (${r.size.length}, ${r.si
 
 	{readout && (
 		<figcaption class="relative z-20 ml-auto mt-2 w-full max-w-[26rem] md:-mt-2">
-			<div class="raw-box rounded-2xl bg-cream p-4 text-black">
+			<div class="raw-box rounded-2xl bg-paper p-4 text-ink">
 				<div class="flex items-center justify-between gap-3">
 					<p class="font-mono text-[10px] uppercase leading-tight" data-r-eyebrow>{first.eyebrow}</p>
 					<button
 						type="button"
 						data-r-next
-						class="font-mono raw-box shadow-hard-sm raw-press shrink-0 rounded-full bg-lime px-3 py-1 text-[10px] uppercase"
+						class="btn btn-sm shrink-0"
 					>
 						Next board →
 					</button>
@@ -133,7 +133,7 @@ const boardList = resolved.map((r) => `${r.board.name} (${r.size.length}, ${r.si
 				<svg viewBox={`-8 0 ${BAR_W + 16} 62`} class="mt-3 w-full overflow-visible" aria-hidden="true">
 					<!-- Calculators' spread for the default surfer: whiskers min-max, box q25-q75, median. -->
 					<line x1={X(consensus.min as number)} x2={X(consensus.max as number)} y1="22" y2="22" stroke="#111" stroke-width="2" />
-					<rect x={X(consensus.q25 as number)} y="13" width={X(consensus.q75 as number) - X(consensus.q25 as number)} height="18" fill="#c8ff3d" stroke="#111" stroke-width="2.5" />
+					<rect x={X(consensus.q25 as number)} y="13" width={X(consensus.q75 as number) - X(consensus.q25 as number)} height="18" fill="#cfcfca" stroke="#111" stroke-width="2.5" />
 					<line x1={X(median)} x2={X(median)} y1="10" y2="34" stroke="#111" stroke-width="3" />
 					{points.map((p) => <circle cx={X(p)} cy="42" r="2.6" fill="#111" />)}
 					<line x1="0" x2={BAR_W} y1="50" y2="50" stroke="#111" stroke-width="1.5" />

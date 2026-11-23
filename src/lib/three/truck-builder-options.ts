@@ -56,7 +56,26 @@ const SRC = {
 	tcLongboard: { label: "T&C Surf Designs, Tommy Tanaka Beach Boy", href: "https://tcsurf.com/collections/tommy-tanaka/products/beach-boy" },
 	trueAmes: { label: "True Ames Greenough 4-A 10.5\" fin (Rider Shack)", href: "https://ridershack.com/products/true-ames-greenough-4-a-10-5-single-fin" },
 	h6054: { label: "H6054 sealed beam, 200 mm wide (NAPA)", href: "https://www.napaonline.com/en/p/LMPH6054N" },
+	hellaH4: { label: "Hella 003427291 7 x 6\" Vision Plus conversion (JEGS)", href: "https://jegs.com/p/Hella/Hella-Vision-Plus-Halogen-Sealed-Beam-Headlight-Conversions/2836501/10002/-1" },
+	retroBright: { label: "Holley RetroBright LFRB130, Classic White 3000K", href: "https://www.holley.com/products/electrical/lighting/headlights/parts/LFRB130" },
+	bilstein5100: { label: "Bilstein 5100 (VS-24-186216): 46 mm zinc body, black boot (CARiD)", href: "https://www.carid.com/bilstein/b8-5100-series-front-shock-absorber-set-mpn-vs-24-186216.html" },
+	kc5105: { label: "KC HiLiTES 5105, 6\" black cover, white KC logo (ExtremeTerrain)", href: "https://www.extremeterrain.com/kc-hilites-jeep-wrangler-6-inch-slimlite-hid-daylighter-hard-light-cover-black-white-kc-logo-5105.html" },
+	linex: { label: "LINE-X Standard spray-on bedliner", href: "https://linex.com/bedliners/standard" },
+	apexSliders: { label: "Trail-Gear APEX rock sliders, 1984-95 Toyota Pickup", href: "https://trail-gear.com/armor/1984-1995-toyota-pickup-apex-rock-sliders.html" },
+	turndown: { label: "Nickson 17601 turndown, 1.75\" inlet, 12\" long (CARiD)", href: "https://www.carid.com/nickson/product-mpn-17601.html" },
+	ulua: { label: "PENN Battalion II Ulua rod: 13', two pieces", href: "https://www.pennfishing.com/products/battalion-ii-conventional-ulua-surf-rod-1523124" },
+	cooler: { label: "Coleman 316 Series 70 qt: 31.2 x 15.7 x 17\" (Academy)", href: "https://www.academy.com/p/coleman-316-series-70-qt-hard-cooler?sku=navy" },
+	bags: { label: "Do it Best 33 gal bags, 33 x 36.5\"", href: "https://www.doitbest.com/product/628131/do-it-best-33-gal-extra-large-black-trash-bag-40-count-628131/" },
+	crf50f: { label: "Honda CRF50F specifications (Honda News)", href: "https://hondanews.com/en-US/releases/release-13f25e90cfe47cd58453f1f71015b964-2024-honda-crf50f-specifications" },
+	kalapanaBig: {
+		label: "Aloha Got Soul, BIG SIZE Kalapana sticker (12 x 4\")",
+		href: "https://alohagotsoul.com/products/big-size-slow-down-i-m-listening-to-kalapana-bumper-sticker-12-x-4",
+	},
+	tcSticker: { label: "T&C Surf Designs, 6\" Standard Logo Sticker", href: "https://tcsurf.com/products/6-std-logo-sticker" },
 } as const satisfies Record<string, Source>;
+
+/** TireSize.com's page for one size: its height, width and approved wheel widths. */
+const tireSizeSrc = (size: string): Source => ({ label: `TireSize.com, ${size}`, href: `https://tiresize.com/tiresizes/${size.replace("/", "-")}.htm` });
 
 const INCH = 0.0254;
 
@@ -273,10 +292,22 @@ export interface TireOption extends Option {
 export const TIRES: TireOption[] = ([
 	{ id: "195-75-14", name: "195/75R14", spec: "", widthMm: 195, aspect: 75, rimIn: 14, note: "Factory size.", source: SRC.tireFactory },
 	{ id: "205-75-14", name: "205/75R14", spec: "", widthMm: 205, aspect: 75, rimIn: 14, note: "Factory alternate.", source: SRC.tireAlt },
+	{ id: "195-60-14", name: "195/60R14", spec: "", widthMm: 195, aspect: 60, rimIn: 14, note: "Not a factory size: a short sidewall on the factory 14-inch wheels, for a lowered truck.", source: tireSizeSrc("195/60R14") },
+	{ id: "215-70-14", name: "215/70R14", spec: "", widthMm: 215, aspect: 70, rimIn: 14, note: "Not a factory size: a little taller and wider than stock, still on 14s.", source: tireSizeSrc("215/70R14") },
 	{ id: "215-65-15", name: "215/65R15", spec: "", widthMm: 215, aspect: 65, rimIn: 15, note: "Factory alternate, on 15-inch wheels.", source: SRC.tireAlt },
-	{ id: "205-60-15", name: "205/60R15", spec: "", widthMm: 205, aspect: 60, rimIn: 15, note: "Not a factory size: shorter sidewall, the lowered look.", source: SRC.tireAlt },
-	{ id: "205-50-15", name: "205/50R15", spec: "", widthMm: 205, aspect: 50, rimIn: 15, note: "Low profile: a short sidewall for a lowered truck. Not a factory size.", source: SRC.tireAlt },
-	{ id: "215-45-17", name: "215/45R17", spec: "", widthMm: 215, aspect: 45, rimIn: 17, note: "Low profile for 17-inch wheels. Not a factory size.", source: SRC.tireAlt },
+	{ id: "205-60-15", name: "205/60R15", spec: "", widthMm: 205, aspect: 60, rimIn: 15, note: "Not a factory size: shorter sidewall, the lowered look.", source: tireSizeSrc("205/60R15") },
+	{ id: "205-50-15", name: "205/50R15", spec: "", widthMm: 205, aspect: 50, rimIn: 15, note: "Low profile: a short sidewall for a lowered truck. Not a factory size.", source: tireSizeSrc("205/50R15") },
+	{
+		id: "31-10.5-15",
+		name: "31x10.50R15",
+		spec: "",
+		// A flotation size: 31 in tall and 10.5 in wide on a 15 in rim, written as width and sidewall ratio.
+		widthMm: 10.5 * 25.4,
+		aspect: ((((31 - 15) / 2) * 25.4) / (10.5 * 25.4)) * 100,
+		rimIn: 15,
+		note: "The everyday 31-inch all-terrain size, for 7-9 in wheels. Not a factory size on a 2WD, and nothing I found confirms it clears one at stock height.",
+		source: tireSizeSrc("31x10.50R15"),
+	},
 	{
 		id: "33-12.5-15",
 		name: "33x12.50R15",
@@ -286,7 +317,7 @@ export const TIRES: TireOption[] = ([
 		aspect: ((((33 - 15) / 2) * 25.4) / (12.5 * 25.4)) * 100,
 		rimIn: 15,
 		note: "Monster-truck rubber. Nothing I found confirms 33s on a 2WD pickup, so expect trimming and rubbing.",
-		source: SRC.tireAlt,
+		source: tireSizeSrc("33x12.50R15"),
 	},
 	{
 		id: "bogger-35",
@@ -300,6 +331,10 @@ export const TIRES: TireOption[] = ([
 		note: "Interco's mud tire: three-stage lugs (short, intermediate, long) 24/32 in deep across a 10.9 in tread, for 8.5-11 in wheels. How many lugs go around it is an estimate. As with the 33s, nothing confirms 35s fit a 2WD Pickup.",
 		source: SRC.bogger,
 	},
+	{ id: "205-45-17", name: "205/45R17", spec: "", widthMm: 205, aspect: 45, rimIn: 17, note: "The lowest profile here for 17s, for 6.5-7.5 in wheels. Not a factory size.", source: tireSizeSrc("205/45R17") },
+	{ id: "215-45-17", name: "215/45R17", spec: "", widthMm: 215, aspect: 45, rimIn: 17, note: "Low profile for 17-inch wheels. Not a factory size.", source: tireSizeSrc("215/45R17") },
+	{ id: "225-45-17", name: "225/45R17", spec: "", widthMm: 225, aspect: 45, rimIn: 17, note: "A wider low profile for 17s. Not a factory size.", source: tireSizeSrc("225/45R17") },
+	{ id: "215-50-17", name: "215/50R17", spec: "", widthMm: 215, aspect: 50, rimIn: 17, note: "A taller sidewall on 17s, closer to the factory tire's height. Not a factory size.", source: tireSizeSrc("215/50R17") },
 ] as TireOption[]).map((t) => ({ ...t, spec: tireSpec(t.widthMm, t.aspect, t.rimIn) + (t.lugs ? `, ${Math.round(t.lugs.depthIn * 32)}/32" lugs` : "") }));
 
 /** Overall tire diameter, meters: the rim plus two sidewalls (width x aspect ratio). */
@@ -350,20 +385,38 @@ export const REAR_TINTS: TintOption[] = [NO_TINT, tint(50), tint(35), tint(20, "
 export const WINDSHIELD_TINTS: TintOption[] = [NO_TINT, tint(50, OVER_WINDSHIELD), tint(35, OVER_WINDSHIELD), tint(20, OVER_WINDSHIELD), tint(5, OVER_WINDSHIELD)];
 
 export interface LightOption extends Option {
-	kind: "sealed" | "led";
+	kind: "sealed" | "h4" | "retro" | "led";
 }
 
 export const LIGHTS: LightOption[] = [
 	{ id: "sealed", name: "Factory sealed beams", spec: "7 x 6 in, H6054 (200 x 142 mm)", kind: "sealed", source: SRC.h6054 },
+	{
+		id: "hella-h4",
+		name: "Hella Vision Plus H4",
+		spec: '7 x 6", glass lens over a chrome reflector, H4 bulb (part 003427291)',
+		kind: "h4",
+		note: "A conversion housing for the same opening that takes a replaceable H4 halogen bulb. ECE approved rather than DOT, so it's sold for off-road use in the US.",
+		source: SRC.hellaH4,
+	},
+	{
+		id: "retrobright",
+		name: "Holley RetroBright LED",
+		spec: '5 x 7" LED, Classic White 3000K (part LFRB130)',
+		kind: "retro",
+		note: "An LED unit made to replace the H6054 and keep the old look: a clear lens over a chrome reflector, in a warm 3000K white.",
+		source: SRC.retroBright,
+	},
 	{ id: "led", name: "7 x 6 LED", spec: "LED units in the same 200 x 142 mm opening", kind: "led", note: "As on the reference build.", source: SRC.h6054 },
 ];
 
 export interface RackOption extends Option {
 	kind: "none" | "rollbar";
+	/** The four 6-inch KC Daylighters on top of the bar, by cover color, or none. */
+	lights: "none" | "yellow" | "black";
 }
 
 export interface StepOption extends Option {
-	kind: "none" | "tube" | "board";
+	kind: "none" | "tube" | "board" | "slider";
 }
 
 export const STEPS: StepOption[] = [
@@ -384,11 +437,34 @@ export const STEPS: StepOption[] = [
 		note: "Toyota's own chrome board for the 1989-95 standard cab. The listing gives no width, so it is drawn 5.5 in wide (estimated).",
 		source: SRC.toyotaBoards,
 	},
+	{
+		id: "apex-sliders",
+		name: "Trail-Gear APEX rock sliders",
+		spec: '60", 1.75" DOM tube, 2" square legs, steel fill plate',
+		kind: "slider",
+		note: "Bolt-on armor that guards the rockers and doubles as a step: the outer tube kicks out and up, with a plate filling the gap. Listed for the 1984-95 Pickup; nothing says 2WD either way. The kick-out angle is estimated.",
+		source: SRC.apexSliders,
+	},
 ];
+
+/** Shocks on hoops: how many per front wheel, the body's diameter (inches) and its colors. */
+export interface ShockSetup {
+	perWheel: 1 | 2;
+	diameterIn: number;
+	body: string;
+	boot: string;
+	metallic: boolean;
+}
 
 export interface ShockOption extends Option {
 	kind: "factory" | "hoops";
+	setup?: ShockSetup;
 }
+
+/** Rancho's RS5000X: a 2.25 in white body under a red accordion boot. */
+const RS5000X = { diameterIn: 2.25, body: "#f2f1ec", boot: "#c41e2a", metallic: false } as const;
+const HOOPS_NOTE =
+	"Custom work, not a kit: hoops welded to the frame stand the shocks up in each front wheel well, where they show beside the tire. Where the hoops sit and how tall they stand are estimates. The rear shocks stay at their mounts behind the tires.";
 
 export const SHOCKS: ShockOption[] = [
 	{
@@ -399,17 +475,36 @@ export const SHOCKS: ShockOption[] = [
 		note: "Every truck has shocks, lift kits included; bolted where the factory put them, they hide behind the tires.",
 	},
 	{
+		id: "rs5000x-single",
+		name: "Rancho RS5000X on front shock hoops",
+		spec: '2.25" white shock with a red boot, one per front wheel, on a weld-on hoop',
+		kind: "hoops",
+		setup: { perWheel: 1, ...RS5000X },
+		note: HOOPS_NOTE,
+		source: SRC.rs5000x,
+	},
+	{
 		id: "rs5000x-hoops",
 		name: "Dual Rancho RS5000X on front shock hoops",
 		spec: '2.25" white shocks with red boots, two per front wheel, on weld-on hoops',
 		kind: "hoops",
-		note: "Custom work, not a kit: hoops welded to the frame stand two shocks up in each front wheel well, one leaning forward and one back, where they show either side of the tire. Where the hoops sit and how tall they stand are estimates. The rear shocks stay at their mounts behind the tires.",
+		setup: { perWheel: 2, ...RS5000X },
+		note: `${HOOPS_NOTE} Two to a wheel, one leans forward and one back, so both show either side of the tire.`,
 		source: SRC.rs5000x,
+	},
+	{
+		id: "bilstein5100-hoops",
+		name: "Dual Bilstein 5100s on front shock hoops",
+		spec: '1.81" zinc-plated monotubes with black boots, two per front wheel',
+		kind: "hoops",
+		setup: { perWheel: 2, diameterIn: 1.81, body: "#c3c7ca", boot: "#141516", metallic: true },
+		note: `Bilstein's lifted-truck shock, slimmer and silver where the Ranchos are white and red. The listing is for a Jeep; on hoops, the hoop sets the length. ${HOOPS_NOTE}`,
+		source: SRC.bilstein5100,
 	},
 ];
 
 export interface ExhaustOption extends Option {
-	kind: "factory" | "tip" | "stacks";
+	kind: "factory" | "tip" | "stacks" | "turndown";
 }
 
 export const EXHAUSTS: ExhaustOption[] = [
@@ -430,6 +525,14 @@ export const EXHAUSTS: ExhaustOption[] = [
 		source: SRC.chromeTip,
 	},
 	{
+		id: "turndown",
+		name: "Side-exit turndown",
+		spec: '1.75" aluminized turndown, 12" long (Nickson 17601)',
+		kind: "turndown",
+		note: "The tailpipe cut short and turned down just ahead of the driver's rear tire, as on many off-road trucks. Where it's cut is an estimate.",
+		source: SRC.turndown,
+	},
+	{
 		id: "stacks",
 		name: "Twin chrome stacks",
 		spec: '5" x 36" mitered, in the bed behind the cab (part EP50MS236C)',
@@ -440,43 +543,101 @@ export const EXHAUSTS: ExhaustOption[] = [
 ];
 
 export const RACKS: RackOption[] = [
-	{ id: "none", name: "No rack", spec: "", kind: "none" },
+	{ id: "none", name: "No rack", spec: "", kind: "none", lights: "none" },
+	{
+		id: "bar",
+		name: "Roll bar, no lights",
+		spec: "The McFly tube bar behind the cab, bare",
+		kind: "rollbar",
+		lights: "none",
+		note: "The same bar as Marty McFly's, without its KC lights.",
+		source: SRC.bttf,
+	},
 	{
 		id: "rollbar",
 		name: "McFly roll bar",
 		spec: 'Tube bar behind the cab, four 6" KC Daylighters',
 		kind: "rollbar",
+		lights: "yellow",
 		note: "Marty McFly's 1985 Toyota carried four 6-inch round KC Daylighters on its rear roll bar. Yellow KC covers (part 5202).",
 		source: SRC.bttf,
 	},
+	{
+		id: "rollbar-black",
+		name: "Roll bar, black KC covers",
+		spec: 'Four 6" KC Daylighters in black covers with the white KC logo (part 5105)',
+		kind: "rollbar",
+		lights: "black",
+		note: "The McFly bar and lights with KC's black covers in place of the yellow.",
+		source: SRC.kc5105,
+	},
 ];
 
-export interface BoardOption extends Option {
-	board: boolean;
+export type CargoKind = "none" | "longboard" | "ulua" | "cooler" | "rubbish" | "dirtbike";
+
+/** What rides in the bed. Everything needs an open bed (a spray-in liner is fine). */
+export interface CargoOption extends Option {
+	kind: CargoKind;
 }
 
-export const BOARDS: BoardOption[] = [
-	{ id: "none", name: "No board", spec: "", board: false },
+export const CARGO: CargoOption[] = [
+	{ id: "none", name: "Empty bed", spec: "", kind: "none" },
 	{
 		id: "longboard",
 		name: "Tanaka Beach Boy (T&C)",
 		spec: '9\'4" x 23 1/2" x 3", single 10.5" fin',
-		board: true,
-		note: "Tommy Tanaka's single-fin noserider for T&C, in classic white with the Town & Country Hawaii disc and the Tanaka script near the nose. It rides deck down so the translucent neon green pivot fin points up, its tail out over the tailgate. Needs an open bed.",
+		kind: "longboard",
+		note: "Tommy Tanaka's single-fin noserider for T&C, in classic white with the Town & Country Hawaii disc and the Tanaka script near the nose. It rides deck down so the translucent neon green pivot fin points up, its tail out over the tailgate.",
 		source: SRC.tcLongboard,
+	},
+	{
+		id: "ulua",
+		name: "Ulua poles",
+		spec: "Three 13' PENN Battalion II Ulua rods, broken down into 6' 6\" halves",
+		kind: "ulua",
+		note: "Hawaii shore-casting rods, made for ulua off the rocks. They come apart in two, so they ride in the bed in halves, butt ends on the floor and resting up on the tailgate. The reels are drawn generic.",
+		source: SRC.ulua,
+	},
+	{
+		id: "cooler",
+		name: "Coleman 70-quart cooler",
+		spec: '316 Series, 31.2 x 15.7 x 17", navy',
+		kind: "cooler",
+		note: "Standing across the front of the bed, behind the cab.",
+		source: SRC.cooler,
+	},
+	{
+		id: "rubbish",
+		name: "Rubbish run",
+		spec: 'Four 33-gallon black bags, 33 x 36.5" flat',
+		kind: "rubbish",
+		note: "Loaded for the transfer station. Each bag is drawn tied off and full; that filled shape is estimated from the flat size.",
+		source: SRC.bags,
+	},
+	{
+		id: "crf50f",
+		name: "Honda CRF50F dirt bike",
+		spec: '51.3" long, 30.5" tall, 10" wheels, red',
+		kind: "dirtbike",
+		note: "Honda's smallest trail bike, standing on its wheels in the bed, strapped down. Wheelbase, height, seat height and tire size are Honda's; the bodywork is simplified.",
+		source: SRC.crf50f,
 	},
 ];
 
 export interface TailgateOption extends Option {
 	lettering: boolean;
+	/** The TOYOTA letters' color, when they're there. */
+	letterHex?: string;
 }
 
 export const TAILGATES: TailgateOption[] = [
-	{ id: "factory", name: "White TOYOTA", spec: "Factory lettering in the indented panel", lettering: true },
+	{ id: "factory", name: "White TOYOTA", spec: "Factory lettering in the indented panel", lettering: true, letterHex: "#f4f2ec" },
+	{ id: "silver", name: "Silver TOYOTA", spec: "The factory letters in silver", lettering: true, letterHex: "#b9bdc1", note: "Custom: the same letters, painted or cut from silver vinyl." },
+	{ id: "black", name: "Black TOYOTA", spec: "The factory letters in black", lettering: true, letterHex: "#141518", note: "Custom: the same letters in black. On a black truck they all but disappear." },
 	{ id: "plain", name: "Lettering removed", spec: "The tailgate in body color only", lettering: false },
 ];
 
-export type GrilleFinish = "painted" | "chrome";
+export type GrilleFinish = "painted" | "chrome" | "body" | "blackout";
 
 export interface GrilleOption extends Option {
 	finish: GrilleFinish;
@@ -485,9 +646,25 @@ export interface GrilleOption extends Option {
 export const GRILLES: GrilleOption[] = [
 	{ id: "painted", name: "Painted black", spec: "1989-91 grille, black shell", finish: "painted", source: SRC.grille },
 	{ id: "chrome", name: "Chrome shell", spec: "1989-91 grille, chrome shell, black insert", finish: "chrome", source: SRC.grille },
+	{
+		id: "body",
+		name: "Body color",
+		spec: "1989-91 grille, shell painted to match",
+		finish: "body",
+		note: "Custom paint: the factory grille with its shell sprayed in the truck's color. Nothing to buy.",
+		source: SRC.grille,
+	},
+	{
+		id: "blackout",
+		name: "Blacked out",
+		spec: "1989-91 grille, black shell, black letters",
+		finish: "blackout",
+		note: "Custom paint: the chrome TOYOTA letters painted black to match the shell.",
+		source: SRC.grille,
+	},
 ];
 
-export type BedKind = "none" | "shell" | "tonneau";
+export type BedKind = "none" | "liner" | "shell" | "tonneau";
 
 export interface BedOption extends Option {
 	kind: BedKind;
@@ -495,25 +672,65 @@ export interface BedOption extends Option {
 
 export const BEDS: BedOption[] = [
 	{ id: "none", name: "Open bed", spec: "", kind: "none" },
+	{
+		id: "linex",
+		name: "LINE-X spray-on liner",
+		spec: "Black textured coating, floor and inside walls",
+		kind: "liner",
+		note: "Sprayed on at a LINE-X dealer. The bed stays open, so cargo still fits.",
+		source: SRC.linex,
+	},
 	{ id: "shell", name: "Cab-high camper shell", spec: "Top level with the roof, full bed length", kind: "shell", note: "Any make; drawn from the bed's own size." },
 	{ id: "tonneau", name: "Soft roll-up tonneau", spec: "Flush with the bed rails", kind: "tonneau", note: "Any make; drawn from the bed's own size." },
 ];
 
+/** Whether cargo can ride in the bed: open, with or without a liner. */
+export const bedIsOpen = (kind: BedKind) => kind === "none" || kind === "liner";
+
+export type StickerKind = "kalapana" | "kalapana-big" | "tc";
+
 export interface DecalOption extends Option {
-	kalapana: boolean;
+	stickers: StickerKind[];
 }
 
-/** Aloha Got Soul's Kalapana sticker is 7.5 x 2.5 inches. */
+/** Aloha Got Soul's Kalapana sticker is 7.5 x 2.5 inches; its BIG SIZE version is 12 x 4. */
 export const STICKER_SIZE = { w: 7.5 * INCH, h: 2.5 * INCH } as const;
+export const BIG_STICKER_SIZE = { w: 12 * INCH, h: 4 * INCH } as const;
+/** T&C's Standard Logo sticker is 6 inches across. */
+export const TC_STICKER_D = 6 * INCH;
 
 export const DECALS: DecalOption[] = [
-	{ id: "none", name: "No sticker", spec: "", kalapana: false, source: SRC.story },
+	{ id: "none", name: "No sticker", spec: "", stickers: [], source: SRC.story },
 	{
 		id: "kalapana",
 		name: '"Slow Down, I\'m Listening to Kalapana"',
 		spec: '7.5 x 2.5" sticker, white on green, rear window',
-		kalapana: true,
+		stickers: ["kalapana"],
 		note: "The Aloha Got Soul sticker from Kyle's plan for the truck.",
+		source: SRC.kalapanaSticker,
+	},
+	{
+		id: "kalapana-big",
+		name: "Big Kalapana",
+		spec: '12 x 4" sticker, white on green, rear window',
+		stickers: ["kalapana-big"],
+		note: "Aloha Got Soul's BIG SIZE version of the same sticker.",
+		source: SRC.kalapanaBig,
+	},
+	{
+		id: "tc",
+		name: "T&C logo",
+		spec: '6" round, white on clear, rear window',
+		stickers: ["tc"],
+		note: "T&C Surf Designs' classic yin-yang logo, in its white-and-clear version, on the driver's side of the rear glass. The ring lettering is too small to draw at this scale.",
+		source: SRC.tcSticker,
+	},
+	{
+		id: "kalapana-tc",
+		name: "Kalapana and T&C",
+		spec: "Both stickers, one each side of the rear window",
+		stickers: ["kalapana", "tc"],
+		note: "The 7.5 x 2.5 in Kalapana sticker on the passenger side and the 6 in T&C logo on the driver's side.",
 		source: SRC.kalapanaSticker,
 	},
 ];
@@ -534,7 +751,7 @@ export interface Build {
 	steps: string;
 	shocks: string;
 	exhaust: string;
-	board: string;
+	cargo: string;
 	decal: string;
 }
 
@@ -555,7 +772,7 @@ export const AS_IT_SITS: Build = {
 	steps: "none",
 	shocks: "factory",
 	exhaust: "factory",
-	board: "none",
+	cargo: "none",
 	decal: "none",
 };
 
@@ -576,7 +793,7 @@ export const KYLE_BUILD: Build = {
 	lights: "led",
 	tailgate: "plain",
 	exhaust: "chrome-tip",
-	board: "longboard",
+	cargo: "longboard",
 	decal: "kalapana",
 };
 
@@ -613,7 +830,7 @@ export const CATALOG = {
 	steps: STEPS,
 	shocks: SHOCKS,
 	exhaust: EXHAUSTS,
-	board: BOARDS,
+	cargo: CARGO,
 	decal: DECALS,
 } as const;
 
@@ -630,9 +847,9 @@ export function resolveBuild(build: Build) {
 	// A tire only goes on a wheel of its own rim size.
 	if (tire.rimIn !== wheel.diameterIn) tire = TIRES.find((t) => t.rimIn === wheel.diameterIn)!;
 	const bed = pick("bed");
-	// The board rides in an open bed; a shell or a cover leaves no room for it.
-	let board = pick("board");
-	if (board.board && bed.kind !== "none") board = BOARDS[0];
+	// Cargo rides in an open bed; a shell or a cover leaves no room for it.
+	let cargo = pick("cargo");
+	if (cargo.kind !== "none" && !bedIsOpen(bed.kind)) cargo = CARGO[0];
 	return {
 		paint: pick("paint"),
 		ride: pick("ride"),
@@ -649,14 +866,14 @@ export function resolveBuild(build: Build) {
 		steps: pick("steps"),
 		shocks: pick("shocks"),
 		exhaust: pick("exhaust"),
-		board,
+		cargo,
 		decal: pick("decal"),
 	};
 }
 
 export type ResolvedBuild = ReturnType<typeof resolveBuild>;
 
-const KEY_ORDER: BuildKey[] = ["paint", "ride", "shocks", "wheel", "tire", "tintFront", "tintRear", "tintWindshield", "lights", "grille", "tailgate", "bed", "rack", "steps", "exhaust", "board", "decal"];
+const KEY_ORDER: BuildKey[] = ["paint", "ride", "shocks", "wheel", "tire", "tintFront", "tintRear", "tintWindshield", "lights", "grille", "tailgate", "bed", "rack", "steps", "exhaust", "cargo", "decal"];
 
 /** A build as a short, readable URL fragment, e.g. "paint=138&ride=b444&...". */
 export function encodeBuild(build: Build): string {
@@ -667,6 +884,8 @@ export function encodeBuild(build: Build): string {
 /** Parse a fragment back into a build; unknown or missing values fall back to the truck as it sits. */
 export function decodeBuild(fragment: string): Build {
 	const params = new URLSearchParams(fragment.replace(/^#?(build=)?/, ""));
+	// Links made before the bed held more than a surfboard say board=longboard.
+	if (!params.has("cargo") && params.get("board") === "longboard") params.set("cargo", "longboard");
 	const raw = Object.fromEntries(KEY_ORDER.map((k) => [k, params.get(k) ?? AS_IT_SITS[k]])) as unknown as Build;
 	const r = resolveBuild(raw);
 	return Object.fromEntries(KEY_ORDER.map((k) => [k, r[k].id])) as unknown as Build;
@@ -691,8 +910,8 @@ export function describeBuild(build: Build): { label: string; value: string }[] 
 		{ label: "Rack", value: r.rack.name },
 		{ label: "Steps", value: r.steps.name },
 		{ label: "Exhaust", value: r.exhaust.name },
-		{ label: "Surfboard", value: r.board.board ? `${r.board.name}, ${r.board.spec}` : r.board.name },
-		{ label: "Sticker", value: r.decal.name },
+		{ label: "Cargo", value: r.cargo.kind === "none" ? r.cargo.name : `${r.cargo.name}, ${r.cargo.spec}` },
+		{ label: "Stickers", value: r.decal.name },
 	];
 }
 
@@ -713,8 +932,8 @@ export const PICKER_GROUPS: { key: BuildKey; label: string }[] = [
 	{ key: "rack", label: "Rack and lights" },
 	{ key: "steps", label: "Steps" },
 	{ key: "exhaust", label: "Exhaust" },
-	{ key: "board", label: "Surfboard" },
-	{ key: "decal", label: "Sticker" },
+	{ key: "cargo", label: "Cargo" },
+	{ key: "decal", label: "Stickers" },
 ];
 
 /** What the 3D truck needs for a build: the paint color and the builder options (minus the engine). */
@@ -731,13 +950,16 @@ export function truckSetup(build: Build) {
 			headlights: r.lights.kind,
 			grille: r.grille.finish,
 			bed: r.bed.kind,
-			sticker: r.decal.kalapana,
+			stickers: r.decal.stickers,
 			tailgateLettering: r.tailgate.lettering,
+			tailgateLetterColor: r.tailgate.letterHex,
 			rack: r.rack.kind,
+			rackLights: r.rack.lights,
 			steps: r.steps.kind,
 			shocks: r.shocks.kind,
+			shockSetup: r.shocks.setup,
 			exhaust: r.exhaust.kind,
-			board: r.board.board,
+			cargo: r.cargo.kind,
 		},
 	};
 }

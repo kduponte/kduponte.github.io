@@ -23,7 +23,7 @@ const opener = [
 	{ key: "tailgate", label: "Tailgate" },
 ];
 const label =
-	"The 1991 Toyota pickup in 3D, built to whichever build is selected: paint, ride height, wheels, tires, window tint, grille, bed and sticker. Drag to spin it; tap the hood, a door or the tailgate to open it.";
+	"The 1991 Toyota pickup in 3D, built to whichever build is selected: paint, ride height, shocks, wheels, tires, window tint, lights, grille, bed, rack, steps, exhaust, cargo and stickers. Drag to spin it; tap the hood, a door or the tailgate to open it.";
 ---
 
 <section id="truck-builder" class="py-16 md:py-24">
@@ -184,6 +184,7 @@ const label =
 		CATALOG,
 		KYLE_BUILD,
 		NOAH_BUILD,
+		bedIsOpen,
 		decodeBuild,
 		describeBuild,
 		encodeBuild,
@@ -229,8 +230,8 @@ const label =
 				const chosen = r[key] as Option;
 				for (const b of fs.querySelectorAll<HTMLButtonElement>("[data-choice]")) {
 					b.setAttribute("aria-pressed", String(b.dataset.choice === chosen.id));
-					// The board needs an open bed.
-					if (key === "board") b.disabled = b.dataset.choice !== "none" && r.bed.kind !== "none";
+					// Cargo needs an open bed.
+					if (key === "cargo") b.disabled = b.dataset.choice !== "none" && !bedIsOpen(r.bed.kind);
 					// A tire only fits a wheel of its own rim size.
 					if (key === "tire") {
 						const t = (CATALOG.tire as readonly { id: string; rimIn: number }[]).find((o) => o.id === b.dataset.choice);

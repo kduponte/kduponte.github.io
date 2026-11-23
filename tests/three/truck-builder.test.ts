@@ -1,12 +1,17 @@
 import { describe, expect, it } from "vitest";
-import { BackSide, Box3, CylinderGeometry, Group, Mesh, MeshBasicMaterial, MeshStandardMaterial, Vector3 } from "three";
+import { BackSide, Box3, CylinderGeometry, Group, Mesh, MeshBasicMaterial, MeshStandardMaterial, RingGeometry, Vector3, type Object3D } from "three";
 import {
 	AS_IT_SITS,
+	CARGO,
 	CATALOG,
 	FRONT_TINTS,
 	KYLE_BUILD,
 	NOAH_BUILD,
+	PICKER_GROUPS,
 	REAR_TINTS,
+	SHOCKS,
+	TIRES,
+	WHEELS,
 	WINDSHIELD_TINTS,
 	decodeBuild,
 	describeBuild,
@@ -16,7 +21,7 @@ import {
 	truckSetup,
 	type Build,
 } from "../../src/lib/three/truck-builder-options";
-import { DEFAULT_TRUCK_COLORS, OPEN_ANGLES, buildToyotaTruck, type TruckModel } from "../../src/lib/three/toyota-truck-model";
+import { CARGO_FLOOR_Y, DEFAULT_TRUCK_COLORS, OPEN_ANGLES, buildToyotaTruck, type TruckModel } from "../../src/lib/three/toyota-truck-model";
 import { FRAME_RADIUS, SPIN_CENTER_X } from "../../src/scripts/three/subjects/truck-builder";
 
 const INCH = 0.0254;
@@ -27,6 +32,22 @@ function bounds(truck: TruckModel): Box3 {
 	for (const p of truck.parts) box.expandByObject(p);
 	return box;
 }
+
+/** Bounds of the visible parts under a named node (outline shells left out). */
+function boundsOf(truck: TruckModel, name: string): Box3 {
+	truck.group.updateMatrixWorld(true);
+	const node = truck.group.getObjectByName(name);
+	const box = new Box3();
+	if (!node) return box;
+	for (const p of truck.parts) {
+		let o: Object3D | null = p;
+		while (o && o !== node) o = o.parent;
+		if (o) box.expandByObject(p, true); // precise: from the vertices, not a rotated bounding box
+	}
+	return box;
+}
+
+const colorOf = (m: Mesh) => (m.material as MeshStandardMaterial).color?.getHexString();
 
 describe("truck builder catalog", () => {
 	it("works out tire diameters from the size code", () => {
@@ -67,7 +88,7 @@ describe("truck builder catalog", () => {
 		expect([r.tintFront.vlt, r.tintRear.vlt, r.tintWindshield.vlt]).toEqual([0.2, 0.2, 0.2]);
 		expect(r.tailgate.lettering).toBe(false);
 		expect(r.exhaust.kind).toBe("tip");
-		expect(r.board.board).toBe(true);
+		expect(r.cargo.kind).toBe("longboard");
 		expect(r.bed.kind).toBe("none");
 	});
 
@@ -88,8 +109,19 @@ describe("truck builder catalog", () => {
 		expect(r.rack.kind).toBe("rollbar");
 	});
 
-	it("drops the board when a shell or cover closes the bed", () => {
-		expect(resolveBuild({ ...KYLE_BUILD, bed: "shell" }).board.board).toBe(false);
+	it("drops the cargo when a shell or cover closes the bed, but not for a spray-in liner", () => {
+		for (const bed of ["shell", "tonneau"]) expect(resolveBuild({ ...KYLE_BUILD, bed }).cargo.kind).toBe("none");
+		expect(resolveBuild({ ...KYLE_BUILD, bed: "linex" }).cargo.kind).toBe("longboard");
+	});
+
+	it("offers at least four choices in every picker group, and at least four tires for every wheel size", () => {
+		for (const g of PICKER_GROUPS) expect(CATALOG[g.key].length, g.label).toBeGreaterThanOrEqual(4);
+		for (const d of new Set(WHEELS.map((w) => w.diameterIn))) expect(TIRES.filter((t) => t.rimIn === d).length, `${d} in wheels`).toBeGreaterThanOrEqual(4);
+	});
+
+	it("still opens links from before the bed held more than a surfboard", () => {
+		expect(decodeBuild("#build=paint=202&board=longboard").cargo).toBe("longboard");
+		expect(describeBuild({ ...AS_IT_SITS, cargo: "crf50f" }).find((l) => l.label === "Cargo")?.value).toMatch(/CRF50F/);
 	});
 
 	it("round-trips a build through the share link", () => {
@@ -294,10 +326,10 @@ describe("buildToyotaTruck with builder options", () => {
 		plain.dispose();
 	});
 
-	it("frames every build at one scale about one spin point, the longboard included", () => {
+	it("frames every build at one scale about one spin point, every cargo included", () => {
 		// The builder never rescales a build, so each must fit the framed radius (the camera adds a 12% margin).
 		const v = new Vector3();
-		for (const b of [AS_IT_SITS, KYLE_BUILD, NOAH_BUILD]) {
+		for (const b of [AS_IT_SITS, KYLE_BUILD, NOAH_BUILD, ...CARGO.map((c) => ({ ...NOAH_BUILD, cargo: c.id, steps: "apex-sliders", exhaust: "turndown" }))]) {
 			const { body, options } = truckSetup(b);
 			const t = buildToyotaTruck({ ...DEFAULT_TRUCK_COLORS, body }, { ...options, openable: true });
 			for (const k of ["hood", "doorLeft", "doorRight", "tailgate"] as const) t.setOpen?.(k, 1);
@@ -315,6 +347,114 @@ describe("buildToyotaTruck with builder options", () => {
 			expect(reach).toBeLessThan(FRAME_RADIUS * 1.05);
 			t.dispose();
 		}
+	});
+
+	it("carries each cargo inside the open bed, behind the cab, on the floor", () => {
+		for (const c of CARGO.filter((o) => o.kind !== "none" && o.kind !== "longboard")) {
+			// No tire size given, so the body sits at its reference height and the floor is where the model says.
+			const t = buildToyotaTruck(undefined, { cargo: c.kind });
+			const box = boundsOf(t, "cargo");
+			expect(box.isEmpty(), c.name).toBe(false);
+			expect(box.min.y, c.name).toBeGreaterThan(CARGO_FLOOR_Y - 0.005);
+			expect(Math.max(-box.min.z, box.max.z), c.name).toBeLessThan(0.74); // inside the bed walls
+			expect(box.max.x, c.name).toBeLessThan(-0.7); // behind the bed's front wall
+			// Only the ulua rods' tips reach past the tailgate.
+			expect(box.min.x, c.name).toBeGreaterThan(c.kind === "ulua" ? -2.8 : -2.58);
+			t.dispose();
+		}
+		const shell = buildToyotaTruck(undefined, { bed: "shell", cargo: "cooler" });
+		expect(boundsOf(shell, "cargo").isEmpty()).toBe(true);
+		shell.dispose();
+	});
+
+	it("draws the CRF50F to Honda's numbers: 30.5 in tall, 22.9 in across the bars, 51.3 in long", () => {
+		const t = buildToyotaTruck(undefined, { cargo: "dirtbike" });
+		const size = boundsOf(t, "crf50f").getSize(new Vector3());
+		const box = boundsOf(t, "crf50f");
+		expect((box.max.y - CARGO_FLOOR_Y) / INCH).toBeCloseTo(30.5, 0);
+		expect(size.z / INCH).toBeCloseTo(22.9, 0);
+		expect(size.x / INCH).toBeCloseTo(51.3, 0);
+		t.dispose();
+	});
+
+	it("sizes the cooler as Coleman lists the 316 Series 70 qt: 31.2 x 15.7 x 17 in", () => {
+		const t = buildToyotaTruck(undefined, { cargo: "cooler" });
+		const box = boundsOf(t, "cargo");
+		expect((box.max.y - CARGO_FLOOR_Y) / INCH).toBeCloseTo(17, 1);
+		const size = box.getSize(new Vector3());
+		expect(size.x / INCH).toBeGreaterThan(15.7);
+		expect(size.x / INCH).toBeLessThan(16.3);
+		expect(size.z / INCH).toBeGreaterThan(31.2);
+		expect(size.z / INCH).toBeLessThan(32.4); // the end grips stand off the sides
+		t.dispose();
+	});
+
+	it("lays the ulua rods in 6 ft 6 in halves, half of PENN's 13 ft", () => {
+		const t = buildToyotaTruck(undefined, { cargo: "ulua" });
+		const blanks = t.parts.filter((p) => colorOf(p) === "2b2d31");
+		expect(blanks).toHaveLength(6);
+		for (const b of blanks) expect((b.geometry as CylinderGeometry).parameters.height / INCH).toBeCloseTo(78, 6);
+		t.dispose();
+	});
+
+	it("fits each shock setup to its hoops: one or two per wheel, at the shock's own diameter", () => {
+		for (const s of SHOCKS.filter((o) => o.setup)) {
+			const t = buildToyotaTruck(undefined, { shocks: "hoops", shockSetup: s.setup, openable: true });
+			const bodies = t.parts.filter((p) => colorOf(p) === s.setup!.body.slice(1) && p.geometry instanceof CylinderGeometry);
+			expect(bodies, s.name).toHaveLength(2 * s.setup!.perWheel);
+			for (const b of bodies) expect(((b.geometry as CylinderGeometry).parameters.radiusTop * 2) / INCH).toBeCloseTo(s.setup!.diameterIn, 6);
+			t.dispose();
+		}
+	});
+
+	it("draws every new part choice without error, each adding parts to the plain truck", () => {
+		const plain = buildToyotaTruck(undefined, {});
+		const n = plain.parts.length;
+		const variants = [
+			{ headlights: "h4" },
+			{ headlights: "retro" },
+			{ steps: "slider" },
+			{ exhaust: "turndown" },
+			{ bed: "liner" },
+			{ stickers: ["kalapana-big"] },
+			{ stickers: ["tc"] },
+		] as const;
+		for (const v of variants) {
+			const t = buildToyotaTruck(undefined, v as never);
+			expect(t.parts.length, JSON.stringify(v)).toBeGreaterThan(n);
+			t.dispose();
+		}
+		plain.dispose();
+	});
+
+	it("puts the big Kalapana sticker at 12 x 4 in and the T&C logo at 6 in across", () => {
+		const t = buildToyotaTruck(undefined, { stickers: ["kalapana-big", "tc"] });
+		const green = t.parts.find((p) => colorOf(p) === "4c9a6a")!;
+		green.geometry.computeBoundingBox();
+		const size = green.geometry.boundingBox!.getSize(new Vector3());
+		expect(size.y / INCH).toBeCloseTo(4, 1);
+		expect(size.z / INCH).toBeCloseTo(12, 0);
+		const ring = t.parts.find((p) => p.geometry instanceof RingGeometry)!;
+		expect(((ring.geometry as RingGeometry).parameters.outerRadius * 2) / INCH).toBeCloseTo(6, 6);
+		t.dispose();
+	});
+
+	it("carries the KC lights in yellow or black covers, or leaves the bar bare", () => {
+		const count = (lights: "none" | "yellow" | "black", hex: string) => {
+			const t = buildToyotaTruck(undefined, { rack: "rollbar", rackLights: lights });
+			const c = t.parts.filter((p) => colorOf(p) === hex).length;
+			t.dispose();
+			return c;
+		};
+		expect(count("yellow", "ffd400")).toBe(4);
+		expect(count("black", "121315")).toBe(4);
+		expect(count("none", "ffd400") + count("none", "121315")).toBe(0);
+	});
+
+	it("paints the tailgate letters in the chosen color", () => {
+		const t = buildToyotaTruck(undefined, { tailgateLetterColor: "#b9bdc1" });
+		expect(t.parts.filter((p) => colorOf(p) === "b9bdc1").length).toBeGreaterThan(6);
+		t.dispose();
 	});
 
 	it("stands the McFly roll bar and its KC lights above the cab roof", () => {

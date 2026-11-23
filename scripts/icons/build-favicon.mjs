@@ -4,7 +4,8 @@
  * whole ring that swells and thins, a ring of long dashes that taper and melt together, and an
  * outer ring breaking into oblong dashes and dots) run through a blur-then-threshold filter.
  *
- * Writes public/favicon.svg, public/favicon.ico (16, 32, 48) and public/apple-touch-icon.png (180).
+ * Writes public/favicon.svg, public/favicon.ico (16, 32, 48), public/apple-touch-icon.png (180) and
+ * public/ripple-mark.svg (the ripple alone, on no background, for the footer).
  * Run: node scripts/icons/build-favicon.mjs
  */
 import { writeFileSync } from "node:fs";
@@ -78,8 +79,9 @@ function ripple() {
 }
 
 /** The icon. `rounded` gives the tab icon its rounded corners; the Apple touch icon is square,
- * because iOS rounds it itself. */
-function icon({ rounded = true } = {}) {
+ * because iOS rounds it itself. `ground: false` leaves out the graphite square, so the ripple sits
+ * straight on whatever is behind it. */
+function icon({ rounded = true, ground = true } = {}) {
 	const rx = rounded ? 14 : 0;
 	return [
 		`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">`,
@@ -92,7 +94,7 @@ function icon({ rounded = true } = {}) {
 		`<feFlood flood-color="${RING}"/><feComposite in2="t" operator="in"/>`,
 		`</filter>`,
 		`</defs>`,
-		`<rect width="64" height="64" rx="${rx}" fill="${GROUND}"/>`,
+		ground ? `<rect width="64" height="64" rx="${rx}" fill="${GROUND}"/>` : "",
 		`<g clip-path="url(#c)"><g filter="url(#goo)" fill="none" stroke="${RING}" color="${RING}" stroke-linecap="round">${ripple()}</g></g>`,
 		`</svg>`,
 	].join("");
@@ -128,4 +130,5 @@ const pngs = [];
 for (const size of [16, 32, 48]) pngs.push({ size, data: await raster(tab, size) });
 writeFileSync(pub("favicon.ico"), ico(pngs));
 writeFileSync(pub("apple-touch-icon.png"), await raster(icon({ rounded: false }), 180));
-console.log("Wrote favicon.svg, favicon.ico and apple-touch-icon.png");
+writeFileSync(pub("ripple-mark.svg"), `${icon({ rounded: false, ground: false })}\n`);
+console.log("Wrote favicon.svg, favicon.ico, apple-touch-icon.png and ripple-mark.svg");

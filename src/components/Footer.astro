@@ -1,6 +1,5 @@
 ---
 import ContactStrip from "./ContactStrip.astro";
-import Logo from "./Logo.astro";
 
 const year = new Date().getFullYear();
 ---
@@ -10,7 +9,9 @@ const year = new Date().getFullYear();
 	<div class="border-t-[3px] border-black bg-black text-dark-ink">
 		<div class="mx-auto flex max-w-7xl flex-col-reverse items-center gap-4 px-6 py-6 text-xs md:flex-row md:justify-between md:px-12">
 			<p class="font-mono uppercase">© {year} Kyle DuPonte · Hilo / Bay Area</p>
-			<Logo variant="mark" class="h-8 w-8" />
+			<!-- The site's mark: the favicon's ripple with no square behind it, so it sits straight on
+			     the black (scripts/icons/build-favicon.mjs). An <img>, so its filter ids stay its own. -->
+			<img src="/ripple-mark.svg" alt="" width="44" height="44" class="h-11 w-11" />
 		</div>
 	</div>
 </footer>

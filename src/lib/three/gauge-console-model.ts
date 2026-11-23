@@ -306,7 +306,7 @@ export function buildGaugeConsole(count = COLS * ROWS, colors: ConsoleColors = D
 				m.emissiveIntensity = 0;
 				return;
 			}
-			// A lit lamp is all glow: a black base keeps lighting from washing lime out toward yellow.
+			// A lit lamp is all glow: a black base keeps the scene's lighting from washing its color out.
 			m.color.copy(black);
 			m.emissive.copy(state === "lift" ? lift : nul);
 			m.emissiveIntensity = glow;

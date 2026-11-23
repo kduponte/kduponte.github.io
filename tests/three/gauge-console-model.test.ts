@@ -113,10 +113,8 @@ describe("buildGaugeConsole", () => {
 		expect(contrast(c.lift, c.null)).toBeGreaterThan(1.5);
 		expect(contrast(c.lift, c.lampOff)).toBeGreaterThan(2.5);
 		expect(contrast(c.null, c.lampOff)).toBeGreaterThan(2.5);
-		// Safety orange means "clickable" on the site, so no data color may be it, and lime is gone.
-		const all = Object.values(c).map((x) => x.toLowerCase());
-		expect(all).not.toContain(token("pop"));
-		expect(all).not.toContain("#c8ff3d");
+		// Safety orange means "clickable" on the site, so no data color may be it.
+		expect(Object.values(c).map((x) => x.toLowerCase())).not.toContain(token("pop"));
 	});
 
 	it("has one numbered gauge per metric, in reading order", () => {

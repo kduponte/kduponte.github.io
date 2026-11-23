@@ -38,6 +38,8 @@ export interface FinSpec {
 	area_in2?: number;
 	/** Published sweep, degrees (the lean from mid-base to the tip). */
 	sweep_deg?: number;
+	/** This fin's box when it differs from the setup's, e.g. a 2+1's single center box. */
+	box?: FinSetup["system"];
 }
 
 /** The fin system and fins a board is shown with. */
@@ -54,6 +56,19 @@ export interface FinSetup {
 	finish: "neo-glass" | "honeycomb" | "performance-core" | "resin" | "soft";
 	/** Fin box color on the bottom. */
 	box_color?: string;
+	/**
+	 * Through-bolted fins (soft and screw-through systems), measured from the maker's photo: the
+	 * caps on the deck the bolts seat in (two per fin), and the plug on the bottom, if one shows.
+	 */
+	plugs?: {
+		cap_diameter_in: number;
+		/** Center to center, along the board. */
+		bolt_spacing_in: number;
+		/** Defaults to the fin color. */
+		cap_color?: string;
+		bottom_length_in?: number;
+		bottom_width_in?: number;
+	};
 }
 
 /**

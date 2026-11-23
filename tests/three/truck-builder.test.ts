@@ -224,7 +224,7 @@ describe("buildToyotaTruck with builder options", () => {
 		const tip = buildToyotaTruck(undefined, { exhaust: "tip" });
 		const tipBox = mirror(tip);
 		expect(tipBox.getSize(new Vector3()).x / INCH).toBeCloseTo(5.25, 1);
-		expect(tipBox.min.z).toBeGreaterThan(0); // passenger side
+		expect(tipBox.max.z).toBeLessThan(0); // driver's side
 		const factory = buildToyotaTruck(undefined, { exhaust: "factory" });
 		expect(mirror(factory).isEmpty()).toBe(true);
 		for (const t of [stacks, tip, factory]) t.dispose();

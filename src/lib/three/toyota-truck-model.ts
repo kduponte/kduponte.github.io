@@ -759,7 +759,7 @@ export function buildToyotaTruck(colors: TruckColors = DEFAULT_TRUCK_COLORS, opt
 	// --- Exhaust ---
 	const pipeR = 1.75 * INCH * 0.5;
 	const pipeY = 0.31; // just under the rear bumper
-	const pipeZ = 0.5; // passenger side
+	const pipeZ = -0.5; // driver's side, as on Kyle's truck
 	const tailpipe = (endX: number) => {
 		const len = TAIL_X + 0.9 - endX;
 		const g = new CylinderGeometry(pipeR, pipeR, len, 14);

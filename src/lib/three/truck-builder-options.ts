@@ -380,7 +380,7 @@ export const EXHAUSTS: ExhaustOption[] = [
 		name: "Factory tailpipe",
 		spec: '1.75" pipe',
 		kind: "factory",
-		note: "Drawn exiting under the rear bumper on the passenger side; Kyle's truck would confirm where it comes out.",
+		note: "Comes out on the driver's side, as on Kyle's truck, drawn exiting under the rear bumper.",
 		source: SRC.tailpipe,
 	},
 	{

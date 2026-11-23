@@ -166,6 +166,15 @@ describe("the blob", () => {
 		expect(bounds(pos)[1]).toBeCloseTo(0.05, 6);
 	});
 
+	it("stretches into a sausage of goo that keeps its liters, longer by elongate^(2/3)", () => {
+		writeBlobPositions(pos, { liters: 61.6 });
+		const round = bounds(pos);
+		writeBlobPositions(pos, { liters: 61.6, elongate: 8 });
+		const sausage = bounds(pos);
+		expect(litersOf(pos)).toBeCloseTo(61.6, 3);
+		expect((sausage[3] - sausage[0]) / (round[3] - round[0])).toBeCloseTo(4, 2);
+	});
+
 	it("reaches out toward a bulge, and reports its tip as the farthest point that way", () => {
 		const dir: [number, number, number] = [0, 0.6, 0.8];
 		const along = (p: Float32Array) => Math.max(...Array.from({ length: VERTEX_COUNT }, (_, i) => p[i * 3 + 1] * dir[1] + p[i * 3 + 2] * dir[2]));

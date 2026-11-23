@@ -488,6 +488,11 @@ export interface BlobOptions {
 	wobble?: number;
 	/** Vertical squash (< 1) or stretch (> 1); the other axes compensate to keep volume. */
 	squash?: number;
+	/**
+	 * Stretch along its length (x), before it's sized to its liters: a sausage of goo with round
+	 * ends. Its half-length grows as elongate^(2/3) since the volume stays the same.
+	 */
+	elongate?: number;
 	/** Shear per meter of height in x and z: the top trailing the bottom as the goo moves. */
 	lean?: [number, number];
 	/** How far the bottom oozes out on the floor, as a fraction of its width. */
@@ -514,12 +519,13 @@ const BULGE_SHARPNESS = 12;
  */
 export function writeBlobPositions(out: Float32Array, opts: BlobOptions): Float32Array {
 	const topo = createTopology();
-	const { liters, time = 0, wobble: amp = 0, squash = 1, lean = [0, 0], spread = 0, bulges = [], tips, offset = [0, 0, 0] } = opts;
+	const { liters, time = 0, wobble: amp = 0, squash = 1, elongate = 1, lean = [0, 0], spread = 0, bulges = [], tips, offset = [0, 0, 0] } = opts;
 	const sy = squash;
 	const sxz = 1 / Math.sqrt(sy);
+	const rx = BLOB_RX * elongate;
 	// Each bulge's direction on the unit sphere the ellipsoid is stretched from.
 	const unit = bulges.map(({ dir: [x, y, z] }) => {
-		const ux = x / (BLOB_RX * sxz);
+		const ux = x / (rx * sxz);
 		const uy = y / (BLOB_RY * sy * (y < 0 ? BLOB_FLAT_BOTTOM : 1));
 		const uz = z / (BLOB_RZ * sxz);
 		const n = Math.hypot(ux, uy, uz) || 1;
@@ -542,7 +548,7 @@ export function writeBlobPositions(out: Float32Array, opts: BlobOptions): Float3
 				if (c > 0) r += bulges[b].amount * c ** (bulges[b].sharpness ?? BULGE_SHARPNESS);
 			}
 			const k = (i * RING_STRIDE + j) * 3;
-			out[k] = dx * BLOB_RX * r * sxz;
+			out[k] = dx * rx * r * sxz;
 			out[k + 1] = dy * BLOB_RY * (dy < 0 ? BLOB_FLAT_BOTTOM : 1) * r * sy;
 			out[k + 2] = dz * BLOB_RZ * r * sxz;
 			if (out[k + 1] < minY) minY = out[k + 1];

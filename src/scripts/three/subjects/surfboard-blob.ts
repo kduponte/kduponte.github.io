@@ -35,6 +35,7 @@ import {
 	INCH,
 	VERTEX_COUNT,
 	blendPositions,
+	bounds,
 	calibrateBoard,
 	createTopology,
 	dropRadius,
@@ -102,6 +103,9 @@ const HOP_LEAN = 0.35;
 /** How far the foot oozes out on the floor, at rest and when it lands. */
 const SPREAD_REST = 0.05;
 const SPREAD_LAND = 0.2;
+/** Melting: the sausage of goo starts this fraction of the board's length, this lumpy. */
+const MELT_LENGTH = 0.66;
+const MELT_LUMPS = 0.24;
 /** How far a pseudopod reaches (fraction of the radius) to push a drop out or pull one in. */
 const REACH_OUT = 0.55;
 const REACH_IN = 0.45;
@@ -303,6 +307,8 @@ const createSurfboardBlob: SubjectFactory = async ({ host, reducedMotion, reques
 		cal: CalibratedBoard;
 		/** Calibrated positions lifted to the hover height. */
 		pos: Float32Array;
+		/** Half-length of the resting blob at this board's liters, meters (what the melt shrinks to). */
+		blobHalf: number;
 		texture: CanvasTexture;
 		fins: Group[];
 	}
@@ -321,7 +327,17 @@ const createSurfboardBlob: SubjectFactory = async ({ host, reducedMotion, reques
 			return pivot;
 		});
 		const matte = b.finish === "matte";
-		return { config: b, cal, pos: lifted, texture, fins, roughness: matte ? MATTE_ROUGH : BOARD_ROUGH, clearcoat: matte ? 0 : BOARD_CLEARCOAT };
+		const [minX, , , maxX] = bounds(writeBlobPositions(blobBuf, { liters: b.liters }));
+		return {
+			config: b,
+			cal,
+			pos: lifted,
+			blobHalf: (maxX - minX) / 2,
+			texture,
+			fins,
+			roughness: matte ? MATTE_ROUGH : BOARD_ROUGH,
+			clearcoat: matte ? 0 : BOARD_CLEARCOAT,
+		};
 	});
 	const maxHalfLength = Math.max(...boards.map((b) => b.cal.prepared.halfL * INCH));
 	// The viewer renders once before the first update, which compiles the shader: give it a map
@@ -708,10 +724,11 @@ const createSurfboardBlob: SubjectFactory = async ({ host, reducedMotion, reques
 			emit(liters);
 			return;
 		}
-		// Melt: fins retract, the paint fades, the ends droop with a ripple running down the length,
-		// and it slumps back into a blob that oozes out on the floor.
+		// Melt: fins retract, the paint fades and the ends droop, while within a third of the melt the
+		// board goes soft into a fat, lumpy sausage of goo with round ends, which sags, falls to the
+		// floor and pulls in to a blob that oozes out on the floor.
 		const m = clamp01(phaseT / DUR.melt);
-		const w = 1 - m * m;
+		const w = 1 - smooth(m / 0.32);
 		const droop = 0.3 * Math.sin(Math.PI * Math.min(1, m * 1.15));
 		const ripple = 0.05 * Math.sin(Math.PI * m);
 		const half = board.cal.prepared.halfL * INCH;
@@ -721,15 +738,25 @@ const createSurfboardBlob: SubjectFactory = async ({ host, reducedMotion, reques
 			sagBuf[k + 1] = board.pos[k + 1] - droop * u * u + ripple * Math.sin(5 * u - 9 * m);
 			sagBuf[k + 2] = board.pos[k + 2];
 		}
+		// The sausage starts a little shorter than the board and shrinks to the blob's length.
+		const sausageHalf = lerp(MELT_LENGTH * half, board.blobHalf, smooth(m / 0.85));
+		const fall = 1 - smooth(m / 0.85);
 		writeBlobPositions(blobBuf, {
 			liters,
 			time,
-			wobble: LAND_WOBBLE * m,
+			elongate: (sausageHalf / board.blobHalf) ** 1.5,
+			wobble: lerp(MELT_LUMPS, LAND_WOBBLE, m),
 			squash: 1 - LAND_SQUASH * m ** 3,
 			spread: (SPREAD_REST + SPREAD_LAND) * m ** 3,
+			offset: [0, (HOVER - 0.05) * fall, 0],
 		});
+		// The goo sags at the ends too, puddling where it reaches the floor.
+		for (let k = 0; k < blobBuf.length; k += 3) {
+			const u = blobBuf[k] / sausageHalf;
+			blobBuf[k + 1] = Math.max(0, blobBuf[k + 1] - droop * fall * u * u);
+		}
 		blendPositions(blobBuf, sagBuf, w, pos);
-		conserve(liters, w);
+		conserve(liters, fall);
 		setSkin(board, 1 - smooth(m / 0.45));
 		setFins(board, 1 - smooth(m / 0.22));
 		emit(liters);

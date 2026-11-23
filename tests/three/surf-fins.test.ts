@@ -60,4 +60,28 @@ describe("fin setups", () => {
 			if (s.system === "glass-on") expect(s.box_color, board.id).toBeUndefined();
 		}
 	});
+
+	it("override a fin's box only with a real system, as a 2+1's single center box does", () => {
+		const systems = ["fcs2", "futures", "us-box", "glass-on", "soft", "screw-through"];
+		for (const board of data.boards)
+			for (const fin of board.shape.fin_layout) {
+				if (fin.box === undefined) continue;
+				expect(systems, board.id).toContain(fin.box);
+				expect(fin.box, board.id).not.toBe(board.fin_setup.system);
+			}
+		const pink = data.boards.find((b) => b.id === "in-the-pink")!;
+		expect(pink.fin_setup.system).toBe("fcs2");
+		expect(pink.shape.fin_layout.filter((f) => f.box === "us-box")).toHaveLength(1);
+	});
+
+	it("size through-bolt plugs only for bolted systems, with caps that fit between the bolts", () => {
+		for (const board of data.boards) {
+			const p = board.fin_setup.plugs;
+			if (!p) continue;
+			expect(["soft", "screw-through"], board.id).toContain(board.fin_setup.system);
+			expect(p.cap_diameter_in, board.id).toBeGreaterThan(0.5);
+			expect(p.bolt_spacing_in, board.id).toBeGreaterThan(p.cap_diameter_in);
+			if (p.bottom_length_in) expect(p.bottom_length_in, board.id).toBeGreaterThan(p.bolt_spacing_in);
+		}
+	});
 });

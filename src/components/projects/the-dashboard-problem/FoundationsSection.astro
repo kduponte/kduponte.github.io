@@ -77,7 +77,7 @@ const groups: Group[] = [
 	{
 		groups.map((group) => (
 			<div class="mt-8">
-				<h3 class="font-mono inline-block -rotate-1 bg-black px-2.5 py-1 text-[11px] uppercase text-lime">{group.heading}</h3>
+				<h3 class="font-mono inline-block -rotate-1 bg-black px-2.5 py-1 text-[11px] uppercase text-dark-ink">{group.heading}</h3>
 				<p class="mt-2 font-display text-lg font-semibold">{group.question}</p>
 				<dl class="mt-4 grid grid-cols-1 gap-6 md:grid-cols-3">
 					{group.terms.map((term) => (
@@ -85,7 +85,7 @@ const groups: Group[] = [
 							<dt class="font-display text-lg font-semibold">{term.name}</dt>
 							<dd class="mt-2 text-sm leading-relaxed font-semibold text-ink">{term.plain}</dd>
 							<div class="mt-3 border-t border-line pt-3">
-								<p class="font-mono text-xs uppercase tracking-wide text-accent-blue">More precisely</p>
+								<p class="font-mono text-xs uppercase tracking-wide text-ink-soft">More precisely</p>
 								<dd class="mt-1 text-xs leading-relaxed text-ink-soft">{term.technical}</dd>
 							</div>
 						</div>
@@ -98,7 +98,7 @@ const groups: Group[] = [
 		That's where the name comes from. A winner on an experiment dashboard can be too good to be true in two ways. It
 		might not be real at all: test enough metrics and some will clear the bar by chance, the textbook <strong>multiple comparisons problem</strong>, or
 		multiple testing, which is the first half of this page. Or it can be real and still smaller than it looks, the <strong>winner's curse</strong>, which
-		is <a href="#winners-curse" class="text-accent-blue underline underline-offset-2">the second half</a>. Experimenters have a rule of thumb that
+		is <a href="#winners-curse" class="link">the second half</a>. Experimenters have a rule of thumb that
 		covers both, Twyman's law: the more surprising a number looks, the more likely it's a mistake rather than a
 		discovery. Kohavi, Tang and Xu give it a whole chapter in their book on online experiments.
 	</p>

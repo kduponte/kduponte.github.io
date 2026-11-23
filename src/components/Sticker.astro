@@ -1,28 +1,19 @@
 ---
+// A tilted round sticker: an outline in the current text color over the ground it sits on, so it
+// reads as print, not as a button.
 interface Props {
-	tone?: "lime" | "bubblegum" | "sun" | "sky" | "tomato" | "cream";
 	/** Degrees of tilt. */
 	rotate?: number;
 	shape?: "circle" | "rect";
 	class?: string;
 }
 
-const { tone = "bubblegum", rotate = 8, shape = "circle", class: className = "" } = Astro.props;
-
-const tones: Record<string, string> = {
-	lime: "bg-lime",
-	bubblegum: "bg-bubblegum",
-	sun: "bg-sun",
-	sky: "bg-sky",
-	tomato: "bg-tomato",
-	cream: "bg-cream",
-};
+const { rotate = 8, shape = "circle", class: className = "" } = Astro.props;
 ---
 
 <div
 	class:list={[
-		"raw-box shadow-hard grid place-items-center text-center font-extrabold leading-tight text-black",
-		tones[tone],
+		"font-anton grid place-items-center border-[3px] border-current text-center uppercase leading-none",
 		shape === "circle" ? "aspect-square rounded-full p-4" : "rounded-lg px-4 py-2",
 		className,
 	]}

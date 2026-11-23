@@ -1,25 +1,26 @@
 ---
+// A small boxed note with a tab label, e.g. the latest truck-log entry. Outlined in the current
+// text color, so it works on white or black.
 interface Props {
 	/** Small pixel-font label, e.g. "Now restoring". */
 	label: string;
-	tone?: "cream" | "lime" | "sky" | "sun" | "bubblegum";
 	class?: string;
 }
 
-const { label, tone = "cream", class: className = "" } = Astro.props;
-
-const tones: Record<string, string> = {
-	cream: "bg-cream",
-	lime: "bg-lime",
-	sky: "bg-sky",
-	sun: "bg-sun",
-	bubblegum: "bg-bubblegum",
-};
+const { label, class: className = "" } = Astro.props;
 ---
 
-<aside class:list={["raw-box shadow-hard relative rounded-2xl p-5 pt-8 text-black", tones[tone], className]}>
-	<span class="font-mono absolute -top-px right-4 rounded-b-lg bg-black px-2.5 py-1 text-[10px] uppercase text-lime">
-		{label}
+<aside class:list={["relative rounded-2xl border-[3px] border-current p-5 pt-8", className]}>
+	<span class="font-mono absolute -top-[3px] right-4 rounded-b-lg bg-current px-2.5 py-1 text-[10px] uppercase">
+		<span class="widget-tab">{label}</span>
 	</span>
 	<slot />
 </aside>
+
+<style>
+	/* The tab fills with the outline color, so its text takes the ground color. Set --widget-ground
+	   when the widget sits on something other than black. */
+	.widget-tab {
+		color: var(--widget-ground, var(--color-black));
+	}
+</style>

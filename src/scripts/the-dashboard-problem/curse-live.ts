@@ -26,8 +26,8 @@ const BIN = 0.05;
 const THRESHOLDS = Array.from({ length: Math.round((X_MAX - X_MIN) / BIN) + 1 }, (_, i) => X_MIN + i * BIN);
 
 const FALSE_COLOR = "#b83a0a";
-/** A warm grey between the cream paper and ink-soft; the site's --color-line is black. */
-const NOT_FLAGGED_COLOR = "#cfc7b3";
+/** Neutral grey (the Signal "Concrete" ground); the site's --color-line is black. */
+const NOT_FLAGGED_COLOR = "#cfcfca";
 const NOT_FLAGGED = "Not flagged";
 const FLAGGED_NULL = "Flagged: false discovery";
 const FLAGGED_LIFTED = "Flagged: real winner";

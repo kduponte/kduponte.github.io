@@ -1,10 +1,11 @@
 ---
+import SectionOpener from "../../editorial/SectionOpener.astro";
 // Markup + mount points only; all behavior lives in src/scripts/the-noise-problem/study-chart.ts.
 ---
 
 <section id="speed-study" class="mx-auto max-w-7xl px-6 py-16 md:px-12 md:py-20">
-	<h2 class="font-anton text-4xl md:text-5xl">How much faster, really?</h2>
-	<p class="mt-3 max-w-[65ch] text-base leading-relaxed text-ink-soft">
+	<SectionOpener bare number="04" kicker="The study" title={`How much faster, really?`} />
+	<p class="mt-10 max-w-[58ch] text-xl font-semibold leading-snug md:text-2xl">
 		Simulate hundreds of independent experiments at a given correlation and traffic level, and measure two separate
 		things: whether a fixed, pre-planned final look finds a real effect (only meaningful when one exists), and, when
 		it does, how many days it took to first become visible.
@@ -13,7 +14,7 @@
 	<form id="pp-study-controls" class="mt-8 grid grid-cols-2 gap-4 raw-box rounded-xl bg-cream p-6 md:grid-cols-5">
 		<label class="flex flex-col gap-1 text-sm">
 			<span class="font-mono text-xs uppercase tracking-wide text-ink-soft">Pre/post correlation</span>
-			<input id="pp-study-correlation" type="range" min="0" max="0.95" step="0.05" class="accent-accent-blue w-full" />
+			<input id="pp-study-correlation" type="range" min="0" max="0.95" step="0.05" class="accent-pop w-full" />
 			<span id="pp-study-correlation-value" class="font-mono text-xs text-ink-soft"></span>
 		</label>
 		<label class="flex flex-col gap-1 text-sm">
@@ -32,7 +33,7 @@
 			<button
 				type="button"
 				id="pp-study-run-button"
-				class="w-full border border-ink bg-ink px-5 py-2.5 font-mono text-xs uppercase tracking-wide text-paper transition-colors hover:border-accent-blue hover:bg-accent-blue"
+				class="btn w-full justify-center"
 			>
 				Run speed study
 			</button>
@@ -42,7 +43,7 @@
 	<div id="pp-speed-study" class="mt-6">
 		<div data-vg-summary class="raw-box rounded-xl bg-cream p-4 font-mono text-sm"></div>
 		<div class="mt-4 flex justify-end">
-			<button type="button" data-vg-table-toggle class="font-mono text-xs uppercase tracking-wide text-accent-blue" aria-pressed="false">
+			<button type="button" data-vg-table-toggle class="btn btn-sm btn-ghost" aria-pressed="false">
 				View as table
 			</button>
 		</div>

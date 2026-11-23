@@ -17,15 +17,15 @@
 			<div class="mt-1 flex flex-wrap gap-2">
 				<label class="cursor-pointer">
 					<input type="radio" name="cl-rule" value="none" class="peer sr-only" />
-					<span class="inline-block border-2 border-black px-3 py-1.5 font-mono text-xs uppercase peer-checked:bg-ink peer-checked:text-paper peer-focus-visible:outline-2 peer-focus-visible:outline-accent-blue">No correction</span>
+					<span class="btn btn-sm btn-ghost peer-checked:border-ink peer-checked:bg-pop peer-checked:text-pop-ink peer-focus-visible:outline-[3px] peer-focus-visible:outline-offset-2 peer-focus-visible:outline-pop">No correction</span>
 				</label>
 				<label class="cursor-pointer">
 					<input type="radio" name="cl-rule" value="bh" class="peer sr-only" />
-					<span class="inline-block border-2 border-black px-3 py-1.5 font-mono text-xs uppercase peer-checked:bg-ink peer-checked:text-paper peer-focus-visible:outline-2 peer-focus-visible:outline-accent-blue">Benjamini-Hochberg</span>
+					<span class="btn btn-sm btn-ghost peer-checked:border-ink peer-checked:bg-pop peer-checked:text-pop-ink peer-focus-visible:outline-[3px] peer-focus-visible:outline-offset-2 peer-focus-visible:outline-pop">Benjamini-Hochberg</span>
 				</label>
 				<label class="cursor-pointer">
 					<input type="radio" name="cl-rule" value="bonferroni" class="peer sr-only" />
-					<span class="inline-block border-2 border-black px-3 py-1.5 font-mono text-xs uppercase peer-checked:bg-ink peer-checked:text-paper peer-focus-visible:outline-2 peer-focus-visible:outline-accent-blue">Bonferroni</span>
+					<span class="btn btn-sm btn-ghost peer-checked:border-ink peer-checked:bg-pop peer-checked:text-pop-ink peer-focus-visible:outline-[3px] peer-focus-visible:outline-offset-2 peer-focus-visible:outline-pop">Bonferroni</span>
 				</label>
 			</div>
 		</fieldset>
@@ -44,14 +44,10 @@
 			<span class="font-mono text-xs uppercase tracking-wide text-ink-soft">Dashboards</span>
 			<span id="cl-seeds" class="font-mono text-xs text-ink-soft"></span>
 			<div class="flex flex-wrap gap-2">
-				<button
-					type="button"
-					id="cl-next"
-					class="border border-ink bg-ink px-4 py-2 font-mono text-xs uppercase tracking-wide text-paper transition-colors hover:border-accent-blue hover:bg-accent-blue"
-				>
+				<button type="button" id="cl-next" class="btn btn-sm">
 					Next 200
 				</button>
-				<button type="button" id="cl-reset" class="border border-ink px-4 py-2 font-mono text-xs uppercase tracking-wide text-ink hover:border-accent-blue hover:text-accent-blue">
+				<button type="button" id="cl-reset" class="btn btn-sm btn-ghost">
 					Back to seed 1
 				</button>
 			</div>
@@ -61,7 +57,7 @@
 	<div id="cl-root" class="mt-6">
 		<div data-vg-summary class="raw-box rounded-xl bg-cream p-4 text-sm leading-relaxed" aria-live="polite"></div>
 		<div class="mt-4 flex justify-end">
-			<button type="button" data-vg-table-toggle class="font-mono text-xs uppercase tracking-wide text-accent-blue" aria-pressed="false">
+			<button type="button" data-vg-table-toggle class="btn btn-sm btn-ghost" aria-pressed="false">
 				View as table
 			</button>
 		</div>

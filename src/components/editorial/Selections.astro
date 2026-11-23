@@ -1,0 +1,30 @@
+---
+// A numbered "selections" catalog, after Brutus and Popeye's item lists: big numbers in the page
+// accent, a short label, and a paragraph, separated by heavy rules instead of boxed cards.
+interface Props {
+	items: { label: string; body: string }[];
+	/** Number of the first item. */
+	start?: number;
+	class?: string;
+}
+
+const { items, start = 1, class: className = "" } = Astro.props;
+---
+
+<ol class:list={["grid grid-cols-1 gap-x-10 md:grid-cols-2", className]}>
+	{
+		items.map((it, i) => (
+			<li class="border-t-[3px] border-current py-5">
+				<div class="flex items-start gap-4">
+					<span class="font-anton text-5xl leading-[0.85] text-spot" style="-webkit-text-stroke: 2px var(--color-black)">
+						{String(start + i).padStart(2, "0")}
+					</span>
+					<div>
+						<p class="font-anton text-2xl uppercase leading-none">{it.label}</p>
+						<p class="mt-2 text-[15px] font-medium leading-relaxed">{it.body}</p>
+					</div>
+				</div>
+			</li>
+		))
+	}
+</ol>

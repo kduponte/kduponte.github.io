@@ -374,26 +374,48 @@ describe("buildToyotaTruck with builder options", () => {
 		expect((box.max.y - CARGO_FLOOR_Y) / INCH).toBeCloseTo(30.5, 0);
 		expect(size.z / INCH).toBeCloseTo(22.9, 0);
 		expect(size.x / INCH).toBeCloseTo(51.3, 0);
+		// Honda's white HONDA and CRF on both sides of the bike.
+		const node = t.group.getObjectByName("crf50f")!;
+		const ink: Mesh[] = [];
+		node.traverse((o) => {
+			if ((o as Mesh).isMesh && t.parts.includes(o as Mesh) && colorOf(o as Mesh) === "f7f6f1") ink.push(o as Mesh);
+		});
+		const sides = new Set(ink.map((m) => Math.sign(m.getWorldPosition(new Vector3()).z)));
+		expect(ink.length).toBeGreaterThan(20);
+		expect(sides).toEqual(new Set([-1, 1]));
 		t.dispose();
 	});
 
-	it("sizes the cooler as Coleman lists the 316 Series 70 qt: 31.2 x 15.7 x 17 in", () => {
+	it("sizes the cooler as the YETI Tundra 110: 37.2 x 18 x 19.8 in outside, with its latches and nameplate", () => {
 		const t = buildToyotaTruck(undefined, { cargo: "cooler" });
-		const box = boundsOf(t, "cargo");
-		expect((box.max.y - CARGO_FLOOR_Y) / INCH).toBeCloseTo(17, 1);
+		const box = boundsOf(t, "cooler");
+		expect((box.max.y - CARGO_FLOOR_Y) / INCH).toBeCloseTo(19.8, 0); // the T-latch handles ride just over the lid
 		const size = box.getSize(new Vector3());
-		expect(size.x / INCH).toBeGreaterThan(15.7);
-		expect(size.x / INCH).toBeLessThan(16.3);
-		expect(size.z / INCH).toBeGreaterThan(31.2);
-		expect(size.z / INCH).toBeLessThan(32.4); // the end grips stand off the sides
+		expect(size.x / INCH).toBeGreaterThan(18);
+		expect(size.x / INCH).toBeLessThan(18.8); // latches and nameplate stand off the front
+		expect(size.z / INCH).toBeGreaterThan(37.2);
+		expect(size.z / INCH).toBeLessThan(41); // the rope handles hang off the ends
+		const latches = t.parts.filter((p) => colorOf(p) === "18191b");
+		expect(latches.length).toBeGreaterThanOrEqual(4 + 4 + 1); // feet, two-part latches, nameplate
 		t.dispose();
 	});
 
-	it("lays the ulua rods in 6 ft 6 in halves, half of PENN's 13 ft", () => {
+	it("lays the ulua rods in 6 ft 6 in halves, half of PENN's 13 ft, with PENN's sleeve, grips and accent bands", () => {
 		const t = buildToyotaTruck(undefined, { cargo: "ulua" });
-		const blanks = t.parts.filter((p) => colorOf(p) === "2b2d31");
+		const blanks = t.parts.filter((p) => colorOf(p) === "131416");
 		expect(blanks).toHaveLength(6);
 		for (const b of blanks) expect((b.geometry as CylinderGeometry).parameters.height / INCH).toBeCloseTo(78, 6);
+		for (const hex of ["b02a6b", "b8913a"]) expect(t.parts.filter((p) => colorOf(p) === hex), hex).toHaveLength(3);
+		t.dispose();
+	});
+
+	it("loads rubbish bags that differ: different fill, height and lean, one on its side", () => {
+		const t = buildToyotaTruck(undefined, { cargo: "rubbish" });
+		t.group.updateMatrixWorld(true);
+		const bags = t.parts.filter((p) => colorOf(p) === "121315" && p.geometry.type === "LatheGeometry");
+		expect(bags).toHaveLength(4);
+		const heights = bags.map((b) => Math.round(new Box3().setFromObject(b, true).getSize(new Vector3()).y * 1000));
+		expect(new Set(heights).size).toBe(4);
 		t.dispose();
 	});
 
@@ -416,8 +438,10 @@ describe("buildToyotaTruck with builder options", () => {
 			{ steps: "slider" },
 			{ exhaust: "turndown" },
 			{ bed: "liner" },
-			{ stickers: ["kalapana-big"] },
 			{ stickers: ["tc"] },
+			{ stickers: ["lemon"] },
+			{ stickers: ["kanaka"] },
+			{ stickers: ["dahui"] },
 		] as const;
 		for (const v of variants) {
 			const t = buildToyotaTruck(undefined, v as never);
@@ -427,16 +451,33 @@ describe("buildToyotaTruck with builder options", () => {
 		plain.dispose();
 	});
 
-	it("puts the big Kalapana sticker at 12 x 4 in and the T&C logo at 6 in across", () => {
-		const t = buildToyotaTruck(undefined, { stickers: ["kalapana-big", "tc"] });
-		const green = t.parts.find((p) => colorOf(p) === "4c9a6a")!;
-		green.geometry.computeBoundingBox();
-		const size = green.geometry.boundingBox!.getSize(new Vector3());
-		expect(size.y / INCH).toBeCloseTo(4, 1);
-		expect(size.z / INCH).toBeCloseTo(12, 0);
-		const ring = t.parts.find((p) => p.geometry instanceof RingGeometry)!;
-		expect(((ring.geometry as RingGeometry).parameters.outerRadius * 2) / INCH).toBeCloseTo(6, 6);
-		t.dispose();
+	it("sizes each sticker: Kanaka Maoli flag 3.75 x 2.5 in, T&C 6 in, Lemon and Da Hui about 4 in", () => {
+		/** A sticker's size in its own frame on the glass: across (z) and up the glass (y). */
+		const sizeOf = (kind: "tc" | "lemon" | "kanaka" | "dahui") => {
+			const t = buildToyotaTruck(undefined, { stickers: [kind] });
+			t.group.updateMatrixWorld(true);
+			const node = t.group.getObjectByName(`sticker-${kind}`)!;
+			const toLocal = node.matrixWorld.clone().invert();
+			const box = new Box3();
+			const v = new Vector3();
+			node.traverse((o) => {
+				const m = o as Mesh;
+				if (!m.isMesh || !t.parts.includes(m)) return;
+				const pos = m.geometry.attributes.position;
+				for (let i = 0; i < pos.count; i++) box.expandByPoint(v.fromBufferAttribute(pos, i).applyMatrix4(m.matrixWorld).applyMatrix4(toLocal));
+			});
+			t.dispose();
+			return box.getSize(new Vector3());
+		};
+		const flag = sizeOf("kanaka");
+		expect(flag.z / INCH).toBeCloseTo(3.75, 2);
+		expect(flag.y / INCH).toBeCloseTo(2.5, 2);
+		expect(sizeOf("tc").z / INCH).toBeCloseTo(6, 2);
+		for (const k of ["lemon", "dahui"] as const) {
+			const s = sizeOf(k);
+			expect(s.z / INCH, k).toBeCloseTo(4, 1);
+			expect(s.y / INCH, k).toBeCloseTo(4, 1);
+		}
 	});
 
 	it("carries the KC lights in yellow or black covers, or leaves the bar bare", () => {

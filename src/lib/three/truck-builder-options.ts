@@ -64,12 +64,14 @@ const SRC = {
 	apexSliders: { label: "Trail-Gear APEX rock sliders, 1984-95 Toyota Pickup", href: "https://trail-gear.com/armor/1984-1995-toyota-pickup-apex-rock-sliders.html" },
 	turndown: { label: "Nickson 17601 turndown, 1.75\" inlet, 12\" long (CARiD)", href: "https://www.carid.com/nickson/product-mpn-17601.html" },
 	ulua: { label: "PENN Battalion II Ulua rod: 13', two pieces", href: "https://www.pennfishing.com/products/battalion-ii-conventional-ulua-surf-rod-1523124" },
-	cooler: { label: "Coleman 316 Series 70 qt: 31.2 x 15.7 x 17\" (Academy)", href: "https://www.academy.com/p/coleman-316-series-70-qt-hard-cooler?sku=navy" },
+	cooler: { label: "YETI Tundra 110: 37.2 x 18 x 19.8\" outside (CampSaver)", href: "https://www.campsaver.com/yeti-tundra-110-cooler.html" },
 	bags: { label: "Do it Best 33 gal bags, 33 x 36.5\"", href: "https://www.doitbest.com/product/628131/do-it-best-33-gal-extra-large-black-trash-bag-40-count-628131/" },
 	crf50f: { label: "Honda CRF50F specifications (Honda News)", href: "https://hondanews.com/en-US/releases/release-13f25e90cfe47cd58453f1f71015b964-2024-honda-crf50f-specifications" },
-	kalapanaBig: {
-		label: "Aloha Got Soul, BIG SIZE Kalapana sticker (12 x 4\")",
-		href: "https://alohagotsoul.com/products/big-size-slow-down-i-m-listening-to-kalapana-bumper-sticker-12-x-4",
+	kanaka: { label: "Flags For Good, Kanaka Maoli flag sticker (3.75 x 2.5\")", href: "https://flagsforgood.com/products/hawaii-flag-sticker" },
+	dahui: { label: "Da Hui Paddle Race 2023, the Hui O He'e Nalu badge (Pacific Sport Events)", href: "https://www.pseresults.com/post/da-hui-paddle-race-2023" },
+	lemon: {
+		label: "Lemon's logo",
+		href: "https://media.licdn.com/dms/image/v2/C4E0BAQGzTdkgip9RiQ/company-logo_200_200/company-logo_200_200/0/1631314531356?e=2147483647&v=beta&t=ulszIuaSUY6FTbNd9jF7MswAgEKeHWYbb55l_kolAK0",
 	},
 	tcSticker: { label: "T&C Surf Designs, 6\" Standard Logo Sticker", href: "https://tcsurf.com/products/6-std-logo-sticker" },
 } as const satisfies Record<string, Source>;
@@ -595,15 +597,15 @@ export const CARGO: CargoOption[] = [
 		name: "Ulua poles",
 		spec: "Three 13' PENN Battalion II Ulua rods, broken down into 6' 6\" halves",
 		kind: "ulua",
-		note: "Hawaii shore-casting rods, made for ulua off the rocks. They come apart in two, so they ride in the bed in halves, butt ends on the floor and resting up on the tailgate. The reels are drawn generic.",
+		note: "Hawaii shore-casting rods, made for ulua off the rocks. They come apart in two, so they ride in the bed in halves, butt ends on the floor and resting up on the tailgate. Drawn from PENN's photos: black blanks, a stainless butt sleeve, black rubber grips, silver trim rings at the reel seat, a magenta band and gold label above the grip, and silver wire guides. Where each sits along the rod is estimated from the photos, and the reels are drawn generic.",
 		source: SRC.ulua,
 	},
 	{
-		id: "cooler",
-		name: "Coleman 70-quart cooler",
-		spec: '316 Series, 31.2 x 15.7 x 17", navy',
+		id: "yeti-110",
+		name: "YETI Tundra 110",
+		spec: '37.2 x 18 x 19.8" outside, white',
 		kind: "cooler",
-		note: "Standing across the front of the bed, behind the cab.",
+		note: "Across the front of the bed with its front to the tailgate: the white rotomolded body and lid, the raised front panel, two black rubber T-latches, the black YETI nameplate, rope handles at the ends and rubber feet. The lid's height and the panel's shape are taken from YETI's photos.",
 		source: SRC.cooler,
 	},
 	{
@@ -611,7 +613,7 @@ export const CARGO: CargoOption[] = [
 		name: "Rubbish run",
 		spec: 'Four 33-gallon black bags, 33 x 36.5" flat',
 		kind: "rubbish",
-		note: "Loaded for the transfer station. Each bag is drawn tied off and full; that filled shape is estimated from the flat size.",
+		note: "Loaded for the transfer station: three standing and one laid on its side. Each is drawn tied off; how full each is, and how it slumps and bulges, is estimated from the flat size.",
 		source: SRC.bags,
 	},
 	{
@@ -619,7 +621,7 @@ export const CARGO: CargoOption[] = [
 		name: "Honda CRF50F dirt bike",
 		spec: '51.3" long, 30.5" tall, 10" wheels, red',
 		kind: "dirtbike",
-		note: "Honda's smallest trail bike, standing on its wheels in the bed, strapped down. Wheelbase, height, seat height and tire size are Honda's; the bodywork is simplified.",
+		note: "Honda's smallest trail bike, standing on its wheels in the bed, strapped down. Wheelbase, height, seat height and tire size are Honda's. Drawn from Honda's studio photo: red plastics and seat, the white HONDA on each side panel and CRF on the shrouds, a silver frame and fork with red guards, spoked wheels on knobby tires, and the black exhaust on the right. Panel shapes are simplified.",
 		source: SRC.crf50f,
 	},
 ];
@@ -687,15 +689,14 @@ export const BEDS: BedOption[] = [
 /** Whether cargo can ride in the bed: open, with or without a liner. */
 export const bedIsOpen = (kind: BedKind) => kind === "none" || kind === "liner";
 
-export type StickerKind = "kalapana" | "kalapana-big" | "tc";
+export type StickerKind = "kalapana" | "tc" | "lemon" | "kanaka" | "dahui";
 
 export interface DecalOption extends Option {
 	stickers: StickerKind[];
 }
 
-/** Aloha Got Soul's Kalapana sticker is 7.5 x 2.5 inches; its BIG SIZE version is 12 x 4. */
+/** Aloha Got Soul's Kalapana sticker is 7.5 x 2.5 inches. */
 export const STICKER_SIZE = { w: 7.5 * INCH, h: 2.5 * INCH } as const;
-export const BIG_STICKER_SIZE = { w: 12 * INCH, h: 4 * INCH } as const;
 /** T&C's Standard Logo sticker is 6 inches across. */
 export const TC_STICKER_D = 6 * INCH;
 
@@ -710,14 +711,6 @@ export const DECALS: DecalOption[] = [
 		source: SRC.kalapanaSticker,
 	},
 	{
-		id: "kalapana-big",
-		name: "Big Kalapana",
-		spec: '12 x 4" sticker, white on green, rear window',
-		stickers: ["kalapana-big"],
-		note: "Aloha Got Soul's BIG SIZE version of the same sticker.",
-		source: SRC.kalapanaBig,
-	},
-	{
 		id: "tc",
 		name: "T&C logo",
 		spec: '6" round, white on clear, rear window',
@@ -726,12 +719,28 @@ export const DECALS: DecalOption[] = [
 		source: SRC.tcSticker,
 	},
 	{
-		id: "kalapana-tc",
-		name: "Kalapana and T&C",
-		spec: "Both stickers, one each side of the rear window",
-		stickers: ["kalapana", "tc"],
-		note: "The 7.5 x 2.5 in Kalapana sticker on the passenger side and the 6 in T&C logo on the driver's side.",
-		source: SRC.kalapanaSticker,
+		id: "lemon",
+		name: "Lemon",
+		spec: "Die-cut lemon slice, driver's side of the rear window",
+		stickers: ["lemon"],
+		note: "A throwback to Lemon, Kyle's old company: just the lemon from its logo, cut to its outline. There's no sticker to buy, so its 4 in size is an estimate.",
+		source: SRC.lemon,
+	},
+	{
+		id: "kanaka",
+		name: "Kanaka Maoli flag",
+		spec: '3.75 x 2.5" sticker, rear window',
+		stickers: ["kanaka"],
+		note: "Gene Simeona's flag: nine stripes of green, red and yellow, and a green shield carrying a kahili and two crossed paddles.",
+		source: SRC.kanaka,
+	},
+	{
+		id: "dahui",
+		name: "Da Hui",
+		spec: "Round badge, yellow on black, driver's side of the rear window",
+		stickers: ["dahui"],
+		note: "The Hui O He'e Nalu badge from the North Shore's Da Hui Paddle Race: a black disc ringed in yellow with a yellow surfer at its center. The ring lettering is too small to draw at this scale, and the surfer is simplified. No sticker size is listed, so its 4 in size is an estimate.",
+		source: SRC.dahui,
 	},
 ];
 

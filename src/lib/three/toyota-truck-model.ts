@@ -97,8 +97,8 @@ export interface TruckOptions {
 	grille?: "painted" | "chrome" | "body" | "blackout";
 	/** Over the bed: nothing, a black spray-in liner (still open), a cab-high shell, or a soft tonneau. */
 	bed?: "none" | "liner" | "shell" | "tonneau";
-	/** Rear-window stickers: the 7.5 x 2.5 in Kalapana, its 12 x 4 in big version, and T&C's 6 in round logo. */
-	stickers?: ("kalapana" | "kalapana-big" | "tc")[];
+	/** Rear-window stickers: the 7.5 x 2.5 in Kalapana, T&C's 6 in logo, the Lemon, the 3.75 x 2.5 in Kanaka Maoli flag and the Da Hui badge. */
+	stickers?: ("kalapana" | "tc" | "lemon" | "kanaka" | "dahui")[];
 	/** The 7.5 x 2.5 in Kalapana sticker on the rear window (same as `stickers: ["kalapana"]`). */
 	sticker?: boolean;
 	/** Metallic paint flakes catch more light than a solid color. */
@@ -326,6 +326,42 @@ function mudLugs(crownR: number, depth: number, halfW: number, treadHalf: number
  * in TOYOTA are needed.
  */
 const GLYPHS: Record<string, [number, number, number, number][]> = {
+	E: [
+		[0.72, 1, 0, 1],
+		[0, 1, 0, 0],
+		[0, 0, 0.72, 0],
+		[0, 0.5, 0.55, 0.5],
+	],
+	F: [
+		[0.72, 1, 0, 1],
+		[0, 1, 0, 0],
+		[0, 0.5, 0.55, 0.5],
+	],
+	H: [
+		[0, 0, 0, 1],
+		[0.75, 0, 0.75, 1],
+		[0, 0.5, 0.75, 0.5],
+	],
+	I: [
+		[0.375, 0, 0.375, 1],
+		[0.1, 1, 0.65, 1],
+		[0.1, 0, 0.65, 0],
+	],
+	D: [
+		[0, 0, 0, 1],
+		[0, 1, 0.5, 1],
+		[0.5, 1, 0.75, 0.75],
+		[0.75, 0.75, 0.75, 0.25],
+		[0.75, 0.25, 0.5, 0],
+		[0.5, 0, 0, 0],
+	],
+	R: [
+		[0, 0, 0, 1],
+		[0, 1, 0.75, 1],
+		[0.75, 1, 0.75, 0.5],
+		[0.75, 0.5, 0, 0.5],
+		[0.3, 0.5, 0.75, 0],
+	],
 	T: [
 		[0, 1, 0.75, 1],
 		[0.375, 1, 0.375, 0],
@@ -1010,21 +1046,71 @@ export function buildToyotaTruck(colors: TruckColors = DEFAULT_TRUCK_COLORS, opt
 		cargoRoot.add(board.group);
 	}
 	if (bedOpen && cargo === "cooler") {
-		// Coleman's 316 Series 70 qt (31.2 x 15.7 x 17 in, navy) across the front of the bed: the body, its
-		// lid and seam, and a grip at each end.
-		const [cl, cw, ch] = [31.2 * INCH, 15.7 * INCH, 17 * INCH];
-		const coolerMat = std("#1f2b45", 0.55, 0.05);
-		const cx = CAB_BACK_X - 0.11 - cw / 2;
-		const lidH = 0.06;
-		add(cargoRoot, slab(cw, ch - lidH, cl, 0.03, 0.01), coolerMat, [cx, cargoFloorY + (ch - lidH) / 2, 0], { outline: OUTLINE_SMALL });
-		add(cargoRoot, slab(cw + 0.01, lidH, cl + 0.01, 0.025, 0.01), coolerMat, [cx, cargoFloorY + ch - lidH / 2, 0], { outline: OUTLINE_SMALL });
-		add(cargoRoot, slab(cw + 0.004, 0.008, cl + 0.004, 0.003, 0.002), trimMat, [cx, cargoFloorY + ch - lidH, 0], { outline: 0 });
-		pair((side) => add(cargoRoot, slab(0.12, 0.035, 0.02, 0.012, 0.005), trimMat, [cx, cargoFloorY + ch - lidH - 0.07, side * (cl / 2 + 0.005)], { outline: 0 }));
+		// YETI's Tundra 110, 37.2 x 18 x 19.8 in outside, across the front of the bed with its front to the
+		// tailgate. From YETI's photos: a white rotomolded body and a lid about a sixth of its height, a raised
+		// panel on the front that narrows toward the bottom, two black rubber T-latches pulled up over the lid's
+		// front edge, the black YETI nameplate under the lid, rope handles at the ends and black rubber feet.
+		const [cl, cd, ch] = [37.2 * INCH, 18 * INCH, 19.8 * INCH];
+		const white = std("#f2f2ee", 0.6, 0.02);
+		const rubber = std("#18191b", 0.8, 0.05);
+		const cooler = new Group();
+		cooler.name = "cooler";
+		cargoRoot.add(cooler);
+		const cx = CAB_BACK_X - 0.11 - cd / 2;
+		const front = cx - cd / 2; // the face toward the tailgate
+		const lidH = ch / 6;
+		const feetH = 0.012;
+		const seamY = cargoFloorY + ch - lidH;
+		for (const fx of [cx - cd / 2 + 0.05, cx + cd / 2 - 0.05]) {
+			for (const fz of [-cl / 2 + 0.07, cl / 2 - 0.07]) add(cooler, slab(0.07, feetH, 0.09, 0.004, 0.002), rubber, [fx, cargoFloorY + feetH / 2, fz], { outline: 0 });
+		}
+		add(cooler, slab(cd, seamY - cargoFloorY - feetH, cl, 0.035, 0.012), white, [cx, (seamY + cargoFloorY + feetH) / 2, 0], { outline: OUTLINE_SMALL });
+		add(cooler, slab(cd, lidH - 0.004, cl, 0.03, 0.012), white, [cx, seamY + 0.004 + (lidH - 0.004) / 2, 0], { outline: OUTLINE_SMALL });
+		add(cooler, slab(cd - 0.01, 0.004, cl - 0.01, 0.0015, 0.001), std("#bdbdb6", 0.7), [cx, seamY + 0.002, 0], { outline: 0 }); // seam
+		// The raised front panel: full width under the lid, its sides angling in toward the feet.
+		const panelTop = seamY - 0.03;
+		const panelBot = cargoFloorY + feetH + 0.04;
+		const panel = new Shape([new Vector2(-cl * 0.43, panelTop), new Vector2(cl * 0.43, panelTop), new Vector2(cl * 0.33, panelBot), new Vector2(-cl * 0.33, panelBot)]);
+		const panelGeo = new ShapeGeometry(panel);
+		panelGeo.rotateY(-Math.PI / 2);
+		add(cooler, panelGeo, std("#e9e9e4", 0.55, 0.02), [front - 0.002, 0, 0], { outline: 0 });
+		for (const [a, b] of [
+			[new Vector2(-cl * 0.43, panelTop), new Vector2(-cl * 0.33, panelBot)],
+			[new Vector2(cl * 0.43, panelTop), new Vector2(cl * 0.33, panelBot)],
+			[new Vector2(-cl * 0.33, panelBot), new Vector2(cl * 0.33, panelBot)],
+		]) {
+			const edge = add(cooler, slab(0.004, a.distanceTo(b), 0.004, 0.001, 0.0005), std("#c8c8c1", 0.6), [front - 0.003, (a.y + b.y) / 2, (a.x + b.x) / 2], { outline: 0 });
+			edge.rotation.x = Math.atan2(b.x - a.x, b.y - a.y);
+		}
+		// Two black T-latches, from the body up over the lid's front edge, their T-handles at the top.
+		for (const z of [-cl * 0.3, cl * 0.3]) {
+			add(cooler, slab(0.012, 0.11, 0.03, 0.004, 0.002), rubber, [front - 0.006, seamY + 0.005, z], { outline: 0.004 });
+			add(cooler, slab(0.016, 0.022, 0.07, 0.006, 0.003), rubber, [front - 0.008, seamY + lidH - 0.012, z], { outline: 0.004 });
+		}
+		// The black nameplate with YETI in white, centered under the lid.
+		add(cooler, slab(0.006, 0.032, 0.12, 0.004, 0.002), rubber, [front - 0.003, seamY - 0.04, 0], { outline: 0 });
+		lettering("YETI", [front + 0.004, seamY - 0.04, 0], 0.018, 0.0035, -1, stickerInkMat, cooler);
+		// Rope handles hanging at each end, a molded grip on each rope.
+		const ropeMat = std("#2c2c2a", 0.9);
+		pair((side) => {
+			const z = side * (cl / 2);
+			const y = seamY - 0.04;
+			const rope = new CatmullRomCurve3([
+				new Vector3(cx - 0.08, y, z),
+				new Vector3(cx - 0.06, y - 0.05, z + side * 0.03),
+				new Vector3(cx + 0.06, y - 0.05, z + side * 0.03),
+				new Vector3(cx + 0.08, y, z),
+			]);
+			add(cooler, new TubeGeometry(rope, 20, 0.006, 6, false), ropeMat, [0, 0, 0], { outline: 0 });
+			const grip = new CylinderGeometry(0.012, 0.012, 0.1, 10);
+			grip.rotateZ(Math.PI / 2);
+			add(cooler, grip, rubber, [cx, y - 0.052, z + side * 0.03], { outline: 0 });
+		});
 	}
 	if (bedOpen && cargo === "rubbish") {
-		// Four 33-gallon black bags, tied off and standing two by two at the back of the bed. Flat, each is
-		// 33 x 36.5 in, so 66 in around: about a 0.27 m radius filled round. Drawn slumping to 0.25 m and
-		// 0.55 m tall with the knot; that filled shape is an estimate.
+		// Four 33-gallon black bags, tied off. Flat, each is 33 x 36.5 in, so 66 in around: about a 0.27 m radius
+		// filled round. Three stand at the back of the bed and one lies on its side; each is filled, slumped and
+		// bulged differently. Those shapes are estimates.
 		const bagMat = std("#121315", 0.28, 0.05);
 		const profile = [
 			[0.001, 0],
@@ -1038,27 +1124,73 @@ export function buildToyotaTruck(colors: TruckColors = DEFAULT_TRUCK_COLORS, opt
 			[0.03, 0.5],
 			[0.022, 0.53],
 			[0.001, 0.55],
-		].map(([r, y]) => new Vector2(r, y));
-		let k = 0;
-		for (const x of [TAIL_X + 0.33, TAIL_X + 0.83]) {
-			for (const z of [-0.255, 0.255]) {
-				const bag = new Group();
-				bag.position.set(x, cargoFloorY, z);
-				bag.rotation.y = k++ * 1.3;
-				cargoRoot.add(bag);
-				add(bag, new LatheGeometry(profile, 20), bagMat, [0, 0, 0], { outline: 0.006 });
-				// The two ears of the knot.
-				for (const t of [-0.7, 0.7]) add(bag, slab(0.05, 0.07, 0.005, 0.002, 0.001), bagMat, [0, 0.55, Math.sign(t) * 0.02], { rot: [t, 0, 0], outline: 0 });
+		];
+		/** One tied bag: the profile scaled by how full it is and how tall it stands, with lumps round it that fade out at the knot. */
+		const bagGeo = (fill: number, tall: number, seed: number) => {
+			const g = new LatheGeometry(
+				profile.map(([r, y]) => new Vector2(r * fill, y * tall)),
+				28,
+			);
+			const pos = g.attributes.position;
+			const v = new Vector3();
+			for (let i = 0; i < pos.count; i++) {
+				v.fromBufferAttribute(pos, i);
+				const a = Math.atan2(v.z, v.x);
+				const t = v.y / (0.55 * tall);
+				const fade = Math.sin(Math.PI * Math.min(1, t * 1.15));
+				const k = 1 + fade * (0.06 * Math.sin(3 * a + seed) + 0.04 * Math.sin(5 * a + 2.1 * seed) + 0.03 * Math.sin(2 * a + 0.7 * seed + 4 * t));
+				pos.setXYZ(i, v.x * k, v.y, v.z * k);
 			}
+			g.computeVertexNormals();
+			return g;
+		};
+		const bags: { at: [number, number]; fill: number; tall: number; seed: number; lean: [number, number]; lying?: boolean }[] = [
+			{ at: [TAIL_X + 0.37, -0.24], fill: 0.95, tall: 1.0, seed: 0.4, lean: [0.06, -0.05] },
+			{ at: [TAIL_X + 0.4, 0.26], fill: 0.85, tall: 0.88, seed: 2.2, lean: [-0.08, -0.04] },
+			{ at: [TAIL_X + 0.9, -0.25], fill: 1.0, tall: 1.08, seed: 4.1, lean: [0.04, 0.05] },
+			{ at: [TAIL_X + 1.27, 0.265], fill: 0.85, tall: 0.95, seed: 5.3, lean: [0, 0], lying: true },
+		];
+		for (const b of bags) {
+			const bag = new Group();
+			const h = 0.55 * b.tall;
+			// The widest a bag gets, lumps included.
+			const widest = 0.25 * b.fill * 1.13;
+			if (b.lying) {
+				// On its side, knot toward the tailgate, sagging flat against the floor.
+				bag.position.set(b.at[0], cargoFloorY + widest * 0.8, b.at[1]);
+				bag.rotation.z = Math.PI / 2;
+				bag.scale.set(0.8, 1, 1);
+			} else {
+				// Leaning lifts one edge of the base and would sink the other, so the bag rides up by that much.
+				bag.position.set(b.at[0], cargoFloorY + widest * Math.sin(Math.abs(b.lean[0]) + Math.abs(b.lean[1])), b.at[1]);
+				bag.rotation.set(b.lean[0], b.seed, b.lean[1]);
+			}
+			cargoRoot.add(bag);
+			add(bag, bagGeo(b.fill, b.tall, b.seed), bagMat, [0, 0, 0], { outline: 0.006 });
+			// The two ears of the knot, splayed differently on each bag.
+			for (const t of [-1, 1]) add(bag, slab(0.05, 0.07, 0.005, 0.002, 0.001), bagMat, [0, h, t * 0.02], { rot: [t * (0.5 + 0.3 * Math.sin(b.seed * 3)), 0, 0.2 * Math.cos(b.seed)], outline: 0 });
 		}
 	}
 	if (bedOpen && cargo === "ulua") {
 		// Three PENN Battalion II Ulua rods, 13 ft in two pieces, broken down: each 6 ft 6 in half lies with its
 		// thick end on the floor behind the cab and rests up on the tailgate's top edge, its tip just past it.
-		// The butt half carries the rubber-shrink grip, the reel seat and a conventional reel on top (the reel
-		// is generic); the tip half lies beside it.
+		// From PENN's photos, the butt half runs: stainless butt sleeve, black rubber grip, the reel seat between
+		// silver trim rings (a conventional reel on top, drawn generic), fore grip, then a magenta band and gold
+		// label on the black blank and its first wire guides. The tip half lies beside it, guides getting
+		// smaller toward the tip. Where each sits along the rod is estimated from the photos.
 		const half = (13 * 12 * INCH) / 2;
-		const blankMat = std("#2b2d31", 0.4, 0.3);
+		const blankMat = std("#131416", 0.35, 0.35);
+		const sleeveMat = std("#c9ccd0", 0.25, 0.85);
+		const rubberMat = std("#1c1d1f", 0.9, 0.02);
+		const magentaMat = std("#b02a6b", 0.45, 0.2);
+		const goldMat = std("#b8913a", 0.35, 0.7);
+		const along = (rod: Group, geo: BufferGeometry, mat: Material, y: number) => add(rod, geo, mat, [0, y, 0], { outline: 0 });
+		const guide = (rod: Group, y: number, r: number, rodR: number) => {
+			const ring = new TorusGeometry(r, 0.0016, 6, 14);
+			ring.rotateX(Math.PI / 2);
+			add(rod, ring, silverMat, [rodR + r + 0.004, y, 0], { outline: 0 });
+			add(rod, slab(0.006, 0.02, 0.004, 0.001, 0.0005), silverMat, [rodR + 0.003, y, 0], { outline: 0 }); // foot
+		};
 		for (const z of [-0.32, -0.02, 0.28]) {
 			for (const butt of [true, false]) {
 				const zz = z + (butt ? 0 : 0.05);
@@ -1066,23 +1198,35 @@ export function buildToyotaTruck(colors: TruckColors = DEFAULT_TRUCK_COLORS, opt
 				const rest = new Vector3(TAIL_X + 0.03, 1.0 + (butt ? 0.012 : 0.008), zz);
 				const rod = new Group();
 				rod.position.copy(start);
-				// Along the rod is local +Y; local +X is straight up off it, the reel's side.
+				// Along the rod is local +Y; local +X is straight up off it, the reel's and the guides' side.
 				rod.quaternion.setFromUnitVectors(new Vector3(0, 1, 0), rest.sub(start).normalize());
 				cargoRoot.add(rod);
 				const [r0, r1] = butt ? [0.012, 0.008] : [0.008, 0.0025];
 				add(rod, new CylinderGeometry(r1, r0, half, 10), blankMat, [0, half / 2, 0], { outline: 0.004 });
-				if (!butt) continue;
-				add(rod, new CylinderGeometry(0.018, 0.018, 0.68, 12), trimMat, [0, 0.36, 0], { outline: 0 }); // grip
-				add(rod, new CylinderGeometry(0.017, 0.017, 0.13, 12), silverMat, [0, 0.77, 0], { outline: 0 }); // reel seat
+				const rAt = (y: number) => r0 + ((r1 - r0) * y) / half;
+				if (!butt) {
+					[0.3, 0.7, 1.1, 1.5, 1.85].forEach((y, i) => guide(rod, y, 0.008 - i * 0.0012, rAt(y)));
+					along(rod, new CylinderGeometry(0.003, 0.003, 0.012, 8), silverMat, half - 0.006); // tip-top
+					continue;
+				}
+				along(rod, new CylinderGeometry(0.0165, 0.0165, 0.24, 12), sleeveMat, 0.12);
+				along(rod, new CylinderGeometry(0.0175, 0.0175, 0.6, 12), rubberMat, 0.54);
+				along(rod, new CylinderGeometry(0.0155, 0.0155, 0.14, 12), silverMat, 0.91);
+				for (const y of [0.845, 0.975]) along(rod, new CylinderGeometry(0.019, 0.019, 0.012, 14), sleeveMat, y);
+				along(rod, new CylinderGeometry(0.0155, 0.017, 0.26, 12), rubberMat, 1.11);
+				along(rod, new CylinderGeometry(rAt(1.32) + 0.0008, rAt(1.32) + 0.0008, 0.012, 10), magentaMat, 1.32);
+				along(rod, new CylinderGeometry(rAt(1.41) + 0.0006, rAt(1.41) + 0.0006, 0.11, 10), goldMat, 1.41);
+				for (const y of [1.6, 1.88]) guide(rod, y, 0.011, rAt(y));
+				// The reel on top of the seat: spool, silver side plates and a foot.
 				const spool = new CylinderGeometry(0.04, 0.04, 0.075, 18);
 				spool.rotateX(Math.PI / 2);
-				add(rod, spool, trimMat, [0.06, 0.77, 0], { outline: 0.006 });
+				add(rod, spool, trimMat, [0.06, 0.91, 0], { outline: 0.006 });
 				for (const side of [-1, 1]) {
 					const plate = new CylinderGeometry(0.046, 0.046, 0.01, 18);
 					plate.rotateX(Math.PI / 2);
-					add(rod, plate, silverMat, [0.06, 0.77, side * 0.042], { outline: 0 });
+					add(rod, plate, silverMat, [0.06, 0.91, side * 0.042], { outline: 0 });
 				}
-				add(rod, slab(0.03, 0.06, 0.02, 0.004, 0.002), silverMat, [0.03, 0.77, 0], { outline: 0 }); // reel foot
+				add(rod, slab(0.03, 0.06, 0.02, 0.004, 0.002), silverMat, [0.03, 0.91, 0], { outline: 0 });
 			}
 		}
 	}
@@ -1090,7 +1234,10 @@ export function buildToyotaTruck(colors: TruckColors = DEFAULT_TRUCK_COLORS, opt
 		// Honda's CRF50F standing on its wheels down the middle of the bed, front wheel to the cab, strapped to
 		// the front tie-downs. From Honda's sheet: 35.9 in wheelbase, 51.3 in long, 22.9 in across the bars,
 		// 30.5 in tall, a 21.6 in seat, 6.0 in of ground clearance, 25 degrees of rake and 2.50-10 tires
-		// (10 in rims, about 15 in tall). The plastics, engine and frame are simplified around those.
+		// (10 in rims, about 15 in tall). From Honda's studio photo: red plastics and seat, the white HONDA on
+		// each side panel and CRF on the shrouds over a navy flash, a silver frame, swingarm and fork with red
+		// guards, a high MX front fender, a red number plate, spoked wheels on knobby tires and the black
+		// exhaust on the right. Panel shapes are simplified.
 		const wb = 35.9 * INCH;
 		const bikeLen = 51.3 * INCH;
 		const barHalf = (22.9 * INCH) / 2;
@@ -1100,31 +1247,65 @@ export function buildToyotaTruck(colors: TruckColors = DEFAULT_TRUCK_COLORS, opt
 		const rake = (25 * Math.PI) / 180;
 		const tw = 2.5 * INCH;
 		const wr = ((10 + 2 * 2.5) * INCH) / 2;
-		const red = std("#c8152a", 0.45, 0.05);
+		const red = std("#d0202b", 0.4, 0.05);
+		const seatRed = std("#a8121e", 0.85, 0.02);
+		const frameMat = std("#b8bcc1", 0.35, 0.7);
 		const blackPart = std("#151618", 0.6, 0.2);
+		const tireMat = std("#141414", 0.9, 0);
+		const navy = std("#1d2a5a", 0.5, 0.05);
 		const bike = new Group();
 		bike.name = "crf50f";
 		bike.position.set(CAB_BACK_X - 0.12 - wr, cargoFloorY, 0); // origin: on the floor under the front axle
 		cargoRoot.add(bike);
+		/** Lettering on one side of the bike (side +1 is its right, +Z), reading front to back as seen from that side. */
+		const sideLetters = (text: string, at: [number, number], z: number, height: number, side: 1 | -1) => {
+			const g = new Group();
+			g.position.set(at[0], at[1], side * z);
+			g.rotation.y = -side * (Math.PI / 2);
+			bike.add(g);
+			lettering(text, [-0.008, 0, 0], height, height * 0.2, 1, stickerInkMat, g);
+		};
+		const tube = (pts: [number, number, number][], r: number, mat: Material) =>
+			add(bike, new TubeGeometry(new CatmullRomCurve3(pts.map((p) => new Vector3(...p))), 24, r, 8, false), mat, [0, 0, 0], { outline: 0 });
+		// Wheels: knobby tire, spoked silver rim and hub.
 		for (const ax of [0, -wb]) {
-			add(bike, new TorusGeometry(wr - tw / 2, tw / 2, 10, 28), trimMat, [ax, wr, 0], { outline: 0.006 });
-			const rim = new CylinderGeometry(5 * INCH, 5 * INCH, 0.03, 20);
-			rim.rotateX(Math.PI / 2);
-			add(bike, rim, silverMat, [ax, wr, 0], { outline: 0 });
-			const hub = new CylinderGeometry(0.03, 0.03, 0.09, 12);
+			add(bike, new TorusGeometry(wr - tw / 2, tw / 2 - 0.006, 10, 28), tireMat, [ax, wr, 0], { outline: 0.006 });
+			for (let i = 0; i < 22; i++) {
+				const a = (i / 22) * Math.PI * 2;
+				add(bike, slab(0.014, 0.018, tw * 0.85, 0.003, 0.002), tireMat, [ax + Math.cos(a) * (wr - 0.007), wr + Math.sin(a) * (wr - 0.007), 0], { rot: [0, 0, a], outline: 0 });
+			}
+			add(bike, new TorusGeometry(5 * INCH, 0.006, 6, 32), frameMat, [ax, wr, 0], { outline: 0 });
+			const hub = new CylinderGeometry(0.03, 0.03, 0.07, 12);
 			hub.rotateX(Math.PI / 2);
-			add(bike, hub, blackPart, [ax, wr, 0], { outline: 0 });
+			add(bike, hub, frameMat, [ax, wr, 0], { outline: 0 });
+			for (let i = 0; i < 12; i++) {
+				const a = (i / 12) * Math.PI * 2;
+				const z = i % 2 ? 0.02 : -0.02;
+				const from = new Vector3(ax + Math.cos(a) * 0.028, wr + Math.sin(a) * 0.028, z);
+				const to = new Vector3(ax + Math.cos(a + 0.4) * 5 * INCH, wr + Math.sin(a + 0.4) * 5 * INCH, 0);
+				const spoke = add(bike, new CylinderGeometry(0.0016, 0.0016, from.distanceTo(to), 4), frameMat, [(from.x + to.x) / 2, (from.y + to.y) / 2, (from.z + to.z) / 2], { outline: 0 });
+				spoke.quaternion.setFromUnitVectors(new Vector3(0, 1, 0), to.sub(from).normalize());
+			}
 		}
-		// Fork: two legs raked back 25 degrees from the front axle to the steering head.
+		// Fork: silver legs raked back 25 degrees from the front axle to the steering head, red guards low on
+		// their fronts, a black clamp on top.
 		const barY = bikeH - 0.012;
 		const forkLen = (barY - 0.06 - wr) / Math.cos(rake);
 		const headX = -forkLen * Math.sin(rake);
+		const fork = new Group();
+		fork.position.set(0, wr, 0);
+		fork.rotation.z = rake;
+		bike.add(fork);
 		for (const z of [-0.055, 0.055]) {
-			const leg = add(bike, new CylinderGeometry(0.016, 0.016, forkLen, 10), blackPart, [0, wr, z], { outline: 0 });
-			leg.geometry.translate(0, forkLen / 2, 0);
-			leg.rotation.z = rake;
+			add(fork, new CylinderGeometry(0.016, 0.016, forkLen, 10), frameMat, [0, forkLen / 2, z], { outline: 0 });
+			add(fork, slab(0.03, 0.2, 0.012, 0.005, 0.002), red, [0.014, 0.14, z], { outline: 0 });
 		}
-		// Handlebar, 22.9 in across with black grips, its top at the bike's 30.5 in.
+		add(fork, slab(0.05, 0.03, 0.15, 0.008, 0.004), blackPart, [0, forkLen - 0.01, 0], { outline: 0 });
+		// High MX front fender off the lower clamp, and the red number plate in front of the bars.
+		const fenderAt = new Vector3(-0.72 * forkLen * Math.sin(rake), wr + 0.72 * forkLen * Math.cos(rake), 0);
+		add(bike, slab(0.32, 0.012, 0.085, 0.005, 0.003), red, [fenderAt.x + 0.08, fenderAt.y - 0.01, 0], { rot: [0, 0, -0.18], outline: OUTLINE_SMALL });
+		add(bike, slab(0.012, 0.11, 0.13, 0.004, 0.002), red, [headX + 0.05, barY - 0.085, 0], { rot: [0, 0, rake], outline: 0.004 });
+		// Handlebar, 22.9 in across, black grips at the ends, its top at the bike's 30.5 in.
 		const bar = new CatmullRomCurve3([
 			new Vector3(headX - 0.05, barY - 0.008, -barHalf),
 			new Vector3(headX - 0.02, barY, -0.12),
@@ -1133,26 +1314,50 @@ export function buildToyotaTruck(colors: TruckColors = DEFAULT_TRUCK_COLORS, opt
 			new Vector3(headX - 0.05, barY - 0.008, barHalf),
 		]);
 		add(bike, new TubeGeometry(bar, 30, 0.011, 8, false), blackPart, [0, 0, 0], { outline: 0.004 });
+		for (const side of [-1, 1]) {
+			const grip = new CylinderGeometry(0.0135, 0.0135, 0.09, 10);
+			grip.rotateX(Math.PI / 2);
+			add(bike, grip, tireMat, [headX - 0.048, barY - 0.007, side * (barHalf - 0.045)], { outline: 0 });
+		}
 		add(bike, slab(0.04, 0.06, 0.06, 0.008, 0.004), blackPart, [headX - 0.01, barY - 0.04, 0], { outline: 0 }); // clamp
-		// Front fender over the tire, red tank and radiator shrouds, black seat at 21.6 in, red tail out to the bike's full length.
-		add(bike, slab(0.3, 0.014, 0.09, 0.006, 0.003), red, [0.01, 2 * wr + 0.03, 0], { rot: [0, 0, -0.12], outline: OUTLINE_SMALL });
-		add(bike, slab(0.15, 0.17, 0.25, 0.03, 0.01), red, [headX - 0.08, seatH + 0.02, 0], { outline: OUTLINE_SMALL });
-		add(bike, slab(0.24, 0.12, 0.19, 0.04, 0.012), red, [headX - 0.2, seatH + 0.04, 0], { outline: OUTLINE_SMALL });
+		// Silver frame: backbone and down tube from the head, a cradle under the engine, seat rails back to the tail.
 		const seatFront = headX - 0.24;
 		const tailX = wr - bikeLen;
-		add(bike, slab(seatFront - (tailX + 0.22), 0.06, 0.17, 0.025, 0.01), trimMat, [(seatFront + tailX + 0.22) / 2, seatH - 0.03, 0], { outline: OUTLINE_SMALL });
+		tube([[headX - 0.01, barY - 0.1, 0], [headX - 0.12, seatH - 0.02, 0], [headX - 0.3, seatH - 0.09, 0], [headX - 0.33, clearance + 0.12, 0]], 0.012, frameMat);
+		tube([[headX + 0.005, barY - 0.12, 0], [headX - 0.02, clearance + 0.12, 0], [headX - 0.1, clearance + 0.012, 0], [headX - 0.3, clearance + 0.012, 0], [headX - 0.33, clearance + 0.12, 0]], 0.012, frameMat);
+		for (const z of [-0.05, 0.05]) tube([[headX - 0.28, seatH - 0.07, z], [tailX + 0.2, seatH - 0.05, z]], 0.008, frameMat);
+		// Red tank and shrouds, a red seat with its top at 21.6 in, red side panels and tail out to the bike's full length.
+		add(bike, slab(0.15, 0.17, 0.25, 0.03, 0.01), red, [headX - 0.08, seatH + 0.02, 0], { outline: OUTLINE_SMALL });
+		add(bike, slab(0.24, 0.12, 0.19, 0.04, 0.012), red, [headX - 0.2, seatH + 0.04, 0], { outline: OUTLINE_SMALL });
+		add(bike, slab(seatFront - (tailX + 0.22), 0.06, 0.17, 0.025, 0.01), seatRed, [(seatFront + tailX + 0.22) / 2, seatH - 0.03, 0], { outline: OUTLINE_SMALL });
 		add(bike, slab(0.3, 0.035, 0.15, 0.012, 0.006), red, [tailX + 0.15, seatH - 0.04, 0], { rot: [0, 0, -0.08], outline: OUTLINE_SMALL });
 		add(bike, slab(0.24, 0.13, 0.2, 0.02, 0.008), red, [seatFront - 0.26, seatH - 0.12, 0], { outline: 0.006 }); // side panels
-		// Engine low between the wheels, its underside at the 6.0 in clearance; swingarm back to the rear axle.
-		add(bike, slab(0.24, 0.2, 0.17, 0.03, 0.01), std("#8d9196", 0.5, 0.5), [headX - 0.17, clearance + 0.1, 0], { outline: 0.006 });
+		// Decals: a navy flash with CRF in white on each shroud, and HONDA in white on each side panel.
+		for (const side of [-1, 1] as const) {
+			add(bike, slab(0.12, 0.045, 0.003, 0.002, 0.001), navy, [headX - 0.085, seatH - 0.002, side * 0.1265], { rot: [0, 0, 0.35], outline: 0 });
+			sideLetters("CRF", [headX - 0.085, seatH + 0.0], 0.125 + 0.005, 0.034, side);
+			sideLetters("HONDA", [seatFront - 0.27, seatH - 0.12], 0.1 + 0.005, 0.03, side);
+		}
+		// Engine low between the wheels, its underside at the 6.0 in clearance: a silver case and the black,
+		// near-level cylinder up front; footpegs either side; the silver swingarm back to the rear axle.
+		add(bike, slab(0.24, 0.2, 0.17, 0.03, 0.01), std("#a3a7ac", 0.45, 0.6), [headX - 0.17, clearance + 0.1, 0], { outline: 0.006 });
+		add(bike, slab(0.11, 0.09, 0.12, 0.012, 0.005), blackPart, [headX - 0.06, clearance + 0.17, 0], { rot: [0, 0, 0.5], outline: 0 });
+		for (const side of [-1, 1]) {
+			const peg = new CylinderGeometry(0.01, 0.01, 0.07, 8);
+			peg.rotateX(Math.PI / 2);
+			add(bike, peg, blackPart, [headX - 0.33, clearance + 0.1, side * 0.12], { outline: 0 });
+		}
 		for (const z of [-0.06, 0.06]) {
-			const pivot = new Vector3(headX - 0.31, clearance + 0.13, z);
+			const pivot = new Vector3(headX - 0.33, clearance + 0.13, z);
 			const axle = new Vector3(-wb, wr, z);
-			const arm = add(bike, new CylinderGeometry(0.014, 0.014, pivot.distanceTo(axle), 8), blackPart, [(pivot.x + axle.x) / 2, (pivot.y + axle.y) / 2, z], { outline: 0 });
+			const arm = add(bike, new CylinderGeometry(0.014, 0.014, pivot.distanceTo(axle), 8), frameMat, [(pivot.x + axle.x) / 2, (pivot.y + axle.y) / 2, z], { outline: 0 });
 			arm.quaternion.setFromUnitVectors(new Vector3(0, 1, 0), axle.clone().sub(pivot).normalize());
 		}
-		const pipe = new CatmullRomCurve3([new Vector3(headX - 0.06, clearance + 0.12, 0.07), new Vector3(headX - 0.3, seatH - 0.2, 0.11), new Vector3(tailX + 0.3, seatH - 0.13, 0.11)]);
-		add(bike, new TubeGeometry(pipe, 20, 0.016, 8, false), blackPart, [0, 0, 0], { outline: 0 });
+		// Exhaust on the right: header from the cylinder, back under the seat to a black muffler by the tail.
+		tube([[headX - 0.02, clearance + 0.14, 0.07], [headX - 0.3, seatH - 0.2, 0.11], [tailX + 0.4, seatH - 0.13, 0.11]], 0.016, blackPart);
+		const muffler = new CylinderGeometry(0.03, 0.03, 0.2, 12);
+		muffler.rotateZ(Math.PI / 2);
+		add(bike, muffler, blackPart, [tailX + 0.3, seatH - 0.13, 0.11], { outline: 0.004 });
 		// Ratchet straps from each end of the bars down to the front tie-down hooks.
 		pair((side) => {
 			const from = new Vector3(bike.position.x + headX - 0.04, bike.position.y + barY, side * (barHalf - 0.05));
@@ -1162,36 +1367,39 @@ export function buildToyotaTruck(colors: TruckColors = DEFAULT_TRUCK_COLORS, opt
 		});
 	}
 	/** A sticker's own frame on the outside of the raked rear glass, centered at (centerY, z); local -X faces out. */
-	const onRearGlass = (z: number, centerY: number) => {
+	const onRearGlass = (name: string, z: number, centerY: number) => {
 		const g = new Group();
+		g.name = name;
 		g.position.set(rearGlassX(centerY) - 0.004, centerY, z);
 		g.rotation.z = rearRake;
 		body.add(g);
 		return g;
 	};
-	// Stickers sit low on the rear glass, just outboard of the slider's frame (at 0.26 m either side).
+	/** A flat piece of a sticker, drawn in its face (x across, y up), pressed on in layers so each sits just over the one below. */
+	const decal = (parent: Object3D, geo: BufferGeometry, mat: Material, layer: number, at: [number, number] = [0, 0]) => {
+		geo.rotateY(-Math.PI / 2);
+		return add(parent, geo, mat, [-0.003 - layer * 0.0004, at[1], at[0]], { outline: 0 });
+	};
+	const rect = (w: number, h: number) => new ShapeGeometry(new Shape([new Vector2(-w / 2, -h / 2), new Vector2(w / 2, -h / 2), new Vector2(w / 2, h / 2), new Vector2(-w / 2, h / 2)]));
+	// Stickers sit low on the rear glass, just outboard of the slider's frame (at 0.26 m either side):
+	// rectangles on the passenger side, rounds on the driver's side.
 	const glassEdgeZ = 0.285;
 	const stickerBottomY = BELT_Y + 0.053;
-	const kalapana = stickers.includes("kalapana-big") ? { w: 12 * INCH, h: 4 * INCH } : stickers.includes("kalapana") ? { w: 7.5 * INCH, h: 2.5 * INCH } : null;
-	if (kalapana) {
-		// Aloha Got Soul's sticker, white on green, on the passenger side: 7.5 x 2.5 in, or 12 x 4 in in its
-		// BIG SIZE. Only the big KALAPANA is lettered; the "SLOW DOWN... I'M LISTENING TO" line above it would
-		// be about a millimeter tall at this scale.
-		const { w, h } = kalapana;
-		const k = h / (2.5 * INCH);
-		const sticker = onRearGlass(glassEdgeZ + w / 2, stickerBottomY + h / 2);
+	if (stickers.includes("kalapana")) {
+		// Aloha Got Soul's 7.5 x 2.5 in sticker, white on green. Only the big KALAPANA is lettered; the
+		// "SLOW DOWN... I'M LISTENING TO" line above it would be about a millimeter tall at this scale.
+		const [w, h] = [7.5 * INCH, 2.5 * INCH];
+		const sticker = onRearGlass("sticker-kalapana", glassEdgeZ + w / 2, stickerBottomY + h / 2);
 		add(sticker, slab(0.005, h, w, 0.004, 0.001), stickerMat, [0, 0, 0], { outline: 0.003 });
-		lettering("KALAPANA", [-0.004, -0.008 * k, 0], 0.021 * k, 0.0042 * k, -1, stickerInkMat, sticker);
+		lettering("KALAPANA", [-0.004, -0.008, 0], 0.021, 0.0042, -1, stickerInkMat, sticker);
 	}
 	if (stickers.includes("tc")) {
-		// T&C Surf Designs' 6 in Standard Logo, white on clear, on the driver's side: the ring that carries
-		// "T&C Surf Designs" and "Hawaii" (too small to letter here) round a yin-yang whose other half is the
-		// clear film. The ring is about a third of the radius, as in T&C's product photo.
+		// T&C Surf Designs' 6 in Standard Logo, white on clear: the ring that carries "T&C Surf Designs" and
+		// "Hawaii" (too small to letter here) round a yin-yang whose other half is the clear film. The ring is
+		// about a third of the radius, as in T&C's product photo.
 		const R = TC_STICKER_R;
-		const sticker = onRearGlass(-(glassEdgeZ + R), stickerBottomY + R);
-		const ring = new RingGeometry(R * 0.68, R, 40);
-		ring.rotateY(-Math.PI / 2);
-		add(sticker, ring, stickerInkMat, [-0.003, 0, 0], { outline: 0 });
+		const sticker = onRearGlass("sticker-tc", -(glassEdgeZ + R), stickerBottomY + R);
+		decal(sticker, new RingGeometry(R * 0.68, R, 40), stickerInkMat, 0);
 		const ry = R * 0.6;
 		const yin = new Shape();
 		yin.moveTo(0, ry);
@@ -1201,12 +1409,99 @@ export function buildToyotaTruck(colors: TruckColors = DEFAULT_TRUCK_COLORS, opt
 		const eye = new Shape();
 		eye.absarc(0, -ry / 2, ry * 0.15, 0, Math.PI * 2, true);
 		yin.holes.push(eye);
-		const half = new ShapeGeometry(yin, 16);
-		half.rotateY(-Math.PI / 2);
-		add(sticker, half, stickerInkMat, [-0.003, 0, 0], { outline: 0 });
-		const dot = new CircleGeometry(ry * 0.15, 16);
-		dot.rotateY(-Math.PI / 2);
-		add(sticker, dot, stickerInkMat, [-0.003, ry / 2, 0], { outline: 0 });
+		decal(sticker, new ShapeGeometry(yin, 16), stickerInkMat, 0);
+		decal(sticker, new CircleGeometry(ry * 0.15, 16), stickerInkMat, 0, [0, ry / 2]);
+	}
+	if (stickers.includes("lemon")) {
+		// The lemon from Lemon's logo, die-cut to its outline (no square, no mark): a black rim round a yellow
+		// slice, the rind set off by a black line round its lower left, and nine segments meeting just up and
+		// right of center, black showing between them. About 4 in across, an estimate.
+		const R = 2 * INCH;
+		const sticker = onRearGlass("sticker-lemon", -(glassEdgeZ + R), stickerBottomY + R);
+		const ink = std("#141414", 0.5, 0);
+		const lemon = std("#f5e23c", 0.45, 0);
+		decal(sticker, new CircleGeometry(R, 40), ink, 0);
+		decal(sticker, new CircleGeometry(R * 0.92, 40), lemon, 1);
+		decal(sticker, new RingGeometry(R * 0.76, R * 0.82, 32, 1, Math.PI * 0.55, Math.PI * 1.05), ink, 2);
+		const c: [number, number] = [R * 0.06, R * 0.06];
+		decal(sticker, new CircleGeometry(R * 0.66, 36), ink, 2, c);
+		for (let i = 0; i < 9; i++) {
+			const a0 = (i / 9) * Math.PI * 2 + 0.07;
+			const a1 = ((i + 1) / 9) * Math.PI * 2 - 0.07;
+			const mid = (a0 + a1) / 2;
+			const seg = new Shape();
+			seg.moveTo(Math.cos(mid) * R * 0.11, Math.sin(mid) * R * 0.11);
+			seg.lineTo(Math.cos(a0) * R * 0.6, Math.sin(a0) * R * 0.6); // an arc after a bare moveTo wouldn't join it
+			seg.absarc(0, 0, R * 0.6, a0, a1, false);
+			decal(sticker, new ShapeGeometry(seg, 8), lemon, 3, c);
+		}
+		decal(sticker, new CircleGeometry(R * 0.08, 12), ink, 4, c);
+	}
+	if (stickers.includes("kanaka")) {
+		// Flags For Good's 3.75 x 2.5 in Kanaka Maoli flag sticker, white-bordered, on the passenger side: nine
+		// stripes, green, red and yellow from the top, and a green shield (darker rim) carrying a yellow kahili
+		// on its staff and two paddles crossed below it, blades up and out.
+		const [w, h] = [3.75 * INCH, 2.5 * INCH];
+		const sticker = onRearGlass("sticker-kanaka", glassEdgeZ + w / 2, stickerBottomY + h / 2);
+		const green = std("#3fae49", 0.5, 0);
+		const red = std("#e2312b", 0.5, 0);
+		const yellow = std("#f5df35", 0.5, 0);
+		decal(sticker, rect(w, h), stickerInkMat, 0);
+		const [fw, fh] = [w - 0.004, h - 0.004];
+		[green, red, yellow, green, red, yellow, green, red, yellow].forEach((m, i) => decal(sticker, rect(fw, fh / 9), m, 1, [0, fh / 2 - (fh / 9) * (i + 0.5)]));
+		const sw = fw * 0.38;
+		const sh = fh * 0.86;
+		const shield = (k: number) => {
+			const p = new Shape();
+			const hw = (sw / 2) * k;
+			p.moveTo(-hw, sh * 0.46 * k);
+			p.lineTo(hw, sh * 0.46 * k);
+			p.lineTo(hw, -sh * 0.08 * k);
+			p.quadraticCurveTo(hw, -sh * 0.42 * k, 0, -sh * 0.54 * k);
+			p.quadraticCurveTo(-hw, -sh * 0.42 * k, -hw, -sh * 0.08 * k);
+			return new ShapeGeometry(p, 10);
+		};
+		decal(sticker, shield(1), std("#1f6a2c", 0.5, 0), 2);
+		decal(sticker, shield(0.9), green, 3);
+		decal(sticker, new ShapeGeometry(new Shape([new Vector2(-sw * 0.2, sh * 0.36), new Vector2(sw * 0.2, sh * 0.36), new Vector2(0, sh * 0.13)])), yellow, 4);
+		decal(sticker, rect(sw * 0.05, sh * 0.52), yellow, 4, [0, -sh * 0.12]);
+		for (const s of [-1, 1]) {
+			const blade = new Shape();
+			blade.absellipse(0, sh * 0.21, sh * 0.04, sh * 0.11, 0, Math.PI * 2, false, 0);
+			const bladeGeo = new ShapeGeometry(blade, 12);
+			bladeGeo.rotateZ(-s * 0.75);
+			decal(sticker, bladeGeo, yellow, 4, [0, -sh * 0.12]);
+			const shaft = rect(sw * 0.035, sh * 0.5);
+			shaft.translate(0, -sh * 0.05, 0);
+			shaft.rotateZ(-s * 0.75);
+			decal(sticker, shaft, yellow, 4, [0, -sh * 0.12]);
+		}
+	}
+	if (stickers.includes("dahui")) {
+		// The Hui O He'e Nalu (Da Hui) badge from the Da Hui Paddle Race, on the driver's side: a black disc
+		// ringed in yellow with a yellow surfer at its center. The ring lettering is too small to draw at this
+		// scale, and the surfer is simplified to a few strokes. About 4 in across, an estimate.
+		const R = 2 * INCH;
+		const sticker = onRearGlass("sticker-dahui", -(glassEdgeZ + R), stickerBottomY + R);
+		const black = std("#111111", 0.5, 0);
+		const yellow = std("#f3d41c", 0.45, 0);
+		decal(sticker, new CircleGeometry(R, 40), black, 0);
+		decal(sticker, new RingGeometry(R * 0.9, R * 0.95, 40), yellow, 1);
+		decal(sticker, new CircleGeometry(R * 0.08, 14), yellow, 1, [R * 0.04, R * 0.38]); // head
+		const stroke = (len: number, angle: number, at: [number, number]) => {
+			const g = rect(R * 0.07, len);
+			g.rotateZ(angle);
+			decal(sticker, g, yellow, 1, at);
+		};
+		stroke(R * 0.32, -0.2, [R * 0.01, R * 0.15]); // body
+		stroke(R * 0.5, 1.2, [R * 0.0, R * 0.22]); // arms out
+		stroke(R * 0.3, 0.55, [-R * 0.1, -R * 0.13]); // back leg
+		stroke(R * 0.3, -0.45, [R * 0.12, -R * 0.13]); // front leg
+		const board = new Shape();
+		board.absellipse(0, 0, R * 0.42, R * 0.055, 0, Math.PI * 2, false, 0);
+		const boardGeo = new ShapeGeometry(board, 16);
+		boardGeo.rotateZ(0.12);
+		decal(sticker, boardGeo, yellow, 1, [R * 0.01, -R * 0.34]);
 	}
 
 	pair((side) => {

@@ -1,33 +1,78 @@
-// Too Good to Be True's hero console: one seeded dashboard per gauge-console "run", built from
-// the page's own simulation (simulateMetricBatch, the same two-proportion z-test, and the same
-// three decision rules the live experiment applies), at the live experiment's default settings.
+// Too Good to Be True's launch dashboard: one seeded dashboard of metric tiles per "run", built from
+// the page's own simulation (simulateMetricBatch, the same two-proportion z-test, and the same three
+// decision rules the live experiment applies), at the live experiment's default settings.
 //
-// Every gauge needle is a metric's signed z statistic. Each rule's redline is the |z| beyond which
-// that rule flags a metric, derived from its p-value threshold through the page's own normal CDF,
-// so "needle in the red" is exactly "flagged by that rule" (tests/stats-sim/dashboard-runs.test.ts
-// checks this for every seed and every rule).
+// Each rule's bar is a p-value threshold, also stated as the |z| a metric has to reach, derived
+// through the page's own normal CDF, so "clears the bar" is exactly "flagged by that rule"
+// (tests/stats-sim/dashboard-runs.test.ts checks this for every seed and every rule).
 import { standardNormalCdf, twoProportionZTest } from "./frequentist";
 import { simulateMetricBatch, type MultiMetricBatchConfig } from "./multi-metric-experiment";
 import { benjaminiHochberg, bonferroniRejections, bonferroniThreshold, naiveRejections } from "./multiple-testing";
+import { mulberry32 } from "./rng";
 
 /** The live experiment's defaults (src/scripts/the-dashboard-problem/live-experiment.ts). */
-export const HERO_CONFIG: Omit<MultiMetricBatchConfig, "seed"> = {
+export const LAUNCH_CONFIG: Omit<MultiMetricBatchConfig, "seed"> = {
 	num_metrics: 20,
 	fraction_null: 0.7,
 	baseline_rate: 0.1,
 	relative_lift: 0.6,
 	visitors_per_arm: 400,
 };
-export const HERO_ALPHA = 0.05;
+export const LAUNCH_ALPHA = 0.05;
 /** Seeds 1 to 20, in order, none skipped. */
-export const HERO_SEEDS: readonly number[] = Array.from({ length: 20 }, (_, i) => i + 1);
+export const LAUNCH_SEEDS: readonly number[] = Array.from({ length: 20 }, (_, i) => i + 1);
 
 export type Correction = "none" | "bonferroni" | "bh";
 export const CORRECTIONS: readonly Correction[] = ["none", "bonferroni", "bh"];
 
-export interface GaugeMetric {
-	/** 1-based, as the live experiment's table numbers them. */
+/**
+ * Made-up product metric names for the tiles, all rates where higher is better, like the simulated
+ * metrics. They are labels only: `dealNames` hands them out at random each run, so a name never
+ * says anything about whether its metric truly moved.
+ */
+export const METRIC_NAMES: readonly string[] = [
+	"Sign-up rate",
+	"Checkout conversion",
+	"Add-to-cart rate",
+	"Trial starts",
+	"Upgrade rate",
+	"Day-7 retention",
+	"Search click-through",
+	"Onboarding done",
+	"Repeat purchase",
+	"Newsletter opt-in",
+	"Referral rate",
+	"Wishlist adds",
+	"Promo-code use",
+	"Review rate",
+	"App installs",
+	"Push opt-in",
+	"Profile complete",
+	"Share rate",
+	"Saved a card",
+	"Return visits",
+];
+
+/** The names' own random stream, kept apart from the simulation's. */
+const NAME_STREAM = 0x5eed_0ff;
+
+/** A seeded shuffle of `METRIC_NAMES` (Fisher-Yates), one name per metric. */
+export function dealNames(seed: number, count: number): string[] {
+	if (count > METRIC_NAMES.length) throw new Error(`dealNames has ${METRIC_NAMES.length} names, asked for ${count}`);
+	const rng = mulberry32((seed * 2654435761) ^ NAME_STREAM);
+	const names = [...METRIC_NAMES];
+	for (let i = names.length - 1; i > 0; i--) {
+		const j = Math.floor(rng() * (i + 1));
+		[names[i], names[j]] = [names[j], names[i]];
+	}
+	return names.slice(0, count);
+}
+
+export interface DashboardMetric {
+	/** 1-based, as the simulation (and the live experiment's table) numbers them. */
 	number: number;
+	/** A made-up tile name, dealt at random each run (see `dealNames`). */
+	name: string;
 	is_null: boolean;
 	rate_a: number;
 	rate_b: number;
@@ -41,10 +86,10 @@ export interface GaugeMetric {
 	flagged: Record<Correction, boolean>;
 }
 
-export interface Redline {
+export interface Bar {
 	/** The rule's p-value threshold. */
 	p: number;
-	/** The same threshold as a |z| on the gauge. */
+	/** The same threshold as the |z| a metric has to reach. */
 	z: number;
 	/** Benjamini-Hochberg rejects p <= threshold; the other two reject p < alpha'. */
 	inclusive: boolean;
@@ -52,17 +97,17 @@ export interface Redline {
 	rank?: number;
 }
 
-export interface GaugeRun {
+export interface DashboardRun {
 	seed: number;
 	alpha: number;
 	config: Omit<MultiMetricBatchConfig, "seed">;
-	metrics: GaugeMetric[];
-	redline: Record<Correction, Redline>;
+	metrics: DashboardMetric[];
+	bar: Record<Correction, Bar>;
 }
 
 /**
  * The |z| whose two-sided p-value is `p`, inverting the page's own standardNormalCdf by bisection
- * (it is monotone), so the redline sits exactly where the page's p-values cross the threshold.
+ * (it is monotone), so the bar sits exactly where the page's p-values cross the threshold.
  */
 export function zForTwoSidedP(p: number): number {
 	if (!(p > 0 && p < 1)) throw new Error(`zForTwoSidedP needs 0 < p < 1, got ${p}`);
@@ -76,12 +121,12 @@ export function zForTwoSidedP(p: number): number {
 	return (lo + hi) / 2;
 }
 
-/** Whether a z statistic lands in a rule's red zone (either end of the dial). */
-export function inRed(z: number, line: Pick<Redline, "z" | "inclusive">): boolean {
-	return line.inclusive ? Math.abs(z) >= line.z : Math.abs(z) > line.z;
+/** Whether a z statistic clears a rule's bar, in either direction. */
+export function clearsBar(z: number, bar: Pick<Bar, "z" | "inclusive">): boolean {
+	return bar.inclusive ? Math.abs(z) >= bar.z : Math.abs(z) > bar.z;
 }
 
-export function runGaugeDashboard(seed: number, config = HERO_CONFIG, alpha = HERO_ALPHA): GaugeRun {
+export function runDashboard(seed: number, config = LAUNCH_CONFIG, alpha = LAUNCH_ALPHA): DashboardRun {
 	const n = config.visitors_per_arm;
 	const outcomes = simulateMetricBatch({ ...config, seed });
 	const pValues = outcomes.map((o) => o.p_value);
@@ -89,12 +134,14 @@ export function runGaugeDashboard(seed: number, config = HERO_CONFIG, alpha = HE
 	const bonferroni = bonferroniRejections(pValues, alpha);
 	const bh = benjaminiHochberg(pValues, alpha);
 	const m = pValues.length;
+	const names = dealNames(seed, m);
 
 	const metrics = outcomes.map((o, i) => {
 		// The batch keeps rates, not counts; rate x visitors recovers the exact counts it tested.
 		const test = twoProportionZTest(Math.round(o.rate_a * n), n, Math.round(o.rate_b * n), n);
 		return {
 			number: o.metric_index + 1,
+			name: names[i],
 			is_null: o.is_null,
 			rate_a: o.rate_a,
 			rate_b: o.rate_b,
@@ -107,7 +154,7 @@ export function runGaugeDashboard(seed: number, config = HERO_CONFIG, alpha = HE
 	});
 
 	// BH rejects the k smallest p-values, which is the same as rejecting every p <= (k/m) x alpha.
-	// With k = 0 nothing clears even rank 1's line, alpha/m, so the redline sits there.
+	// With k = 0 nothing clears even rank 1's line, alpha/m, so the bar sits there.
 	const rank = bh.filter(Boolean).length;
 	const bhP = (Math.max(rank, 1) / m) * alpha;
 	const bonfP = bonferroniThreshold(alpha, m);
@@ -117,7 +164,7 @@ export function runGaugeDashboard(seed: number, config = HERO_CONFIG, alpha = HE
 		alpha,
 		config,
 		metrics,
-		redline: {
+		bar: {
 			none: { p: alpha, z: zForTwoSidedP(alpha), inclusive: false },
 			bonferroni: { p: bonfP, z: zForTwoSidedP(bonfP), inclusive: false },
 			bh: { p: bhP, z: zForTwoSidedP(bhP), inclusive: true, rank },
@@ -126,7 +173,7 @@ export function runGaugeDashboard(seed: number, config = HERO_CONFIG, alpha = HE
 }
 
 /** Mean observed lift of the truly lifted metrics that pass `keep`, or null if none do. */
-export function meanLift(metrics: GaugeMetric[], keep: (m: GaugeMetric) => boolean = () => true): number | null {
+export function meanLift(metrics: DashboardMetric[], keep: (m: DashboardMetric) => boolean = () => true): number | null {
 	const lifts = metrics.filter((m) => !m.is_null && keep(m) && m.lift !== null).map((m) => m.lift as number);
 	return lifts.length ? lifts.reduce((a, b) => a + b, 0) / lifts.length : null;
 }
@@ -141,7 +188,7 @@ export interface RunTally {
 	allLift: number | null;
 }
 
-export function tallyRuns(runs: GaugeRun[]): RunTally {
+export function tallyRuns(runs: DashboardRun[]): RunTally {
 	const anyFalse = { none: 0, bonferroni: 0, bh: 0 };
 	for (const run of runs) {
 		for (const c of CORRECTIONS) if (run.metrics.some((m) => m.is_null && m.flagged[c])) anyFalse[c]++;

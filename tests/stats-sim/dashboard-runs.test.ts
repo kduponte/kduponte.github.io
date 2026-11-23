@@ -1,12 +1,14 @@
 import { describe, expect, it } from "vitest";
 import {
 	CORRECTIONS,
-	HERO_ALPHA,
-	HERO_CONFIG,
-	HERO_SEEDS,
-	inRed,
+	LAUNCH_ALPHA,
+	LAUNCH_CONFIG,
+	LAUNCH_SEEDS,
+	METRIC_NAMES,
+	clearsBar,
+	dealNames,
 	meanLift,
-	runGaugeDashboard,
+	runDashboard,
 	tallyRuns,
 	zForTwoSidedP,
 } from "../../src/lib/stats-sim/dashboard-runs";
@@ -26,12 +28,12 @@ describe("zForTwoSidedP", () => {
 	});
 });
 
-describe("runGaugeDashboard", () => {
-	const runs = HERO_SEEDS.map((s) => runGaugeDashboard(s));
+describe("runDashboard", () => {
+	const runs = LAUNCH_SEEDS.map((s) => runDashboard(s));
 
 	it("uses the live experiment's defaults: 20 metrics, 14 null, 6 lifted", () => {
-		expect(HERO_CONFIG).toEqual({ num_metrics: 20, fraction_null: 0.7, baseline_rate: 0.1, relative_lift: 0.6, visitors_per_arm: 400 });
-		expect(HERO_ALPHA).toBe(0.05);
+		expect(LAUNCH_CONFIG).toEqual({ num_metrics: 20, fraction_null: 0.7, baseline_rate: 0.1, relative_lift: 0.6, visitors_per_arm: 400 });
+		expect(LAUNCH_ALPHA).toBe(0.05);
 		for (const run of runs) {
 			expect(run.metrics).toHaveLength(20);
 			expect(run.metrics.filter((m) => m.is_null)).toHaveLength(14);
@@ -39,16 +41,16 @@ describe("runGaugeDashboard", () => {
 	});
 
 	it("runs the seeds 1 to 20 in order", () => {
-		expect(HERO_SEEDS).toEqual(Array.from({ length: 20 }, (_, i) => i + 1));
+		expect(LAUNCH_SEEDS).toEqual(Array.from({ length: 20 }, (_, i) => i + 1));
 	});
 
 	it("carries the batch's own p-values and rates unchanged", () => {
-		const batch = simulateMetricBatch({ ...HERO_CONFIG, seed: 1 });
+		const batch = simulateMetricBatch({ ...LAUNCH_CONFIG, seed: 1 });
 		expect(runs[0].metrics.map((m) => m.p)).toEqual(batch.map((o) => o.p_value));
 		expect(runs[0].metrics.map((m) => m.rate_b)).toEqual(batch.map((o) => o.rate_b));
 	});
 
-	it("gives each needle a z whose two-sided p-value is the metric's p-value", () => {
+	it("gives each metric a z whose two-sided p-value is the metric's p-value", () => {
 		for (const run of runs) {
 			for (const m of run.metrics) {
 				expect(2 * (1 - standardNormalCdf(Math.abs(m.z)))).toBeCloseTo(m.p, 12);
@@ -57,34 +59,30 @@ describe("runGaugeDashboard", () => {
 		}
 	});
 
-	it("puts a needle in the red exactly when the page's rule flags it, for every seed and rule", () => {
+	it("clears a metric over the bar exactly when the page's rule flags it, for every seed and rule", () => {
 		for (const run of runs) {
 			for (const c of CORRECTIONS) {
-				for (const m of run.metrics) expect(inRed(m.z, run.redline[c])).toBe(m.flagged[c]);
+				for (const m of run.metrics) expect(clearsBar(m.z, run.bar[c])).toBe(m.flagged[c]);
 			}
 		}
 	});
 
-	it("pushes the redline outward under either correction", () => {
+	it("raises the bar under either correction", () => {
 		for (const run of runs) {
-			expect(run.redline.bonferroni.z).toBeGreaterThan(run.redline.none.z);
-			expect(run.redline.bh.z).toBeGreaterThan(run.redline.none.z);
-			expect(run.redline.bh.z).toBeLessThanOrEqual(run.redline.bonferroni.z + 1e-9);
+			expect(run.bar.bonferroni.z).toBeGreaterThan(run.bar.none.z);
+			expect(run.bar.bh.z).toBeGreaterThan(run.bar.none.z);
+			expect(run.bar.bh.z).toBeLessThanOrEqual(run.bar.bonferroni.z + 1e-9);
 		}
 	});
 
 	it("sets Bonferroni's line at alpha/20 and BH's at rank/20 x alpha", () => {
 		const run = runs[0];
-		expect(run.redline.bonferroni.p).toBeCloseTo(0.0025, 12);
-		expect(run.redline.bh.rank).toBe(run.metrics.filter((m) => m.flagged.bh).length);
-		expect(run.redline.bh.p).toBeCloseTo((Math.max(run.redline.bh.rank!, 1) / 20) * 0.05, 12);
+		expect(run.bar.bonferroni.p).toBeCloseTo(0.0025, 12);
+		expect(run.bar.bh.rank).toBe(run.metrics.filter((m) => m.flagged.bh).length);
+		expect(run.bar.bh.p).toBeCloseTo((Math.max(run.bar.bh.rank!, 1) / 20) * 0.05, 12);
 	});
 
-	it("keeps every needle on a +/-5 dial", () => {
-		for (const run of runs) for (const m of run.metrics) expect(Math.abs(m.z)).toBeLessThan(5);
-	});
-
-	it("opens on a run where one truly null metric crosses the uncorrected redline and neither correction keeps it", () => {
+	it("opens on a run where one truly null metric clears the uncorrected bar and neither correction keeps it", () => {
 		const [first] = runs;
 		const falseNaive = first.metrics.filter((m) => m.is_null && m.flagged.none);
 		expect(falseNaive.map((m) => m.number)).toEqual([9]);
@@ -123,5 +121,24 @@ describe("runGaugeDashboard", () => {
 		expect(meanLift(runs[0].metrics, () => false)).toBeNull();
 		const six = runs[0].metrics.filter((m) => !m.is_null).map((m) => m.lift as number);
 		expect(meanLift(runs[0].metrics)).toBeCloseTo(six.reduce((a, b) => a + b, 0) / 6, 12);
+	});
+
+	it("gives every metric a name, dealt at random each run", () => {
+		for (const run of runs) {
+			expect(run.metrics.map((m) => m.name).sort()).toEqual([...METRIC_NAMES].sort());
+			expect(run.metrics.map((m) => m.name)).toEqual(dealNames(run.seed, 20));
+		}
+		expect(dealNames(1, 20)).not.toEqual(dealNames(2, 20));
+		expect(dealNames(1, 20)).toEqual(dealNames(1, 20));
+		expect(() => dealNames(1, 21)).toThrow();
+	});
+
+	it("never ties a name to the truth: across the 20 runs, every name is real in some and null in others", () => {
+		const real = new Map<string, number>();
+		for (const run of runs) for (const m of run.metrics) if (!m.is_null) real.set(m.name, (real.get(m.name) ?? 0) + 1);
+		for (const name of METRIC_NAMES) {
+			expect(real.get(name) ?? 0).toBeGreaterThan(0);
+			expect(real.get(name)).toBeLessThan(runs.length);
+		}
 	});
 });

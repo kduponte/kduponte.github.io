@@ -61,8 +61,6 @@ const X = (l: number) => ((l - lo) / (hi - lo)) * BAR_W;
 const ticks = Array.from({ length: (hi - lo) / 10 + 1 }, (_, i) => lo + i * 10);
 const n = points.length;
 const median = consensus.median as number;
-// Boards shown at a size other than the median rule's, named in the caption.
-const overrides = resolved.filter((r) => r.board.size_override).map((r) => `the ${r.board.name}, shown at ${r.size.length}`);
 
 const readouts = resolved.map((r, i) => ({
 	eyebrow: `Board ${i + 1} of ${resolved.length} · ${r.board.style}`,
@@ -92,7 +90,7 @@ const boardList = resolved.map((r) => `${r.board.name} (${r.size.length}, ${r.si
 		data-volume-blob-viewer
 		data-config={JSON.stringify(config)}
 		role="img"
-		aria-label={`A translucent lime blob bounces and reshapes into iconic surfboards at true relative size: ${boardList}. Drag to spin it; tap to skip ahead.`}
+		aria-label={`A translucent lime blob bounces and reshapes into iconic surfboards at true relative size, squeezing out or soaking up drops of goo to match each board's liters: ${boardList}. Drag to spin it; tap to skip ahead.`}
 		class:list={["relative z-10 w-full select-none", aspect, canvasClass]}
 	>
 		<!-- Static fallback: shown until WebGL mounts, and kept if it can't. -->
@@ -163,8 +161,9 @@ const boardList = resolved.map((r) => `${r.board.name} (${r.size.length}, ${r.si
 			</div>
 			<p class="mt-3 text-[11px] font-medium leading-snug">
 				<strong>To scale:</strong> every board's length, width, thickness and liters, on one shared scale, and the blob always holds exactly
-				the liters of the board it's becoming. Each model is shown in its stock size nearest the {median.toFixed(1)} L median{overrides.length > 0 && <>{" "}(except {overrides.join(", ")})</>}.{" "}
-				<strong>Not to scale:</strong> the bounce, wobble and goo are animation; outlines, rocker and rails are estimated from typical designs or fitted to
+				the liters of the board it's becoming: it squeezes out drops when the next board is smaller and soaks up drops when it's bigger, each
+				drop holding the liters it carries.{" "}
+				<strong>Not to scale:</strong> the bounce, wobble and where the drops fly are animation; outlines, rocker and rails are estimated from typical designs or fitted to
 				maker photos (only length, width, thickness and liters are published); fins follow published specs where they exist; graphics are painted after
 				reference photos; logos are the makers' own brand and model marks.
 			</p>
@@ -213,19 +212,24 @@ const boardList = resolved.map((r) => `${r.board.name} (${r.size.length}, ${r.si
 		if (!host || !readouts.length || [eyebrow, name, maker, liters, dims, status, sentence, source, sourceLine, marker].some((e) => !e)) continue;
 
 		let shownKey = "";
-		const show = ({ phase, index, liters: l }: BlobState) => {
+		const show = ({ phase, index, liters: l, from }: BlobState) => {
 			const r = readouts[index];
 			const isBlob = phase === "blob";
 			const key = `${isBlob}:${index}`;
 			if (key !== shownKey) {
 				shownKey = key;
 				if (isBlob) {
+					const change = r.liters - from;
+					const amount = `${Math.abs(change).toFixed(1)} L`;
 					eyebrow!.textContent = `Play-Doh · becoming board ${index + 1} of ${readouts.length}`;
 					name!.textContent = "The blob";
-					maker!.textContent = `Holding the next board's liters`;
+					maker!.textContent = Math.abs(change) < 0.05 ? "Already the right size" : change < 0 ? `Squeezing out ${amount}` : `Soaking up ${amount}`;
 					dims!.textContent = "No board yet";
 					status!.textContent = "";
-					sentence!.textContent = `Reshaping to ${r.liters.toFixed(1)} L for the ${r.name}.`;
+					sentence!.textContent =
+						Math.abs(change) < 0.05
+							? `Holding ${r.liters.toFixed(1)} L for the ${r.name}.`
+							: `From ${from.toFixed(1)} L to ${r.liters.toFixed(1)} L for the ${r.name}.`;
 					sourceLine!.hidden = true;
 				} else {
 					eyebrow!.textContent = r.eyebrow;
@@ -252,7 +256,7 @@ const boardList = resolved.map((r) => `${r.board.name} (${r.size.length}, ${r.si
 				host.dispatchEvent(new CustomEvent("surfblob:next"));
 			} else {
 				fallbackIndex = (fallbackIndex + 1) % readouts.length;
-				show({ phase: "hold", index: fallbackIndex, liters: readouts[fallbackIndex].liters });
+				show({ phase: "hold", index: fallbackIndex, liters: readouts[fallbackIndex].liters, from: readouts[fallbackIndex].liters });
 			}
 		});
 	}

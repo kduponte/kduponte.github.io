@@ -161,7 +161,8 @@ const boardList = resolved.map((r) => `${r.board.name} (${r.size.length}, ${r.si
 					Specs: <a data-r-source href={first.url} class="underline decoration-2 underline-offset-2" rel="noopener" target="_blank">{first.source}</a>
 				</p>
 			</div>
-			<p class="mt-3 text-[11px] font-medium leading-snug">
+			<!-- A solid backing: on the black header the season's ripples would otherwise run through this small type. -->
+			<p class="mt-3 rounded-xl bg-black px-3 py-2.5 text-[11px] font-medium leading-snug">
 				<strong>To scale:</strong> every board's length, width, thickness and liters, on one shared scale, and the blob always holds exactly
 				the liters of the board it's becoming. Each model is shown in its stock size nearest the {median.toFixed(1)} L median{overrides.length > 0 && <>{" "}(except {overrides.join(", ")})</>}.{" "}
 				<strong>Not to scale:</strong> the bounce, wobble and goo are animation; outlines, rocker and rails are estimated from typical designs or fitted to

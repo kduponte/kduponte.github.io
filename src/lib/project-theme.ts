@@ -49,7 +49,7 @@ const byPage: Record<string, SeasonId> = {
 	about: "shell",
 	experience: "signal",
 	"the-22re-restoration": "espresso",
-	"the-dashboard-problem": "coral",
+	"too-good-to-be-true": "coral",
 	"the-noise-problem": "moss",
 	"the-peeking-problem": "cobalt",
 	"the-volume-gap": "night",

@@ -1,0 +1,43 @@
+---
+// The winner's-curse study. Both sweeps run once at build time (runCurseStudy, pinned in
+// tests/stats-sim/winners-curse.test.ts) and ship as JSON; the script only draws them, so the
+// chart and its table show exactly the numbers the test checks.
+// Behavior lives in src/scripts/the-dashboard-problem/curse-study-chart.ts.
+import { formatCount, type StudySweep } from "../../../lib/stats-sim/winners-curse";
+
+interface Props {
+	byVisitors: StudySweep;
+	byMetrics: StudySweep;
+}
+
+const { byVisitors, byMetrics } = Astro.props;
+const lastSeed = byVisitors.first_seed + byVisitors.dashboards - 1;
+---
+
+<section id="curse-study" class="mx-auto max-w-7xl px-6 py-16 md:px-12 md:py-20">
+	<h2 class="font-anton text-4xl md:text-5xl">What makes the curse better or worse</h2>
+	<p class="mt-3 max-w-[65ch] text-base leading-relaxed text-ink-soft">
+		The same {formatCount(byVisitors.dashboards)} seeded dashboards at every point, the live experiment's defaults with one
+		setting changed. Left: visitors per arm, which sets how much power each test has. Right: the number of metrics,
+		which moves the corrections' bars, Bonferroni's directly. Each line is the average observed lift of the real winners
+		a rule flags. The dashed line is the true lift, the dotted one every real lift, flagged or not.
+	</p>
+
+	<div id="cs-root" class="mt-6">
+		<div data-vg-summary class="raw-box rounded-xl bg-cream p-4 text-sm leading-relaxed"></div>
+		<div class="mt-4 flex justify-end">
+			<button type="button" data-vg-table-toggle class="btn btn-sm btn-ghost" aria-pressed="false">
+				View as table
+			</button>
+		</div>
+		<div data-vg-chart class="mt-2 grid grid-cols-1 gap-8 md:grid-cols-2"></div>
+		<div data-vg-table class="mt-2 overflow-x-auto"></div>
+		<p class="mt-2 max-w-[65ch] text-xs leading-relaxed text-ink-soft">
+			Seeds {formatCount(byVisitors.first_seed)}–{formatCount(lastSeed)} at every point, computed at build time by runCurseStudy in
+			src/lib/stats-sim/winners-curse.ts. At 2 and 5 metrics the 70/30 split rounds to one lifted metric per dashboard.
+		</p>
+	</div>
+
+	<script type="application/json" id="cs-data" set:html={JSON.stringify({ byVisitors, byMetrics })} />
+	<script src="../../../scripts/the-dashboard-problem/curse-study-chart.ts"></script>
+</section>

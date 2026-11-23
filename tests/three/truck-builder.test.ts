@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { BackSide, Box3, Group, Mesh, MeshBasicMaterial, MeshStandardMaterial, Vector3 } from "three";
+import { BackSide, Box3, CylinderGeometry, Group, Mesh, MeshBasicMaterial, MeshStandardMaterial, Vector3 } from "three";
 import {
 	AS_IT_SITS,
 	CATALOG,
@@ -71,14 +71,19 @@ describe("truck builder catalog", () => {
 		expect(r.bed.kind).toBe("none");
 	});
 
-	it("builds Noah's monster-truck version: Cavalry Blue, 6.5 in of lift, 33s on 15 x 10s, steps, stacks, McFly roll bar", () => {
+	it("builds Noah's monster-truck version: 1991 navy, 6.5 in of lift, 35 in Boggers on 15 x 10s, shock hoops, steps, stacks, McFly roll bar", () => {
 		const r = resolveBuild(NOAH_BUILD);
-		expect(r.paint.id).toBe("8W2");
+		expect(r.paint.id).toBe("8E3");
+		expect(r.paint.spec).toContain("1991 factory");
 		expect([r.ride.front, r.ride.rear].map((m) => m / INCH)).toEqual([6.5, 6.5]);
 		expect(r.steps.kind).toBe("tube");
+		expect(r.shocks.kind).toBe("hoops");
 		expect(r.exhaust.kind).toBe("stacks");
-		expect(tireDiameter(r.tire.widthMm, r.tire.aspect, r.tire.rimIn) / INCH).toBeCloseTo(33, 6);
-		expect(r.tire.widthMm / 25.4).toBeCloseTo(12.5, 6);
+		// Interco's B-150: 35.3 in tall, 13.2 in wide, 24/32 in lugs across a 10.9 in tread.
+		expect(tireDiameter(r.tire.widthMm, r.tire.aspect, r.tire.rimIn) / INCH).toBeCloseTo(35.3, 6);
+		expect(r.tire.widthMm / 25.4).toBeCloseTo(13.2, 6);
+		expect(r.tire.lugs).toEqual({ depthIn: 24 / 32, treadWidthIn: 10.9 });
+		expect(r.tire.spec).toBe('35.3" tall, 13.2" wide, 24/32" lugs');
 		expect(r.wheel.widthIn).toBe(10);
 		expect(r.rack.kind).toBe("rollbar");
 	});
@@ -228,6 +233,55 @@ describe("buildToyotaTruck with builder options", () => {
 		const factory = buildToyotaTruck(undefined, { exhaust: "factory" });
 		expect(mirror(factory).isEmpty()).toBe(true);
 		for (const t of [stacks, tip, factory]) t.dispose();
+	});
+
+	it("stands mud lugs proud of the carcass, reaching the tire's full 35.3 in", () => {
+		const { options } = truckSetup(NOAH_BUILD);
+		const t = buildToyotaTruck(undefined, options);
+		const plain = buildToyotaTruck(undefined, { ...options, tire: { ...options.tire, lugs: undefined } });
+		t.group.updateMatrixWorld(true);
+		plain.group.updateMatrixWorld(true);
+		// Measured over the visible parts only, not their outline shells.
+		const wheelBox = (truck: TruckModel) => {
+			const box = new Box3();
+			for (const p of truck.parts) if (p.parent === truck.wheels[0]) box.expandByObject(p);
+			return box.getSize(new Vector3());
+		};
+		expect(wheelBox(t).y / INCH).toBeCloseTo(35.3, 1);
+		expect(t.parts.length).toBe(plain.parts.length + 4);
+		// The lugs make up the height a plain tire of the same size gets from its carcass alone...
+		expect(Math.abs(wheelBox(t).y - wheelBox(plain).y) / INCH).toBeLessThan(0.1);
+		// ...so the mud tire's carcass sits a lug's depth (24/32 in) inside it.
+		const carcass = t.wheels[0].children.find((c) => (c as Mesh).geometry?.type === "LatheGeometry") as Mesh;
+		carcass.geometry.computeBoundingBox();
+		const carcassR = carcass.geometry.boundingBox!.max.x;
+		expect((t.wheels[0].position.y - carcassR) / INCH).toBeCloseTo(24 / 32, 2);
+		for (const x of [t, plain]) x.dispose();
+	});
+
+	it("stands Noah's front shocks two to a wheel on hoops, inboard of the tires and showing over them, under the top of the arch", () => {
+		const { body, options } = truckSetup(NOAH_BUILD);
+		const t = buildToyotaTruck({ ...DEFAULT_TRUCK_COLORS, body }, { ...options, openable: true });
+		t.group.updateMatrixWorld(true);
+		const white = (m: Mesh) => (m.material as MeshStandardMaterial).color.getHexString() === "f2f1ec";
+		const shockBodies = t.parts.filter(white);
+		expect(shockBodies).toHaveLength(4);
+		const front = t.wheels.filter((w) => w.position.x > 0);
+		const tireR = front[0].position.y;
+		const tireInner = Math.min(...front.map((w) => Math.abs(w.position.z))) - options.tire.widthMm / 2000;
+		// The body rises by the lift plus the tire's extra radius over the 0.33 m reference; the arch tops out 0.74 up it.
+		const archTop = 6.5 * INCH + tireR - 0.33 + 0.74;
+		for (const s of shockBodies) {
+			const shock = s.parent!;
+			const box = new Box3().setFromObject(shock);
+			expect(Math.abs((box.min.z + box.max.z) / 2)).toBeLessThan(tireInner);
+			expect(box.max.y).toBeGreaterThan(2 * tireR);
+			expect(box.max.y).toBeLessThan(archTop);
+			expect(((s.geometry as CylinderGeometry).parameters.radiusTop * 2) / INCH).toBeCloseTo(2.25, 6);
+		}
+		const factory = buildToyotaTruck({ ...DEFAULT_TRUCK_COLORS, body }, { ...options, shocks: "factory", openable: true });
+		expect(factory.parts.filter(white)).toHaveLength(0);
+		for (const x of [t, factory]) x.dispose();
 	});
 
 	it("hangs step bars or running boards under both doors, between the front tire and the back of the cab", () => {

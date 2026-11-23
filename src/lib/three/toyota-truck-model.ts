@@ -1,8 +1,10 @@
 import {
+	type BufferGeometry,
 	CatmullRomCurve3,
 	CircleGeometry,
 	Color,
 	CylinderGeometry,
+	ExtrudeGeometry,
 	Group,
 	LatheGeometry,
 	Mesh,
@@ -16,6 +18,7 @@ import {
 	type Material,
 	type Object3D,
 } from "three";
+import { mergeGeometries } from "three/examples/jsm/utils/BufferGeometryUtils.js";
 import { OUTLINE, OUTLINE_SMALL, createPartKit, extrude, shade, slab, tint } from "./kit";
 import { TC_LONGBOARD, buildLongboard, deckOffsetAt } from "./longboard-model";
 
@@ -76,8 +79,11 @@ export interface TruckOptions {
 	};
 	/** Factory 7x6 sealed beams, or LED units of the same size. */
 	headlights?: "sealed" | "led";
-	/** Tire size: the wheels sit on the ground, so a taller tire raises the whole truck. */
-	tire?: { widthMm: number; aspect: number; rimIn: number };
+	/**
+	 * Tire size: the wheels sit on the ground, so a taller tire raises the whole truck. `lugs` gives it a
+	 * mud tread: lugs this deep (inches) across a tread this wide (inches), standing proud of the carcass.
+	 */
+	tire?: { widthMm: number; aspect: number; rimIn: number; lugs?: { depthIn: number; treadWidthIn: number } };
 	/** Ride-height change at each axle, meters (negative is lower). */
 	ride?: { front: number; rear: number };
 	/** Visible light transmission of the side windows, the rear window and the windshield (fractions; the windshield stays factory if left out). */
@@ -96,6 +102,8 @@ export interface TruckOptions {
 	rack?: "none" | "rollbar";
 	/** Under the doors: 3-inch round step bars, or flat chrome running boards. */
 	steps?: "none" | "tube" | "board";
+	/** Shocks on custom hoops, stood up just inboard of each front tire where they show in the wheel well. Left out, shocks aren't drawn (at their stock mounts they sit behind the tires). */
+	shocks?: "factory" | "hoops";
 	/** The factory 1.75-inch tailpipe, the same with a chrome tip, or twin 5 x 36 in chrome stacks in the bed. Left out, no exhaust is drawn. */
 	exhaust?: "factory" | "tip" | "stacks";
 }
@@ -240,6 +248,58 @@ function archLip(width: number): Shape {
 	return new Shape([...outer, ...inner]);
 }
 
+/** A band just inside an arch outline: `inset` in from it and `width` thick. Local origin at the axle. */
+function archBand(inset: number, width: number): Shape {
+	const outer = archPoints(0, 0, ARCH_RX - inset, ARCH_RY - inset);
+	const inner = archPoints(0, 0, ARCH_RX - inset - width, ARCH_RY - inset - width).reverse();
+	return new Shape([...outer, ...inner]);
+}
+
+/** Lug pitches around each half of a mud tread. Interco doesn't publish a count, so this is an estimate. */
+const MUD_LUG_PITCHES = 18;
+
+/**
+ * Mud-terrain lugs, merged into one geometry, around a tire whose axis is Z. Interco's three-stage
+ * pattern: short, intermediate and long lugs in turn, each running in from its shoulder, staggered half a
+ * pitch between the two halves of the tread, and stepping down over the shoulder. The lug depth and the
+ * tread width come from the tire's spec; the lug count and proportions are estimates.
+ */
+function mudLugs(crownR: number, depth: number, halfW: number, treadHalf: number): BufferGeometry {
+	const pieces: BufferGeometry[] = [];
+	const pitch = (2 * Math.PI) / MUD_LUG_PITCHES;
+	const half = (pitch * 0.45) / 2; // each lug fills 45% of its pitch
+	// A ring sector from r0 to r1 across the lug's angle, `len` long along the axle and centered on it.
+	const sector = (r0: number, r1: number, len: number) => {
+		const s = new Shape();
+		s.absarc(0, 0, r1, -half, half, false);
+		s.absarc(0, 0, r0, half, -half, true);
+		const g = new ExtrudeGeometry(s, { depth: len, bevelEnabled: false, curveSegments: 4 });
+		g.translate(0, 0, -len / 2);
+		return g;
+	};
+	const stages = [0.36, 0.5, 0.64]; // share of the tread width each lug runs in from its shoulder
+	for (const side of [1, -1]) {
+		for (let i = 0; i < MUD_LUG_PITCHES; i++) {
+			const theta = (i + (side > 0 ? 0 : 0.5)) * pitch;
+			const len = stages[i % 3] * 2 * treadHalf;
+			// The tread lug, its top on the tire's full radius, sunk a little into the rounded crown, raked a few degrees.
+			const lug = sector(crownR - 0.02, crownR + depth, len);
+			lug.rotateX(side * 0.18);
+			lug.translate(0, 0, side * (treadHalf - len / 2));
+			// Its end, stepping down over the shoulder onto the sidewall.
+			const shoulder = sector(crownR - 0.05, crownR + depth - 0.006, halfW * 0.97 - treadHalf + 0.005);
+			shoulder.translate(0, 0, side * (treadHalf + halfW * 0.97) / 2);
+			for (const g of [lug, shoulder]) {
+				g.rotateZ(theta);
+				pieces.push(g);
+			}
+		}
+	}
+	const merged = mergeGeometries(pieces)!;
+	pieces.forEach((g) => g.dispose());
+	return merged;
+}
+
 /**
  * Raised block lettering, as stroke segments on a cell 0.75 wide and 1 tall. Only the letters
  * in TOYOTA are needed.
@@ -306,6 +366,13 @@ export function buildToyotaTruck(colors: TruckColors = DEFAULT_TRUCK_COLORS, opt
 	/** Fresh show chrome, brighter than the factory bumpers: the chrome wheels and the exhaust tip. */
 	const mirrorMat = std("#ffffff", 0.05, 1);
 	const dishMat = std(shade(colors.silver, 0.35), 0.5, 0.6);
+	// Shock hoops stand 2.25 in Rancho RS5000Xs just inboard of each front tire (with a little clearance),
+	// so the dark wheel well steps back behind them.
+	const hoops = options.shocks === "hoops";
+	const SHOCK_R = (2.25 * INCH) / 2;
+	const tireInnerZ = HUB_FACE_Z - (options.wheel?.offsetMm ?? 20) / 1000 - (options.tire?.widthMm ?? 195) / 2000;
+	const shockZ = Math.min(tireInnerZ - SHOCK_R - 0.03, 0.6);
+	const wellZ = shockZ - SHOCK_R - 0.03;
 	const silverMat = std(colors.silver, 0.28, 0.85);
 	const hubMat = std(colors.hub, 0.5);
 	const amberMat = std(colors.amber, 0.4);
@@ -419,10 +486,19 @@ export function buildToyotaTruck(colors: TruckColors = DEFAULT_TRUCK_COLORS, opt
 		// Fenders as two walls, the hood as a panel hinged at the cowl, and a bay between them.
 		pair((side) => {
 			add(body, extrude(frontClipProfile(), 0.08, 0.02, false), bodyMat, [0, 0, side * (BODY_HALF_W - 0.04)], { outline: OUTLINE });
-			// Inner fender apron.
-			add(body, slab(NOSE_X - CAB_FRONT_X - 0.16, 0.34, 0.03, 0.01, 0.005), bedFloorMat, [(NOSE_X + CAB_FRONT_X) / 2 - 0.02, 0.72, side * (BODY_HALF_W - 0.12)], {
-				outline: 0,
-			});
+			// Inner fender apron; with shock hoops in the well it stops short of the arch so the shocks show.
+			if (!hoops) {
+				add(body, slab(NOSE_X - CAB_FRONT_X - 0.16, 0.34, 0.03, 0.01, 0.005), bedFloorMat, [(NOSE_X + CAB_FRONT_X) / 2 - 0.02, 0.72, side * (BODY_HALF_W - 0.12)], {
+					outline: 0,
+				});
+			} else {
+				const apron = (x0: number, x1: number, y0: number, y1: number) =>
+					add(body, slab(x1 - x0, y1 - y0, 0.03, 0.01, 0.005), bedFloorMat, [(x0 + x1) / 2, (y0 + y1) / 2, side * (BODY_HALF_W - 0.12)], { outline: 0 });
+				const [x0, x1, y0, y1] = [CAB_FRONT_X + 0.06, NOSE_X - 0.1, 0.55, 0.89];
+				apron(x0, FRONT_AXLE_X - ARCH_RX, y0, y1);
+				apron(FRONT_AXLE_X + ARCH_RX, x1, y0, y1);
+				apron(FRONT_AXLE_X - ARCH_RX, FRONT_AXLE_X + ARCH_RX, AXLE_Y + ARCH_RY, y1);
+			}
 		});
 		const hood = new Group();
 		hood.position.set(CAB_FRONT_X, BELT_Y, 0);
@@ -513,7 +589,14 @@ export function buildToyotaTruck(colors: TruckColors = DEFAULT_TRUCK_COLORS, opt
 	});
 	add(body, slab(0.06, BELT_Y - CAB_FLOOR_Y, BODY_HALF_W * 2 - 0.1, 0.02, 0.01), bodyMat, [CAB_BACK_X + 0.03, (CAB_FLOOR_Y + BELT_Y) / 2, 0]);
 	// Dark wheel well behind the front wheels.
-	if (!openable) {
+	if (hoops) {
+		// Stepped back behind the shocks, its roof lined in black out to the fender.
+		const linerW = BODY_HALF_W - 0.01 - wellZ;
+		pair((side) => {
+			add(body, extrude(archFill(), 0.12, 0, false), trimMat, [FRONT_AXLE_X, AXLE_Y, side * (wellZ - 0.06)], { outline: 0 });
+			add(body, extrude(archBand(0.004, 0.02), linerW, 0, false), trimMat, [FRONT_AXLE_X, AXLE_Y, side * (wellZ + linerW / 2)], { outline: 0 });
+		});
+	} else if (!openable) {
 		add(body, extrude(archFill(), BODY_HALF_W * 2 - 0.2, 0, false), trimMat, [FRONT_AXLE_X, AXLE_Y, 0], { outline: 0 });
 	} else {
 		// Only the wheel wells themselves, so the bay between them stays open.
@@ -1100,17 +1183,21 @@ export function buildToyotaTruck(colors: TruckColors = DEFAULT_TRUCK_COLORS, opt
 		const tire = options.tire ?? { widthMm: 195, aspect: 75, rimIn: wheel.diameterIn };
 		tireR = (wheel.diameterIn * INCH) / 2 + (tire.widthMm * tire.aspect) / 100 / 1000;
 		const halfW = tire.widthMm / 2000;
+		// A mud tire's lugs reach the full diameter; its carcass sits a lug's depth inside it.
+		const lugDepth = tire.lugs ? tire.lugs.depthIn * INCH : 0;
+		const crownR = tireR - lugDepth;
+		const lugGeo = tire.lugs ? kit.geometry(mudLugs(crownR, lugDepth, halfW, (tire.lugs.treadWidthIn * INCH) / 2)) : undefined;
 		const rimR = (wheel.diameterIn * INCH) / 2;
 		const rimHalfW = (wheel.widthIn * INCH) / 2;
 		const centerZ = HUB_FACE_Z - wheel.offsetMm / 1000;
 		const profile = [
 			new Vector2(rimR - 0.012, -halfW * 0.92),
-			new Vector2(tireR - 0.04, -halfW),
-			new Vector2(tireR - 0.005, -halfW * 0.75),
-			new Vector2(tireR, -halfW * 0.5),
-			new Vector2(tireR, halfW * 0.5),
-			new Vector2(tireR - 0.005, halfW * 0.75),
-			new Vector2(tireR - 0.04, halfW),
+			new Vector2(crownR - 0.04, -halfW),
+			new Vector2(crownR - 0.005, -halfW * 0.75),
+			new Vector2(crownR, -halfW * 0.5),
+			new Vector2(crownR, halfW * 0.5),
+			new Vector2(crownR - 0.005, halfW * 0.75),
+			new Vector2(crownR - 0.04, halfW),
 			new Vector2(rimR - 0.012, halfW * 0.92),
 		];
 		const capMat = std(tint(colors.silver, 0.1), 0.22, 0.9);
@@ -1132,6 +1219,7 @@ export function buildToyotaTruck(colors: TruckColors = DEFAULT_TRUCK_COLORS, opt
 			const tireGeo = new LatheGeometry(profile, 36);
 			tireGeo.rotateX(Math.PI / 2);
 			add(pivot, tireGeo, trimMat, [0, 0, 0]);
+			if (lugGeo) add(pivot, lugGeo, trimMat, [0, 0, 0], { outline: 0 });
 			const disc = (r: number, h: number, mat: Material, z: number, seg = 28) => {
 				const g = new CylinderGeometry(r, r, h, seg);
 				g.rotateX(Math.PI / 2);
@@ -1256,6 +1344,67 @@ export function buildToyotaTruck(colors: TruckColors = DEFAULT_TRUCK_COLORS, opt
 	const pitch = (ride.front - ride.rear) / (FRONT_AXLE_X - REAR_AXLE_X);
 	body.rotation.z = Math.atan(pitch);
 	body.position.y = ride.rear + lift - REAR_AXLE_X * pitch;
+
+	if (hoops) {
+		// Custom dual front shock hoops: two Rancho RS5000Xs (2.25 in white body, red boot) stand just inboard of
+		// each front tire, from the lower control arm up to hoops under the roof of the wheel well, one leaning
+		// forward and one back so both show over the tire. Where the hoops put them, and their 1.75 in tube, are estimates.
+		body.updateMatrix();
+		const toBody = body.matrix.clone().invert();
+		const shockWhite = std("#f2f1ec", 0.45, 0.05);
+		const bootRed = std("#c41e2a", 0.6, 0.02);
+		const hoopMat = std("#1d1f22", 0.5, 0.4);
+		const hoopR = (1.75 * INCH) / 2;
+		// Each top sits toward one end of the arch, where the tire falls away fastest, just under the well's lined roof.
+		const topDx = 0.26;
+		const [roofRx, roofRy] = [ARCH_RX - 0.024, ARCH_RY - 0.024];
+		const roofY = AXLE_Y + roofRy * (1 - (topDx / roofRx) ** ARCH_SQUARENESS) ** (1 / ARCH_SQUARENESS);
+		const eye = () => {
+			const g = new CylinderGeometry(0.018, 0.018, 0.04, 12);
+			g.rotateX(Math.PI / 2);
+			return g;
+		};
+		pair((side) => {
+			for (const fore of [1, -1]) {
+				const bottom = new Vector3(FRONT_AXLE_X + fore * 0.04, tireR - 0.08, side * shockZ).applyMatrix4(toBody);
+				const top = new Vector3(FRONT_AXLE_X + fore * topDx, roofY - 0.05, side * (shockZ - 0.02));
+				const axis = top.clone().sub(bottom);
+				const len = axis.length();
+				const shock = new Group();
+				shock.position.copy(bottom);
+				shock.quaternion.setFromUnitVectors(new Vector3(0, 1, 0), axis.normalize());
+				body.add(shock);
+				// Body down, rod up: the white twin-tube body, then the red bellows boot over the rod, an eye at each end.
+				const bodyLen = len * 0.52;
+				const bootLen = len - bodyLen - 0.05;
+				add(shock, eye(), trimMat, [0, 0, 0], { outline: 0 });
+				add(shock, new CylinderGeometry(SHOCK_R, SHOCK_R, bodyLen, 18), shockWhite, [0, 0.02 + bodyLen / 2, 0]);
+				const folds = 9;
+				const bellows: Vector2[] = [];
+				for (let i = 0; i <= folds * 2; i++) bellows.push(new Vector2(i % 2 ? SHOCK_R * 0.92 : SHOCK_R * 0.74, (i / (folds * 2)) * bootLen));
+				add(shock, new LatheGeometry(bellows, 16), bootRed, [0, 0.02 + bodyLen, 0]);
+				add(shock, eye(), trimMat, [0, len, 0], { outline: 0 });
+				// The hoop: an upside-down U of tube straddling the top of the shock, its legs running down behind the tire to the frame.
+				const crossY = top.y + 0.028;
+				const legLow = crossY - 0.2;
+				const [hx0, hx1] = [top.x - 0.055, top.x + 0.055];
+				const path = new CatmullRomCurve3(
+					[
+						new Vector3(hx0, legLow, top.z),
+						new Vector3(hx0, crossY - 0.03, top.z),
+						new Vector3(hx0 + 0.02, crossY, top.z),
+						new Vector3(hx1 - 0.02, crossY, top.z),
+						new Vector3(hx1, crossY - 0.03, top.z),
+						new Vector3(hx1, legLow, top.z),
+					],
+					false,
+					"catmullrom",
+					0.2,
+				);
+				add(body, new TubeGeometry(path, 40, hoopR, 10, false), hoopMat, [0, 0, 0], { outline: 0.006 });
+			}
+		});
+	}
 
 	// Hard, flat ground shadow that turns with the truck.
 	const shadowGeo = new CircleGeometry(1, 40);

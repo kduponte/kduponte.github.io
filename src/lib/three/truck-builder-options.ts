@@ -50,6 +50,8 @@ const SRC = {
 	tailpipe: { label: "Walker 44363 tailpipe, 1990-95 Pickup (FinditParts)", href: "https://www.finditparts.com/products/538637/walker-exhaust-44363" },
 	chromeTip: { label: "Summit Racing APH-9822 chrome tip", href: "https://www.summitracing.com/parts/aph-9822" },
 	stacks: { label: "5 x 36\" chrome mitered stack, EP50MS236C (Big Rig World)", href: "https://bigrigworld.com/mitered-stack-36-ep50ms236c.html" },
+	bogger: { label: "Interco Super Swamper Bogger sizes (B-150)", href: "https://intercotire.com/tire/bogger" },
+	rs5000x: { label: "Rancho RS5000X RS55372: 2.25\" body, red boot (Summit Racing)", href: "https://www.summitracing.com/parts/ran-rs55372/make/ford" },
 	bttf: { label: "Back to the Future wiki, Marty's Toyota", href: "https://backtothefuture.fandom.com/wiki/Toyota_Hilux" },
 	tcLongboard: { label: "T&C Surf Designs, Tommy Tanaka Beach Boy", href: "https://tcsurf.com/collections/tommy-tanaka/products/beach-boy" },
 	trueAmes: { label: "True Ames Greenough 4-A 10.5\" fin (Rider Shack)", href: "https://ridershack.com/products/true-ames-greenough-4-a-10-5-single-fin" },
@@ -162,7 +164,7 @@ export const RIDES: RideOption[] = [
 		spec: '6.5" total: 3.5" suspension, 3" body',
 		front: 6.5 * INCH,
 		rear: 6.5 * INCH,
-		note: "Both kits together. The body lift is the PA5503M above, which doesn't fit 2WD trucks with power steering.",
+		note: "Both kits together. The body lift is the PA5503M above, which doesn't fit 2WD trucks with power steering. Three inches is as far as Hawaii lets a body sit off its frame (HRS §291-35.1), and no taller 2WD suspension kit turned up, so more height has to come from bigger tires.",
 		source: SRC.fabtech2wd,
 	},
 ];
@@ -264,9 +266,11 @@ export interface TireOption extends Option {
 	widthMm: number;
 	aspect: number;
 	rimIn: number;
+	/** A mud tread: lug depth and tread width, inches, from the maker's spec sheet. */
+	lugs?: { depthIn: number; treadWidthIn: number };
 }
 
-export const TIRES: TireOption[] = [
+export const TIRES: TireOption[] = ([
 	{ id: "195-75-14", name: "195/75R14", spec: "", widthMm: 195, aspect: 75, rimIn: 14, note: "Factory size.", source: SRC.tireFactory },
 	{ id: "205-75-14", name: "205/75R14", spec: "", widthMm: 205, aspect: 75, rimIn: 14, note: "Factory alternate.", source: SRC.tireAlt },
 	{ id: "215-65-15", name: "215/65R15", spec: "", widthMm: 215, aspect: 65, rimIn: 15, note: "Factory alternate, on 15-inch wheels.", source: SRC.tireAlt },
@@ -284,7 +288,19 @@ export const TIRES: TireOption[] = [
 		note: "Monster-truck rubber. Nothing I found confirms 33s on a 2WD pickup, so expect trimming and rubbing.",
 		source: SRC.tireAlt,
 	},
-].map((t) => ({ ...t, spec: tireSpec(t.widthMm, t.aspect, t.rimIn) }));
+	{
+		id: "bogger-35",
+		name: "Super Swamper Bogger 35x12.50-15",
+		spec: "",
+		// Interco lists it 35.3 in tall and 13.2 in wide (B-150), written here as width and sidewall ratio.
+		widthMm: 13.2 * 25.4,
+		aspect: ((((35.3 - 15) / 2) * 25.4) / (13.2 * 25.4)) * 100,
+		rimIn: 15,
+		lugs: { depthIn: 24 / 32, treadWidthIn: 10.9 },
+		note: "Interco's mud tire: three-stage lugs (short, intermediate, long) 24/32 in deep across a 10.9 in tread, for 8.5-11 in wheels. How many lugs go around it is an estimate. As with the 33s, nothing confirms 35s fit a 2WD Pickup.",
+		source: SRC.bogger,
+	},
+] as TireOption[]).map((t) => ({ ...t, spec: tireSpec(t.widthMm, t.aspect, t.rimIn) + (t.lugs ? `, ${Math.round(t.lugs.depthIn * 32)}/32" lugs` : "") }));
 
 /** Overall tire diameter, meters: the rim plus two sidewalls (width x aspect ratio). */
 export function tireDiameter(widthMm: number, aspect: number, rimIn: number): number {
@@ -367,6 +383,28 @@ export const STEPS: StepOption[] = [
 		kind: "board",
 		note: "Toyota's own chrome board for the 1989-95 standard cab. The listing gives no width, so it is drawn 5.5 in wide (estimated).",
 		source: SRC.toyotaBoards,
+	},
+];
+
+export interface ShockOption extends Option {
+	kind: "factory" | "hoops";
+}
+
+export const SHOCKS: ShockOption[] = [
+	{
+		id: "factory",
+		name: "Factory mounts",
+		spec: "Behind the tires, not drawn",
+		kind: "factory",
+		note: "Every truck has shocks, lift kits included; bolted where the factory put them, they hide behind the tires.",
+	},
+	{
+		id: "rs5000x-hoops",
+		name: "Dual Rancho RS5000X on front shock hoops",
+		spec: '2.25" white shocks with red boots, two per front wheel, on weld-on hoops',
+		kind: "hoops",
+		note: "Custom work, not a kit: hoops welded to the frame stand two shocks up in each front wheel well, one leaning forward and one back, where they show either side of the tire. Where the hoops sit and how tall they stand are estimates. The rear shocks stay at their mounts behind the tires.",
+		source: SRC.rs5000x,
 	},
 ];
 
@@ -494,6 +532,7 @@ export interface Build {
 	bed: string;
 	rack: string;
 	steps: string;
+	shocks: string;
 	exhaust: string;
 	board: string;
 	decal: string;
@@ -514,6 +553,7 @@ export const AS_IT_SITS: Build = {
 	bed: "none",
 	rack: "none",
 	steps: "none",
+	shocks: "factory",
 	exhaust: "factory",
 	board: "none",
 	decal: "none",
@@ -541,18 +581,19 @@ export const KYLE_BUILD: Build = {
 };
 
 /**
- * Noah's build: closer to a monster truck, after Marty McFly's Toyota and Poi Pounder. Cavalry Blue
- * (a bluer take on Underground), 6.5 inches of lift, 33-inch tires on fat 15 x 10 wheels, step bars, twin
- * chrome stacks, and a McFly roll bar with KC lights on top.
+ * Noah's build: closer to a monster truck, after Marty McFly's Toyota and Poi Pounder. Toyota's 1991
+ * Blue Pearl, nearer navy than gray; 6.5 inches of lift, 35-inch Super Swamper Boggers on fat 15 x 10 wheels,
+ * front shocks on hoops where they show, step bars, twin chrome stacks, and a McFly roll bar with KC lights.
  */
 export const NOAH_BUILD: Build = {
 	...AS_IT_SITS,
-	paint: "8W2",
+	paint: "8E3",
 	ride: "fabtech-pa",
 	wheel: "ultra164",
-	tire: "33-12.5-15",
+	tire: "bogger-35",
 	rack: "rollbar",
 	steps: "westin",
+	shocks: "rs5000x-hoops",
 	exhaust: "stacks",
 };
 
@@ -570,6 +611,7 @@ export const CATALOG = {
 	bed: BEDS,
 	rack: RACKS,
 	steps: STEPS,
+	shocks: SHOCKS,
 	exhaust: EXHAUSTS,
 	board: BOARDS,
 	decal: DECALS,
@@ -605,6 +647,7 @@ export function resolveBuild(build: Build) {
 		bed,
 		rack: pick("rack"),
 		steps: pick("steps"),
+		shocks: pick("shocks"),
 		exhaust: pick("exhaust"),
 		board,
 		decal: pick("decal"),
@@ -613,7 +656,7 @@ export function resolveBuild(build: Build) {
 
 export type ResolvedBuild = ReturnType<typeof resolveBuild>;
 
-const KEY_ORDER: BuildKey[] = ["paint", "ride", "wheel", "tire", "tintFront", "tintRear", "tintWindshield", "lights", "grille", "tailgate", "bed", "rack", "steps", "exhaust", "board", "decal"];
+const KEY_ORDER: BuildKey[] = ["paint", "ride", "shocks", "wheel", "tire", "tintFront", "tintRear", "tintWindshield", "lights", "grille", "tailgate", "bed", "rack", "steps", "exhaust", "board", "decal"];
 
 /** A build as a short, readable URL fragment, e.g. "paint=138&ride=b444&...". */
 export function encodeBuild(build: Build): string {
@@ -635,6 +678,7 @@ export function describeBuild(build: Build): { label: string; value: string }[] 
 	return [
 		{ label: "Paint", value: `${r.paint.name} (code ${r.paint.id})` },
 		{ label: "Ride height", value: `${r.ride.name}: ${r.ride.spec}` },
+		{ label: "Shocks", value: r.shocks.name },
 		{ label: "Wheels", value: `${r.wheel.name}, ${r.wheel.spec}` },
 		{ label: "Tires", value: `${r.tire.name}, ${r.tire.spec}` },
 		{ label: "Front side windows", value: r.tintFront.name },
@@ -656,6 +700,7 @@ export function describeBuild(build: Build): { label: string; value: string }[] 
 export const PICKER_GROUPS: { key: BuildKey; label: string }[] = [
 	{ key: "paint", label: "Paint" },
 	{ key: "ride", label: "Ride height" },
+	{ key: "shocks", label: "Shocks" },
 	{ key: "wheel", label: "Wheels" },
 	{ key: "tire", label: "Tires" },
 	{ key: "tintFront", label: "Front side windows" },
@@ -681,7 +726,7 @@ export function truckSetup(build: Build) {
 			metallicPaint: r.paint.metallic,
 			ride: { front: r.ride.front, rear: r.ride.rear },
 			wheel: { diameterIn: r.wheel.diameterIn, widthIn: r.wheel.widthIn, offsetMm: r.wheel.offsetMm, style: r.wheel.style, finish: r.wheel.finish },
-			tire: { widthMm: r.tire.widthMm, aspect: r.tire.aspect, rimIn: r.tire.rimIn },
+			tire: { widthMm: r.tire.widthMm, aspect: r.tire.aspect, rimIn: r.tire.rimIn, lugs: r.tire.lugs },
 			glassVlt: { front: r.tintFront.vlt, rear: r.tintRear.vlt, windshield: r.tintWindshield.vlt },
 			headlights: r.lights.kind,
 			grille: r.grille.finish,
@@ -690,6 +735,7 @@ export function truckSetup(build: Build) {
 			tailgateLettering: r.tailgate.lettering,
 			rack: r.rack.kind,
 			steps: r.steps.kind,
+			shocks: r.shocks.kind,
 			exhaust: r.exhaust.kind,
 			board: r.board.board,
 		},

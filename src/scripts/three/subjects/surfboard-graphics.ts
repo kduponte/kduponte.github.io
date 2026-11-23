@@ -517,10 +517,15 @@ const odyseaLog: Painter = (pen, c) => {
 			ctx.stroke();
 		}
 	}
-	// Bumper tail and the leash plug.
+	// Bumper tail, and the leash plug 2" up (Catch Surf's photo): a cup with its cord bar on the
+	// deck, and the plug's black end showing through on the bottom.
 	ctx.fillStyle = pick(c, "bumper", "#1a1a1a");
 	ctx.fillRect(pen.x(L - 1.2), 0, TEX_W - pen.x(L - 1.2), TEX_H);
-	pen.circle("deck", L - 3, 0, 0.55, "#1a1a1a");
+	pen.circle("deck", L - 2, 0, 0.83, "#111111");
+	pen.circle("deck", L - 2, 0, 0.74, "#1a1a1a");
+	pen.circle("deck", L - 2, 0, 0.52, "#080808");
+	pen.poly("deck", rectPts(L - 2, 0, 0.16, 0.9), "#3a3a3a");
+	pen.circle("bottom", L - 2, 0, 0.55, "#141414");
 };
 
 /** Fallback for boards added without a painter: base color and a stringer. */
@@ -845,49 +850,125 @@ function stadium(cx: number, cz: number, length: number, width: number): [number
 	return pts;
 }
 
+/** An axis-aligned rectangle in plan inches, centered on a point. */
+function rectPts(cx: number, cz: number, length: number, width: number): [number, number][] {
+	return [
+		[cx - length / 2, cz - width / 2],
+		[cx + length / 2, cz - width / 2],
+		[cx + length / 2, cz + width / 2],
+		[cx - length / 2, cz + width / 2],
+	];
+}
+
+const STEEL = "#c4c9ce";
+const STEEL_RIM = "#5b6168";
+const HOLE = "#090909";
+const INK = "#111111";
+
 /**
- * The fin boxes (or glass-on fillets, or soft-fin plates) on the bottom, sized for each system:
- * a long single Futures box, a shorter FCS II tab box, a long US single box with its plate screw.
+ * A box set flush into the bottom: an ink outline like the boards' and fins' own, then its
+ * flange, lit along one edge and shaded along the other so it reads as a molded part.
+ */
+function boxFlange(pen: Pen, side: Side, at: number, z: number, length: number, width: number, color: string) {
+	pen.poly(side, stadium(at, z, length + 0.18, width + 0.18), INK);
+	pen.poly(side, stadium(at, z, length, width), color);
+	pen.poly(side, stadium(at, z - width * 0.3, length - 0.12, width * 0.2), adjust(color, -0.22));
+	pen.poly(side, stadium(at, z + width * 0.3, length - 0.12, width * 0.2), adjust(color, 0.18));
+}
+
+/** A slot or pocket in a box, with its far wall catching a little light. */
+function slot(pen: Pen, at: number, z: number, length: number, width: number) {
+	pen.poly("bottom", stadium(at, z, length, width), HOLE);
+	pen.poly("bottom", stadium(at, z + width * 0.2, Math.max(0.01, length - width * 0.4), width * 0.3), "#2a2a2a");
+}
+
+/** A screw head: steel with a dark rim, a glint, and its drive (hex socket or slot). */
+function screwHead(pen: Pen, side: Side, at: number, z: number, r: number, drive: "hex" | "slot") {
+	pen.circle(side, at, z, r, STEEL_RIM);
+	pen.circle(side, at, z, r * 0.8, STEEL);
+	pen.circle(side, at - r * 0.3, z - r * 0.3, r * 0.28, "#f1f4f6");
+	const ink = "#2b2f33";
+	if (drive === "hex") {
+		const hex: [number, number][] = [];
+		for (let k = 0; k < 6; k++) hex.push([at + r * 0.42 * Math.cos((k * Math.PI) / 3), z + r * 0.42 * Math.sin((k * Math.PI) / 3)]);
+		pen.poly(side, hex, ink);
+		return;
+	}
+	pen.poly(side, rectPts(at, z, r * 1.2, r * 0.22), ink);
+}
+
+/** A molded cap on the deck that a through-bolt seats in: rim, recessed center, cross drive. */
+function topPlug(pen: Pen, at: number, z: number, r: number, color: string) {
+	const dark = parseInt(color.slice(1, 3), 16) + parseInt(color.slice(3, 5), 16) + parseInt(color.slice(5, 7), 16) < 240;
+	pen.circle("deck", at, z, r + 0.09, INK);
+	pen.circle("deck", at, z, r, color);
+	pen.circle("deck", at, z - r * 0.1, r * 0.7, adjust(color, dark ? -0.12 : 0.14));
+	pen.circle("deck", at, z, r * 0.62, adjust(color, dark ? -0.05 : 0.22));
+	const ink = dark ? "#000000" : adjust(color, 0.5);
+	pen.poly("deck", rectPts(at, z, r * 0.7, r * 0.13), ink);
+	pen.poly("deck", rectPts(at, z, r * 0.13, r * 0.7), ink);
+}
+
+/**
+ * The fin boxes (or glass-on fillets, or bolt-through plugs) under each fin, drawn after each
+ * system's real hardware. Positions run from the nose, so a box's front is its smaller end.
+ * - Futures: one long box, the fin's base in a full-length slot, a 3/32" hex grub screw at the front.
+ * - FCS II: a shorter box with two tab pockets, the front one longer (FCS II's longer front slot).
+ * - US / single box: a 10" box running forward of the fin, with the plate screw at the fin's back.
+ * - Glass-on: the cloth lap patch and the resin rope fillet blending the fin into the bottom.
+ * - Bolt-through soft fins and screw-through fins: two caps per fin on the deck where the bolts go
+ *   in, and the plug on the bottom where the maker's photo shows one (sizes from `plugs`).
+ * A fin's own `box` overrides the setup's, so a 2+1 gets FCS II side boxes and a single center box.
  */
 function drawFinBoxes(pen: Pen, layout: FinSpec[], setup: FinSetup, finColor: string) {
 	const box = setup.box_color ?? "#151515";
-	const dark = parseInt(box.slice(1, 3), 16) < 128;
-	const slot = dark ? "#000000" : adjust(box, 0.35);
-	const screw = "#9aa0a6";
 	for (const fin of layout) {
 		const at = pen.L - fin.from_tail_in;
 		const z = fin.off_center_in;
 		const b = fin.base_in;
-		switch (setup.system) {
+		switch (fin.box ?? setup.system) {
 			case "futures":
-				pen.poly("bottom", stadium(at, z, b + 0.5, 0.7), box);
-				pen.poly("bottom", stadium(at, z, b + 0.15, 0.3), slot);
+				boxFlange(pen, "bottom", at, z, b + 0.6, 0.8, box);
+				slot(pen, at, z, b + 0.2, 0.3);
+				screwHead(pen, "bottom", at - b / 2 - 0.08, z, 0.13, "hex");
 				break;
-			case "fcs2":
-				pen.poly("bottom", stadium(at, z, b * 0.95, 0.62), box);
-				pen.poly("bottom", stadium(at, z, b * 0.8, 0.26), slot);
+			case "fcs2": {
+				const len = b + 0.15;
+				boxFlange(pen, "bottom", at, z, len, 0.74, box);
+				const front: [number, number] = [at - len / 2 + 0.14, at + len * 0.06];
+				const rear: [number, number] = [at + len * 0.18, at + len / 2 - 0.14];
+				for (const [a0, a1] of [front, rear]) slot(pen, (a0 + a1) / 2, z, a1 - a0, 0.27);
 				break;
+			}
 			case "us-box": {
-				const len = Math.min(10, b * 1.35);
-				pen.poly("bottom", stadium(at, z, len, 0.85), box);
-				pen.poly("bottom", stadium(at, z, len - 0.3, 0.32), "#000000");
-				pen.circle("bottom", at - b / 2 + 0.2, z, 0.3, screw);
+				// A standard 10" box, its back end just behind the fin so the box runs forward of it.
+				const len = 10;
+				const center = at + b / 2 + 0.35 - len / 2;
+				boxFlange(pen, "bottom", center, z, len, 1.0, box);
+				slot(pen, center, z, len - 0.4, 0.38);
+				screwHead(pen, "bottom", at + b / 2 - 0.45, z, 0.2, "slot");
 				break;
 			}
 			case "glass-on":
-				// The resin fillet that blends a glassed-on fin into the bottom.
+				pen.poly("bottom", stadium(at, z, b + 2.8, 2.4), "rgba(0, 0, 0, 0.1)");
+				pen.poly("bottom", stadium(at, z, b + 2.6, 2.2), "rgba(255, 255, 255, 0.12)");
 				pen.poly("bottom", stadium(at, z, b + 1.4, 1.2), fadeTo(adjust(finColor, 0.15), 0.85));
+				pen.poly("bottom", stadium(at, z, b + 0.5, 0.5), fadeTo(adjust(finColor, 0.3), 0.9));
 				break;
 			case "soft":
-				pen.poly("bottom", stadium(at, z, b * 0.75, 0.95), box);
-				pen.circle("bottom", at - b * 0.2, z, 0.18, screw);
-				pen.circle("bottom", at + b * 0.2, z, 0.18, screw);
+			case "screw-through": {
+				const plugs = setup.plugs;
+				if (plugs?.bottom_length_in) {
+					boxFlange(pen, "bottom", at, z, plugs.bottom_length_in, plugs.bottom_width_in ?? 1.2, box);
+				} else {
+					// The fin's base sits straight on the slick: only its contact shadow shows.
+					pen.poly("bottom", stadium(at, z, b + 0.3, 0.8), "rgba(0, 0, 0, 0.14)");
+				}
+				const spacing = plugs?.bolt_spacing_in ?? b * 0.44;
+				const r = (plugs?.cap_diameter_in ?? 0.76) / 2;
+				for (const k of [-0.5, 0.5]) topPlug(pen, at + spacing * k, z, r, plugs?.cap_color ?? finColor);
 				break;
-			case "screw-through":
-				// Fin plugs on the bottom, and the screws that hold the fins showing through the deck.
-				pen.poly("bottom", stadium(at, z, b * 0.85, 1.0), box);
-				for (const k of [-0.22, 0.22]) pen.circle("deck", at + b * k, z, 0.35, "#1a1a1a");
-				break;
+			}
 		}
 	}
 }

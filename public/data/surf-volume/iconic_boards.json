@@ -28,7 +28,7 @@
 			"style": "Noserider longboard",
 			"construction": "Tuflite Pro",
 			"fins": "single",
-			"fin_setup": { "system": "us-box", "model": "9\" longboard single fin in a US box", "status": "estimated", "source": "https://surftech.com/products/in-the-pink-tuflite-pro", "note": "Surftech sells the In the Pink without fins; a classic 9\" noserider single fin is shown.", "finish": "resin", "box_color": "#1a1a1a" },
+			"fin_setup": { "system": "fcs2", "model": "Single fin with FCS II Carver PG side bytes", "status": "estimated", "source": "https://www.boardshop.co.uk/takayama-in-the-pink-tuflite-pro-surfboard-8ft-6-fcs-ii-2-1-sage", "note": "The Tuflite Pro In the Pink is sold as a 2+1, a single fin with FCS II side bites, fins not included (Boardshop UK; Surftech's own page names no fin system). Side bites: FCS's Carver PG Side Byte, Small, from FCS's own size table (surffcs.com): 3.86\" base x 3.93\" deep, 11.07 sq in, 33.2 degree sweep. The center is a classic 9\" noserider single in a 10\" single box, estimated, so the setup as a whole is flagged estimated.", "finish": "resin", "box_color": "#1a1a1a" },
 			"graphic": "pink-resin",
 			"colors": { "base": "#ff5cb8", "accent": "#111111", "wood": "#e9c48f", "fin": "#f6f1e4" },
 			"labels": [
@@ -60,7 +60,9 @@
 				"foil": { "nose_frac_12": 0.64, "tail_frac_12": 0.64, "thickest_from_center_in": 2 },
 				"rail": { "apex_frac": 0.45, "deck_exp": 2.3, "bottom_exp": 3.0 },
 				"fin_layout": [
-					{ "from_tail_in": 8, "off_center_in": 0, "depth_in": 9, "base_in": 8, "template": "longboard" }
+					{ "from_tail_in": 11, "off_center_in": 5.9, "depth_in": 3.93, "base_in": 3.86, "area_in2": 11.07, "sweep_deg": 33.2, "template": "thruster" },
+					{ "from_tail_in": 11, "off_center_in": -5.9, "depth_in": 3.93, "base_in": 3.86, "area_in2": 11.07, "sweep_deg": 33.2, "template": "thruster" },
+					{ "from_tail_in": 8, "off_center_in": 0, "depth_in": 9, "base_in": 8, "template": "longboard", "box": "us-box" }
 				]
 			}
 		},
@@ -426,7 +428,7 @@
 			"style": "Foam soft-top",
 			"construction": "EPS core, 3 marine-ply stringers, HDPE slick bottom",
 			"fins": "thruster",
-			"fin_setup": { "system": "soft", "model": "Wavestorm soft fins (screw-on)", "status": "estimated", "source": "https://shop.agit-global.com/surfboards-longboards/Wavestorm/8ft-Classic-Surfboard/starburst/WS22SF2STA/", "note": "The board comes with three soft, screw-on fins; their size is estimated.", "finish": "soft", "box_color": "#e9eef2" },
+			"fin_setup": { "system": "soft", "model": "Wavestorm soft fins (bolt-through)", "status": "estimated", "source": "https://shop.agit-global.com/surfboards-longboards/Wavestorm/8ft-Classic-Surfboard/starburst/WS22SF2STA/", "note": "The board comes with three soft fins that bolt through the board from top plugs on the deck; their size is estimated. AGIT's product render shows two round top plugs per fin, about 1.65\" across and 4.7\" apart and the same color as the fins, and nothing but the fin's base on the bottom.", "finish": "soft", "box_color": "#e9eef2", "plugs": { "cap_diameter_in": 1.65, "bolt_spacing_in": 4.7 } },
 			"graphic": "classic-stripes",
 			"finish": "matte",
 			"colors": { "stripes": ["#1b2a7a", "#2438ff", "#4aa3e8", "#3fb44a", "#c6e84a", "#ffffff"], "rail": "#1b2a7a", "pad": "#9aa6bf", "bottom": "#f4f5f2", "fin": "#a6d63a" },
@@ -471,9 +473,10 @@
 				"model": "Catch Surf Hi-Performance fins (included)",
 				"status": "estimated",
 				"source": "https://catchsurf.com/collections/boards/products/log",
-				"note": "Catch Surf's Hi-Performance fin system with leash plug; the fins come with the board. Their size isn't published, so it is estimated.",
+				"note": "Catch Surf's Hi-Performance fin system with leash plug; the fins come with the board. Their size isn't published, so it is estimated. Fin positions and plugs are measured from Catch Surf's own 8'0\" product photo (deck and bottom): side fins centered 16.6\" up from the tail and 6.2\" off the stringer, the center fin 6.8\" up; yellow bottom plugs about 5.9\" x 1.35\"; two black caps per fin on the deck, about 1.4\" across and 4\" apart, where the screws go in.",
 				"finish": "resin",
-				"box_color": "#f1e33b"
+				"box_color": "#f1e33b",
+				"plugs": { "cap_diameter_in": 1.4, "bolt_spacing_in": 4.0, "cap_color": "#151515", "bottom_length_in": 5.9, "bottom_width_in": 1.35 }
 			},
 			"graphic": "odysea-log",
 			"finish": "matte",
@@ -509,9 +512,9 @@
 				"foil": { "nose_frac_12": 0.85, "tail_frac_12": 0.85, "thickest_from_center_in": 0 },
 				"rail": { "apex_frac": 0.45, "deck_exp": 3.5, "bottom_exp": 3.5 },
 				"fin_layout": [
-					{ "from_tail_in": 11, "off_center_in": 8.6, "depth_in": 4.3, "base_in": 4.2, "template": "thruster" },
-					{ "from_tail_in": 11, "off_center_in": -8.6, "depth_in": 4.3, "base_in": 4.2, "template": "thruster" },
-					{ "from_tail_in": 4.5, "off_center_in": 0, "depth_in": 4.3, "base_in": 4.2, "template": "thruster" }
+					{ "from_tail_in": 16.6, "off_center_in": 6.2, "depth_in": 4.3, "base_in": 4.2, "template": "thruster" },
+					{ "from_tail_in": 16.6, "off_center_in": -6.2, "depth_in": 4.3, "base_in": 4.2, "template": "thruster" },
+					{ "from_tail_in": 6.8, "off_center_in": 0, "depth_in": 4.3, "base_in": 4.2, "template": "thruster" }
 				]
 			}
 		}

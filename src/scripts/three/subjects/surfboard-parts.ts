@@ -117,7 +117,7 @@ export function buildFin(kit: PartKit, cal: CalibratedBoard, fin: FinSpec, setup
 	placeFin(pivot, cal, fin, yOffset);
 	if (fin.off_center_in !== 0) {
 		const side = Math.sign(fin.off_center_in);
-		const angles = FIN_ANGLES[setup.system];
+		const angles = FIN_ANGLES[fin.box ?? setup.system];
 		pivot.rotation.order = "YXZ";
 		pivot.rotation.x = -side * ((angles.cant * Math.PI) / 180);
 		pivot.rotation.y = side * ((angles.toe * Math.PI) / 180);

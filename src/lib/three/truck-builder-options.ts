@@ -40,6 +40,16 @@ const SRC = {
 	ultra164: { label: "Ultra Wheel, Type 164 sizes", href: "https://www.ultrawheel.com/wheel/28/164" },
 	bbsRgr: { label: "BBS RG-R, 17x7.5 5x114.3 +48 (Canada Wheels)", href: "https://www.canadawheels.ca/bbs-wheels/rgr" },
 	bbsJapan: { label: "BBS Japan, RG-R sizes and finishes", href: "https://bbs-japan.co.jp/en/?p=1266" },
+	cavalryBlue: { label: "AutomotiveTouchup, 2021 Tacoma colors (8W2 Cavalry Blue)", href: "https://www.automotivetouchup.com/touch-up-paint/toyota/2021/tacoma" },
+	fabtech2wd: { label: "Fabtech 3.5\" 2WD lift, 1984-95 Pickup (LC Engineering)", href: "https://www.lceperformance.com/2wd-3-5-lift-kit-with-shocks-1984-1995-pickup/" },
+	westinSteps: {
+		label: "Westin Signature 3\" step bars, 25-0575 (Vivid Racing)",
+		href: "https://www.vividracing.com/westin-black-signature-nerf-step-bars-toyota-pickup-reg-cab-19891994-p-153275974.html",
+	},
+	toyotaBoards: { label: "Toyota running board 00228-89915-13 (North Park Toyota)", href: "https://parts.northparktoyota.com/oem-parts/toyota-running-board-2288991513" },
+	tailpipe: { label: "Walker 44363 tailpipe, 1990-95 Pickup (FinditParts)", href: "https://www.finditparts.com/products/538637/walker-exhaust-44363" },
+	chromeTip: { label: "Summit Racing APH-9822 chrome tip", href: "https://www.summitracing.com/parts/aph-9822" },
+	stacks: { label: "5 x 36\" chrome mitered stack, EP50MS236C (Big Rig World)", href: "https://bigrigworld.com/mitered-stack-36-ep50ms236c.html" },
 	bttf: { label: "Back to the Future wiki, Marty's Toyota", href: "https://backtothefuture.fandom.com/wiki/Toyota_Hilux" },
 	tcLongboard: { label: "T&C Surf Designs, Tommy Tanaka Beach Boy", href: "https://tcsurf.com/collections/tommy-tanaka/products/beach-boy" },
 	trueAmes: { label: "True Ames Greenough 4-A 10.5\" fin (Rider Shack)", href: "https://ridershack.com/products/true-ames-greenough-4-a-10-5-single-fin" },
@@ -91,6 +101,15 @@ export const PAINTS: PaintOption[] = [
 		note: "A dark gray with a blue cast, between charcoal and navy. Not offered in 1991.",
 		source: SRC.underground,
 	},
+	{
+		id: "8W2",
+		name: "Cavalry Blue",
+		spec: "2019+ Toyota, code 8W2",
+		hex: "#56687c",
+		metallic: false,
+		note: "Sold as a grayish blue: the same family as Underground, a step bluer. Not offered in 1991.",
+		source: SRC.cavalryBlue,
+	},
 ];
 
 /** Ride height change at each axle, meters (negative is lower). */
@@ -127,6 +146,24 @@ export const RIDES: RideOption[] = [
 		rear: 3 * INCH,
 		note: "Lifts the body off the frame; doesn't fit 2WD trucks with power steering.",
 		source: SRC.pa5503m,
+	},
+	{
+		id: "fabtech",
+		name: "Fabtech 3.5\" 2WD lift",
+		spec: '3.5" suspension lift (kit 2044030)',
+		front: 3.5 * INCH,
+		rear: 3.5 * INCH,
+		note: "Taller upper control arms up front and add-a-leafs in the rear, made for the 1984-95 Pickup 2WD.",
+		source: SRC.fabtech2wd,
+	},
+	{
+		id: "fabtech-pa",
+		name: "Fabtech lift plus PA5503M body lift",
+		spec: '6.5" total: 3.5" suspension, 3" body',
+		front: 6.5 * INCH,
+		rear: 6.5 * INCH,
+		note: "Both kits together. The body lift is the PA5503M above, which doesn't fit 2WD trucks with power steering.",
+		source: SRC.fabtech2wd,
 	},
 ];
 
@@ -309,6 +346,61 @@ export interface RackOption extends Option {
 	kind: "none" | "rollbar";
 }
 
+export interface StepOption extends Option {
+	kind: "none" | "tube" | "board";
+}
+
+export const STEPS: StepOption[] = [
+	{ id: "none", name: "No steps", spec: "", kind: "none" },
+	{
+		id: "westin",
+		name: "Westin Signature step bars",
+		spec: '3" round tube, black (part 25-0575)',
+		kind: "tube",
+		note: "Made for the 1989-94 regular cab: a step for climbing into a lifted truck.",
+		source: SRC.westinSteps,
+	},
+	{
+		id: "toyota-boards",
+		name: "Toyota chrome running boards",
+		spec: "Dealer accessory, standard cab (part 00228-89915-13)",
+		kind: "board",
+		note: "Toyota's own chrome board for the 1989-95 standard cab. The listing gives no width, so it is drawn 5.5 in wide (estimated).",
+		source: SRC.toyotaBoards,
+	},
+];
+
+export interface ExhaustOption extends Option {
+	kind: "factory" | "tip" | "stacks";
+}
+
+export const EXHAUSTS: ExhaustOption[] = [
+	{
+		id: "factory",
+		name: "Factory tailpipe",
+		spec: '1.75" pipe',
+		kind: "factory",
+		note: "Drawn exiting under the rear bumper on the passenger side; Kyle's truck would confirm where it comes out.",
+		source: SRC.tailpipe,
+	},
+	{
+		id: "chrome-tip",
+		name: "Chrome tip",
+		spec: '1.75" inlet, 1.75" outlet, 5.25" long (Summit APH-9822)',
+		kind: "tip",
+		note: "A plain round chrome tip that bolts onto the factory 1.75-inch tailpipe.",
+		source: SRC.chromeTip,
+	},
+	{
+		id: "stacks",
+		name: "Twin chrome stacks",
+		spec: '5" x 36" mitered, in the bed behind the cab (part EP50MS236C)',
+		kind: "stacks",
+		note: "The monster-truck look. The 22R-E has a single exhaust, so twin stacks mean splitting it with a Y-pipe. We couldn't find what Poi Pounder itself ran.",
+		source: SRC.stacks,
+	},
+];
+
 export const RACKS: RackOption[] = [
 	{ id: "none", name: "No rack", spec: "", kind: "none" },
 	{
@@ -401,6 +493,8 @@ export interface Build {
 	tailgate: string;
 	bed: string;
 	rack: string;
+	steps: string;
+	exhaust: string;
 	board: string;
 	decal: string;
 }
@@ -419,6 +513,8 @@ export const AS_IT_SITS: Build = {
 	tailgate: "factory",
 	bed: "none",
 	rack: "none",
+	steps: "none",
+	exhaust: "factory",
 	board: "none",
 	decal: "none",
 };
@@ -426,7 +522,7 @@ export const AS_IT_SITS: Build = {
 /**
  * Kyle's build, from his notes and the reference truck he picked: factory black, lowered a little on a
  * Belltech kit (not slammed), chrome BBS RG-R mesh wheels on low-profile tires, LED headlights, 20% film on
- * every window (windshield too), the tailgate lettering removed, the Kalapana sticker, and a longboard in the bed.
+ * every window (windshield too), the tailgate lettering removed, a chrome exhaust tip, the Kalapana sticker, and a longboard in the bed.
  */
 export const KYLE_BUILD: Build = {
 	...AS_IT_SITS,
@@ -439,21 +535,25 @@ export const KYLE_BUILD: Build = {
 	tintWindshield: "20",
 	lights: "led",
 	tailgate: "plain",
+	exhaust: "chrome-tip",
 	board: "longboard",
 	decal: "kalapana",
 };
 
 /**
- * Noah's build: closer to a monster truck, after Marty McFly's Toyota and Poi Pounder. Underground
- * paint, a body lift, 33-inch tires on fat 15 x 10 wheels, and a McFly roll bar with KC lights on top.
+ * Noah's build: closer to a monster truck, after Marty McFly's Toyota and Poi Pounder. Cavalry Blue
+ * (a bluer take on Underground), 6.5 inches of lift, 33-inch tires on fat 15 x 10 wheels, step bars, twin
+ * chrome stacks, and a McFly roll bar with KC lights on top.
  */
 export const NOAH_BUILD: Build = {
 	...AS_IT_SITS,
-	paint: "1L7",
-	ride: "pa5503m",
+	paint: "8W2",
+	ride: "fabtech-pa",
 	wheel: "ultra164",
 	tire: "33-12.5-15",
 	rack: "rollbar",
+	steps: "westin",
+	exhaust: "stacks",
 };
 
 export const CATALOG = {
@@ -469,6 +569,8 @@ export const CATALOG = {
 	tailgate: TAILGATES,
 	bed: BEDS,
 	rack: RACKS,
+	steps: STEPS,
+	exhaust: EXHAUSTS,
 	board: BOARDS,
 	decal: DECALS,
 } as const;
@@ -502,6 +604,8 @@ export function resolveBuild(build: Build) {
 		tailgate: pick("tailgate"),
 		bed,
 		rack: pick("rack"),
+		steps: pick("steps"),
+		exhaust: pick("exhaust"),
 		board,
 		decal: pick("decal"),
 	};
@@ -509,7 +613,7 @@ export function resolveBuild(build: Build) {
 
 export type ResolvedBuild = ReturnType<typeof resolveBuild>;
 
-const KEY_ORDER: BuildKey[] = ["paint", "ride", "wheel", "tire", "tintFront", "tintRear", "tintWindshield", "lights", "grille", "tailgate", "bed", "rack", "board", "decal"];
+const KEY_ORDER: BuildKey[] = ["paint", "ride", "wheel", "tire", "tintFront", "tintRear", "tintWindshield", "lights", "grille", "tailgate", "bed", "rack", "steps", "exhaust", "board", "decal"];
 
 /** A build as a short, readable URL fragment, e.g. "paint=138&ride=b444&...". */
 export function encodeBuild(build: Build): string {
@@ -541,6 +645,8 @@ export function describeBuild(build: Build): { label: string; value: string }[] 
 		{ label: "Tailgate", value: r.tailgate.name },
 		{ label: "Bed", value: r.bed.name },
 		{ label: "Rack", value: r.rack.name },
+		{ label: "Steps", value: r.steps.name },
+		{ label: "Exhaust", value: r.exhaust.name },
 		{ label: "Surfboard", value: r.board.board ? `${r.board.name}, ${r.board.spec}` : r.board.name },
 		{ label: "Sticker", value: r.decal.name },
 	];
@@ -560,6 +666,8 @@ export const PICKER_GROUPS: { key: BuildKey; label: string }[] = [
 	{ key: "tailgate", label: "Tailgate" },
 	{ key: "bed", label: "Bed" },
 	{ key: "rack", label: "Rack and lights" },
+	{ key: "steps", label: "Steps" },
+	{ key: "exhaust", label: "Exhaust" },
 	{ key: "board", label: "Surfboard" },
 	{ key: "decal", label: "Sticker" },
 ];
@@ -581,6 +689,8 @@ export function truckSetup(build: Build) {
 			sticker: r.decal.kalapana,
 			tailgateLettering: r.tailgate.lettering,
 			rack: r.rack.kind,
+			steps: r.steps.kind,
+			exhaust: r.exhaust.kind,
 			board: r.board.board,
 		},
 	};

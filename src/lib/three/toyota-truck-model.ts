@@ -94,6 +94,10 @@ export interface TruckOptions {
 	board?: boolean;
 	/** A tube roll bar in the bed behind the cab with four 6-inch KC Daylighters on top, as on Marty McFly's truck. */
 	rack?: "none" | "rollbar";
+	/** Under the doors: 3-inch round step bars, or flat chrome running boards. */
+	steps?: "none" | "tube" | "board";
+	/** The factory 1.75-inch tailpipe, the same with a chrome tip, or twin 5 x 36 in chrome stacks in the bed. Left out, no exhaust is drawn. */
+	exhaust?: "factory" | "tip" | "stacks";
 }
 
 /** How far each hinged part swings open, radians. */
@@ -299,6 +303,8 @@ export function buildToyotaTruck(colors: TruckColors = DEFAULT_TRUCK_COLORS, opt
 	const trimMat = std(colors.trim, 0.8);
 	const grilleMat = std(colors.bumper, 0.6);
 	const chromeMat = std(tint(colors.silver, 0.3), 0.16, 0.9);
+	/** Fresh show chrome, brighter than the factory bumpers: the chrome wheels and the exhaust tip. */
+	const mirrorMat = std("#ffffff", 0.05, 1);
 	const dishMat = std(shade(colors.silver, 0.35), 0.5, 0.6);
 	const silverMat = std(colors.silver, 0.28, 0.85);
 	const hubMat = std(colors.hub, 0.5);
@@ -706,6 +712,104 @@ export function buildToyotaTruck(colors: TruckColors = DEFAULT_TRUCK_COLORS, opt
 			lettering("KC", [rx + 0.054, barTop + kcR + 0.04, z], 0.05, 0.011, 1, trimMat);
 		}
 	}
+
+	// --- Steps under the doors, from just behind the front tire to the back of the cab ---
+	const stepFrontX = 0.86;
+	const stepBackX = CAB_BACK_X - 0.05;
+	const stepY = DOOR_BOTTOM_Y - 0.08;
+	if (options.steps === "tube") {
+		// Westin Signature: a 3-inch round tube in black powder coat, its ends bent back to the body, on two
+		// brackets, with a molded step pad under the door.
+		const tubeR = 1.5 * INCH;
+		const stepMat = std("#17181a", 0.45, 0.4);
+		const padMat = std("#0b0b0c", 0.9);
+		pair((side) => {
+			const out = side * (BODY_HALF_W + 0.07);
+			const inn = side * (BODY_HALF_W - 0.03);
+			const path = new CatmullRomCurve3(
+				[
+					new Vector3(stepFrontX, stepY, inn),
+					new Vector3(stepFrontX - 0.07, stepY, out),
+					new Vector3(stepBackX + 0.07, stepY, out),
+					new Vector3(stepBackX, stepY, inn),
+				],
+				false,
+				"catmullrom",
+				0.1,
+			);
+			add(body, new TubeGeometry(path, 40, tubeR, 12, false), stepMat, [0, 0, 0], { outline: 0.008 });
+			for (const bx of [0.45, -0.35]) add(body, slab(0.06, 0.04, 0.12, 0.01, 0.004), stepMat, [bx, stepY + 0.02, side * (BODY_HALF_W + 0.01)], { outline: 0 });
+			add(body, slab(0.34, 0.014, 0.075, 0.006, 0.003), padMat, [0.12, stepY + tubeR, out], { outline: 0 });
+		});
+	} else if (options.steps === "board") {
+		// Toyota's chrome running board: a flat board with black rubber treads along it. Its width isn't
+		// published; it is drawn 5.5 inches wide.
+		const boardW = 5.5 * INCH;
+		const treadMat = std("#111214", 0.85);
+		pair((side) => {
+			const z = side * (BODY_HALF_W - 0.02 + boardW / 2);
+			add(body, slab(stepFrontX - stepBackX, 0.035, boardW, 0.012, 0.004), chromeMat, [(stepFrontX + stepBackX) / 2, stepY, z], { outline: 0.008 });
+			for (const dz of [-0.04, 0, 0.04]) {
+				add(body, slab(stepFrontX - stepBackX - 0.12, 0.008, 0.016, 0.003, 0.002), treadMat, [(stepFrontX + stepBackX) / 2, stepY + 0.021, z + dz * side], { outline: 0 });
+			}
+			for (const bx of [0.45, -0.35]) add(body, slab(0.05, 0.05, 0.1, 0.01, 0.004), trimMat, [bx, stepY + 0.035, side * (BODY_HALF_W - 0.02)], { outline: 0 });
+		});
+	}
+
+	// --- Exhaust ---
+	const pipeR = 1.75 * INCH * 0.5;
+	const pipeY = 0.31; // just under the rear bumper
+	const pipeZ = 0.5; // passenger side
+	const tailpipe = (endX: number) => {
+		const len = TAIL_X + 0.9 - endX;
+		const g = new CylinderGeometry(pipeR, pipeR, len, 14);
+		g.rotateZ(Math.PI / 2);
+		add(body, g, std("#55595d", 0.6, 0.6), [endX + len / 2, pipeY, pipeZ], { outline: 0 });
+		// The open end, dark inside.
+		const mouth = new CylinderGeometry(pipeR * 0.8, pipeR * 0.8, 0.004, 14);
+		mouth.rotateZ(Math.PI / 2);
+		add(body, mouth, trimMat, [endX - 0.001, pipeY, pipeZ], { outline: 0 });
+	};
+	if (options.exhaust === "factory") {
+		tailpipe(TAIL_X - 0.06);
+	} else if (options.exhaust === "tip") {
+		// A plain round chrome tip, 1.75 in across and 5.25 in long, over the end of the factory pipe, its
+		// mouth flush with the back of the bumper so it shows.
+		const tipLen = 5.25 * INCH;
+		const tipEnd = TAIL_X - 0.2;
+		tailpipe(tipEnd + tipLen - 0.02);
+		const tip = new CylinderGeometry(pipeR + 0.002, pipeR + 0.002, tipLen, 18, 1, true);
+		tip.rotateZ(Math.PI / 2);
+		add(body, tip, mirrorMat, [tipEnd + tipLen / 2, pipeY, pipeZ], { outline: 0.004 });
+		const mouth = new CylinderGeometry(pipeR * 0.95, pipeR * 0.95, 0.004, 18);
+		mouth.rotateZ(Math.PI / 2);
+		add(body, mouth, trimMat, [tipEnd + 0.004, pipeY, pipeZ], { outline: 0 });
+	} else if (options.exhaust === "stacks") {
+		// Twin 5-inch chrome stacks, 36 inches long, standing in the front corners of the bed with their
+		// tops cut at 45 degrees and the open side facing back, each clamped to the cab.
+		const stackR = 2.5 * INCH;
+		const stackLen = 36 * INCH;
+		const stackX = CAB_BACK_X - 0.13;
+		pair((side) => {
+			const g = new CylinderGeometry(stackR, stackR, stackLen, 24, 1, true);
+			// Mitered top: the front of the tube stays full length, the back is cut down by one diameter.
+			const pos = g.attributes.position;
+			for (let i = 0; i < pos.count; i++) {
+				if (pos.getY(i) > 0) pos.setY(i, pos.getY(i) - (stackR - pos.getX(i)));
+			}
+			g.computeVertexNormals();
+			const z = side * 0.62;
+			add(body, g, chromeMat, [stackX, BED_FLOOR_Y + stackLen / 2, z], { outline: 0.01 });
+			// Dark throat a little way down so the open cut reads as a pipe.
+			const throat = new CylinderGeometry(stackR * 0.92, stackR * 0.92, 0.006, 24);
+			add(body, throat, trimMat, [stackX, BED_FLOOR_Y + stackLen - 2 * stackR - 0.03, z], { outline: 0 });
+			// Clamp and brace back to the cab.
+			for (const y of [BELT_Y + 0.08, BED_FLOOR_Y + stackLen - 0.3]) {
+				add(body, new TorusGeometry(stackR + 0.004, 0.008, 6, 20), trimMat, [stackX, y, z], { rot: [Math.PI / 2, 0, 0], outline: 0 });
+				add(body, slab(CAB_BACK_X - stackX - stackR, 0.02, 0.02, 0.004, 0.002), trimMat, [(stackX + stackR + CAB_BACK_X) / 2, y, z], { outline: 0 });
+			}
+		});
+	}
 	if (options.board && options.bed !== "shell" && options.bed !== "tonneau") {
 		// The longboard rests deck-down with its nose tip on the bed floor just behind the cab and its deck on
 		// the tailgate's top edge, fin up, tail hanging out past the back of the truck. Its rocker and foil
@@ -1014,7 +1118,7 @@ export function buildToyotaTruck(colors: TruckColors = DEFAULT_TRUCK_COLORS, opt
 		// The mesh wheel's spokes and center in BBS Diamond Black, or chrome-plated: mirror-bright spokes over a
 		// plated barrel that sits deep in the wheel and mostly reflects the tire and the wheel well.
 		const chromeWheel = wheel.finish === "chrome";
-		const meshBlackMat = chromeWheel ? std("#ffffff", 0.05, 1) : std("#2a2d31", 0.3, 0.6);
+		const meshBlackMat = chromeWheel ? mirrorMat : std("#2a2d31", 0.3, 0.6);
 		const barrelMat = chromeWheel ? std("#6d7278", 0.12, 1) : std("#0c0d0f", 0.7, 0.2);
 		const capGoldMat = std("#c9a24a", 0.35, 0.8);
 		for (const [x, side] of [

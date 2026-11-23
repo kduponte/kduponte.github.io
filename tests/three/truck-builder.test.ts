@@ -66,14 +66,17 @@ describe("truck builder catalog", () => {
 		expect(r.tire.aspect).toBeLessThanOrEqual(50);
 		expect([r.tintFront.vlt, r.tintRear.vlt, r.tintWindshield.vlt]).toEqual([0.2, 0.2, 0.2]);
 		expect(r.tailgate.lettering).toBe(false);
+		expect(r.exhaust.kind).toBe("tip");
 		expect(r.board.board).toBe(true);
 		expect(r.bed.kind).toBe("none");
 	});
 
-	it("builds Noah's monster-truck version: Underground, lifted, 33s on 15 x 10s, McFly roll bar", () => {
+	it("builds Noah's monster-truck version: Cavalry Blue, 6.5 in of lift, 33s on 15 x 10s, steps, stacks, McFly roll bar", () => {
 		const r = resolveBuild(NOAH_BUILD);
-		expect(r.paint.id).toBe("1L7");
-		expect(r.ride.front).toBeGreaterThan(0);
+		expect(r.paint.id).toBe("8W2");
+		expect([r.ride.front, r.ride.rear].map((m) => m / INCH)).toEqual([6.5, 6.5]);
+		expect(r.steps.kind).toBe("tube");
+		expect(r.exhaust.kind).toBe("stacks");
 		expect(tireDiameter(r.tire.widthMm, r.tire.aspect, r.tire.rimIn) / INCH).toBeCloseTo(33, 6);
 		expect(r.tire.widthMm / 25.4).toBeCloseTo(12.5, 6);
 		expect(r.wheel.widthIn).toBe(10);
@@ -196,6 +199,45 @@ describe("buildToyotaTruck with builder options", () => {
 		};
 		expect(colorsOf("black").has("2a2d31")).toBe(true);
 		expect(colorsOf("chrome").has("2a2d31")).toBe(false);
+	});
+
+	it("stands Noah's twin stacks 36 in up from the bed floor, and puts Kyle's chrome tip out under the bumper", () => {
+		const mirror = (t: TruckModel) => {
+			t.group.updateMatrixWorld(true);
+			const box = new Box3();
+			for (const m of t.parts) {
+				const mat = m.material as MeshStandardMaterial;
+				if (mat.color.getHexString() === "ffffff" && mat.metalness === 1) box.expandByObject(m);
+			}
+			return box;
+		};
+		const stacks = buildToyotaTruck(undefined, { exhaust: "stacks" });
+		stacks.group.updateMatrixWorld(true);
+		// The two stacks are the open 36-inch tubes; each tops out at the 0.665 m bed floor plus 36 in, the
+		// mitered front edge the tallest point.
+		const tubes = stacks.parts.filter((m) => {
+			const p = (m.geometry as { parameters?: { height?: number; openEnded?: boolean } }).parameters;
+			return p?.openEnded && Math.abs((p.height ?? 0) - 36 * INCH) < 1e-9;
+		});
+		expect(tubes).toHaveLength(2);
+		for (const t of tubes) expect(new Box3().setFromObject(t).max.y).toBeCloseTo(0.665 + 36 * INCH, 2);
+		const tip = buildToyotaTruck(undefined, { exhaust: "tip" });
+		const tipBox = mirror(tip);
+		expect(tipBox.getSize(new Vector3()).x / INCH).toBeCloseTo(5.25, 1);
+		expect(tipBox.min.z).toBeGreaterThan(0); // passenger side
+		const factory = buildToyotaTruck(undefined, { exhaust: "factory" });
+		expect(mirror(factory).isEmpty()).toBe(true);
+		for (const t of [stacks, tip, factory]) t.dispose();
+	});
+
+	it("hangs step bars or running boards under both doors, between the front tire and the back of the cab", () => {
+		const plain = buildToyotaTruck(undefined, {});
+		for (const steps of ["tube", "board"] as const) {
+			const t = buildToyotaTruck(undefined, { steps });
+			expect(t.parts.length).toBeGreaterThan(plain.parts.length + 3);
+			t.dispose();
+		}
+		plain.dispose();
 	});
 
 	it("frames every build at one scale about one spin point, the longboard included", () => {

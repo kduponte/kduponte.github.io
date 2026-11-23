@@ -1,4 +1,4 @@
-// The Dashboard Problem's hero console: one seeded dashboard per gauge-console "run", built from
+// Too Good to Be True's hero console: one seeded dashboard per gauge-console "run", built from
 // the page's own simulation (simulateMetricBatch, the same two-proportion z-test, and the same
 // three decision rules the live experiment applies), at the live experiment's default settings.
 //

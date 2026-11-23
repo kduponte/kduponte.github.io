@@ -18,14 +18,14 @@ import { OUTLINE, createPartKit, extrude, shade, slab } from "./kit";
 import { COLS, DEFAULT_CONSOLE_COLORS, DIAL_HALF_SWEEP, DIAL_Z_MAX, ROWS, dialAngle, type ConsoleColors } from "./gauge-dial";
 
 /**
- * The Dashboard Problem's hero: a chunky 1980s instrument cluster in the 22RE truck's dash colors
- * (gray dash, black hood), with one center-zero analog gauge per metric, like an old ammeter.
+ * Too Good to Be True's hero: a chunky 1980s instrument cluster in the 22RE truck's dash colors
+ * (gray dash and hood, black bezels), with one center-zero analog gauge per metric, like an old ammeter.
  *
  * - Needle: the metric's signed z statistic, on a dial from -5 to +5 (ticks every 1, halves between).
  * - Red zones at both ends: the decision rule's two-sided threshold |z| (the redline), shared by
  *   every dial because every rule applies one threshold to the whole dashboard.
  * - Lamp under the hub: lit when the needle is in the red (the rule flags the metric), lime if the
- *   metric truly moved, tomato if it was truly null (a false discovery).
+ *   metric truly moved, orange if it was truly null (a false discovery).
  * - Pixel numerals: the metric's number, as the live experiment's table numbers them.
  *
  * Pure: no renderer or DOM, so it is unit tested in Node. Units are arbitrary (a dial is 0.6 wide).
@@ -173,7 +173,9 @@ export function buildGaugeConsole(count = COLS * ROWS, colors: ConsoleColors = D
 	panel.rotation.x = TILT;
 	group.add(panel);
 
-	// --- Housing: faceplate, a deep back box, the black hood with its side cheeks, a dash-top ledge ---
+	// --- Housing: faceplate, a deep back box, the hood with its side cheeks, a dash-top ledge ---
+	// The hood and cheeks are the same molded plastic as the dash, as on the truck; black is kept for
+	// the bezels, hubs and outlines, so the housing still reads against a black page.
 	add(panel, slab(PANEL_W, PANEL_H, 0.16, 0.12, 0.04), dashMat, [0, 0, -0.08], { outline: OUTLINE });
 	add(panel, slab(PANEL_W - 0.2, PANEL_H - 0.2, 0.55, 0.1, 0.03), dashDarkMat, [0, 0, -0.42], { outline: OUTLINE });
 	// The hood: a thick visor that overhangs the top row and drops a lip at the front, shaped in side
@@ -189,7 +191,7 @@ export function buildGaugeConsole(count = COLS * ROWS, colors: ConsoleColors = D
 	visor.lineTo(0.22, PANEL_H / 2 - 0.02);
 	visor.lineTo(-0.72, PANEL_H / 2 - 0.02);
 	visor.lineTo(-0.72, hoodTop);
-	add(panel, extrude(visor, PANEL_W + 0.28, 0.035, false), trimMat, [0, 0, 0], { rot: [0, -Math.PI / 2, 0], outline: OUTLINE });
+	add(panel, extrude(visor, PANEL_W + 0.28, 0.035, false), dashMat, [0, 0, 0], { rot: [0, -Math.PI / 2, 0], outline: OUTLINE });
 	// Side cheeks run from the visor's lip down the panel's sides, tapering back toward the dash.
 	const cheek = new Shape();
 	cheek.moveTo(-0.72, hoodTop - 0.02);
@@ -198,7 +200,7 @@ export function buildGaugeConsole(count = COLS * ROWS, colors: ConsoleColors = D
 	cheek.lineTo(-0.72, -PANEL_H / 2 + 0.3);
 	cheek.lineTo(-0.72, hoodTop - 0.02);
 	for (const side of [1, -1]) {
-		add(panel, extrude(cheek, 0.12, 0.03, false), trimMat, [side * (PANEL_W / 2 + 0.07), 0, 0], {
+		add(panel, extrude(cheek, 0.12, 0.03, false), dashMat, [side * (PANEL_W / 2 + 0.07), 0, 0], {
 			rot: [0, -Math.PI / 2, 0],
 			outline: OUTLINE,
 		});

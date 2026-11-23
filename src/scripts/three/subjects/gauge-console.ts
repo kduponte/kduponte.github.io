@@ -1,8 +1,8 @@
 /**
- * The Dashboard Problem's gauge console as a viewer subject. Every needle is one metric's z
+ * Too Good to Be True's gauge console as a viewer subject. Every needle is one metric's z
  * statistic from a seeded run of the page's own simulation; the red zones are the chosen rule's
  * redline; a lamp lights when its needle is in the red (lime: the metric truly moved; blinking
- * tomato: it was truly null, a false discovery).
+ * orange: it was truly null, a false discovery).
  *
  * Tap runs the next seed. The host element hears "gauges:select" ({ index?, mode? }) from the
  * readout and reports what it shows with "gauges:state" ({ index, seed, mode }). Needles swing on

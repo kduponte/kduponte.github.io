@@ -37,7 +37,7 @@ export function gaugeConsoleSvg(run: GaugeRun, mode: Correction): string {
 	out.push(`<g stroke="${c.trim}" stroke-width="6" stroke-linejoin="round">`);
 	out.push(`<rect x="${px - 22}" y="${py + panelH - 4}" width="${panelW + 44}" height="22" rx="8" fill="${c.dash}"/>`);
 	out.push(`<rect x="${px}" y="${py}" width="${panelW}" height="${panelH}" rx="14" fill="${c.dash}"/>`);
-	out.push(`<rect x="${px - 12}" y="${py - 26}" width="${panelW + 24}" height="30" rx="8" fill="${c.trim}"/>`);
+	out.push(`<rect x="${px - 12}" y="${py - 26}" width="${panelW + 24}" height="30" rx="8" fill="${c.dash}"/>`);
 	out.push(`</g>`);
 
 	run.metrics.forEach((m, i) => {

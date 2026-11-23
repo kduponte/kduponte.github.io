@@ -4,6 +4,7 @@
 export interface ConsoleColors {
 	/** Dash plastic: the 22RE truck's dash, its interior gray shaded 35% (kit `shade`). */
 	dash: string;
+	/** Bezels, hubs and outlines. */
 	trim: string;
 	face: string;
 	ink: string;

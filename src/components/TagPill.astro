@@ -2,14 +2,12 @@
 import Chip from "./Chip.astro";
 
 interface Props {
-	tone?: "blue" | "green" | "yellow" | "neutral";
+	/** Legacy tone names; tags are outlined labels in every tone now. */
+	tone?: string;
 	class?: string;
 }
 
-const { tone = "neutral", class: className = "" } = Astro.props;
-
-// Legacy tone names map onto the new palette.
-const chipTone = { blue: "cobalt", green: "lime", yellow: "sun", neutral: "cream" } as const;
+const { class: className = "" } = Astro.props;
 ---
 
-<Chip tone={chipTone[tone]} class:list={["tag-pill", className]}><slot /></Chip>
+<Chip class:list={["tag-pill", className]}><slot /></Chip>

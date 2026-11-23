@@ -15,7 +15,7 @@ for (const p of projects.filter((p) => p.data.status === "live").slice(0, 4)) {
 const line = items.join("  ★  ");
 ---
 
-<div class="ticker overflow-hidden border-b-[3px] border-black bg-black py-2 text-lime" role="marquee" aria-label="Latest updates">
+<div class="ticker overflow-hidden border-b-[3px] border-black bg-black py-2 text-dark-ink" role="marquee" aria-label="Latest updates">
 	<div class="ticker-track font-mono flex w-max whitespace-nowrap text-[11px] uppercase">
 		<span class="px-6" data-ticker-line>{line}  ★  <span data-local-time>—</span></span>
 		<span class="px-6" aria-hidden="true">{line}  ★  <span data-local-time>—</span></span>

@@ -68,7 +68,7 @@ async function render() {
 				y: "median",
 				r: 3,
 				fill: "var(--color-accent-blue)",
-				title: (d: YearSummary) => `${d.year} (this page's traced sales): median $${d.median.toLocaleString()}, n=${d.count}`,
+				title: (d: YearSummary) => `${d.year} (individual sales): median $${d.median.toLocaleString()}, n=${d.count}`,
 			}),
 		],
 	});
@@ -78,7 +78,7 @@ async function render() {
 	if (legendEl) {
 		legendEl.innerHTML = `
 			<span class="inline-flex items-center gap-1.5"><span class="inline-block h-2.5 w-2.5 rounded-full" style="background:var(--color-accent-green)"></span>classic.com market data, 1976-1994 (median, 25th-75th percentile band, full range)</span>
-			<span class="ml-4 inline-flex items-center gap-1.5"><span class="inline-block h-2.5 w-2.5 rounded-full" style="background:var(--color-accent-blue)"></span>this page's individually-traced sales, 1984-1994 (cross-check)</span>
+			<span class="ml-4 inline-flex items-center gap-1.5"><span class="inline-block h-2.5 w-2.5 rounded-full" style="background:var(--color-accent-blue)"></span>individual sales checked against their listings, 1984-1994 (cross-check)</span>
 			<span class="ml-4 inline-flex items-center gap-1.5"><span class="inline-block h-2.5 w-1 rounded-sm" style="background:var(--color-accent-yellow)"></span>1984 MSRP, new</span>
 		`;
 	}

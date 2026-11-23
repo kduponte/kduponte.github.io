@@ -1,4 +1,5 @@
 ---
+import SectionOpener from "../../editorial/SectionOpener.astro";
 /**
  * The board rack at the end of the Volume Gap writeup: every iconic board from the hero, in a
  * 3D rack at true relative size, ordered by liters. Pick one to take it down, stretch it inside
@@ -46,8 +47,8 @@ const SLIDERS = [
 ---
 
 <section id="board-rack" class="mx-auto max-w-7xl px-6 py-16 md:px-12 md:py-20">
-	<h2 class="font-anton text-4xl md:text-5xl">Pull a board off the rack</h2>
-	<p class="mt-3 max-w-[65ch] text-base leading-relaxed text-ink-soft">
+	<SectionOpener bare number="09" kicker="The rack" title={`Pull a board off the rack`} />
+	<p class="mt-10 max-w-[58ch] text-xl font-semibold leading-snug md:text-2xl">
 		Every board from the top of the page, at true relative size and ordered by liters. Take one down, then stretch it within
 		its maker's own size range and watch the volume move, and where it lands against what the calculators recommend for you.
 	</p>
@@ -89,7 +90,7 @@ const SLIDERS = [
 							type="button"
 							data-rack-pick={b.id}
 							aria-pressed="false"
-							class="raw-box rounded-full bg-cream px-3 py-1.5 text-sm font-semibold transition-colors hover:bg-lime aria-pressed:bg-lime data-[hover]:bg-lime/50"
+							class="btn btn-sm btn-ghost data-[hover]:bg-concrete"
 						>
 							{b.name}
 							<span class="font-mono ml-1 text-[10px] uppercase text-ink-soft">{b.liters.toFixed(1)} L</span>
@@ -141,7 +142,7 @@ const SLIDERS = [
 
 				<div class="mt-3 flex flex-wrap items-center justify-between gap-2 border-t-2 border-black pt-2 text-xs">
 					<p data-p-nearest-row><span class="font-semibold" data-p-nearest-label></span> <span data-p-nearest></span></p>
-					<button type="button" data-p-snap class="font-mono raw-box shadow-hard-sm raw-press rounded-full bg-lime px-3 py-1 text-[10px] uppercase">
+					<button type="button" data-p-snap class="btn btn-sm">
 						Set sliders to it
 					</button>
 				</div>

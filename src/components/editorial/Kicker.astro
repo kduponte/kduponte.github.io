@@ -1,0 +1,17 @@
+---
+// A subhead in the magazine kicker style (matches .mag h3): a black tab, mono caps, and a rule
+// running out to the edge.
+interface Props {
+	/** Optional tab text, e.g. "03.1"; defaults to a bullet. */
+	tab?: string;
+	class?: string;
+}
+
+const { tab = "✶", class: className = "" } = Astro.props;
+---
+
+<h3 class:list={["font-mono flex items-center gap-2.5 text-[11px] uppercase tracking-[0.06em]", className]}>
+	<span class="bg-black px-2 py-0.5 text-spot">{tab}</span>
+	<span><slot /></span>
+	<span class="flex-1 border-t-2 border-black" aria-hidden="true"></span>
+</h3>

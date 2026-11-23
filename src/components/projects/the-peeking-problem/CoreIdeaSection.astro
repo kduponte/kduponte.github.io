@@ -1,4 +1,5 @@
 ---
+import SectionOpener from "../../editorial/SectionOpener.astro";
 // Static, hand-drawn illustrative diagrams (deterministic pseudo-random walks generated offline,
 // then hardcoded here as plain SVG). These are sketches of the *mechanism*, not simulation output,
 // the live charts below use real computed numbers; these three exist purely to build intuition.
@@ -35,8 +36,8 @@ const d2Paths = [
 ---
 
 <section id="core-idea" class="mx-auto max-w-7xl px-6 py-16 md:px-12 md:py-20">
-	<h2 class="font-anton text-4xl md:text-5xl">Can you actually peek safely?</h2>
-	<p class="mt-3 max-w-[65ch] text-base leading-relaxed text-ink">
+	<SectionOpener bare number="02" kicker="The idea" title={`Can you actually peek safely?`} />
+	<p class="mt-10 max-w-[58ch] text-xl font-semibold leading-snug md:text-2xl">
 		Yes, but only with the right kind of test. The two sketches below are the whole mechanism, in miniature: why
 		watching a normal test every day is dangerous, and what a genuinely different construction does instead.
 	</p>
@@ -56,7 +57,7 @@ const d2Paths = [
 				<text x="66" y="34" class="font-mono" font-size="11" fill="var(--color-ink)">you'd stop here,</text>
 				<text x="66" y="48" class="font-mono" font-size="11" fill="var(--color-ink)">but nothing's actually different</text>
 			</svg>
-			<p class="mt-3 text-sm leading-relaxed text-ink-soft">
+			<p class="mt-3 text-[15px] font-medium leading-relaxed">
 				This is pure noise, no real difference between A and B, checked every day. A p-value or a raw posterior
 				probability wanders like this under the null. Wait long enough, and it is guaranteed to cross any fixed line
 				eventually, purely by chance. That's the actual mechanism behind "checking every day inflates false
@@ -88,7 +89,7 @@ const d2Paths = [
 				<text x="330" y="88" class="font-mono" font-size="11" fill="var(--color-ink)">only a small, capped fraction</text>
 				<text x="330" y="102" class="font-mono" font-size="11" fill="var(--color-ink)">of runs ever reach here</text>
 			</svg>
-			<p class="mt-3 text-sm leading-relaxed text-ink-soft">
+			<p class="mt-3 text-[15px] font-medium leading-relaxed">
 				These are many possible runs of a test built as a "fair game": engineered so its expected value under the
 				null never drifts upward, however often it's checked. Statisticians call this a martingale, a process
 				where, however things have gone so far, your best guess for what happens next is more of the same, no
@@ -127,7 +128,7 @@ const d2Paths = [
 			}
 			<text x="240" y="163" text-anchor="middle" class="font-mono" font-size="10" fill="var(--color-ink-soft)">possible true effect size</text>
 		</svg>
-		<p class="mt-3 max-w-[65ch] text-sm leading-relaxed text-ink-soft">
+		<p class="mt-3 max-w-[65ch] text-[15px] font-medium leading-relaxed">
 			Instead of testing one guess about the effect size, the always-valid test blends the likelihood of the data
 			across a whole range of plausible effects, weighted by how plausible each one is. That blending, not the
 			Bayesian-ness by itself, is what makes the resulting ratio behave like the fair game above instead of the
@@ -137,31 +138,31 @@ const d2Paths = [
 	</figure>
 
 	<div class="mt-10 raw-box rounded-xl bg-cream p-6">
-		<p class="font-mono text-xs uppercase tracking-wide text-accent-blue">So, can you peek safely?</p>
+		<p class="font-mono text-xs uppercase tracking-wide text-ink-soft">So, can you peek safely?</p>
 		<dl class="mt-4 grid grid-cols-1 gap-6 md:grid-cols-2">
 			<div>
 				<dt class="font-display text-base font-semibold">Yes, if</dt>
-				<dd class="mt-1 text-sm leading-relaxed text-ink-soft">
+				<dd class="mt-1 text-[15px] font-medium leading-relaxed">
 					you're using a genuine mixture Bayes factor, the fair-game construction above, this page's third engine.
 				</dd>
 			</div>
 			<div>
 				<dt class="font-display text-base font-semibold">No, if</dt>
-				<dd class="mt-1 text-sm leading-relaxed text-ink-soft">
+				<dd class="mt-1 text-[15px] font-medium leading-relaxed">
 					you're watching a raw posterior probability cross a fixed threshold. That's the same wandering-statistic
 					problem as a p-value, wearing different clothes (see Key Findings).
 				</dd>
 			</div>
 			<div>
 				<dt class="font-display text-base font-semibold">The guarantee breaks, not just weakens, if</dt>
-				<dd class="mt-1 text-sm leading-relaxed text-ink-soft">
+				<dd class="mt-1 text-[15px] font-medium leading-relaxed">
 					the underlying model is badly misspecified, or there's an unprincipled "I'll act early if it's extreme
 					enough" override sitting outside the formal rule.
 				</dd>
 			</div>
 			<div>
 				<dt class="font-display text-base font-semibold">It costs you, without breaking, if</dt>
-				<dd class="mt-1 text-sm leading-relaxed text-ink-soft">
+				<dd class="mt-1 text-[15px] font-medium leading-relaxed">
 					the assumed effect size (τ) is badly mismatched to reality. Safety holds regardless; you pay for the
 					mismatch in how quickly you can detect a real effect (see Key Findings).
 				</dd>

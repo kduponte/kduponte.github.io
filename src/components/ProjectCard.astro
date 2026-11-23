@@ -1,7 +1,10 @@
 ---
 import { projectTheme } from "../lib/project-theme";
-import TruckViewer from "./three/TruckViewer.astro";
-import BuoyViewer from "./three/BuoyViewer.astro";
+import { hasTilePreview, type TilePlacement } from "../lib/project-tiles";
+import TilePreview from "./three/TilePreview.astro";
+import Ripples from "./Ripples.astro";
+import { isLight } from "../lib/project-theme";
+import { seedFrom } from "../lib/patterns/ripples";
 
 interface Props {
 	slug: string;
@@ -11,10 +14,12 @@ interface Props {
 	tags: string[];
 	/** Degrees of tilt, for the collage feel. */
 	rotate?: number;
+	/** Where the card sits on a 12-column grid at md and up (see layoutTiles). */
+	place?: TilePlacement;
 	class?: string;
 }
 
-const { slug, title, summary, status, tags, rotate = 0, class: className = "" } = Astro.props;
+const { slug, title, summary, status, tags, rotate = 0, place, class: className = "" } = Astro.props;
 
 const statusLabel: Record<Props["status"], string> = {
 	"coming-soon": "Coming soon",
@@ -23,44 +28,74 @@ const statusLabel: Record<Props["status"], string> = {
 };
 
 const isLinkable = status !== "coming-soon";
+// Each project wears its season pair: the ground is the tile, the ring is its ripple.
 const theme = projectTheme(slug);
+const light = isLight(theme.pair.ground);
+const feature = hasTilePreview(slug);
+const placeVars = place ? ` --tile-col: ${place.column}; --tile-row: ${place.row};` : "";
 ---
 
 <article
 	class:list={[
-		"group raw-box shadow-hard-lg relative flex min-h-[18rem] flex-col gap-4 overflow-hidden rounded-3xl p-6 pt-9",
-		theme.fill,
+		"group raw-box shadow-hard-lg relative flex min-h-[18rem] flex-col gap-4 overflow-hidden rounded-3xl bg-season p-6 pt-9 text-season-ink",
+		place && "md:[grid-column:var(--tile-col)] md:[grid-row:var(--tile-row)]",
 		isLinkable && "raw-press",
 		!isLinkable && "opacity-80",
 		className,
 	]}
-	style={`transform: rotate(${rotate}deg); --dot: ${theme.dot}; --cell: 9px;`}
+	style={`transform: rotate(${rotate}deg); ${theme.vars};${placeVars}`}
+	data-season={theme.pair.id}
+	data-dark={light ? undefined : ""}
 >
-	<div class="halftone pointer-events-none absolute inset-0 opacity-20" aria-hidden="true"></div>
-	<span class="font-mono absolute -top-px right-5 rounded-b-lg bg-black px-2.5 py-1 text-[10px] uppercase text-lime">
+	<!-- The ripple lives in a square at the top of the tile (behind the 3D preview on a feature tile,
+	     in the top-right corner on the others), so on a tall phone tile it stays clear of the text. -->
+	<div
+		class:list={[
+			"pointer-events-none absolute top-0 aspect-square",
+			feature ? "inset-x-0" : "right-0 w-full max-w-[24rem]",
+		]}
+		aria-hidden="true"
+	>
+		<Ripples
+			form="drop"
+			seed={seedFrom(slug)}
+			cx={feature ? 500 : 860}
+			cy={300}
+			rings={9}
+			gap={feature ? 36 : 44}
+			class="text-season-ring"
+		/>
+	</div>
+	<div class:list={["pointer-events-none absolute inset-0", light ? "halftone opacity-20" : "halftone-light opacity-15"]} aria-hidden="true"></div>
+	<span
+		class:list={[
+			"font-mono absolute -top-px right-5 rounded-b-lg px-2.5 py-1 text-[10px] uppercase",
+			light ? "bg-black text-dark-ink" : "bg-dark-ink text-black",
+		]}
+	>
 		{statusLabel[status]}
 	</span>
-	{slug === "the-22re-restoration" && <TruckViewer class="pointer-events-auto absolute -bottom-4 -right-4 z-10 hidden w-[55%] sm:block" />}
-	{slug === "the-forecast-gap" && <BuoyViewer readout={false} class="pointer-events-auto absolute -bottom-4 -right-4 z-10 hidden w-[55%] sm:block" />}
+	{feature && <TilePreview slug={slug} />}
 	<h3 class="font-anton relative text-4xl leading-[0.95] md:text-5xl">{title}</h3>
 	<p class="relative max-w-[42ch] text-[15px] font-medium leading-snug">{summary}</p>
 	{
 		tags.length > 0 && (
 			<ul class="relative flex flex-wrap gap-2">
 				{tags.map((tag) => (
-					<li class="font-mono rounded-full border-2 border-black bg-cream/90 px-2.5 py-0.5 text-[10px] uppercase text-black">
-						{tag}
-					</li>
+					<li class="label-chip">{tag}</li>
 				))}
 			</ul>
 		)
 	}
 	{
 		isLinkable ? (
-			<a href={`/projects/${slug}`} class="font-mono relative mt-auto text-xs uppercase underline decoration-2 underline-offset-4">
-				View project →
-				<span class="absolute inset-0 -m-6 -mt-9" aria-hidden="true" />
-			</a>
+			<>
+				<a href={`/projects/${slug}`} class="btn btn-sm relative z-20 mt-auto self-start">
+					View project →
+				</a>
+				<!-- The whole tile opens the project; the button above is the one in the tab order. -->
+				<a href={`/projects/${slug}`} class="absolute inset-0 z-[5]" aria-hidden="true" tabindex="-1" />
+			</>
 		) : (
 			<span class="font-mono relative mt-auto text-xs uppercase" aria-hidden="true">
 				Write-up coming soon

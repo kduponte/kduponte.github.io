@@ -1,4 +1,5 @@
 ---
+import SectionOpener from "../../editorial/SectionOpener.astro";
 import comparisonData from "../../../../public/data/surf-forecast/comparisons.json";
 import metadata from "../../../../public/data/surf-forecast/metadata.json";
 
@@ -25,8 +26,8 @@ const perDay = (headline.effective_n / headline.n_days).toFixed(0);
 ---
 
 <section id="evidence" class="mx-auto max-w-7xl px-6 py-16 md:px-12 md:py-20">
-	<h2 class="font-anton text-4xl md:text-5xl">How much evidence is in {(metadata.total_pairs / 1e6).toFixed(1)} million pairs?</h2>
-	<div class="mt-3 max-w-[65ch] space-y-4 text-base leading-relaxed text-ink-soft">
+	<SectionOpener bare number="09" kicker="Evidence" title={`How much evidence is in ${(metadata.total_pairs / 1e6).toFixed(1)} million pairs?`} />
+	<div class="mag mt-10 max-w-[65ch]">
 		<p>
 			Less than the count suggests. Forecast errors are not independent: a model that misreads a swell misreads it at
 			every synoptic hour while the swell lasts, and at every neighbouring buoy it reaches. Treat each pair as a fresh
@@ -59,7 +60,7 @@ const perDay = (headline.effective_n / headline.n_days).toFixed(0);
 
 	<div id="fg-independence" class="mt-8">
 		<div class="flex justify-end">
-			<button type="button" data-vg-table-toggle class="font-mono text-xs uppercase tracking-wide text-accent-blue" aria-pressed="false">
+			<button type="button" data-vg-table-toggle class="btn btn-sm btn-ghost" aria-pressed="false">
 				View as table
 			</button>
 		</div>

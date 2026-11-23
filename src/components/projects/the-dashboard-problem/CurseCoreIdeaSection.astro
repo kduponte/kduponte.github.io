@@ -1,0 +1,129 @@
+---
+// The winner's curse, in plain English, then measured on the page's own seeded dashboards. Every
+// number below comes from measureWinnersCurse (src/lib/stats-sim/winners-curse.ts), run once at
+// build time by the page and passed in, and pinned in tests/stats-sim/winners-curse.test.ts.
+// Nothing is typed in by hand. Astro drops a line break that touches a tag or an {expression}, so
+// the prose below only breaks lines between plain words.
+import { formatCount, formatLift, formatShare, type Rule, type WinnersCurseResult } from "../../../lib/stats-sim/winners-curse";
+
+interface Props {
+	curse: WinnersCurseResult;
+}
+
+const { curse } = Astro.props;
+const { config } = curse;
+const points = (x: number | null) => (x === null ? "—" : (x * 100).toFixed(2));
+
+const liftedPerDashboard = config.num_metrics - Math.round(config.num_metrics * config.fraction_null);
+const labels: Record<Rule, string> = {
+	none: "Flagged, no correction",
+	bh: "Flagged, Benjamini-Hochberg",
+	bonferroni: "Flagged, Bonferroni",
+};
+const rows = (["none", "bh", "bonferroni"] as const).map((rule) => ({ rule, label: labels[rule], ...curse.rules[rule] }));
+const { none, bh, bonferroni } = curse.rules;
+---
+
+<section id="winners-curse" class="mx-auto max-w-7xl scroll-mt-24 px-6 py-16 md:px-12 md:py-20">
+	<p class="font-mono text-xs uppercase tracking-wide text-ink-soft">Trap two</p>
+	<h2 class="mt-2 font-anton text-4xl md:text-5xl">Why do real winners look bigger than they are?</h2>
+	<p class="mt-3 max-w-[65ch] text-base leading-relaxed text-ink">
+		The <strong>winner's curse</strong> got its name in the oil business. Companies bidding on federal offshore leases
+		in the Gulf of Mexico each estimated how much oil sat under a tract. Some guessed high, some low, and on average
+		the guesses could be fair. But whoever won an auction was, almost by definition, the bidder who guessed highest,
+		so the winners kept overpaying. Capen, Clapp and Campbell wrote it up in 1971, and the name stuck: winning
+		selects the biggest overestimate.
+	</p>
+	<p class="mt-3 max-w-[65ch] text-base leading-relaxed text-ink-soft">
+		A dashboard runs that same auction on every real lift. Each measurement is the true lift plus some noise,
+		sometimes pushing it up, sometimes down. The significance bar is the auction: the real lifts that clear it are,
+		disproportionately, the ones whose noise happened to push them up. So when a real winner gets flagged, its
+		measured lift is a guess that won a contest for being high. Gelman and Carlin call that overshoot a Type M, for
+		magnitude, error.
+	</p>
+	<p class="mt-3 max-w-[65ch] text-base leading-relaxed text-ink-soft">
+		That makes it a different trap from the first one, asking a different question. Multiple testing asks whether a
+		flagged winner is real at all. The winner's curse asks how big a real winner is. Same flags, two different ways
+		to be wrong, and the corrections from the first half only fix the first: a stricter bar lets through only the
+		luckiest draws, so the real winners it does flag come out even more exaggerated.
+	</p>
+
+	<figure class="mt-10 raw-box rounded-xl bg-cream p-6">
+		<figcaption class="font-display text-lg font-semibold">Is it real? How big is it? The same flags, both questions</figcaption>
+		<p class="mt-1 max-w-[65ch] text-sm leading-relaxed text-ink-soft">
+			The live experiment's dashboard, run {formatCount(curse.dashboards)} times, each rule applied to every run.
+		</p>
+		<div class="mt-5 overflow-x-auto">
+			<table class="w-full text-left text-sm">
+				<thead>
+					<tr class="border-b border-line align-bottom font-mono text-xs uppercase tracking-wide text-ink-soft">
+						<th scope="col" class="py-2 pr-3 font-normal md:pr-4">Which metrics</th>
+						<th scope="col" class="py-2 pr-3 font-normal md:pr-4">
+							<span class="block text-ink">Is it real?</span>
+							Flags on a null metric
+						</th>
+						<th scope="col" class="py-2 font-normal">
+							<span class="block text-ink">How big is it?</span>
+							Average observed lift
+						</th>
+					</tr>
+				</thead>
+				<tbody>
+					<tr class="border-b border-line/60 align-top">
+						<th scope="row" class="py-2 pr-3 font-normal text-ink-soft md:pr-4">Every real lift, flagged or not</th>
+						<td class="py-2 pr-3 font-mono text-ink-soft md:pr-4">&mdash;</td>
+						<td class="py-2 font-mono">
+							{formatLift(curse.mean_observed_lift_all)}
+							<span class="block text-xs text-ink-soft">{formatCount(curse.lifted_metrics)} metrics</span>
+						</td>
+					</tr>
+					{
+						rows.map((row) => (
+							<tr class="border-b border-line/60 align-top">
+								<th scope="row" class="py-2 pr-3 font-normal text-ink md:pr-4">
+									{row.label}
+								</th>
+								<td class="py-2 pr-3 font-mono md:pr-4">
+									{formatShare(row.null_share)}
+									<span class="block text-xs text-ink-soft">
+										{formatCount(row.null_flags)} of {formatCount(row.flags)} flags
+									</span>
+								</td>
+								<td class="py-2 font-mono">
+									{formatLift(row.mean_observed_lift)}
+									<span class="block text-xs text-ink-soft">{formatCount(row.lifted_flags)} real winners</span>
+								</td>
+							</tr>
+						))
+					}
+				</tbody>
+			</table>
+		</div>
+		<p class="mt-5 max-w-[65ch] text-sm leading-relaxed text-ink-soft">
+			Read down the columns. Each stricter rule cuts the fake flags, from {formatShare(none.null_share)} to {formatShare(bh.null_share)} to {formatShare(bonferroni.null_share)}, and
+			pushes the real winners' average further from the truth, from {formatLift(none.mean_observed_lift)} to {formatLift(bh.mean_observed_lift)} to {formatLift(bonferroni.mean_observed_lift)}, on a
+			true lift of {formatLift(curse.true_lift)}. The same bar that fixes false discoveries makes the curse worse.
+		</p>
+		<p class="mt-3 max-w-[65ch] text-xs leading-relaxed text-ink-soft">
+			{formatCount(curse.dashboards)} simulated dashboards, seeds {formatCount(curse.first_seed)}–{formatCount(curse.last_seed)}, at the
+			live experiment's defaults: {config.num_metrics} metrics, {liftedPerDashboard} of them lifted by a true {formatLift(curse.true_lift)} on a {Math.round(config.baseline_rate * 100)}% baseline, {formatCount(config.visitors_per_arm)} visitors per
+			arm, α = {curse.alpha}. The yardstick is {formatLift(curse.mean_observed_lift_all)}, not {formatLift(curse.true_lift)}, and
+			that first gap isn't the curse: a ratio of two noisy rates runs high on average even when nothing is selected.
+			Measured as a plain difference in rates, which doesn't, every lifted metric averages {points(curse.mean_observed_diff_all)} percentage
+			points against a true {points(curse.true_diff)}. Computed at build time by src/lib/stats-sim/winners-curse.ts and
+			pinned in tests/stats-sim/winners-curse.test.ts.
+		</p>
+	</figure>
+
+	<div class="mt-10 raw-box rounded-xl bg-cream p-6">
+		<p class="font-mono text-xs uppercase tracking-wide text-ink-soft">The fix isn't a stricter bar</p>
+		<p class="mt-2 max-w-[65ch] text-sm leading-relaxed text-ink-soft">
+			Two things actually shrink it. More traffic: once nearly every real lift clears the bar, clearing it stops
+			selecting for luck, the study further down shows how fast that happens. And measuring a winner again on fresh
+			traffic, a holdout or a re-test, since nothing about the second measurement was selected. Re-run on fresh
+			traffic, Bonferroni's {formatLift(bonferroni.mean_observed_lift)} winners come back at {formatLift(bonferroni.mean_retest_lift)}, right on the unselected
+			average. Shrinkage, pulling flagged estimates back toward what's typical, does a similar job without new traffic,
+			but it needs a prior built from many past experiments, which this page doesn't model.
+		</p>
+	</div>
+</section>

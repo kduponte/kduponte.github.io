@@ -5,9 +5,9 @@ import GaugeConsoleViewer from "../../three/GaugeConsoleViewer.astro";
 
 <ProjectHeader
 	eyebrow="[ Statistics, Illustrated ]"
-	title="The Dashboard Problem"
-	subtitle="Test twenty metrics at once, and something will look like a winner by chance, even when nothing real changed."
-	summary="Checking one metric at a fixed 5% false-positive rate feels safe. Checking twenty at once, even at that same safe rate each, isn't, the chance that at least one of them cries wolf climbs fast. This project simulates a real dashboard of metrics, some genuinely moved, most genuinely not, and measures exactly how often naive thresholds get fooled, and how much two real corrections, Bonferroni and Benjamini-Hochberg, actually fix it."
+	title="Too Good to Be True"
+	subtitle="Test twenty metrics at once and something will look like a winner. Some of those winners aren't real, and the real ones are smaller than they look."
+	summary="Checking one metric at a fixed 5% false-positive rate feels safe. Checking twenty at once isn't, and the trouble comes in two kinds. Some of the metrics that clear the bar never moved at all, they're false discoveries, the multiple comparisons problem. And the ones that really did move look bigger than they are, because clearing the bar picks out the lucky draws, the winner's curse. This project simulates a dashboard of metrics, some genuinely moved, most genuinely not, and measures both traps: how often each rule gets fooled, how much the real winners get exaggerated, and what actually fixes each one."
 	primaryCta={{ label: "Run the experiment", href: "#live-experiment" }}
 	secondaryCta={{ label: "See the metric-count study", href: "#metric-study" }}
 >

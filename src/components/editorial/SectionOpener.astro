@@ -1,0 +1,49 @@
+---
+// A magazine feature opener: a running head, a big outlined section number, the title, and an
+// optional standfirst. A ripple in the page's season color sits behind the number, so each chapter
+// opens in the same color as the project's tile and hero.
+import Ripples from "../Ripples.astro";
+import { seedFrom } from "../../lib/patterns/ripples";
+
+interface Props {
+	/** Section number, e.g. "01". */
+	number: string;
+	/** Short label for the running head, e.g. "The story". */
+	kicker: string;
+	title: string;
+	/** Standfirst: one or two sentences that set up the section. */
+	deck?: string;
+	/** Drop the outer width and padding, for use inside a section that already has them. */
+	bare?: boolean;
+	class?: string;
+}
+
+const { number, kicker, title, deck, bare = false, class: className = "" } = Astro.props;
+const slug = Astro.url.pathname.split("/").filter(Boolean).pop() ?? "";
+const seed = seedFrom(`${slug}${number}`, 11);
+---
+
+<header class:list={["relative", !bare && "mx-auto max-w-7xl px-6 md:px-12", className]}>
+	<div class="font-mono flex items-center gap-3 border-b-[3px] border-black pb-2 text-[11px] uppercase">
+		<span class="bg-black px-2 py-0.5 text-dark-ink">{number}</span>
+		<span>{kicker}</span>
+		<span class="ml-auto hidden sm:inline">Kyle DuPonte · Projects</span>
+	</div>
+	<div class="relative mt-8 grid grid-cols-1 items-end gap-6 md:grid-cols-12">
+		<div class="relative md:col-span-3">
+			<div class="relative h-36 overflow-hidden md:h-44" aria-hidden="true">
+				<Ripples form="drop" seed={seed} cx={300} cy={560} rings={10} gap={42} class="text-ring-paper" />
+				<span
+					class="font-anton absolute bottom-0 left-0 text-[8.5rem] leading-[0.8] text-paper md:text-[11rem]"
+					style="-webkit-text-stroke: 3px var(--color-black); text-shadow: 5px 5px 0 var(--color-black)"
+				>
+					{number}
+				</span>
+			</div>
+		</div>
+		<div class="md:col-span-9">
+			<h2 class="font-anton text-5xl leading-[0.92] [text-wrap:balance] md:text-7xl">{title}</h2>
+			{deck && <p class="mt-4 max-w-[52ch] text-xl font-bold leading-snug md:text-2xl">{deck}</p>}
+		</div>
+	</div>
+</header>

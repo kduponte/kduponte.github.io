@@ -1,0 +1,70 @@
+---
+// Markup + mount points only; all behavior lives in src/scripts/the-dashboard-problem/curse-live.ts.
+---
+
+<section id="curse-live" class="mx-auto max-w-7xl px-6 py-16 md:px-12 md:py-20">
+	<h2 class="font-anton text-4xl md:text-5xl">Where the flagged winners come from</h2>
+	<p class="mt-3 max-w-[65ch] text-base leading-relaxed text-ink-soft">
+		Every metric from 200 seeded dashboards at once, laid out by the lift it showed. The top panel holds the metrics
+		that truly didn't move, so anything flagged there is a false discovery, trap one. The bottom panel holds the
+		metrics that truly lifted, so the flagged ones show what clearing the bar does to the size of a real winner, trap
+		two. Switch the rule, change the traffic, or step to the next 200 dashboards.
+	</p>
+
+	<form id="cl-controls" class="mt-8 grid grid-cols-1 gap-4 raw-box rounded-xl bg-cream p-6 md:grid-cols-3">
+		<fieldset class="flex flex-col gap-1 text-sm">
+			<legend class="font-mono text-xs uppercase tracking-wide text-ink-soft">Decision rule</legend>
+			<div class="mt-1 flex flex-wrap gap-2">
+				<label class="cursor-pointer">
+					<input type="radio" name="cl-rule" value="none" class="peer sr-only" />
+					<span class="btn btn-sm btn-ghost peer-checked:border-ink peer-checked:bg-pop peer-checked:text-pop-ink peer-focus-visible:outline-[3px] peer-focus-visible:outline-offset-2 peer-focus-visible:outline-pop">No correction</span>
+				</label>
+				<label class="cursor-pointer">
+					<input type="radio" name="cl-rule" value="bh" class="peer sr-only" />
+					<span class="btn btn-sm btn-ghost peer-checked:border-ink peer-checked:bg-pop peer-checked:text-pop-ink peer-focus-visible:outline-[3px] peer-focus-visible:outline-offset-2 peer-focus-visible:outline-pop">Benjamini-Hochberg</span>
+				</label>
+				<label class="cursor-pointer">
+					<input type="radio" name="cl-rule" value="bonferroni" class="peer sr-only" />
+					<span class="btn btn-sm btn-ghost peer-checked:border-ink peer-checked:bg-pop peer-checked:text-pop-ink peer-focus-visible:outline-[3px] peer-focus-visible:outline-offset-2 peer-focus-visible:outline-pop">Bonferroni</span>
+				</label>
+			</div>
+		</fieldset>
+		<label class="flex flex-col gap-1 text-sm">
+			<span class="font-mono text-xs uppercase tracking-wide text-ink-soft">Visitors/arm</span>
+			<select id="cl-visitors" class="border-2 border-black bg-paper px-3 py-2 text-ink">
+				<option value="100">100</option>
+				<option value="200">200</option>
+				<option value="400">400</option>
+				<option value="800">800</option>
+				<option value="1600">1,600</option>
+				<option value="3200">3,200</option>
+			</select>
+		</label>
+		<div class="flex flex-col gap-1 text-sm">
+			<span class="font-mono text-xs uppercase tracking-wide text-ink-soft">Dashboards</span>
+			<span id="cl-seeds" class="font-mono text-xs text-ink-soft"></span>
+			<div class="flex flex-wrap gap-2">
+				<button type="button" id="cl-next" class="btn btn-sm">
+					Next 200
+				</button>
+				<button type="button" id="cl-reset" class="btn btn-sm btn-ghost">
+					Back to seed 1
+				</button>
+			</div>
+		</div>
+	</form>
+
+	<div id="cl-root" class="mt-6">
+		<div data-vg-summary class="raw-box rounded-xl bg-cream p-4 text-sm leading-relaxed" aria-live="polite"></div>
+		<div class="mt-4 flex justify-end">
+			<button type="button" data-vg-table-toggle class="btn btn-sm btn-ghost" aria-pressed="false">
+				View as table
+			</button>
+		</div>
+		<div data-vg-chart class="mt-2 space-y-6"></div>
+		<div data-vg-table class="mt-2 overflow-x-auto"></div>
+		<p data-cl-note class="mt-2 max-w-[65ch] text-xs leading-relaxed text-ink-soft"></p>
+	</div>
+
+	<script src="../../../scripts/the-dashboard-problem/curse-live.ts"></script>
+</section>

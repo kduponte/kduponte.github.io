@@ -90,7 +90,7 @@ const SLIDERS = [
 							type="button"
 							data-rack-pick={b.id}
 							aria-pressed="false"
-							class="raw-box rounded-full bg-cream px-3 py-1.5 text-sm font-semibold transition-colors hover:bg-lime aria-pressed:bg-lime data-[hover]:bg-lime/50"
+							class="btn btn-sm btn-ghost data-[hover]:bg-concrete"
 						>
 							{b.name}
 							<span class="font-mono ml-1 text-[10px] uppercase text-ink-soft">{b.liters.toFixed(1)} L</span>
@@ -142,7 +142,7 @@ const SLIDERS = [
 
 				<div class="mt-3 flex flex-wrap items-center justify-between gap-2 border-t-2 border-black pt-2 text-xs">
 					<p data-p-nearest-row><span class="font-semibold" data-p-nearest-label></span> <span data-p-nearest></span></p>
-					<button type="button" data-p-snap class="font-mono raw-box shadow-hard-sm raw-press rounded-full bg-lime px-3 py-1 text-[10px] uppercase">
+					<button type="button" data-p-snap class="btn btn-sm">
 						Set sliders to it
 					</button>
 				</div>

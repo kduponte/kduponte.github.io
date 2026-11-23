@@ -25,42 +25,35 @@ const tilts = [-0.8, 1, 0.8, -0.5];
 
 <BaseLayout
 	title="Home"
-	theme="cobalt"
 	description="Kyle DuPonte, Staff Data Scientist. 10+ years in FinTech, working across full-stack analytics and experimentation."
 >
-	<section class="relative overflow-hidden border-y-[3px] border-black bg-black">
-		<Ripples seed={1991} cx={760} cy={420} rings={16} gap={52} class="text-cornflower" />
-		<div class="halftone absolute inset-0 opacity-40" aria-hidden="true"></div>
+	<!-- Black hero with grey rain: the home page wears no season pair, like Cav Empt's site at rest.
+	     The project tiles below carry the color. -->
+	<section class="relative overflow-hidden border-b-[3px] border-black bg-black text-dark-ink" data-dark>
+		<Ripples form="rain" seed={1991} drops={7} minDist={210} class="text-rain-dark" />
+		<div class="halftone-light absolute inset-0 opacity-15" aria-hidden="true"></div>
 		<div class="relative mx-auto max-w-7xl px-6 pb-16 pt-10 md:px-12 md:pb-24 md:pt-14">
-			<h1
-				class="text-[clamp(5.5rem,26vw,22rem)] text-cream"
-				style="text-shadow: 6px 6px 0 var(--color-tomato)"
-			>
-				Kyle<br />DuPonte
-			</h1>
+			<h1 class="text-[clamp(5.5rem,26vw,22rem)]">Kyle<br />DuPonte</h1>
 
 			<div class="mt-8 grid grid-cols-1 items-start gap-8 md:grid-cols-12">
-				<div class="raw-box shadow-hard-lg rounded-2xl bg-cream p-6 text-black md:col-span-6">
+				<div class="rounded-2xl border-[3px] border-black bg-paper p-6 text-ink md:col-span-6">
 					<p class="text-xl font-bold leading-snug md:text-2xl">
 						Staff Data Scientist at Intuit. 10+ years in FinTech, working across full-stack analytics and
 						<span class="chip-serif">experimentation</span>.
 					</p>
-					<div class="mt-5 flex flex-wrap gap-3">
-						<Chip tone="lime">SF Bay Area</Chip>
-						<Chip tone="sun">Experimentation</Chip>
-						<Chip as="a" href="/experience" tone="black" interactive>Experience →</Chip>
+					<div class="mt-5 flex flex-wrap items-center gap-2">
+						<Chip>SF Bay Area</Chip>
+						<Chip>Experimentation</Chip>
+						<Chip as="a" href="/experience" interactive class="ml-auto">Experience →</Chip>
 					</div>
 				</div>
 
 				{
 					latest && (
-						<Widget label="Now restoring" tone="sun" class="md:col-span-4 md:col-start-8">
+						<Widget label="Now restoring" class="bg-black md:col-span-4 md:col-start-8">
 							<p class="font-mono text-[11px] uppercase">Truck log · {latestDate}</p>
 							<p class="mt-2 text-lg font-extrabold leading-tight">{latest.data.title}</p>
-							<a
-								href="/projects/the-22re-restoration"
-								class="font-mono mt-3 inline-block text-xs uppercase underline decoration-2 underline-offset-4"
-							>
+							<a href="/projects/the-22re-restoration" class="link mt-3 inline-block text-sm">
 								Follow the build →
 							</a>
 						</Widget>
@@ -68,33 +61,17 @@ const tilts = [-0.8, 1, 0.8, -0.5];
 				}
 			</div>
 
-			<Sticker tone="bubblegum" rotate={12} class="absolute right-4 top-6 hidden w-28 text-sm md:grid lg:right-16 lg:w-36 lg:text-base">
+			<Sticker rotate={12} class="absolute right-4 top-6 hidden w-28 bg-black text-sm md:grid lg:right-16 lg:w-36 lg:text-base">
 				10+<br />years<br />in<br />FinTech
 			</Sticker>
 		</div>
 	</section>
 
-	<section class="border-b-[3px] border-black bg-cream text-black">
-		<div class="mx-auto grid max-w-7xl grid-cols-1 gap-8 px-6 py-20 md:grid-cols-12 md:px-12 md:py-28">
-			<div class="md:col-span-5">
-				<SectionHeading eyebrow="About" title="Experimentation is the throughline." />
-			</div>
-			<div class="md:col-span-6 md:col-start-7">
-				<p class="text-lg font-medium leading-relaxed md:text-xl">
-					I'm the person teams come to for experimentation platform expertise: building the tooling, defining the
-					guardrails, and helping teams make sense of a messy result. Lately I've been picking up causal
-					inference too, for the questions a randomized test can't answer.
-				</p>
-				<Chip as="a" href="/about" tone="lime" interactive class="mt-6">Read the full story →</Chip>
-			</div>
-		</div>
-	</section>
-
-	<section class="border-b-[3px] border-black bg-sand text-black">
+	<section class="bg-grey text-ink">
 		<div class="mx-auto max-w-7xl px-6 py-20 md:px-12 md:py-28">
 			<div class="flex flex-wrap items-end justify-between gap-4">
 				<SectionHeading eyebrow="Projects" title="Portfolio, in progress." />
-				<Chip as="a" href="/projects" tone="black" interactive>View all →</Chip>
+				<Chip as="a" href="/projects" interactive variant="ghost">View all →</Chip>
 			</div>
 			<div class="mt-12 grid grid-cols-1 gap-8 md:grid-cols-12">
 				{

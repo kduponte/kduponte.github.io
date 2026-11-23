@@ -27,7 +27,7 @@ const removed = [0.3, 0.5, 0.7].map((r) => ({ value: `${Math.round(r * r * 100)}
 		not a single number for the whole experiment.
 	</p>
 
-	<Band tone="field" contained class="mt-10" cx={140} cy={500} rings={9}>
+	<Band tone="field" contained class="mt-10" cx={140} cy={500}>
 		<p class="font-mono text-[11px] uppercase">The tare, by the numbers: variance removed is exactly correlation²</p>
 		<StatSpread class="mt-4" items={removed} />
 	</Band>
@@ -101,7 +101,7 @@ const removed = [0.3, 0.5, 0.7].map((r) => ({ value: `${Math.round(r * r * 100)}
 	</div>
 
 	<div class="mt-10 raw-box rounded-xl bg-cream p-6">
-		<p class="font-mono text-xs uppercase tracking-wide text-accent-blue">Why this doesn't cheat</p>
+		<p class="font-mono text-xs uppercase tracking-wide text-ink-soft">Why this doesn't cheat</p>
 		<p class="mt-2 max-w-[65ch] text-[15px] font-medium leading-relaxed">
 			The adjustment subtracts a constant (each visitor's covariate compared to the overall average covariate),
 			the same rule for every visitor regardless of which arm they're in. Subtracting the same rule from both arms

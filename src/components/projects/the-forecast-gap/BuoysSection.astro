@@ -132,7 +132,7 @@ const label = `${countWord(n, true)} wave buoys at true size on a slowly turning
 										data-fleet-pick={i}
 										aria-pressed={i === 0 ? "true" : "false"}
 										aria-controls={panelId(profiles[i])}
-										class="border-2 border-black bg-cream px-3 py-1.5 text-sm leading-tight font-medium text-black transition-colors hover:bg-black/10 aria-pressed:bg-lime"
+										class="border-2 border-black bg-paper px-3 py-1.5 text-sm leading-tight font-medium text-ink transition-colors hover:bg-pop aria-pressed:bg-pop"
 									>
 										{profiles[i].name}
 									</button>
@@ -155,7 +155,7 @@ const label = `${countWord(n, true)} wave buoys at true size on a slowly turning
 							data-selected={i === 0 ? "" : undefined}
 							class="group raw-box shadow-hard-sm overflow-hidden rounded-xl bg-cream text-black"
 						>
-							<header class="border-b-[3px] border-black px-5 py-4 group-data-[selected]:bg-lime">
+							<header class="border-b-[3px] border-black px-5 py-4 group-data-[selected]:bg-pop">
 								<p class="font-mono text-xs uppercase">
 									{p.station}
 									{p.page.cdip && ` · CDIP ${p.page.cdip}`} · {REGION_LABEL[p.region]}

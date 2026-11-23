@@ -12,11 +12,11 @@ import StatSpread from "../../editorial/StatSpread.astro";
 		Simulate hundreds of independent experiments where there is truly no difference between A and B, and count how
 		often each of the three methods would have declared a winner: checking once at a fixed end date, versus checking
 		every single day and stopping the moment any of them looked convincing. This is the wandering-statistic-vs-fair-game
-		story from <a href="#core-idea" class="text-accent-blue underline underline-offset-2">Can you actually peek safely?</a>, run
+		story from <a href="#core-idea" class="link">Can you actually peek safely?</a>, run
 		hundreds of times over.
 	</p>
 
-	<Band tone="ink" contained class="mt-10" cx={900} cy={500} rings={10}>
+	<Band tone="ink" contained class="mt-10" cx={900} cy={500}>
 		<p class="font-mono text-[11px] uppercase">False positives with no real effect, at the default settings</p>
 		<StatSpread
 			class="mt-4"
@@ -50,13 +50,13 @@ import StatSpread from "../../editorial/StatSpread.astro";
 		</label>
 		<label class="col-span-2 flex flex-col gap-1 text-sm">
 			<span class="font-mono text-xs uppercase tracking-wide text-ink-soft">Prior strength (Bayesian rule): weak &rarr; skeptical</span>
-			<input id="pp-study-prior-strength" type="range" min="0" max="1" step="0.01" class="accent-accent-blue w-full" />
+			<input id="pp-study-prior-strength" type="range" min="0" max="1" step="0.01" class="accent-pop w-full" />
 		</label>
 		<div class="flex items-end">
 			<button
 				type="button"
 				id="pp-study-run-button"
-				class="w-full border border-ink bg-ink px-5 py-2.5 font-mono text-xs uppercase tracking-wide text-paper transition-colors hover:border-accent-blue hover:bg-accent-blue"
+				class="btn w-full justify-center"
 			>
 				Run peeking study
 			</button>
@@ -70,7 +70,7 @@ import StatSpread from "../../editorial/StatSpread.astro";
 	<div id="pp-peeking-study" class="mt-6">
 		<div data-vg-summary class="raw-box rounded-xl bg-cream p-4 font-mono text-sm"></div>
 		<div class="mt-4 flex justify-end">
-			<button type="button" data-vg-table-toggle class="font-mono text-xs uppercase tracking-wide text-accent-blue" aria-pressed="false">
+			<button type="button" data-vg-table-toggle class="btn btn-sm btn-ghost" aria-pressed="false">
 				View as table
 			</button>
 		</div>

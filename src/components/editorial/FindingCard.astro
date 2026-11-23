@@ -28,11 +28,11 @@ const bars =
 		: null;
 ---
 
-<li class="raw-box shadow-hard-lg relative rounded-2xl bg-cream p-6 text-black">
+<li class="raw-box shadow-hard-lg relative rounded-2xl bg-paper p-6 text-ink">
 	<div class="flex items-start gap-4">
 		{
 			index !== undefined && (
-				<span class="font-anton text-5xl leading-[0.85] text-spot" style="-webkit-text-stroke: 2px var(--color-black)">
+				<span class="font-anton text-5xl leading-[0.85]">
 					{String(index).padStart(2, "0")}
 				</span>
 			)
@@ -45,8 +45,8 @@ const bars =
 				{bars.map((bar) => (
 					<div class="flex items-center gap-2 text-xs">
 						<span class="font-mono w-32 shrink-0 truncate text-[10px] uppercase">{bar.label}</span>
-						<span class="h-3.5 flex-1 rounded-sm border-2 border-black bg-black/5">
-							<span class="block h-full bg-spot" style={`width: ${bar.pct}%`} />
+						<span class="h-3.5 flex-1 rounded-sm border-2 border-black bg-grey">
+							<span class="block h-full bg-ink" style={`width: ${bar.pct}%`} />
 						</span>
 						<span class="w-14 shrink-0 text-right font-bold">
 							{bar.value}

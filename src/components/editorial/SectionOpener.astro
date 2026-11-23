@@ -1,9 +1,9 @@
 ---
-// A magazine feature opener: a running head, a big outlined section number in the page accent,
-// the title, and an optional standfirst. Ripple rings in the project's own ring color sit behind
-// the number, so each chapter opens in the same colors as the project's card and hero.
+// A magazine feature opener: a running head, a big outlined section number, the title, and an
+// optional standfirst. A ripple in the page's season color sits behind the number, so each chapter
+// opens in the same color as the project's tile and hero.
 import Ripples from "../Ripples.astro";
-import { projectTheme } from "../../lib/project-theme";
+import { seedFrom } from "../../lib/patterns/ripples";
 
 interface Props {
 	/** Section number, e.g. "01". */
@@ -20,22 +20,21 @@ interface Props {
 
 const { number, kicker, title, deck, bare = false, class: className = "" } = Astro.props;
 const slug = Astro.url.pathname.split("/").filter(Boolean).pop() ?? "";
-const theme = projectTheme(slug);
-const seed = [...`${slug}${number}`].reduce((a, c) => (a * 31 + c.charCodeAt(0)) >>> 0, 11);
+const seed = seedFrom(`${slug}${number}`, 11);
 ---
 
 <header class:list={["relative", !bare && "mx-auto max-w-7xl px-6 md:px-12", className]}>
 	<div class="font-mono flex items-center gap-3 border-b-[3px] border-black pb-2 text-[11px] uppercase">
-		<span class="bg-black px-2 py-0.5 text-spot">{number}</span>
+		<span class="bg-black px-2 py-0.5 text-dark-ink">{number}</span>
 		<span>{kicker}</span>
 		<span class="ml-auto hidden sm:inline">Kyle DuPonte · Projects</span>
 	</div>
 	<div class="relative mt-8 grid grid-cols-1 items-end gap-6 md:grid-cols-12">
 		<div class="relative md:col-span-3">
 			<div class="relative h-36 overflow-hidden md:h-44" aria-hidden="true">
-				<Ripples seed={seed} cx={300} cy={520} rings={11} gap={44} class={theme.ring} />
+				<Ripples form="drop" seed={seed} cx={300} cy={560} rings={10} gap={42} class="text-ring-paper" />
 				<span
-					class="font-anton absolute bottom-0 left-0 text-[8.5rem] leading-[0.8] text-spot md:text-[11rem]"
+					class="font-anton absolute bottom-0 left-0 text-[8.5rem] leading-[0.8] text-paper md:text-[11rem]"
 					style="-webkit-text-stroke: 3px var(--color-black); text-shadow: 5px 5px 0 var(--color-black)"
 				>
 					{number}

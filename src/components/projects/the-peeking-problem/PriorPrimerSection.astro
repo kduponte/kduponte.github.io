@@ -20,7 +20,7 @@ import SectionOpener from "../../editorial/SectionOpener.astro";
 	</p>
 
 	<div class="mt-6 max-w-[65ch] border-l-2 border-accent-blue pl-4">
-		<p class="font-mono text-xs uppercase tracking-wide text-accent-blue">Before you trust a prior, ask</p>
+		<p class="font-mono text-xs uppercase tracking-wide text-ink-soft">Before you trust a prior, ask</p>
 		<ul class="mt-2 space-y-2 text-[15px] font-medium leading-relaxed">
 			<li>Is it based on something real, like this page's own history, not a guess or a hope?</li>
 			<li>Is its confidence level honest? If you're not actually sure, the prior shouldn't act sure.</li>
@@ -36,17 +36,17 @@ import SectionOpener from "../../editorial/SectionOpener.astro";
 	<div class="mt-4 grid grid-cols-1 gap-6 raw-box rounded-xl bg-cream p-6 md:grid-cols-3">
 		<label class="flex flex-col gap-1 text-sm">
 			<span class="font-mono text-xs uppercase tracking-wide text-ink-soft">Prior strength: weak &rarr; strong</span>
-			<input id="pp-primer-strength" type="range" min="0" max="1" step="0.01" class="accent-accent-blue w-full" />
+			<input id="pp-primer-strength" type="range" min="0" max="1" step="0.01" class="accent-pop w-full" />
 			<span id="pp-primer-strength-value" class="font-mono text-xs text-ink-soft"></span>
 		</label>
 		<label class="flex flex-col gap-1 text-sm">
 			<span class="font-mono text-xs uppercase tracking-wide text-ink-soft">What the data alone suggests</span>
-			<input id="pp-primer-data-rate" type="range" min="0" max="30" step="0.5" class="accent-accent-blue w-full" />
+			<input id="pp-primer-data-rate" type="range" min="0" max="30" step="0.5" class="accent-pop w-full" />
 			<span id="pp-primer-data-rate-value" class="font-mono text-xs text-ink-soft"></span>
 		</label>
 		<label class="flex flex-col gap-1 text-sm">
 			<span class="font-mono text-xs uppercase tracking-wide text-ink-soft">Visitors observed so far</span>
-			<input id="pp-primer-visitors" type="range" min="10" max="3000" step="10" class="accent-accent-blue w-full" />
+			<input id="pp-primer-visitors" type="range" min="10" max="3000" step="10" class="accent-pop w-full" />
 			<span id="pp-primer-visitors-value" class="font-mono text-xs text-ink-soft"></span>
 		</label>
 	</div>
@@ -110,7 +110,7 @@ import SectionOpener from "../../editorial/SectionOpener.astro";
 	<div class="mt-4 max-w-xl raw-box rounded-xl bg-cream p-6">
 		<label class="flex flex-col gap-1 text-sm">
 			<span class="font-mono text-xs uppercase tracking-wide text-ink-soft">τ: narrow &rarr; wide</span>
-			<input id="pp-tau-slider" type="range" min="0.25" max="3" step="0.05" class="accent-accent-blue w-full" />
+			<input id="pp-tau-slider" type="range" min="0.25" max="3" step="0.05" class="accent-pop w-full" />
 			<span id="pp-tau-value" class="font-mono text-xs text-ink-soft"></span>
 		</label>
 	</div>

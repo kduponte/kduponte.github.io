@@ -1,6 +1,6 @@
 ---
 interface Props {
-	/** "wordmark": sticker-style name. "full": large wordmark for heroes. "mark": small KD stamp. */
+	/** "wordmark": the name in a black block. "full": larger, for heroes. "mark": small KD stamp. */
 	variant?: "wordmark" | "full" | "mark";
 	class?: string;
 }
@@ -11,21 +11,15 @@ const { variant = "mark", class: className = "" } = Astro.props;
 {
 	variant === "mark" ? (
 		<svg viewBox="0 0 100 100" class:list={["logo-mark-static", className]} aria-hidden="true">
-			<rect x="6" y="6" width="88" height="88" rx="18" fill="var(--color-lime)" stroke="var(--color-black)" stroke-width="7" />
-			<text
-				x="50"
-				y="68"
-				text-anchor="middle"
-				font-family="Anton, Impact, sans-serif"
-				font-size="56"
-				fill="var(--color-black)">KD</text
-			>
+			<rect x="6" y="6" width="88" height="88" rx="18" fill="var(--color-dark-ink)" stroke="var(--color-black)" stroke-width="7" />
+			<text x="50" y="68" text-anchor="middle" font-family="Anton, Impact, sans-serif" font-size="56" fill="var(--color-black)">KD</text>
 		</svg>
 	) : (
 		<span
 			class:list={[
-				"logo-wordmark font-anton inline-block border-[3px] border-black bg-lime text-black shadow-hard",
-				variant === "full" ? "px-4 py-1 text-5xl md:text-7xl" : "px-3 py-0.5 text-2xl md:text-3xl",
+				// The wordmark is the home link, so it turns orange on hover like everything clickable.
+				"logo-wordmark font-anton inline-block rounded-md border-[3px] border-black bg-black text-dark-ink transition-colors group-hover:bg-pop group-hover:text-pop-ink",
+				variant === "full" ? "px-4 py-1 text-5xl md:text-7xl" : "px-2.5 py-0.5 text-xl md:text-2xl",
 				className,
 			]}
 			aria-hidden="true">Kyle DuPonte</span

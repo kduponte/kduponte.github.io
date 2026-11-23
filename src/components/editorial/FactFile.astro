@@ -12,10 +12,10 @@ interface Props {
 }
 
 const { title = "Fact file", rows, note, tone = "paper", class: className = "" } = Astro.props;
-const t = toneClasses(tone, Astro.url.pathname);
+const t = toneClasses(tone);
 ---
 
-<div class:list={["relative rounded-2xl border-[3px] border-black p-5 pt-7", t.surface, t.shadow, className]}>
+<div class:list={["relative rounded-2xl border-[3px] border-black p-5 pt-7", t.surface, t.shadow, className]} data-dark={t.dark ? "" : undefined}>
 	<span class:list={["font-mono absolute -top-px left-5 rounded-b-lg px-2.5 py-1 text-[10px] uppercase", t.tab]}>{title}</span>
 	<dl class="space-y-2.5 text-sm">
 		{

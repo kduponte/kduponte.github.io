@@ -13,13 +13,13 @@ const isActive = (href: string) => currentPath.startsWith(href);
 ---
 
 <Ticker />
-<header class="relative z-50">
-	<div class="mx-auto flex max-w-7xl flex-wrap items-center justify-between gap-3 px-6 py-4 md:px-12">
-		<a href="/" class="shrink-0" aria-label="Kyle DuPonte, home">
+<header class="relative z-50 border-b-[3px] border-black bg-paper text-ink">
+	<div class="mx-auto flex max-w-7xl flex-wrap items-center gap-x-3 gap-y-2 px-6 py-3 md:px-12">
+		<a href="/" class="group shrink-0" aria-label="Kyle DuPonte, home">
 			<Logo variant="wordmark" />
 		</a>
-		<nav aria-label="Primary">
-			<ul class="flex flex-wrap items-center gap-2 font-bold">
+		<nav aria-label="Primary" class="order-last w-full md:order-none md:mr-auto md:w-auto">
+			<ul class="flex flex-wrap items-center gap-1">
 				{
 					navItems.map((item) => (
 						<li>
@@ -27,16 +27,19 @@ const isActive = (href: string) => currentPath.startsWith(href);
 								href={item.href}
 								aria-current={isActive(item.href) ? "page" : undefined}
 								class:list={[
-									"raw-box raw-press shadow-hard-sm inline-block rounded-full px-4 py-1.5 text-sm text-black",
-									isActive(item.href) ? "bg-lime" : "bg-cream",
+									"font-mono inline-block rounded-full border-2 px-3 py-1.5 text-[11px] uppercase transition-colors",
+									isActive(item.href)
+										? "border-black bg-pop text-pop-ink"
+										: "border-transparent hover:border-black",
 								]}
 							>
-								{item.label.toLowerCase()}
+								{item.label}
 							</a>
 						</li>
 					))
 				}
 			</ul>
 		</nav>
+		<a href="#contact" class="btn btn-sm ml-auto md:ml-0">Get in touch</a>
 	</div>
 </header>

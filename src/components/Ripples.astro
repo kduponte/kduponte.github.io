@@ -1,14 +1,25 @@
 ---
-// Organic ripple rings as a texture layer (see lib/patterns/ripples.ts). Color comes from the
-// text color, so set it with a `text-*` class, e.g. "text-black/15".
-import { ripplePaths, type RippleOptions } from "../lib/patterns/ripples";
+// Organic water ripples as a texture layer (see lib/patterns/ripples.ts). Color comes from the
+// text color, so set it with a `text-*` class, e.g. "text-ring-paper". The strokes run through a
+// blur-then-threshold filter, so strokes that sit close melt together into one solid shape, the
+// way Cav Empt's ripples do. The result is solid color, never see-through.
+import { formBlur, formPaths, type FormOptions, type RippleForm } from "../lib/patterns/ripples";
 
-interface Props extends RippleOptions {
+interface Props extends FormOptions {
+	form?: RippleForm;
 	class?: string;
 }
 
-const { class: className = "", ...opts } = Astro.props;
-const paths = ripplePaths(opts);
+const { class: className = "", form = "drop", ...opts } = Astro.props;
+const paths = formPaths(form, opts);
+const blur = formBlur(form, opts);
+// Filter ids only need to be unique on a page; a counter across the build guarantees that.
+const g = globalThis as { __rippleId?: number };
+g.__rippleId = (g.__rippleId ?? 0) + 1;
+const id = `ripple-goo-${g.__rippleId}`;
+// Alpha above THRESHOLD becomes solid; the slope keeps a one-pixel-ish soft edge.
+const SLOPE = 22;
+const THRESHOLD = 0.45;
 ---
 
 <svg
@@ -17,7 +28,19 @@ const paths = ripplePaths(opts);
 	preserveAspectRatio="xMidYMid slice"
 	aria-hidden="true"
 >
-	<g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
-		{paths.map((p) => <path d={p.d} stroke-width={p.width} stroke-dasharray={p.dash} />)}
+	<defs>
+		<filter id={id} filterUnits="userSpaceOnUse" x="-60" y="-60" width="1120" height="1120" color-interpolation-filters="sRGB">
+			<feGaussianBlur stdDeviation={blur} />
+			<feComponentTransfer>
+				<feFuncA type="linear" slope={SLOPE} intercept={-SLOPE * THRESHOLD} />
+			</feComponentTransfer>
+		</filter>
+	</defs>
+	<g filter={`url(#${id})`} fill="none" stroke="currentColor" stroke-linecap="round">
+		{
+			paths.map((p) =>
+				p.fill ? <path d={p.d} fill="currentColor" stroke="none" /> : <path d={p.d} stroke-width={p.width} />,
+			)
+		}
 	</g>
 </svg>

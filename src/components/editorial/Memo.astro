@@ -10,7 +10,7 @@ interface Props {
 }
 
 const { title, tone = "paper", class: className = "" } = Astro.props;
-const t = toneClasses(tone, Astro.url.pathname);
+const t = toneClasses(tone);
 ---
 
 <aside
@@ -20,6 +20,7 @@ const t = toneClasses(tone, Astro.url.pathname);
 		t.shadow,
 		className,
 	]}
+	data-dark={t.dark ? "" : undefined}
 >
 	<span class:list={["font-mono absolute -top-px left-5 rounded-b-lg px-2.5 py-1 text-[10px] uppercase", t.tab]}>{title}</span>
 	<div class="space-y-3"><slot /></div>

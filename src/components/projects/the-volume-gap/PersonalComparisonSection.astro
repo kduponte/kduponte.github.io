@@ -21,7 +21,7 @@ const who = `${profile.weight_lb} lb, ${formatLengthIn(profile.height_in)}, ${pr
 		branded calculator.
 	</p>
 
-	<Band tone="field" contained class="mt-10" cx={140} cy={500} rings={9}>
+	<Band tone="field" contained class="mt-10" cx={140} cy={500}>
 		<p class="font-mono text-[11px] uppercase">The default surfer ({who}), {consensus.n_contributing_systems} systems</p>
 		<StatSpread
 			class="mt-4"
@@ -78,7 +78,7 @@ const who = `${profile.weight_lb} lb, ${formatLengthIn(profile.height_in)}, ${pr
 	<div id="vg-hero-comparison" class="mt-6">
 		<div data-vg-summary class="raw-box rounded-xl bg-cream p-4 font-mono text-sm"></div>
 		<div class="mt-4 flex justify-end">
-			<button type="button" data-vg-table-toggle class="font-mono text-xs uppercase tracking-wide text-accent-blue" aria-pressed="false">
+			<button type="button" data-vg-table-toggle class="btn btn-sm btn-ghost" aria-pressed="false">
 				View as table
 			</button>
 		</div>

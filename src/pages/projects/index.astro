@@ -1,6 +1,7 @@
 ---
 import { getCollection } from "astro:content";
 import BaseLayout from "../../layouts/BaseLayout.astro";
+import Ripples from "../../components/Ripples.astro";
 import ProjectCard from "../../components/ProjectCard.astro";
 import { hasTilePreview, layoutTiles } from "../../lib/project-tiles";
 
@@ -13,13 +14,17 @@ const places = layoutTiles(projects.map((p) => hasTilePreview(p.id)));
 
 <BaseLayout
 	title="Projects"
-	theme="sun"
 	description="Portfolio projects from Kyle DuPonte: real, data-driven write-ups on experimentation, causal inference, and more."
 >
-	<div class="relative overflow-hidden border-y-[3px] border-black">
-		<div class="halftone absolute inset-0 opacity-25" style="--dot: #ff5a1f; --cell: 14px" aria-hidden="true"></div>
-		<div class="relative mx-auto max-w-7xl px-6 pb-12 pt-10 md:px-12 md:pb-16">
-			<h1 class="text-[clamp(5rem,24vw,20rem)]" style="text-shadow: 5px 5px 0 #f6f1e4">Projects</h1>
+	<!-- Every page opens on black with rain in its season color, kept right of the headline (on
+	     phones, in a strip of its own under the headline). -->
+	<div class="relative overflow-hidden border-b-[3px] border-black bg-black text-dark-ink" data-dark>
+		<div class="pointer-events-none absolute inset-x-0 bottom-0 h-[50vw] md:inset-0 md:h-auto" aria-hidden="true">
+			<Ripples form="rain" seed={1992} drops={4} minDist={220} scale={0.85} areaX={[730, 980]} areaY={[150, 850]} class="text-rain-dark" />
+		</div>
+		<div class="halftone-light absolute inset-0 opacity-15" aria-hidden="true"></div>
+		<div class="relative mx-auto max-w-7xl px-6 pb-[50vw] pt-10 md:px-12 md:pb-16">
+			<h1 class="text-[clamp(5rem,24vw,20rem)]">Projects</h1>
 			<p class="mt-4 max-w-[48ch] text-lg font-bold leading-snug md:text-xl">
 				Personal projects I build on my own time: real, data-driven write-ups on experimentation and causal
 				inference, plus a couple of notes still in progress.
@@ -45,18 +50,3 @@ const places = layoutTiles(projects.map((p) => hasTilePreview(p.id)));
 		</div>
 	</div>
 </BaseLayout>
-
-<script>
-	// Hovering a card washes the page in that project's accent (its light partner color), like a
-	// print proof under a gel.
-	const body = document.body;
-	const reset = () => body.style.removeProperty("--page-field");
-	document.querySelectorAll<HTMLElement>("article[data-wash]").forEach((card) => {
-		card.addEventListener("pointerenter", () => {
-			const wash = card.dataset.wash;
-			if (!wash || card.dataset.tone === "sand" || card.dataset.tone === "bone") return reset();
-			body.style.setProperty("--page-field", `color-mix(in srgb, var(--color-${wash}) 40%, var(--color-cream))`);
-		});
-		card.addEventListener("pointerleave", reset);
-	});
-</script>

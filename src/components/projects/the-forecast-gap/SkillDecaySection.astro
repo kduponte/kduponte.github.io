@@ -62,7 +62,7 @@ const noaaDirEverPositive = leads.some((l) => skill("all", "ncep_gfswave016", l,
 		</p>
 	</div>
 
-	<Band tone="ink" contained class="mt-10" cx={900} cy={500} rings={10}>
+	<Band tone="ink" contained class="mt-10" cx={900} cy={500}>
 		<StatSpread
 			items={[
 				{ value: `${ft(e3)} ft`, label: "ECMWF's average miss, three days out" },
@@ -82,7 +82,7 @@ const noaaDirEverPositive = leads.some((l) => skill("all", "ncep_gfswave016", l,
 					Direction
 				</button>
 			</div>
-			<button type="button" data-vg-table-toggle class="font-mono text-xs uppercase tracking-wide text-accent-blue" aria-pressed="false">
+			<button type="button" data-vg-table-toggle class="btn btn-sm btn-ghost" aria-pressed="false">
 				View as table
 			</button>
 		</div>

@@ -1,25 +1,30 @@
 ---
-// A full-width color block with ripple rings, for a chapter break or a block of big numbers. Bands
-// give a long write-up its rhythm: paper, then a dark or colored spread, then paper again.
+// A full-width block for a chapter break or a block of big numbers. Bands give a long write-up its
+// rhythm: white, then a black or grey spread, then white again. A ripple in the page's season color
+// reaches in from one edge.
 import Ripples from "../Ripples.astro";
 import { toneClasses, type TileTone } from "../../lib/tile-tone";
+import { seedFrom, type RippleForm } from "../../lib/patterns/ripples";
 
 interface Props {
 	tone?: TileTone;
-	/** Where the rings center, in the 1000 × 1000 ripple box. */
+	/** Which edge the ripple reaches in from: below 500 is the left edge, otherwise the right. */
 	cx?: number;
+	/** Kept for older callers; the ripple centers on the band's height (or its top, see align). */
 	cy?: number;
-	/** Ring count; use fewer on bands that carry paragraph text so the rings stay clear of it. */
-	rings?: number;
+	form?: RippleForm;
+	/** "top" pins the ripple to the top of a tall band, behind its heading. */
+	align?: "center" | "top";
 	/** A rounded tile inside the column instead of a full-width band. */
 	contained?: boolean;
 	class?: string;
 	innerClass?: string;
 }
 
-const { tone = "ink", cx = 860, cy = 500, rings = 16, contained = false, class: className = "", innerClass = "" } = Astro.props;
-const t = toneClasses(tone, Astro.url.pathname);
-const seed = [...`${Astro.url.pathname}${cx}${cy}${tone}`].reduce((a, c) => (a * 31 + c.charCodeAt(0)) >>> 0, 5);
+const { tone = "ink", cx = 860, form = "drop", align = "center", contained = false, class: className = "", innerClass = "" } = Astro.props;
+const t = toneClasses(tone);
+const seed = seedFrom(`${Astro.url.pathname}${cx}${tone}`, 5);
+const left = cx < 500;
 ---
 
 <div
@@ -29,9 +34,22 @@ const seed = [...`${Astro.url.pathname}${cx}${cy}${tone}`].reduce((a, c) => (a *
 		t.surface,
 		className,
 	]}
+	data-dark={t.dark ? "" : undefined}
 >
-	<Ripples seed={seed} cx={cx} cy={cy} rings={rings} gap={50} class={`${t.ring} opacity-50 md:opacity-100`} />
-	<div class="halftone absolute inset-0 opacity-25" aria-hidden="true"></div>
+	<!-- A ripple centered on one edge, half off the band, so its rings reach in from the side and stop
+	     well short of the text. Its size follows the band's height, capped for tall spreads. -->
+	<div
+		class:list={[
+			"pointer-events-none absolute aspect-square",
+			contained ? "h-[min(90%,40rem)]" : "h-[min(130%,40rem)]",
+			left ? "left-0 -translate-x-1/2" : "right-0 translate-x-1/2",
+			align === "top" ? "-top-16" : "top-1/2 -translate-y-1/2",
+		]}
+		aria-hidden="true"
+	>
+		<Ripples form={form} seed={seed} rings={10} gap={46} class={t.ring} />
+	</div>
+	<div class:list={["absolute inset-0", t.grain]} aria-hidden="true"></div>
 	<div class:list={["relative", contained ? "px-6 py-10 md:px-10 md:py-12" : "mx-auto max-w-7xl px-6 py-14 md:px-12 md:py-20", innerClass]}>
 		<slot />
 	</div>

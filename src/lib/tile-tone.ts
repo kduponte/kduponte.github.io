@@ -1,36 +1,54 @@
-import { projectTheme } from "./project-theme";
-
 /**
- * Surface tones for magazine tiles and bands, so a write-up alternates paper, dark and colored
- * blocks instead of a column of identical cream cards. Every tone stays inside the site palette:
- * "field" is the project's own color (its card and hero), "spot" the page accent, "ink" near-black.
+ * Surface tones for magazine tiles and bands, so a write-up alternates white, grey and black blocks
+ * instead of a column of identical cards. Sections never take a color: "ink" is black and the rest
+ * are white or grey. The page's season pair shows in the ripples on each surface.
+ * ("field", "spot" and "sand" were colored surfaces; they now map to grey.)
  */
-export type TileTone = "paper" | "ink" | "field" | "spot" | "sand";
+export type TileTone = "paper" | "ink" | "field" | "spot" | "sand" | "grey";
 
 export interface ToneClasses {
 	/** Background + text color for the surface. */
 	surface: string;
 	/** The little tab label on the box. */
 	tab: string;
-	/** Hard shadow; a dark tile throws an accent-colored one so it still reads on paper. */
+	/** Hard shadow. */
 	shadow: string;
-	/** Ripple ring color for bands. */
+	/** Ripple color on this surface. */
 	ring: string;
+	/** Grain overlay for this surface. */
+	grain: string;
+	/** Black surfaces set data-dark, so buttons on them drop their shadow. */
+	dark: boolean;
 }
 
-export function toneClasses(tone: TileTone, pathname: string): ToneClasses {
-	const slug = pathname.split("/").filter(Boolean).pop() ?? "";
-	const theme = projectTheme(slug);
+export function toneClasses(tone: TileTone): ToneClasses {
 	switch (tone) {
 		case "ink":
-			return { surface: "bg-black text-bone", tab: "bg-spot text-black", shadow: "shadow-[8px_8px_0_var(--page-spot)]", ring: "text-spot/35" };
-		case "field":
-			return { surface: theme.fill, tab: "bg-black text-spot", shadow: "shadow-hard-lg", ring: theme.ring };
-		case "spot":
-			return { surface: "bg-spot text-black", tab: "bg-black text-spot", shadow: "shadow-hard-lg", ring: "text-black/15" };
-		case "sand":
-			return { surface: "bg-sand text-black", tab: "bg-black text-spot", shadow: "shadow-hard-lg", ring: "text-black/12" };
+			return {
+				surface: "bg-black text-dark-ink",
+				tab: "bg-dark-ink text-black",
+				shadow: "shadow-hard-lg",
+				ring: "text-ring-dark",
+				grain: "halftone-light opacity-15",
+				dark: true,
+			};
+		case "paper":
+			return {
+				surface: "bg-paper text-ink",
+				tab: "bg-black text-dark-ink",
+				shadow: "shadow-hard-lg",
+				ring: "text-ring-paper",
+				grain: "halftone opacity-20",
+				dark: false,
+			};
 		default:
-			return { surface: "bg-cream text-black", tab: "bg-black text-spot", shadow: "shadow-hard-lg", ring: "text-black/15" };
+			return {
+				surface: "bg-grey text-ink",
+				tab: "bg-black text-dark-ink",
+				shadow: "shadow-hard-lg",
+				ring: "text-ring-paper",
+				grain: "halftone opacity-20",
+				dark: false,
+			};
 	}
 }

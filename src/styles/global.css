@@ -1,36 +1,40 @@
 @import "tailwindcss";
 
 @theme {
-	/* PROTOTYPE v4: one curated set, used site-wide. Fields, rings and page accents all come from
-	   these, so a page never shows a color from outside the set. Rings pair with their field by
-	   complement (navy/mustard, sage/terracotta) or by tone (petrol/cornflower). */
-	--color-bone: #ece6dc; /* paper */
-	--color-ink: #141414;
-	--color-navy: #1d2a44;
-	--color-petrol: #1f4a63;
-	--color-cornflower: #6f8fcf;
-	--color-terracotta: #c65d3b;
-	--color-mustard: #d9a23f;
-	--color-sage: #a8b796;
-	--color-sand: #d8cebf;
-
-	--color-cream: var(--color-bone);
-	--color-black: var(--color-ink);
-	--color-cobalt: var(--color-petrol);
-	--color-tomato: var(--color-terracotta);
-	--color-bubblegum: var(--color-terracotta);
-	--color-sky: var(--color-cornflower);
-	--color-sun: var(--color-mustard);
-	--color-mint: var(--color-sage);
-
-	/* Legacy names kept as aliases so existing project pages keep working
-	   until Phase 3 migrates them. Prefer the names above in new code. */
-	--color-paper: var(--color-cream);
-	--color-ink-soft: #4a463b;
+	/* Signal: white paper, near-black ink, one safety orange for everything you can click. Sections
+	   are white, grey or black; the color lives in the ripples, one season pair per page
+	   (lib/project-theme.ts). */
+	--color-paper: #ffffff;
+	--color-grey: #f0f0ef;
+	--color-ink: #111111;
+	--color-black: #111111;
+	--color-dark-ink: #f5f5f3; /* text on black */
+	--color-ink-soft: #5c5e62;
 	--color-line: #111111;
-	--color-accent-blue: var(--color-cobalt);
-	--color-accent-green: #4f6b45;
-	--color-accent-yellow: var(--color-mustard);
+	--color-pop: #ff5b1f; /* safety orange: buttons, nav, filters, focus */
+	--color-pop-ink: #111111;
+	--color-graphite: #2b2d30;
+	--color-olive: #4a5034;
+	--color-concrete: #cfcfca;
+	/* Season rings used outside ripples, e.g. as categorical fills (lib/project-theme.ts has all
+	   twelve pairs). */
+	--color-night-ring: #56b2c7;
+	--color-coral-ring: #f47468;
+	--color-rose-ring: #cc7d95;
+	--color-sage-ring: #85896d;
+	/* Rain: tonal ripples for pages without a pair (home), on black and on white. */
+	--color-rain-dark: #434343;
+	--color-rain-paper: #dedede;
+
+	/* Chart series, taken from the season: Cobalt mist's ring, olive drab, Rose's ring. The old
+	   names stay so the chart scripts keep working. */
+	--color-accent-blue: #2a70c8;
+	--color-accent-green: #4a5034;
+	--color-accent-yellow: #cc7d95;
+
+	/* Legacy names, mapped onto Signal. Prefer paper, grey and ink in new code. */
+	--color-cream: var(--color-paper);
+	--color-bone: var(--color-dark-ink);
 
 	--font-anton: "Anton", "Impact", "Haettenschweiler", sans-serif;
 	--font-display: "Bricolage Grotesque Variable", "Bricolage Grotesque", ui-sans-serif, system-ui, sans-serif;
@@ -43,45 +47,30 @@
 	--shadow-hard-sm: 3px 3px 0 var(--color-black);
 }
 
-/* Themed page field. `inline` keeps the var() reference in the utility so
-   <body data-theme="..."> overrides take effect instead of resolving at :root. */
+/* The page's season pair. `inline` keeps the var() reference in the utility, so the variables
+   BaseLayout (a page) or ProjectCard (a tile) sets take effect where they are set. */
 @theme inline {
-	--color-field: var(--page-field);
-	--color-field-ink: var(--page-ink);
-	--color-spot: var(--page-spot);
-	/* "lime" was the old accent everywhere (logo, active nav, tabs, eyebrows, ticker, contact). It
-	   now follows each page's accent, so every page reads as one curated piece. */
-	--color-lime: var(--page-spot);
+	--color-season: var(--season-ground);
+	--color-season-ink: var(--season-ground-ink);
+	--color-season-ring: var(--season-ring);
+	--color-ring-paper: var(--season-ring-paper);
+	--color-ring-dark: var(--season-ring-dark);
+	/* "spot" was each page's accent on tabs and big numerals. Those are black and white now, so
+	   color stays on the ripples and on what you can click. */
+	--color-spot: var(--color-dark-ink);
 }
 
 :root {
-	--page-field: var(--color-cream);
-	--page-ink: var(--color-black);
-	--page-spot: var(--color-mustard);
-}
-
-/* Page accents. Pages are paper; each one picks the single accent its chrome uses with
-   <BaseLayout theme="...">. Project pages take theirs from lib/project-theme.ts. */
-[data-theme="paper"] {
-	--page-spot: var(--color-mustard);
-}
-[data-theme="cobalt"] {
-	--page-spot: var(--color-cornflower);
-}
-[data-theme="sun"],
-[data-theme="tomato"] {
-	--page-spot: var(--color-terracotta);
-}
-[data-theme="bubblegum"] {
-	--page-spot: var(--color-sage);
-}
-[data-theme="lime"] {
-	--page-spot: var(--color-cornflower);
+	--season-ground: var(--color-concrete);
+	--season-ground-ink: var(--color-ink);
+	--season-ring: var(--color-rain-paper);
+	--season-ring-paper: var(--color-rain-paper);
+	--season-ring-dark: var(--color-rain-dark);
 }
 
 @layer base {
 	html {
-		background-color: var(--color-cream);
+		background-color: var(--color-paper);
 		color: var(--color-black);
 		font-family: var(--font-sans);
 		-webkit-font-smoothing: antialiased;
@@ -131,21 +120,20 @@
 		font-style: italic;
 		font-weight: 400;
 		text-transform: none;
-		background: var(--color-cream);
+		background: var(--color-grey);
 		color: var(--color-black);
 		padding: 0 0.15em;
 		border-radius: 0.12em;
 	}
 
 	::selection {
-		background-color: var(--color-lime);
-		color: var(--color-black);
+		background-color: var(--color-pop);
+		color: var(--color-pop-ink);
 	}
 
 	:focus-visible {
-		outline: 3px solid var(--color-black);
+		outline: 3px solid var(--color-pop);
 		outline-offset: 3px;
-		box-shadow: 0 0 0 6px var(--color-lime);
 	}
 }
 
@@ -170,9 +158,122 @@
 		box-shadow: 1px 1px 0 var(--color-black);
 	}
 
+	/* Color means clickable. Buttons are safety orange with a black outline and a hard shadow;
+	   ghost buttons are outlines that fill orange on hover. On black ([data-dark]) the shadow
+	   drops, since a black shadow can't show there. */
+	.btn {
+		display: inline-flex;
+		align-items: center;
+		gap: 0.35em;
+		padding: 0.72em 1.15em;
+		border: 2.5px solid var(--color-ink);
+		border-radius: 999px;
+		background: var(--color-pop);
+		color: var(--color-pop-ink);
+		box-shadow: 3px 3px 0 var(--color-ink);
+		font-family: var(--font-display);
+		font-size: 0.875rem;
+		font-weight: 700;
+		line-height: 1;
+		white-space: nowrap;
+		text-decoration: none;
+		cursor: pointer;
+		transition:
+			transform 120ms,
+			box-shadow 120ms,
+			background-color 120ms,
+			color 120ms,
+			border-color 120ms;
+	}
+	.btn:hover {
+		transform: translate(-2px, -2px);
+		box-shadow: 5px 5px 0 var(--color-ink);
+	}
+	.btn:active {
+		transform: translate(2px, 2px);
+		box-shadow: 0 0 0 var(--color-ink);
+	}
+	.btn-sm {
+		padding: 0.6em 0.95em;
+		font-size: 0.75rem;
+	}
+	.btn-ghost {
+		background: var(--color-paper);
+		color: var(--color-ink);
+		border-color: currentColor;
+		box-shadow: none;
+	}
+	.btn-ghost:hover,
+	.btn-ghost[aria-pressed="true"] {
+		background: var(--color-pop);
+		color: var(--color-pop-ink);
+		border-color: var(--color-ink);
+		box-shadow: none;
+		transform: none;
+	}
+	[data-dark] .btn {
+		box-shadow: none;
+	}
+	[data-dark] .btn-ghost {
+		background: transparent;
+		color: inherit;
+	}
+	[data-dark] .btn:hover {
+		box-shadow: none;
+		transform: translate(0, -2px);
+	}
+	[data-dark] .btn-ghost:hover,
+	[data-dark] .btn-ghost[aria-pressed="true"] {
+		background: var(--color-pop);
+		color: var(--color-pop-ink);
+		border-color: var(--color-pop);
+	}
+	.btn:disabled,
+	.btn[aria-disabled="true"] {
+		cursor: not-allowed;
+		opacity: 0.55;
+		transform: none;
+	}
+
+	/* Text links: ink text with an orange underline that fills on hover. */
+	.link {
+		font-weight: 700;
+		color: inherit;
+		text-decoration: underline;
+		text-decoration-color: var(--color-pop);
+		text-decoration-thickness: 3px;
+		text-underline-offset: 4px;
+		transition: background-color 120ms;
+	}
+	.link:hover {
+		background: var(--color-pop);
+		color: var(--color-pop-ink);
+		text-decoration-color: var(--color-pop-ink);
+	}
+
+	/* Labels (tags, places): outlines only, never filled, so they never read as buttons. */
+	.label-chip {
+		display: inline-flex;
+		align-items: center;
+		gap: 0.25rem;
+		padding: 0.35em 0.8em;
+		border: 2px solid currentColor;
+		border-radius: 999px;
+		font-family: var(--font-mono);
+		font-size: 0.625rem;
+		letter-spacing: 0.05em;
+		line-height: 1.3;
+		text-transform: uppercase;
+	}
+
 	/* PROTOTYPE: fine print grain in place of the halftone dot screen. */
 	.halftone {
 		background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0.08 0 0 0 0 0.08 0 0 0 0 0.08 0 0 0 1.25 -0.5'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+		background-size: 180px 180px;
+	}
+	/* The same grain in white, for black grounds. */
+	.halftone-light {
+		background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 0 1.25 -0.5'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
 		background-size: 180px 180px;
 	}
 }
@@ -211,7 +312,7 @@
 		height: 0.8em;
 		margin-right: 0.45em;
 		translate: 0 0.06em;
-		background: var(--page-spot);
+		background: var(--color-ink);
 		border: 2.5px solid var(--color-black);
 	}
 	.mag h3 {
@@ -230,7 +331,7 @@
 		content: counter(mag-kicker, decimal-leading-zero);
 		padding: 0.15rem 0.45rem;
 		background: var(--color-black);
-		color: var(--page-spot);
+		color: var(--color-dark-ink);
 	}
 	.mag h3::after {
 		content: "";
@@ -239,7 +340,7 @@
 	}
 	.mag strong {
 		font-weight: 700;
-		background: linear-gradient(transparent 58%, color-mix(in srgb, var(--page-spot) 70%, transparent) 58%);
+		background: linear-gradient(transparent 58%, color-mix(in srgb, var(--season-ring-paper) 32%, var(--color-paper)) 58%);
 	}
 	.mag aside.pull {
 		margin: 1.6em 0;
@@ -259,7 +360,7 @@
 		font-style: normal;
 		font-size: 2.4em;
 		line-height: 0.9;
-		color: var(--page-spot);
+		color: var(--color-dark-ink);
 		-webkit-text-stroke: 2px var(--color-black);
 	}
 	@media (min-width: 768px) {
@@ -290,7 +391,7 @@
 		padding: 0.2rem 0.6rem;
 		border-radius: 0 0 0.5rem 0.5rem;
 		background: var(--color-black);
-		color: var(--page-spot);
+		color: var(--color-dark-ink);
 		font-family: var(--font-mono);
 		font-size: 0.62rem;
 		font-weight: 400;
@@ -314,7 +415,7 @@
 		font-family: var(--font-anton);
 		font-size: 1.35rem;
 		line-height: 1;
-		color: var(--page-spot);
+		color: var(--color-dark-ink);
 		-webkit-text-stroke: 1.5px var(--color-black);
 	}
 	.mag aside.box.check li::before {
@@ -424,7 +525,7 @@ svg.plot-d6a7b5 g[aria-label="rule"] line {
 	padding: 0.2rem 0.6rem;
 	border-radius: 0 0 0.5rem 0.5rem;
 	background: var(--color-ink);
-	color: var(--page-spot);
+	color: var(--color-dark-ink);
 	font-family: var(--font-mono);
 	font-size: 0.62rem;
 	text-transform: uppercase;

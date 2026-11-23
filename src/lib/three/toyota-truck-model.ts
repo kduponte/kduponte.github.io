@@ -66,15 +66,22 @@ export interface TruckOptions {
 	/** Something to mount in the engine bay (the 22R-E), origin at its crankshaft centerline, front toward +X. */
 	engine?: Object3D;
 	/** Wheel size and look. 5 x 114.3 lug pattern, as on the 2WD truck. */
-	wheel?: { diameterIn: number; widthIn: number; offsetMm: number; style: "hubcap" | "steel" | "alloy" | "hammer" | "eighthole" | "mesh" };
+	wheel?: {
+		diameterIn: number;
+		widthIn: number;
+		offsetMm: number;
+		style: "hubcap" | "steel" | "alloy" | "hammer" | "eighthole" | "mesh";
+		/** Spoke finish for the mesh wheel: BBS Diamond Black (the default) or chrome. */
+		finish?: "black" | "chrome";
+	};
 	/** Factory 7x6 sealed beams, or LED units of the same size. */
 	headlights?: "sealed" | "led";
 	/** Tire size: the wheels sit on the ground, so a taller tire raises the whole truck. */
 	tire?: { widthMm: number; aspect: number; rimIn: number };
 	/** Ride-height change at each axle, meters (negative is lower). */
 	ride?: { front: number; rear: number };
-	/** Visible light transmission of the side windows and the rear window (fractions). */
-	glassVlt?: { front: number; rear: number };
+	/** Visible light transmission of the side windows, the rear window and the windshield (fractions; the windshield stays factory if left out). */
+	glassVlt?: { front: number; rear: number; windshield?: number };
 	grille?: "painted" | "chrome";
 	bed?: "none" | "shell" | "tonneau";
 	/** The 7.5 x 2.5 in Kalapana sticker on the rear window. */
@@ -312,11 +319,14 @@ export function buildToyotaTruck(colors: TruckColors = DEFAULT_TRUCK_COLORS, opt
 	const tailMat = std(colors.tail, 0.35);
 	tailMat.emissive = new Color(colors.tail);
 	tailMat.emissiveIntensity = 0;
-	/** Glass with a given visible light transmission: the less light through, the darker and more opaque. Factory glass is 0.74. */
+	/**
+	 * Glass with a given visible light transmission. Factory glass (0.74) keeps its pale tint; a pane with
+	 * film on it takes the black film's color, and its opacity (1 - VLT) sets how much of the cab shows through.
+	 */
 	const glassWith = (vlt: number) =>
 		kit.material(
 			new MeshStandardMaterial({
-				color: new Color(colors.glass).lerp(new Color("#0b0d10"), Math.max(0, Math.min(1, 1 - vlt / 0.74))),
+				color: vlt >= 0.74 ? new Color(colors.glass) : new Color("#0b0d10"),
 				roughness: 0.05,
 				metalness: 0.1,
 				transparent: true,
@@ -327,6 +337,7 @@ export function buildToyotaTruck(colors: TruckColors = DEFAULT_TRUCK_COLORS, opt
 	const glassMat = glassWith(0.74);
 	const sideGlassMat = options.glassVlt ? glassWith(options.glassVlt.front) : glassMat;
 	const rearGlassMat = options.glassVlt ? glassWith(options.glassVlt.rear) : glassMat;
+	const windshieldMat = options.glassVlt?.windshield !== undefined ? glassWith(options.glassVlt.windshield) : glassMat;
 	const surroundMat = options.grille === "chrome" ? chromeMat : grilleMat;
 	const ledHousingMat = std("#1b1d20", 0.35, 0.4);
 	const kcYellowMat = std("#ffd400", 0.45);
@@ -631,7 +642,7 @@ export function buildToyotaTruck(colors: TruckColors = DEFAULT_TRUCK_COLORS, opt
 		add(body, extrude(glassShape, 1.5, 0.02, false), glassMat, [0, 0, 0], { outline: 0 });
 	} else {
 		// Separate panes, so the side glass can ride with the doors and each window takes its own tint.
-		add(body, slab(Math.hypot(0.6, 0.6), 0.012, 1.48, 0.005, 0.002), glassMat, [0.42, (BELT_Y + 1.58) / 2, 0], { rot: [0, 0, (3 * Math.PI) / 4], outline: 0 });
+		add(body, slab(Math.hypot(0.6, 0.6), 0.012, 1.48, 0.005, 0.002), windshieldMat, [0.42, (BELT_Y + 1.58) / 2, 0], { rot: [0, 0, (3 * Math.PI) / 4], outline: 0 });
 		add(body, slab(0.012, 0.6, 1.48, 0.005, 0.002), rearGlassMat, [-0.55, (BELT_Y + 1.58) / 2, 0], { rot: [0, 0, -0.165], outline: 0 });
 		if (!openable) {
 			pair((side) => {
@@ -1000,8 +1011,11 @@ export function buildToyotaTruck(colors: TruckColors = DEFAULT_TRUCK_COLORS, opt
 		];
 		const capMat = std(tint(colors.silver, 0.1), 0.22, 0.9);
 		const machinedMat = std(tint(colors.silver, 0.2), 0.32, 0.85);
-		const meshBlackMat = std("#2a2d31", 0.3, 0.6);
-		const barrelMat = std("#0c0d0f", 0.7, 0.2);
+		// The mesh wheel's spokes and center in BBS Diamond Black, or chrome-plated: mirror-bright spokes over a
+		// plated barrel that sits deep in the wheel and mostly reflects the tire and the wheel well.
+		const chromeWheel = wheel.finish === "chrome";
+		const meshBlackMat = chromeWheel ? std("#ffffff", 0.05, 1) : std("#2a2d31", 0.3, 0.6);
+		const barrelMat = chromeWheel ? std("#6d7278", 0.12, 1) : std("#0c0d0f", 0.7, 0.2);
 		const capGoldMat = std("#c9a24a", 0.35, 0.8);
 		for (const [x, side] of [
 			[FRONT_AXLE_X, 1],
@@ -1051,8 +1065,8 @@ export function buildToyotaTruck(colors: TruckColors = DEFAULT_TRUCK_COLORS, opt
 					});
 				}
 			} else if (wheel.style === "mesh") {
-				// BBS RG-R: a cross-laced mesh of twenty spokes in Diamond Black, a diamond-cut lip and a center cap,
-				// over the dark barrel.
+				// BBS RG-R: a cross-laced mesh of twenty spokes (Diamond Black or chrome), a diamond-cut lip and a
+				// center cap, over the barrel.
 				disc(rimR - 0.006, 0.006, barrelMat, face - s * 0.016);
 				add(pivot, new TorusGeometry(rimR - 0.004, 0.012, 6, 36), machinedMat, [0, 0, face - s * 0.002], { outline: 0 });
 				const inner = rimR * 0.3;

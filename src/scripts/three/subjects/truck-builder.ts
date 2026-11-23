@@ -13,7 +13,14 @@ import type { SubjectFactory } from "../viewer";
 /** Seconds for a part to swing fully open. */
 const SWING_S = 0.7;
 /** The turntable radius the camera frames, meters. */
-const FRAME_RADIUS = 3.0;
+export const FRAME_RADIUS = 3.0;
+/**
+ * Where along the truck it spins, meters from the model's origin (rearward is negative). Every build
+ * turns about the same point at the same scale, so switching builds never resizes or slides the truck.
+ * Here the longest build (a 9'4" longboard hanging out the back) and the stock truck with its doors
+ * open both reach about 3.0 m from the axis, which the camera frames.
+ */
+export const SPIN_CENTER_X = -0.6;
 const KEYS: OpenerKey[] = ["hood", "doorLeft", "doorRight", "tailgate"];
 
 const createTruckBuilder: SubjectFactory = ({ THREE, host, reducedMotion, requestRender }) => {
@@ -37,13 +44,8 @@ const createTruckBuilder: SubjectFactory = ({ THREE, host, reducedMotion, reques
 		}
 		truck = buildToyotaTruck({ ...DEFAULT_TRUCK_COLORS, body: setup.body }, { ...setup.options, openable: true, engine: engine.group });
 		for (const k of KEYS) truck.setOpen?.(k, amount[k]);
+		truck.group.position.x = -SPIN_CENTER_X;
 		spinner.add(truck.group);
-		// A build that reaches past the framed radius (a longboard hanging out the back) shrinks the whole
-		// scene evenly so nothing leaves the canvas as it turns; everything keeps its true proportions.
-		truck.group.updateMatrixWorld(true);
-		const box = new THREE.Box3().setFromObject(truck.group);
-		const reach = Math.max(...[box.min.x, box.max.x].flatMap((x) => [box.min.z, box.max.z].map((z) => Math.hypot(x, z))));
-		spinner.scale.setScalar(Math.min(1, FRAME_RADIUS / reach));
 		requestRender();
 	};
 	build(currentBuild(root) ?? AS_IT_SITS);

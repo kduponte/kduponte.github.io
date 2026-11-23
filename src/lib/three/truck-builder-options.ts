@@ -39,6 +39,7 @@ const SRC = {
 	underground: { label: "Toyota touch-up paint, Underground 1L7", href: "https://autoparts.toyota.com/products/product/underground-00258001l721" },
 	ultra164: { label: "Ultra Wheel, Type 164 sizes", href: "https://www.ultrawheel.com/wheel/28/164" },
 	bbsRgr: { label: "BBS RG-R, 17x7.5 5x114.3 +48 (Canada Wheels)", href: "https://www.canadawheels.ca/bbs-wheels/rgr" },
+	bbsJapan: { label: "BBS Japan, RG-R sizes and finishes", href: "https://bbs-japan.co.jp/en/?p=1266" },
 	bttf: { label: "Back to the Future wiki, Marty's Toyota", href: "https://backtothefuture.fandom.com/wiki/Toyota_Hilux" },
 	tcLongboard: { label: "T&C Surf Designs, Tommy Tanaka Beach Boy", href: "https://tcsurf.com/collections/tommy-tanaka/products/beach-boy" },
 	trueAmes: { label: "True Ames Greenough 4-A 10.5\" fin (Rider Shack)", href: "https://ridershack.com/products/true-ames-greenough-4-a-10-5-single-fin" },
@@ -130,12 +131,15 @@ export const RIDES: RideOption[] = [
 ];
 
 export type WheelStyle = "hubcap" | "steel" | "alloy" | "hammer" | "eighthole" | "mesh";
+/** What the spokes are finished in, where a wheel comes in more than one (only the mesh wheel does). */
+export type WheelFinish = "black" | "chrome";
 
 export interface WheelOption extends Option {
 	diameterIn: number;
 	widthIn: number;
 	offsetMm: number;
 	style: WheelStyle;
+	finish?: WheelFinish;
 }
 
 export const WHEELS: WheelOption[] = [
@@ -161,13 +165,26 @@ export const WHEELS: WheelOption[] = [
 		source: SRC.stockWheel,
 	},
 	{
+		id: "bbs-rgr-chrome",
+		name: "BBS RG-R, chrome",
+		spec: '17 x 7.5", +48 mm, 5 x 114.3 (RG744, chromed)',
+		diameterIn: 17,
+		widthIn: 7.5,
+		offsetMm: 48,
+		style: "mesh",
+		finish: "chrome",
+		note: "The same RG744 in chrome. BBS doesn't sell the RG-R in chrome (it comes in Diamond Black, Diamond Silver, Black Diacut and Gold Diacut), so a chrome set means plating a set after you buy it. Diamond Silver is the brightest finish sold new.",
+		source: SRC.bbsJapan,
+	},
+	{
 		id: "bbs-rgr",
-		name: "BBS RG-R",
+		name: "BBS RG-R, black",
 		spec: '17 x 7.5", +48 mm, 5 x 114.3 (part RG744HDBK)',
 		diameterIn: 17,
 		widthIn: 7.5,
 		offsetMm: 48,
 		style: "mesh",
+		finish: "black",
 		note: "BBS's classic cross-spoke mesh, in Diamond Black, sold new in this bolt pattern. The +48 mm offset tucks the wheel 28 mm further in than the factory +20.",
 		source: SRC.bbsRgr,
 	},
@@ -267,10 +284,17 @@ const NO_TINT: TintOption = {
 	source: SRC.fmvss,
 };
 
+/** Darker than Hawaii allows on the front side windows (35%, plus or minus 6%, with the film on). */
+const OVER_FRONT = "Darker than Hawaii's 35% limit for front side windows.";
+/** Hawaii allows film on a windshield only along its top edge, above the AS-1 line (or the top 4 inches). */
+const OVER_WINDSHIELD = "Hawaii allows film only along the top edge of a windshield, so this is darker than the law allows.";
+
 /** Hawaii: front side windows must pass at least 35% (plus or minus 6%) with the film on. */
-export const FRONT_TINTS: TintOption[] = [NO_TINT, tint(50), tint(35, "Hawaii's limit for front side windows.")];
+export const FRONT_TINTS: TintOption[] = [NO_TINT, tint(50), tint(35, "Hawaii's limit for front side windows."), tint(20, OVER_FRONT), tint(5, OVER_FRONT)];
 /** Hawaii exempts a truck's rear window, so any film is legal there. */
 export const REAR_TINTS: TintOption[] = [NO_TINT, tint(50), tint(35), tint(20, "Legal on a truck's rear window only."), tint(5, "Legal on a truck's rear window only.")];
+/** Film across the whole windshield; Hawaii allows only a strip along the top edge. */
+export const WINDSHIELD_TINTS: TintOption[] = [NO_TINT, tint(50, OVER_WINDSHIELD), tint(35, OVER_WINDSHIELD), tint(20, OVER_WINDSHIELD), tint(5, OVER_WINDSHIELD)];
 
 export interface LightOption extends Option {
 	kind: "sealed" | "led";
@@ -371,6 +395,7 @@ export interface Build {
 	tire: string;
 	tintFront: string;
 	tintRear: string;
+	tintWindshield: string;
 	lights: string;
 	grille: string;
 	tailgate: string;
@@ -388,6 +413,7 @@ export const AS_IT_SITS: Build = {
 	tire: "195-75-14",
 	tintFront: "none",
 	tintRear: "none",
+	tintWindshield: "none",
 	lights: "sealed",
 	grille: "painted",
 	tailgate: "factory",
@@ -399,17 +425,18 @@ export const AS_IT_SITS: Build = {
 
 /**
  * Kyle's build, from his notes and the reference truck he picked: factory black, lowered a little on a
- * Belltech kit (not slammed), BBS RG-R mesh wheels on low-profile tires, LED headlights, 35% film all
- * round, the tailgate lettering removed, the Kalapana sticker, and a longboard in the bed.
+ * Belltech kit (not slammed), chrome BBS RG-R mesh wheels on low-profile tires, LED headlights, 20% film on
+ * every window (windshield too), the tailgate lettering removed, the Kalapana sticker, and a longboard in the bed.
  */
 export const KYLE_BUILD: Build = {
 	...AS_IT_SITS,
 	paint: "202",
 	ride: "b444",
-	wheel: "bbs-rgr",
+	wheel: "bbs-rgr-chrome",
 	tire: "215-45-17",
-	tintFront: "35",
-	tintRear: "35",
+	tintFront: "20",
+	tintRear: "20",
+	tintWindshield: "20",
 	lights: "led",
 	tailgate: "plain",
 	board: "longboard",
@@ -436,6 +463,7 @@ export const CATALOG = {
 	tire: TIRES,
 	tintFront: FRONT_TINTS,
 	tintRear: REAR_TINTS,
+	tintWindshield: WINDSHIELD_TINTS,
 	lights: LIGHTS,
 	grille: GRILLES,
 	tailgate: TAILGATES,
@@ -468,6 +496,7 @@ export function resolveBuild(build: Build) {
 		tire,
 		tintFront: pick("tintFront"),
 		tintRear: pick("tintRear"),
+		tintWindshield: pick("tintWindshield"),
 		lights: pick("lights"),
 		grille: pick("grille"),
 		tailgate: pick("tailgate"),
@@ -480,7 +509,7 @@ export function resolveBuild(build: Build) {
 
 export type ResolvedBuild = ReturnType<typeof resolveBuild>;
 
-const KEY_ORDER: BuildKey[] = ["paint", "ride", "wheel", "tire", "tintFront", "tintRear", "lights", "grille", "tailgate", "bed", "rack", "board", "decal"];
+const KEY_ORDER: BuildKey[] = ["paint", "ride", "wheel", "tire", "tintFront", "tintRear", "tintWindshield", "lights", "grille", "tailgate", "bed", "rack", "board", "decal"];
 
 /** A build as a short, readable URL fragment, e.g. "paint=138&ride=b444&...". */
 export function encodeBuild(build: Build): string {
@@ -506,6 +535,7 @@ export function describeBuild(build: Build): { label: string; value: string }[] 
 		{ label: "Tires", value: `${r.tire.name}, ${r.tire.spec}` },
 		{ label: "Front side windows", value: r.tintFront.name },
 		{ label: "Rear window", value: r.tintRear.name },
+		{ label: "Windshield", value: r.tintWindshield.name },
 		{ label: "Headlights", value: r.lights.name },
 		{ label: "Grille", value: r.grille.name },
 		{ label: "Tailgate", value: r.tailgate.name },
@@ -524,6 +554,7 @@ export const PICKER_GROUPS: { key: BuildKey; label: string }[] = [
 	{ key: "tire", label: "Tires" },
 	{ key: "tintFront", label: "Front side windows" },
 	{ key: "tintRear", label: "Rear window" },
+	{ key: "tintWindshield", label: "Windshield" },
 	{ key: "lights", label: "Headlights" },
 	{ key: "grille", label: "Grille" },
 	{ key: "tailgate", label: "Tailgate" },
@@ -541,9 +572,9 @@ export function truckSetup(build: Build) {
 		options: {
 			metallicPaint: r.paint.metallic,
 			ride: { front: r.ride.front, rear: r.ride.rear },
-			wheel: { diameterIn: r.wheel.diameterIn, widthIn: r.wheel.widthIn, offsetMm: r.wheel.offsetMm, style: r.wheel.style },
+			wheel: { diameterIn: r.wheel.diameterIn, widthIn: r.wheel.widthIn, offsetMm: r.wheel.offsetMm, style: r.wheel.style, finish: r.wheel.finish },
 			tire: { widthMm: r.tire.widthMm, aspect: r.tire.aspect, rimIn: r.tire.rimIn },
-			glassVlt: { front: r.tintFront.vlt, rear: r.tintRear.vlt },
+			glassVlt: { front: r.tintFront.vlt, rear: r.tintRear.vlt, windshield: r.tintWindshield.vlt },
 			headlights: r.lights.kind,
 			grille: r.grille.finish,
 			bed: r.bed.kind,

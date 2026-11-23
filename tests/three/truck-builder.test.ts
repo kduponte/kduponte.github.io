@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { Box3, Group, Vector3 } from "three";
+import { BackSide, Box3, Group, Mesh, MeshBasicMaterial, MeshStandardMaterial, Vector3 } from "three";
 import {
 	AS_IT_SITS,
 	CATALOG,
@@ -7,6 +7,7 @@ import {
 	KYLE_BUILD,
 	NOAH_BUILD,
 	REAR_TINTS,
+	WINDSHIELD_TINTS,
 	decodeBuild,
 	describeBuild,
 	encodeBuild,
@@ -15,7 +16,8 @@ import {
 	truckSetup,
 	type Build,
 } from "../../src/lib/three/truck-builder-options";
-import { OPEN_ANGLES, buildToyotaTruck, type TruckModel } from "../../src/lib/three/toyota-truck-model";
+import { DEFAULT_TRUCK_COLORS, OPEN_ANGLES, buildToyotaTruck, type TruckModel } from "../../src/lib/three/toyota-truck-model";
+import { FRAME_RADIUS, SPIN_CENTER_X } from "../../src/scripts/three/subjects/truck-builder";
 
 const INCH = 0.0254;
 
@@ -34,8 +36,11 @@ describe("truck builder catalog", () => {
 		expect(tireDiameter(205, 60, 15) / INCH).toBeCloseTo(24.7, 1);
 	});
 
-	it("keeps Hawaii's 35% limit on the front side windows and allows darker film only on the rear window", () => {
-		expect(Math.min(...FRONT_TINTS.map((t) => t.vlt))).toBe(0.35);
+	it("labels every film darker than Hawaii allows: under 35% on the front side windows, any film across the windshield", () => {
+		for (const t of FRONT_TINTS) if (t.vlt < 0.35) expect(t.note, t.name).toMatch(/35% limit/);
+		for (const t of WINDSHIELD_TINTS) if (t.id !== "none") expect(t.note, t.name).toMatch(/top edge of a windshield/);
+		// A truck's rear window is exempt, so darker film there carries no warning.
+		for (const t of REAR_TINTS) expect(t.note ?? "").not.toMatch(/limit|law allows/);
 		expect(Math.min(...REAR_TINTS.map((t) => t.vlt))).toBeLessThan(0.35);
 	});
 
@@ -45,20 +50,21 @@ describe("truck builder catalog", () => {
 		}
 	});
 
-	it("builds Kyle's truck in factory black on BBS RG-R mesh wheels, lowered on a Belltech kit, with LED headlights", () => {
+	it("builds Kyle's truck in factory black on chrome BBS RG-R mesh wheels, lowered on a Belltech kit, with LED headlights", () => {
 		const r = resolveBuild(KYLE_BUILD);
 		expect(r.paint.name).toBe("Black");
 		expect(r.wheel.style).toBe("mesh");
+		expect(r.wheel.finish).toBe("chrome");
 		expect(r.wheel.diameterIn).toBe(17);
 		expect(r.ride.id).toBe("b444");
 		expect(r.lights.kind).toBe("led");
 		expect(r.tire.rimIn).toBe(r.wheel.diameterIn);
 	});
 
-	it("gives Kyle low-profile tires, 35% film, a plain tailgate and a longboard in the open bed", () => {
+	it("gives Kyle low-profile tires, 20% film on every window including the windshield, a plain tailgate and a longboard", () => {
 		const r = resolveBuild(KYLE_BUILD);
 		expect(r.tire.aspect).toBeLessThanOrEqual(50);
-		expect([r.tintFront.vlt, r.tintRear.vlt]).toEqual([0.35, 0.35]);
+		expect([r.tintFront.vlt, r.tintRear.vlt, r.tintWindshield.vlt]).toEqual([0.2, 0.2, 0.2]);
 		expect(r.tailgate.lettering).toBe(false);
 		expect(r.board.board).toBe(true);
 		expect(r.bed.kind).toBe("none");
@@ -79,7 +85,7 @@ describe("truck builder catalog", () => {
 	});
 
 	it("round-trips a build through the share link", () => {
-		const build: Build = { ...AS_IT_SITS, paint: "8E3", ride: "b444", wheel: "hammer", tire: "215-45-17", tintRear: "5", lights: "led", bed: "tonneau", decal: "kalapana" };
+		const build: Build = { ...AS_IT_SITS, paint: "8E3", ride: "b444", wheel: "hammer", tire: "215-45-17", tintRear: "5", tintWindshield: "35", lights: "led", bed: "tonneau", decal: "kalapana" };
 		expect(decodeBuild(`#build=${encodeBuild(build)}`)).toEqual(build);
 	});
 
@@ -169,6 +175,50 @@ describe("buildToyotaTruck with builder options", () => {
 		expect(boardBox.min.y).toBeGreaterThan(0.66);
 		expect(boardBox.min.y).toBeLessThan(0.72);
 		truck.dispose();
+	});
+
+	it("tints the windshield only when a windshield film is chosen", () => {
+		const opacities = (t: TruckModel) => t.parts.map((m) => (m.material as MeshStandardMaterial).opacity);
+		const clear = buildToyotaTruck(undefined, { glassVlt: { front: 0.74, rear: 0.74 } });
+		const dark = buildToyotaTruck(undefined, { glassVlt: { front: 0.74, rear: 0.74, windshield: 0.2 } });
+		expect(opacities(clear).some((o) => Math.abs(o - 0.8) < 1e-9)).toBe(false);
+		expect(opacities(dark).filter((o) => Math.abs(o - 0.8) < 1e-9)).toHaveLength(1);
+		clear.dispose();
+		dark.dispose();
+	});
+
+	it("plates the mesh wheel's spokes in chrome or leaves them Diamond Black", () => {
+		const colorsOf = (finish: "black" | "chrome") => {
+			const t = buildToyotaTruck(undefined, truckSetup({ ...AS_IT_SITS, wheel: finish === "chrome" ? "bbs-rgr-chrome" : "bbs-rgr", tire: "215-45-17" }).options);
+			const hexes = new Set(t.parts.map((m) => (m.material as MeshStandardMaterial).color.getHexString()));
+			t.dispose();
+			return hexes;
+		};
+		expect(colorsOf("black").has("2a2d31")).toBe(true);
+		expect(colorsOf("chrome").has("2a2d31")).toBe(false);
+	});
+
+	it("frames every build at one scale about one spin point, the longboard included", () => {
+		// The builder never rescales a build, so each must fit the framed radius (the camera adds a 12% margin).
+		const v = new Vector3();
+		for (const b of [AS_IT_SITS, KYLE_BUILD, NOAH_BUILD]) {
+			const { body, options } = truckSetup(b);
+			const t = buildToyotaTruck({ ...DEFAULT_TRUCK_COLORS, body }, { ...options, openable: true });
+			for (const k of ["hood", "doorLeft", "doorRight", "tailgate"] as const) t.setOpen?.(k, 1);
+			t.group.updateMatrixWorld(true);
+			let reach = 0;
+			t.group.traverse((o) => {
+				const m = o as Mesh;
+				if (!m.isMesh || (m.material as MeshStandardMaterial).side === BackSide || m.material instanceof MeshBasicMaterial) return;
+				const pos = m.geometry.attributes.position;
+				for (let i = 0; i < pos.count; i++) {
+					v.fromBufferAttribute(pos, i).applyMatrix4(m.matrixWorld);
+					reach = Math.max(reach, Math.hypot(v.x - SPIN_CENTER_X, v.z));
+				}
+			});
+			expect(reach).toBeLessThan(FRAME_RADIUS * 1.05);
+			t.dispose();
+		}
 	});
 
 	it("stands the McFly roll bar and its KC lights above the cab roof", () => {

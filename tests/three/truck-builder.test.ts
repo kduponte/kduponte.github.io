@@ -480,6 +480,32 @@ describe("buildToyotaTruck with builder options", () => {
 		}
 	});
 
+	it("puts every sticker in the same spot: the bottom passenger-side corner of the rear glass", () => {
+		const kinds = ["kalapana", "tc", "lemon", "kanaka", "dahui"] as const;
+		const boxes = kinds.map((kind) => {
+			const t = buildToyotaTruck(undefined, { stickers: [kind] });
+			const box = boundsOf(t, `sticker-${kind}`);
+			t.dispose();
+			return box;
+		});
+		for (const [i, box] of boxes.entries()) {
+			// Outboard edges and bottoms all line up, a little in from the C pillar's inner face (0.735 m).
+			expect(box.max.z, kinds[i]).toBeCloseTo(boxes[0].max.z, 3);
+			expect(box.min.y, kinds[i]).toBeCloseTo(boxes[0].min.y, 2);
+			expect(0.735 - box.max.z, kinds[i]).toBeGreaterThan(0);
+			expect(0.735 - box.max.z, kinds[i]).toBeLessThan(0.02);
+			// All on the passenger side's fixed pane, outboard of the slider's frame at 0.26 m.
+			expect(box.min.z, kinds[i]).toBeGreaterThan(0.26);
+		}
+		// Asked for together, they line up inboard of the corner instead of piling up.
+		const both = buildToyotaTruck(undefined, { stickers: ["kanaka", "lemon"] });
+		const lemon = boundsOf(both, "sticker-lemon");
+		const flag = boundsOf(both, "sticker-kanaka");
+		expect(lemon.max.z).toBeCloseTo(boxes[0].max.z, 3);
+		expect(flag.max.z).toBeLessThan(lemon.min.z);
+		both.dispose();
+	});
+
 	it("carries the KC lights in yellow or black covers, or leaves the bar bare", () => {
 		const count = (lights: "none" | "yellow" | "black", hex: string) => {
 			const t = buildToyotaTruck(undefined, { rack: "rollbar", rackLights: lights });

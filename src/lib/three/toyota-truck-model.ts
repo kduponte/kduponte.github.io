@@ -1381,15 +1381,25 @@ export function buildToyotaTruck(colors: TruckColors = DEFAULT_TRUCK_COLORS, opt
 		return add(parent, geo, mat, [-0.003 - layer * 0.0004, at[1], at[0]], { outline: 0 });
 	};
 	const rect = (w: number, h: number) => new ShapeGeometry(new Shape([new Vector2(-w / 2, -h / 2), new Vector2(w / 2, -h / 2), new Vector2(w / 2, h / 2), new Vector2(-w / 2, h / 2)]));
-	// Stickers sit low on the rear glass, just outboard of the slider's frame (at 0.26 m either side):
-	// rectangles on the passenger side, rounds on the driver's side.
-	const glassEdgeZ = 0.285;
-	const stickerBottomY = BELT_Y + 0.053;
+	// Every sticker goes in the same spot: the bottom corner of the rear glass on the passenger side (+Z),
+	// the bottom right seen from behind, a 0.4 in gap from the C pillar and from the frame below. Only code
+	// can ask for more than one at once; any after the first line up inboard of it.
+	const cornerGap = 0.4 * INCH;
+	const pillarInnerZ = 0.77 - 0.07 / 2;
+	const frameTopY = BELT_Y + 0.03 + 0.025 / 2;
+	const stickerBottomY = frameTopY + cornerGap;
+	let stickerEdgeZ = pillarInnerZ - cornerGap;
+	/** The frame for the next sticker, w across and h tall, its outboard bottom corner at the corner. */
+	const atCorner = (name: string, w: number, h: number) => {
+		const g = onRearGlass(name, stickerEdgeZ - w / 2, stickerBottomY + h / 2);
+		stickerEdgeZ -= w + cornerGap;
+		return g;
+	};
 	if (stickers.includes("kalapana")) {
 		// Aloha Got Soul's 7.5 x 2.5 in sticker, white on green. Only the big KALAPANA is lettered; the
 		// "SLOW DOWN... I'M LISTENING TO" line above it would be about a millimeter tall at this scale.
 		const [w, h] = [7.5 * INCH, 2.5 * INCH];
-		const sticker = onRearGlass("sticker-kalapana", glassEdgeZ + w / 2, stickerBottomY + h / 2);
+		const sticker = atCorner("sticker-kalapana", w, h);
 		add(sticker, slab(0.005, h, w, 0.004, 0.001), stickerMat, [0, 0, 0], { outline: 0.003 });
 		lettering("KALAPANA", [-0.004, -0.008, 0], 0.021, 0.0042, -1, stickerInkMat, sticker);
 	}
@@ -1398,7 +1408,7 @@ export function buildToyotaTruck(colors: TruckColors = DEFAULT_TRUCK_COLORS, opt
 		// "Hawaii" (too small to letter here) round a yin-yang whose other half is the clear film. The ring is
 		// about a third of the radius, as in T&C's product photo.
 		const R = TC_STICKER_R;
-		const sticker = onRearGlass("sticker-tc", -(glassEdgeZ + R), stickerBottomY + R);
+		const sticker = atCorner("sticker-tc", 2 * R, 2 * R);
 		decal(sticker, new RingGeometry(R * 0.68, R, 40), stickerInkMat, 0);
 		const ry = R * 0.6;
 		const yin = new Shape();
@@ -1417,7 +1427,7 @@ export function buildToyotaTruck(colors: TruckColors = DEFAULT_TRUCK_COLORS, opt
 		// slice, the rind set off by a black line round its lower left, and nine segments meeting just up and
 		// right of center, black showing between them. About 4 in across, an estimate.
 		const R = 2 * INCH;
-		const sticker = onRearGlass("sticker-lemon", -(glassEdgeZ + R), stickerBottomY + R);
+		const sticker = atCorner("sticker-lemon", 2 * R, 2 * R);
 		const ink = std("#141414", 0.5, 0);
 		const lemon = std("#f5e23c", 0.45, 0);
 		decal(sticker, new CircleGeometry(R, 40), ink, 0);
@@ -1438,11 +1448,11 @@ export function buildToyotaTruck(colors: TruckColors = DEFAULT_TRUCK_COLORS, opt
 		decal(sticker, new CircleGeometry(R * 0.08, 12), ink, 4, c);
 	}
 	if (stickers.includes("kanaka")) {
-		// Flags For Good's 3.75 x 2.5 in Kanaka Maoli flag sticker, white-bordered, on the passenger side: nine
+		// Flags For Good's 3.75 x 2.5 in Kanaka Maoli flag sticker, white-bordered: nine
 		// stripes, green, red and yellow from the top, and a green shield (darker rim) carrying a yellow kahili
 		// on its staff and two paddles crossed below it, blades up and out.
 		const [w, h] = [3.75 * INCH, 2.5 * INCH];
-		const sticker = onRearGlass("sticker-kanaka", glassEdgeZ + w / 2, stickerBottomY + h / 2);
+		const sticker = atCorner("sticker-kanaka", w, h);
 		const green = std("#3fae49", 0.5, 0);
 		const red = std("#e2312b", 0.5, 0);
 		const yellow = std("#f5df35", 0.5, 0);
@@ -1478,11 +1488,11 @@ export function buildToyotaTruck(colors: TruckColors = DEFAULT_TRUCK_COLORS, opt
 		}
 	}
 	if (stickers.includes("dahui")) {
-		// The Hui O He'e Nalu (Da Hui) badge from the Da Hui Paddle Race, on the driver's side: a black disc
-		// ringed in yellow with a yellow surfer at its center. The ring lettering is too small to draw at this
-		// scale, and the surfer is simplified to a few strokes. About 4 in across, an estimate.
+		// The Hui O He'e Nalu (Da Hui) badge from the Da Hui Paddle Race: a black disc ringed in
+		// yellow with a yellow surfer at its center. The ring lettering is too small to draw at this scale, and
+		// the surfer is simplified to a few strokes. About 4 in across, an estimate.
 		const R = 2 * INCH;
-		const sticker = onRearGlass("sticker-dahui", -(glassEdgeZ + R), stickerBottomY + R);
+		const sticker = atCorner("sticker-dahui", 2 * R, 2 * R);
 		const black = std("#111111", 0.5, 0);
 		const yellow = std("#f3d41c", 0.45, 0);
 		decal(sticker, new CircleGeometry(R, 40), black, 0);

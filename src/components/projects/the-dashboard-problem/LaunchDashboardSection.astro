@@ -1,0 +1,110 @@
+---
+/**
+ * The page's hook: a simulated product launch readout of 20 metric tiles that looks like a good
+ * launch until you reveal which metrics truly moved. Every tile is a real draw from runDashboard
+ * (seeds 1 to 20 at the live experiment's defaults); the names are made up and dealt at random.
+ * Unlike the live experiment further down, nothing here is adjustable and the truth starts hidden.
+ *
+ * Markup and first render here; behavior in src/scripts/the-dashboard-problem/launch-dashboard.ts.
+ */
+import Band from "../../editorial/Band.astro";
+import { CORRECTION_LABEL, describeRun, formatLift } from "../../../lib/stats-sim/dashboard-readout";
+import { CORRECTIONS, LAUNCH_ALPHA, LAUNCH_CONFIG, LAUNCH_SEEDS, runDashboard, tallyRuns } from "../../../lib/stats-sim/dashboard-runs";
+import { tableHtml, tileViews, tilesHtml } from "../../../lib/stats-sim/dashboard-tiles";
+
+const runs = LAUNCH_SEEDS.map((s) => runDashboard(s));
+const first = runs[0];
+const r0 = describeRun(first, "none", 0, runs.length);
+const views = tileViews(first, "none", false);
+const tally = tallyRuns(runs);
+const nNull = first.metrics.filter((m) => m.is_null).length;
+const nLift = first.metrics.length - nNull;
+const pct = (x: number) => `${Math.round(x * 100)}%`;
+const lift = (x: number | null) => (x === null ? "n/a" : formatLift(x));
+// One string, so no space between an expression and the words around it can be lost.
+const footnote =
+	`<strong class="text-ink">Every tile is real:</strong> one metric from this page's own simulation, at the live experiment's defaults: ` +
+	`${first.metrics.length} metrics, ${nNull} truly unchanged and ${nLift} truly lifted (+${pct(LAUNCH_CONFIG.relative_lift)} on a ` +
+	`${pct(LAUNCH_CONFIG.baseline_rate)} baseline), ${LAUNCH_CONFIG.visitors_per_arm} visitors per arm, two-sided at α = ${LAUNCH_ALPHA}. ` +
+	`<strong class="text-ink">The names are made up:</strong> they're dealt out at random each run, so a name never tells you whether its ` +
+	`metric moved; only the simulation decides that. Runs are seeds 1 to ${runs.length} in order, none skipped. Across all ${tally.runs}, a ` +
+	`truly unchanged metric cleared the bar in ${tally.anyFalse.none} runs with no correction, ${tally.anyFalse.bonferroni} under Bonferroni ` +
+	`and ${tally.anyFalse.bh} under Benjamini-Hochberg, and the real lifts that cleared it averaged ${lift(tally.flaggedLift.none)}, ` +
+	`${lift(tally.flaggedLift.bonferroni)} and ${lift(tally.flaggedLift.bh)}, against ${lift(tally.allLift)} for every real lift and ` +
+	`+${pct(LAUNCH_CONFIG.relative_lift)} built in.`;
+---
+
+<section id="launch-dashboard" aria-labelledby="launch-dashboard-title" class="scroll-mt-24">
+	<!-- The ripple centers on the band's left edge, behind the control card, clear of the intro text. -->
+	<Band tone="grey" cx={0} class="-mt-[3px]">
+		<h2 id="launch-dashboard-title" class="font-anton text-4xl md:text-5xl">A dashboard that looks too good</h2>
+		<p class="mt-3 max-w-[65ch] text-base leading-relaxed text-ink-soft">
+			A simulated product launch: {first.metrics.length} metrics, each one the new version tested against the old, each tile showing the lift it
+			measured and whether it cleared the bar for significance. Most launch readouts stop here, and most runs of this one look like a good launch.
+			Decide which wins you'd believe, then reveal which metrics truly moved.
+		</p>
+
+		<div data-launch class="mt-8 grid grid-cols-1 gap-6 lg:grid-cols-12">
+			<div class="lg:col-span-4">
+				<div class="raw-box rounded-2xl bg-paper p-5 lg:sticky lg:top-24">
+					<p class="font-mono text-[10px] uppercase leading-tight" data-l-eyebrow>{r0.eyebrow}</p>
+					<div class="mt-3 flex flex-wrap gap-2">
+						<button type="button" data-l-next class="btn btn-sm">Next run →</button>
+						<button type="button" data-l-reveal class="btn btn-sm btn-ghost" aria-pressed="false">Reveal truth</button>
+					</div>
+					<div class="mt-3 flex flex-wrap gap-1.5" role="group" aria-label="Decision rule">
+						{
+							CORRECTIONS.map((mode) => (
+								<button type="button" data-l-mode={mode} aria-pressed={mode === "none" ? "true" : "false"} class="btn btn-sm btn-ghost">
+									{CORRECTION_LABEL[mode]}
+								</button>
+							))
+						}
+					</div>
+					<p class="mt-2 text-[12px] leading-snug text-ink-soft">
+						No correction tests each metric on its own at 5%. Bonferroni and Benjamini-Hochberg are two standard ways to raise the bar when
+						you test many at once; the sections below explain both.
+					</p>
+
+					<div class="mt-4 border-t-2 border-ink pt-4" aria-live="polite" data-l-tally>
+						<p class="font-anton text-[2.6rem] leading-none">
+							<span data-l-count>{r0.cleared.length}</span><span class="ml-2 text-xl">cleared the bar</span>
+						</p>
+						<p class="mt-1 text-[14px] font-semibold leading-snug" data-l-headline>{r0.headline}</p>
+						<p class="font-mono mt-3 text-[10px] uppercase leading-snug">The bar: <span data-l-bar>{r0.bar}</span></p>
+						<p class="mt-1 text-[13px] leading-snug" data-l-rule>{r0.rule}</p>
+
+						<p class="mt-4 rounded-lg border-2 border-dashed border-ink px-3 py-2 text-[13px] font-semibold leading-snug" data-l-prompt>
+							Before you reveal: which of these wins would you ship?
+						</p>
+						<div data-l-revealed hidden>
+							<p class="font-anton mt-4 text-[2.6rem] leading-none">
+								<span data-l-false>{r0.falseCount}</span><span class="ml-2 text-xl" data-l-false-label>{r0.falseCount === 1 ? "false discovery" : "false discoveries"}</span>
+							</p>
+							<p class="mt-1 text-[14px] font-semibold leading-snug" data-l-truth>{r0.truth}</p>
+							<p class="mt-3 rounded-lg border-2 border-ink bg-grey px-3 py-2 text-[13px] font-semibold leading-snug" data-l-curse>{r0.curse}</p>
+							<p class="mt-2 text-[13px] leading-snug" data-l-missed>{r0.missedLine}</p>
+							<ul class="mt-3 flex flex-wrap gap-1.5 text-[10px]" aria-label="Key">
+								<li class="label-chip border-ink bg-accent-blue text-paper"><span aria-hidden="true">✓</span> Real lift</li>
+								<li class="label-chip border-ink bg-coral-ring text-ink"><span aria-hidden="true">✗</span> False discovery</li>
+								<li class="label-chip border-dashed">Real lift, missed</li>
+							</ul>
+						</div>
+					</div>
+				</div>
+			</div>
+
+			<div class="lg:col-span-8">
+				<div class="flex flex-wrap items-center justify-between gap-3">
+					<p class="font-mono text-[10px] uppercase">Launch readout · biggest observed lift first</p>
+					<button type="button" data-vg-table-toggle class="btn btn-sm btn-ghost" aria-pressed="false">View as table</button>
+				</div>
+				<ul data-vg-chart data-l-tiles class="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-4" aria-label="The launch dashboard's metric tiles" set:html={tilesHtml(views)} />
+				<div data-vg-table data-l-table class="mt-3 overflow-x-auto rounded-xl border-2 border-ink bg-paper p-3" set:html={tableHtml(views, "none", false)} />
+			</div>
+		</div>
+
+		<p class="mt-8 max-w-[90ch] text-[13px] leading-relaxed text-ink-soft" set:html={footnote} />
+	</Band>
+	<script src="../../../scripts/the-dashboard-problem/launch-dashboard.ts"></script>
+</section>

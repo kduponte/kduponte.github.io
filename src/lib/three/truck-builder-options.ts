@@ -700,6 +700,9 @@ export const STICKER_SIZE = { w: 7.5 * INCH, h: 2.5 * INCH } as const;
 /** T&C's Standard Logo sticker is 6 inches across. */
 export const TC_STICKER_D = 6 * INCH;
 
+/** Every sticker shares the bottom passenger-side corner of the rear window, drawn bigger than life. */
+const DRAWN_BIGGER = "Drawn 1.5x its real size so it shows up on screen.";
+
 export const DECALS: DecalOption[] = [
 	{ id: "none", name: "No sticker", spec: "", stickers: [], source: SRC.story },
 	{
@@ -707,7 +710,7 @@ export const DECALS: DecalOption[] = [
 		name: '"Slow Down, I\'m Listening to Kalapana"',
 		spec: '7.5 x 2.5" sticker, white on green, rear window',
 		stickers: ["kalapana"],
-		note: "The Aloha Got Soul sticker from Kyle's plan for the truck.",
+		note: `The Aloha Got Soul sticker from Kyle's plan for the truck. ${DRAWN_BIGGER}`,
 		source: SRC.kalapanaSticker,
 	},
 	{
@@ -715,7 +718,7 @@ export const DECALS: DecalOption[] = [
 		name: "T&C logo",
 		spec: '6" round, white on clear, rear window',
 		stickers: ["tc"],
-		note: "T&C Surf Designs' classic yin-yang logo, in its white-and-clear version. The ring lettering is too small to draw at this scale.",
+		note: `T&C Surf Designs' classic yin-yang logo, in its white-and-clear version. The ring lettering is too small to draw at this scale. ${DRAWN_BIGGER}`,
 		source: SRC.tcSticker,
 	},
 	{
@@ -723,7 +726,7 @@ export const DECALS: DecalOption[] = [
 		name: "Lemon",
 		spec: "Die-cut lemon slice, rear window",
 		stickers: ["lemon"],
-		note: "A throwback to Lemon, Kyle's old company: just the lemon from its logo, cut to its outline. There's no sticker to buy, so its 4 in size is an estimate.",
+		note: `A throwback to Lemon, Kyle's old company: just the lemon from its logo, cut to its outline. There's no sticker to buy, so its 4 in size is an estimate. ${DRAWN_BIGGER}`,
 		source: SRC.lemon,
 	},
 	{
@@ -731,7 +734,7 @@ export const DECALS: DecalOption[] = [
 		name: "Kanaka Maoli flag",
 		spec: '3.75 x 2.5" sticker, rear window',
 		stickers: ["kanaka"],
-		note: "Gene Simeona's flag: nine stripes of green, red and yellow, and a green shield carrying a kahili and two crossed paddles.",
+		note: `Gene Simeona's flag: nine stripes of green, red and yellow, and a green shield carrying a kahili and two crossed paddles. ${DRAWN_BIGGER}`,
 		source: SRC.kanaka,
 	},
 	{
@@ -739,7 +742,7 @@ export const DECALS: DecalOption[] = [
 		name: "Da Hui",
 		spec: "Round badge, yellow on black, rear window",
 		stickers: ["dahui"],
-		note: "The Hui O He'e Nalu badge from the North Shore's Da Hui Paddle Race: a black disc ringed in yellow with a yellow surfer at its center. The ring lettering is too small to draw at this scale, and the surfer is simplified. No sticker size is listed, so its 4 in size is an estimate.",
+		note: `The Hui O He'e Nalu badge from the North Shore's Da Hui Paddle Race: a black disc ringed in yellow with a yellow surfer at its center. The ring lettering is too small to draw at this scale, and the surfer is simplified. No sticker size is listed, so its 4 in size is an estimate. ${DRAWN_BIGGER}`,
 		source: SRC.dahui,
 	},
 ];

@@ -21,7 +21,7 @@ import {
 	truckSetup,
 	type Build,
 } from "../../src/lib/three/truck-builder-options";
-import { CARGO_FLOOR_Y, DEFAULT_TRUCK_COLORS, OPEN_ANGLES, buildToyotaTruck, type TruckModel } from "../../src/lib/three/toyota-truck-model";
+import { CARGO_FLOOR_Y, DEFAULT_TRUCK_COLORS, OPEN_ANGLES, STICKER_DRAW_SCALE, buildToyotaTruck, type TruckModel } from "../../src/lib/three/toyota-truck-model";
 import { FRAME_RADIUS, SPIN_CENTER_X } from "../../src/scripts/three/subjects/truck-builder";
 
 const INCH = 0.0254;
@@ -497,6 +497,9 @@ describe("buildToyotaTruck with builder options", () => {
 			// All on the passenger side's fixed pane, outboard of the slider's frame at 0.26 m.
 			expect(box.min.z, kinds[i]).toBeGreaterThan(0.26);
 		}
+		// Drawn 1.5x real size: the 3.75 in flag is 5.6 in across on the glass.
+		const flagBox = boxes[kinds.indexOf("kanaka")];
+		expect((flagBox.max.z - flagBox.min.z) / INCH).toBeCloseTo(3.75 * STICKER_DRAW_SCALE, 1);
 		// Asked for together, they line up inboard of the corner instead of piling up.
 		const both = buildToyotaTruck(undefined, { stickers: ["kanaka", "lemon"] });
 		const lemon = boundsOf(both, "sticker-lemon");
@@ -504,6 +507,18 @@ describe("buildToyotaTruck with builder options", () => {
 		expect(lemon.max.z).toBeCloseTo(boxes[0].max.z, 3);
 		expect(flag.max.z).toBeLessThan(lemon.min.z);
 		both.dispose();
+	});
+
+	it("keeps the engine-bay floor behind the radiator and between the frame rails, out of sight under the bumper", () => {
+		const t = buildToyotaTruck(undefined, { openable: true });
+		t.group.updateMatrixWorld(true);
+		const floor = new Box3().setFromObject(t.group.getObjectByName("bay-floor")!);
+		const bumper = new Box3();
+		for (const p of t.parts) if (p.position.x > 2.2 && p.position.y < 0.6) bumper.expandByObject(p);
+		// The radiator sits 0.1 m behind the nose; the floor stops short of it and well inside the fenders.
+		expect(floor.max.x).toBeLessThan(bumper.min.x - 0.1);
+		expect(floor.max.z - floor.min.z).toBeLessThan(0.9);
+		t.dispose();
 	});
 
 	it("carries the KC lights in yellow or black covers, or leaves the bar bare", () => {

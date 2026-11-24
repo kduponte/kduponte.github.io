@@ -5,6 +5,7 @@
 import categories from "../../../public/data/toyota-truck/failure_categories.json";
 import { OFF_ENGINE_CATEGORIES, failureTint, rampGradient, systemCounts, type CategoryCount } from "../../lib/three/engine-22re-data";
 import { ENGINE_LAYOUT as L } from "../../lib/three/engine-22re-model";
+import DragHint from "./DragHint.astro";
 
 interface Props {
 	/** Classes for the canvas box. */
@@ -64,7 +65,7 @@ const fallbackParts = [
 	{ ...rect(-bf - 0.025, -0.047, -bf + 0.125, 0.037), fill: tints.electrical },
 ];
 const label =
-	"A Toyota 22R-E engine, slowly turning, with its driver's side cut away to show the pistons moving. Each system's parts are colored by how many forum threads reported a problem with it, pale for few and deep red for many. Drag to spin it; tap a part to read its count.";
+	"A Toyota 22R-E engine with its driver's side cut away to show the pistons moving. Each system's parts are colored by how many forum threads reported a problem with it, pale for few and deep red for many. Drag to spin it; tap a part to read its count.";
 ---
 
 <div data-engine-root class="grid gap-6 md:grid-cols-12 md:items-start">
@@ -82,6 +83,7 @@ const label =
 				{fallbackParts.map((p) => <rect x={p.x} y={p.y} width={p.width} height={p.height} fill={p.fill} />)}
 			</g>
 		</svg>
+		<DragHint />
 	</div>
 
 	<div class="raw-box rounded-xl bg-cream p-4 md:col-span-5">

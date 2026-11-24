@@ -186,6 +186,11 @@ const HOOD_BULGE_W = 0.74;
 export const CARGO_FLOOR_Y = BED_FLOOR_Y + 0.021;
 /** T&C's Standard Logo sticker: 6 inches across. */
 const TC_STICKER_R = 3 * INCH;
+/**
+ * Stickers are drawn half again their real size: at true size a 4 in sticker is a few pixels on screen.
+ * Each sticker's own frame stays in real inches; only its group is scaled up.
+ */
+export const STICKER_DRAW_SCALE = 1.5;
 /** The tailgate's indented panel, meters: between the tail lamps, from just under the latch to near the bottom. */
 const GATE_PANEL = { top: 0.875, bottom: 0.56, halfW: 0.63 } as const;
 
@@ -578,9 +583,15 @@ export function buildToyotaTruck(colors: TruckColors = DEFAULT_TRUCK_COLORS, opt
 		openers.hood = hood;
 		// Bay: firewall, radiator behind the grille, the core support's top bar, a dark floor below the engine.
 		add(body, slab(0.03, BELT_Y - CAB_FLOOR_Y, BODY_HALF_W * 2 - 0.12, 0.01, 0.005), bedFloorMat, [CAB_FRONT_X + 0.015, (CAB_FLOOR_Y + BELT_Y) / 2, 0], { outline: 0 });
-		add(body, slab(0.05, 0.42, 1.1, 0.01, 0.005), trimMat, [NOSE_X - 0.1, 0.62, 0], { outline: 0.01 });
+		const radiatorX = NOSE_X - 0.1;
+		add(body, slab(0.05, 0.42, 1.1, 0.01, 0.005), trimMat, [radiatorX, 0.62, 0], { outline: 0.01 });
 		add(body, slab(0.08, 0.04, BODY_HALF_W * 2 - 0.16, 0.01, 0.005), bodyMat, [NOSE_X - 0.06, 0.865, 0], { outline: 0.01 });
-		add(body, slab(NOSE_X - CAB_FRONT_X - 0.05, 0.02, BODY_HALF_W * 2 - 0.2, 0.005, 0.003), trimMat, [(NOSE_X + CAB_FRONT_X) / 2, 0.2, 0], { outline: 0 });
+		// The floor only darkens the bay when the hood is up, so it stays tucked between the frame rails and
+		// behind the radiator: run out to the nose and the fenders, it showed under the bumper as a big flat
+		// plate, most of all on a lowered truck.
+		const bayBackX = CAB_FRONT_X + 0.025;
+		const bayFrontX = radiatorX - 0.03;
+		add(body, slab(bayFrontX - bayBackX, 0.02, 0.84, 0.005, 0.003), trimMat, [(bayFrontX + bayBackX) / 2, 0.2, 0], { outline: 0 }).name = "bay-floor";
 		// Body-color face panel between the bumper and the lamp band, and under the valance.
 		add(body, slab(0.04, 0.05, BODY_HALF_W * 2 - 0.04, 0.01, 0.005), bodyMat, [NOSE_X - 0.01, 0.675, 0], { outline: 0.01 });
 		add(body, slab(0.04, 0.06, BODY_HALF_W * 2 - 0.2, 0.01, 0.005), bodyMat, [NOSE_X - 0.03, 0.36, 0], { outline: 0.01 });
@@ -1389,10 +1400,12 @@ export function buildToyotaTruck(colors: TruckColors = DEFAULT_TRUCK_COLORS, opt
 	const frameTopY = BELT_Y + 0.03 + 0.025 / 2;
 	const stickerBottomY = frameTopY + cornerGap;
 	let stickerEdgeZ = pillarInnerZ - cornerGap;
-	/** The frame for the next sticker, w across and h tall, its outboard bottom corner at the corner. */
+	/** The frame for the next sticker, w across and h tall (real size), its outboard bottom corner at the corner. */
 	const atCorner = (name: string, w: number, h: number) => {
-		const g = onRearGlass(name, stickerEdgeZ - w / 2, stickerBottomY + h / 2);
-		stickerEdgeZ -= w + cornerGap;
+		const [dw, dh] = [w * STICKER_DRAW_SCALE, h * STICKER_DRAW_SCALE];
+		const g = onRearGlass(name, stickerEdgeZ - dw / 2, stickerBottomY + dh / 2);
+		g.scale.setScalar(STICKER_DRAW_SCALE);
+		stickerEdgeZ -= dw + cornerGap;
 		return g;
 	};
 	if (stickers.includes("kalapana")) {

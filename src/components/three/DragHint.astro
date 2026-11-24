@@ -1,0 +1,70 @@
+---
+/**
+ * A "drag to spin" badge for a 3D viewer that holds still until you move it. Put it inside the
+ * viewer's host (a `relative` element). It goes away the first time someone drags the model, and
+ * the viewer's own aria-label already says it can be dragged, so screen readers skip it.
+ */
+interface Props {
+	text?: string;
+}
+const { text = "Drag to spin" } = Astro.props;
+---
+
+<div
+	data-drag-hint
+	aria-hidden="true"
+	class="pointer-events-none absolute bottom-3 left-1/2 z-10 flex -translate-x-1/2 items-center gap-2 rounded-full border-2 border-ink bg-paper py-1 pr-3 pl-2 font-mono text-[11px] whitespace-nowrap text-ink uppercase transition-opacity duration-500"
+>
+	<svg viewBox="0 0 32 20" class="drag-hint-icon h-4 w-7" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+		<!-- A turntable seen from the side, with an arrow round it each way. -->
+		<path d="M8 6.5C3.6 7.6 2 9 2 10.5c0 3 6.3 5.5 14 5.5s14-2.5 14-5.5c0-1.5-1.6-2.9-6-4" />
+		<path d="M5.5 13.2 2.8 11.4 5.2 9.2" />
+		<path d="M26.5 13.2 29.2 11.4 26.8 9.2" />
+		<path d="M16 2v9" />
+	</svg>
+	<span>{text}</span>
+</div>
+
+<style>
+	[data-drag-hint][data-done] {
+		opacity: 0;
+	}
+	.drag-hint-icon {
+		animation: drag-hint-nudge 2.4s ease-in-out infinite;
+	}
+	@keyframes drag-hint-nudge {
+		0%,
+		100% {
+			transform: translateX(-2px);
+		}
+		50% {
+			transform: translateX(2px);
+		}
+	}
+	@media (prefers-reduced-motion: reduce) {
+		.drag-hint-icon {
+			animation: none;
+		}
+	}
+</style>
+
+<script>
+	// Hide each hint once someone actually drags its viewer (a tap to open a door doesn't count).
+	for (const hint of document.querySelectorAll<HTMLElement>("[data-drag-hint]")) {
+		const host = hint.parentElement;
+		if (!host) continue;
+		let downX: number | null = null;
+		const onDown = (e: PointerEvent) => (downX = e.clientX);
+		const onUp = () => (downX = null);
+		const onMove = (e: PointerEvent) => {
+			if (downX === null || Math.abs(e.clientX - downX) < 8) return;
+			hint.dataset.done = "";
+			host.removeEventListener("pointerdown", onDown);
+			host.removeEventListener("pointermove", onMove);
+			host.removeEventListener("pointerup", onUp);
+		};
+		host.addEventListener("pointerdown", onDown);
+		host.addEventListener("pointermove", onMove);
+		host.addEventListener("pointerup", onUp);
+	}
+</script>

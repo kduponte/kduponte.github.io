@@ -9,6 +9,7 @@ import {
 	NOAH_BUILD,
 	PICKER_GROUPS,
 	REAR_TINTS,
+	RIDES,
 	SHOCKS,
 	TIRES,
 	WHEELS,
@@ -23,6 +24,8 @@ import {
 } from "../../src/lib/three/truck-builder-options";
 import { CARGO_FLOOR_Y, DEFAULT_TRUCK_COLORS, OPEN_ANGLES, STICKER_DRAW_SCALE, buildToyotaTruck, type TruckModel } from "../../src/lib/three/toyota-truck-model";
 import { FRAME_RADIUS, SPIN_CENTER_X } from "../../src/scripts/three/subjects/truck-builder";
+import { OUTLINE_SMALL } from "../../src/lib/three/kit";
+import * as engineModule from "../../src/lib/three/engine-22re-model";
 
 const INCH = 0.0254;
 
@@ -92,11 +95,17 @@ describe("truck builder catalog", () => {
 		expect(r.bed.kind).toBe("none");
 	});
 
-	it("builds Noah's monster-truck version: 1991 navy, 6.5 in of lift, 35 in Boggers on 15 x 10s, shock hoops, steps, stacks, McFly roll bar", () => {
+	it("builds Noah's monster-truck version: 1991 navy, about 8 in of lift on a solid-axle swap, 35 in Boggers on 15 x 10s, shock hoops, steps, stacks, McFly roll bar", () => {
 		const r = resolveBuild(NOAH_BUILD);
 		expect(r.paint.id).toBe("8E3");
 		expect(r.paint.spec).toContain("1991 factory");
-		expect([r.ride.front, r.ride.rear].map((m) => m / INCH)).toEqual([6.5, 6.5]);
+		// Taller than the tallest 2WD setup (Fabtech 3.5 in plus the 3 in body lift), with the body lift still at Hawaii's 3 in.
+		expect(r.ride.id).toBe("sas");
+		expect([r.ride.front, r.ride.rear].map((m) => m / INCH)).toEqual([8, 8]);
+		const twoWdMax = RIDES.find((x) => x.id === "fabtech-pa")!;
+		expect(r.ride.front).toBeGreaterThan(twoWdMax.front);
+		expect(r.ride.spec).toContain('3" body');
+		expect(r.ride.spec).toContain("estimated");
 		expect(r.steps.kind).toBe("tube");
 		expect(r.shocks.kind).toBe("hoops");
 		expect(r.exhaust.kind).toBe("stacks");
@@ -482,18 +491,23 @@ describe("buildToyotaTruck with builder options", () => {
 
 	it("puts every sticker in the same spot: the bottom passenger-side corner of the rear glass", () => {
 		const kinds = ["kalapana", "tc", "lemon", "kanaka", "dahui"] as const;
+		let capTop = 0;
 		const boxes = kinds.map((kind) => {
 			const t = buildToyotaTruck(undefined, { stickers: [kind] });
+			capTop = boundsOf(t, "bed-front-cap").max.y;
 			const box = boundsOf(t, `sticker-${kind}`);
 			t.dispose();
 			return box;
 		});
 		for (const [i, box] of boxes.entries()) {
-			// Outboard edges and bottoms all line up, a little in from the C pillar's inner face (0.735 m).
+			// Outboard edges and bottoms all line up, on the glass that shows: inside the C pillar's inner
+			// face (0.735 m) and its black outline, and above the bed's front-wall cap and its outline.
 			expect(box.max.z, kinds[i]).toBeCloseTo(boxes[0].max.z, 3);
 			expect(box.min.y, kinds[i]).toBeCloseTo(boxes[0].min.y, 2);
-			expect(0.735 - box.max.z, kinds[i]).toBeGreaterThan(0);
-			expect(0.735 - box.max.z, kinds[i]).toBeLessThan(0.02);
+			expect(box.max.z, kinds[i]).toBeLessThan(0.735 - OUTLINE_SMALL);
+			expect(box.max.z, kinds[i]).toBeGreaterThan(0.735 - OUTLINE_SMALL - 0.03);
+			expect(box.min.y, kinds[i]).toBeGreaterThan(capTop + OUTLINE_SMALL);
+			expect(box.min.y, kinds[i]).toBeLessThan(capTop + OUTLINE_SMALL + 0.04);
 			// All on the passenger side's fixed pane, outboard of the slider's frame at 0.26 m.
 			expect(box.min.z, kinds[i]).toBeGreaterThan(0.26);
 		}
@@ -519,6 +533,34 @@ describe("buildToyotaTruck with builder options", () => {
 		expect(floor.max.x).toBeLessThan(bumper.min.x - 0.1);
 		expect(floor.max.z - floor.min.z).toBeLessThan(0.9);
 		t.dispose();
+	});
+
+	it("fills the engine bay around the engine, all of it under the closed hood and inside the fenders", () => {
+		const { build22REEngine } = engineModule;
+		for (const opts of [{}, truckSetup(NOAH_BUILD).options, truckSetup(KYLE_BUILD).options]) {
+			const engine = build22REEngine({ cutaway: false });
+			const t = buildToyotaTruck(undefined, { ...opts, openable: true, engine: engine.group });
+			t.group.updateMatrixWorld(true);
+			const bay = t.group.getObjectByName("bay")!;
+			const box = boundsOf(t, "bay");
+			const hood = boundsOf(t, "hood");
+			// Battery, air cleaner, meter, duct, tanks, booster, master cylinder, fuse box and the aprons.
+			let parts = 0;
+			bay.traverse((o) => (o as Mesh).isMesh && t.parts.includes(o as Mesh) && parts++);
+			expect(parts).toBeGreaterThan(25);
+			expect(box.max.y).toBeLessThan(hood.max.y);
+			expect(box.max.z).toBeLessThan(0.82);
+			expect(box.min.z).toBeGreaterThan(-0.82);
+			// The crossover duct reaches the hose leaving the throttle body.
+			const stub = new Vector3(...(engine.group.userData.intakeStubEnd as [number, number, number])).applyMatrix4(engine.group.matrixWorld);
+			expect(box.distanceToPoint(stub)).toBeLessThan(0.01);
+			t.dispose();
+			engine.dispose();
+		}
+		// Only the openable truck (the builder) has a bay to fill.
+		const closed = buildToyotaTruck(undefined, {});
+		expect(closed.group.getObjectByName("bay")).toBeUndefined();
+		closed.dispose();
 	});
 
 	it("carries the KC lights in yellow or black covers, or leaves the bar bare", () => {

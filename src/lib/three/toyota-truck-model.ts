@@ -547,6 +547,118 @@ export function buildToyotaTruck(colors: TruckColors = DEFAULT_TRUCK_COLORS, opt
 		add(parent, geo, bodyMat, [mid - ox, topAt(mid) + rise / 2 - 0.006 - oy, 0], { outline: OUTLINE_SMALL });
 	}
 
+	/**
+	 * The rest of the engine bay, for when the hood is up. The stock 1989-95 22R-E layout: the air cleaner
+	 * and its air flow meter on the driver's side at the front, beside a white plastic reservoir, with the
+	 * crossover duct running across the front of the engine to the throttle body (Trail-Gear's 1989-95 22R-E
+	 * intake kit instructions, images.carid.com/trail-gear/items/pdf/180316-1-kit-installation-instructions.pdf);
+	 * the battery opposite it on the passenger side; the brake booster and
+	 * master cylinder on the driver's side of the firewall, as on any left-hand-drive truck; the inner fender
+	 * aprons in body color. Where the washer bottle and fuse box sit, and every size but the battery's, are
+	 * estimates.
+	 */
+	const buildBay = (engine: Object3D | undefined) => {
+		const bay = new Group();
+		bay.name = "bay";
+		body.add(bay);
+		const SHELF_Y = 0.79; // over the wheel well's roof and the tallest tire the truck can carry
+		const TRAY_Y = 0.6; // the front corners, ahead of the wheels, sit lower
+		// Inner edge, over the edge of the floor below; with shock hoops, just inboard of them.
+		const IN = hoops ? Math.max(0.33, Math.min(0.42, shockZ - 0.065)) : 0.42;
+		const OUT = BODY_HALF_W - 0.12 - 0.015; // the inner fender wall
+		const wellFrontX = FRONT_AXLE_X + ARCH_RX + 0.02;
+		const radiatorBackX = NOSE_X - 0.1 - 0.025;
+		const zMid = (IN + OUT) / 2;
+		pair((side) => {
+			add(bay, slab(wellFrontX - CAB_FRONT_X - 0.06, 0.015, OUT - IN, 0.004, 0.002), bodyMat, [(wellFrontX + CAB_FRONT_X + 0.06) / 2, SHELF_Y, side * zMid], { outline: 0.006 });
+			add(bay, slab(0.015, SHELF_Y - TRAY_Y, OUT - IN, 0.004, 0.002), bodyMat, [wellFrontX, (SHELF_Y + TRAY_Y) / 2, side * zMid], { outline: 0.006 });
+			add(bay, slab(radiatorBackX - wellFrontX, 0.015, OUT - IN, 0.004, 0.002), bodyMat, [(radiatorBackX + wellFrontX) / 2, TRAY_Y, side * zMid], { outline: 0.006 });
+			// The apron's inner wall, down to the frame, so the wheel well doesn't show past the shelf's edge.
+			const wallBot = 0.2;
+			add(bay, slab(wellFrontX - CAB_FRONT_X - 0.06, SHELF_Y - wallBot, 0.015, 0.004, 0.002), bodyMat, [(wellFrontX + CAB_FRONT_X + 0.06) / 2, (SHELF_Y + wallBot) / 2, side * IN], { outline: 0.006 });
+			add(bay, slab(radiatorBackX - wellFrontX, TRAY_Y - wallBot, 0.015, 0.004, 0.002), bodyMat, [(radiatorBackX + wellFrontX) / 2, (TRAY_Y + wallBot) / 2, side * IN], { outline: 0.006 });
+		});
+		const onShelf = SHELF_Y + 0.0075;
+		const onTray = TRAY_Y + 0.0075;
+		const blackPlastic = std("#1d1e20", 0.7);
+		const castAlu = std("#a7abaf", 0.45, 0.6);
+		const milky = kit.material(new MeshStandardMaterial({ color: new Color("#eeece4"), roughness: 0.35, transparent: true, opacity: 0.82 }));
+		const tube = (pts: [number, number, number][], r: number) => new TubeGeometry(new CatmullRomCurve3(pts.map((p) => new Vector3(...p)), false, "catmullrom", 0.3), 48, r, 12, false);
+
+		// Battery, passenger side: BCI Group 24F, 10.25 x 6.81 x 8.88 in, long side across the truck, held by a
+		// bar over the top, posts to the inboard side, positive in a red boot.
+		const bat = { l: 10.25 * INCH, w: 6.81 * INCH, h: 8.88 * INCH };
+		const batX = (wellFrontX + radiatorBackX) / 2;
+		const batZ = OUT - bat.l / 2;
+		const batTop = onTray + bat.h;
+		add(bay, slab(bat.w, bat.h, bat.l, 0.01, 0.004), std("#232427", 0.55), [batX, onTray + bat.h / 2, batZ], { outline: 0.01 });
+		add(bay, slab(bat.w + 0.004, 0.018, bat.l + 0.004, 0.006, 0.003), std("#34363a", 0.5), [batX, batTop - 0.009, batZ], { outline: 0 });
+		const postZ = batZ - bat.l / 2 + 0.035;
+		for (const [dx, mat] of [[0.04, std("#c42a2a", 0.5)], [-0.04, std("#8d9094", 0.4, 0.6)]] as const) {
+			add(bay, new CylinderGeometry(0.014, 0.016, 0.028, 14), mat, [batX + dx, batTop + 0.014, postZ], { outline: 0.004 });
+		}
+		add(bay, slab(0.022, 0.012, bat.l + 0.03, 0.004, 0.002), trimMat, [batX, batTop + 0.006, batZ + 0.02], { outline: 0.003 });
+		for (const dz of [-1, 1]) add(bay, slab(0.008, bat.h * 0.85, 0.008, 0.003, 0.001), silverMat, [batX, onTray + bat.h * 0.45, batZ + 0.02 + dz * (bat.l / 2 + 0.016)], { outline: 0 });
+		// Cables: positive down past the engine toward the starter on the passenger side, negative to the body.
+		add(bay, tube([[batX + 0.04, batTop + 0.03, postZ], [batX + 0.03, batTop + 0.02, postZ - 0.05], [wellFrontX + 0.03, 0.55, 0.34], [1.55, 0.34, 0.3]], 0.008), std("#b52222", 0.5), [0, 0, 0], { outline: 0.003 });
+		add(bay, tube([[batX - 0.04, batTop + 0.03, postZ], [batX - 0.07, batTop - 0.02, postZ - 0.02], [wellFrontX + 0.02, onTray + 0.01, IN + 0.03]], 0.007), trimMat, [0, 0, 0], { outline: 0.003 });
+
+		// Air cleaner, driver's side: a black canister on the tray, its intake snout reaching forward beside the
+		// radiator toward the headlamp, the cast air flow meter on its inboard side.
+		const ac = { x: 0.2, y: 0.17, z: 0.24 };
+		const acX = (wellFrontX + radiatorBackX) / 2 + 0.005;
+		const acZ = -(OUT - ac.z / 2);
+		add(bay, slab(ac.x, ac.y * 0.55, ac.z, 0.02, 0.01), blackPlastic, [acX, onTray + ac.y * 0.275, acZ], { outline: 0.01 });
+		add(bay, slab(ac.x + 0.012, ac.y * 0.45, ac.z + 0.012, 0.025, 0.012), blackPlastic, [acX, onTray + ac.y * 0.775, acZ], { outline: 0.01 });
+		for (const dx of [-0.06, 0.06]) add(bay, slab(0.02, 0.03, 0.008, 0.003, 0.001), silverMat, [acX + dx, onTray + ac.y * 0.55, acZ - ac.z / 2 - 0.007], { outline: 0 }); // lid clips
+		add(bay, slab(NOSE_X - 0.06 - (acX + ac.x / 2), 0.055, 0.09, 0.012, 0.006), blackPlastic, [(NOSE_X - 0.06 + acX + ac.x / 2) / 2, onTray + 0.06, acZ - 0.05], { outline: 0.006 });
+		const afm = { x: 0.12, y: 0.1, z: 0.07 };
+		const afmZ = acZ + ac.z / 2 + afm.z / 2;
+		const afmY = onTray + 0.1;
+		add(bay, slab(afm.x, afm.y, afm.z, 0.012, 0.006), castAlu, [acX, afmY, afmZ], { outline: 0.006 });
+		add(bay, slab(0.04, 0.025, 0.03, 0.004, 0.002), blackPlastic, [acX - 0.02, afmY + afm.y / 2 + 0.012, afmZ], { outline: 0 }); // connector
+		// The crossover duct: from the meter, up over the fan and across the front of the engine to the hose
+		// leaving the throttle body. Drawn only with an engine to meet.
+		const stub = engine?.userData.intakeStubEnd as [number, number, number] | undefined;
+		if (engine && stub) {
+			const end: [number, number, number] = [engine.position.x + stub[0], engine.position.y + stub[1], engine.position.z + stub[2]];
+			const start: [number, number, number] = [acX, afmY, afmZ + afm.z / 2];
+			const duct = [start, [acX + 0.02, afmY + 0.07, start[2] + 0.06], [radiatorBackX - 0.06, end[1], -0.12], [radiatorBackX - 0.07, end[1], 0.04], end] as [number, number, number][];
+			add(bay, tube(duct, 0.036), trimMat, [0, 0, 0], { outline: 0.006 });
+		}
+
+		// Coolant reserve tank behind the air cleaner and the washer bottle behind the battery, both milky plastic
+		// with black caps; the washer fluid shows blue through its bottle.
+		const tank = (x: number, z: number, sx: number, sy: number, sz: number) => {
+			add(bay, slab(sx, sy, sz, 0.012, 0.006), milky, [x, onShelf + sy / 2, z], { outline: 0.006 });
+			add(bay, new CylinderGeometry(0.018, 0.018, 0.02, 14), blackPlastic, [x + sx / 4, onShelf + sy + 0.01, z], { outline: 0.003 });
+		};
+		tank(wellFrontX - 0.1, -(IN + 0.08), 0.13, 0.08, 0.1);
+		tank(wellFrontX - 0.12, IN + 0.1, 0.16, 0.075, 0.15);
+		add(bay, slab(0.15, 0.045, 0.14, 0.01, 0.005), std("#3f7fcf", 0.35), [wellFrontX - 0.12, onShelf + 0.024, IN + 0.1], { outline: 0 });
+
+		// Brake booster and master cylinder on the driver's side of the firewall, the fluid reservoir on top.
+		const boosterR = 0.11;
+		const boosterX = CAB_FRONT_X + 0.03 + 0.06;
+		const brakeY = 0.66;
+		const brakeZ = -0.31;
+		const booster = new CylinderGeometry(boosterR, boosterR, 0.12, 32);
+		booster.rotateZ(Math.PI / 2);
+		add(bay, booster, std("#1a1b1d", 0.45, 0.3), [boosterX, brakeY, brakeZ], { outline: 0.008 });
+		const mc = new CylinderGeometry(0.03, 0.03, 0.17, 18);
+		mc.rotateZ(Math.PI / 2);
+		add(bay, mc, castAlu, [boosterX + 0.06 + 0.085, brakeY, brakeZ], { outline: 0.005 });
+		add(bay, slab(0.1, 0.06, 0.05, 0.008, 0.004), milky, [boosterX + 0.15, brakeY + 0.06, brakeZ], { outline: 0.004 });
+		add(bay, new CylinderGeometry(0.018, 0.018, 0.015, 14), blackPlastic, [boosterX + 0.15, brakeY + 0.098, brakeZ], { outline: 0.003 });
+		for (const dz of [-0.012, 0.012]) {
+			add(bay, tube([[boosterX + 0.2, brakeY - 0.02, brakeZ + dz], [boosterX + 0.24, brakeY - 0.08, brakeZ - 0.06 + dz], [boosterX + 0.26, brakeY - 0.12, -IN - 0.02 + dz]], 0.004), silverMat, [0, 0, 0], { outline: 0 });
+		}
+
+		// Fuse and relay box on the driver's shelf by the firewall.
+		add(bay, slab(0.14, 0.06, 0.11, 0.012, 0.006), blackPlastic, [CAB_FRONT_X + 0.24, onShelf + 0.03, -(OUT - 0.07)], { outline: 0.006 });
+		add(bay, slab(0.142, 0.006, 0.112, 0.002, 0.001), trimMat, [CAB_FRONT_X + 0.24, onShelf + 0.045, -(OUT - 0.07)], { outline: 0 });
+	};
+
 	// --- Front clip: hood and fenders ---
 	const openers = {} as Record<OpenerKey, Group>;
 	if (!openable) {
@@ -556,14 +668,15 @@ export function buildToyotaTruck(colors: TruckColors = DEFAULT_TRUCK_COLORS, opt
 		// Fenders as two walls, the hood as a panel hinged at the cowl, and a bay between them.
 		pair((side) => {
 			add(body, extrude(frontClipProfile(), 0.08, 0.02, false), bodyMat, [0, 0, side * (BODY_HALF_W - 0.04)], { outline: OUTLINE });
-			// Inner fender apron; with shock hoops in the well it stops short of the arch so the shocks show.
+			// Inner fender apron, body color as on the real truck; with shock hoops in the well it stops short of
+			// the arch so the shocks show.
 			if (!hoops) {
-				add(body, slab(NOSE_X - CAB_FRONT_X - 0.16, 0.34, 0.03, 0.01, 0.005), bedFloorMat, [(NOSE_X + CAB_FRONT_X) / 2 - 0.02, 0.72, side * (BODY_HALF_W - 0.12)], {
+				add(body, slab(NOSE_X - CAB_FRONT_X - 0.16, 0.34, 0.03, 0.01, 0.005), bodyMat, [(NOSE_X + CAB_FRONT_X) / 2 - 0.02, 0.72, side * (BODY_HALF_W - 0.12)], {
 					outline: 0,
 				});
 			} else {
 				const apron = (x0: number, x1: number, y0: number, y1: number) =>
-					add(body, slab(x1 - x0, y1 - y0, 0.03, 0.01, 0.005), bedFloorMat, [(x0 + x1) / 2, (y0 + y1) / 2, side * (BODY_HALF_W - 0.12)], { outline: 0 });
+					add(body, slab(x1 - x0, y1 - y0, 0.03, 0.01, 0.005), bodyMat, [(x0 + x1) / 2, (y0 + y1) / 2, side * (BODY_HALF_W - 0.12)], { outline: 0 });
 				const [x0, x1, y0, y1] = [CAB_FRONT_X + 0.06, NOSE_X - 0.1, 0.55, 0.89];
 				apron(x0, FRONT_AXLE_X - ARCH_RX, y0, y1);
 				apron(FRONT_AXLE_X + ARCH_RX, x1, y0, y1);
@@ -571,6 +684,7 @@ export function buildToyotaTruck(colors: TruckColors = DEFAULT_TRUCK_COLORS, opt
 			}
 		});
 		const hood = new Group();
+		hood.name = "hood";
 		hood.position.set(CAB_FRONT_X, BELT_Y, 0);
 		const hoodShape = new Shape();
 		hoodShape.moveTo(0, 0);
@@ -600,6 +714,7 @@ export function buildToyotaTruck(colors: TruckColors = DEFAULT_TRUCK_COLORS, opt
 			options.engine.position.set(1.62, 0.42, 0);
 			body.add(options.engine);
 		}
+		buildBay(options.engine);
 	}
 
 	// --- Cab shell: floor pan, door walls and back wall, hollow so the interior shows through the glass ---
@@ -739,7 +854,7 @@ export function buildToyotaTruck(colors: TruckColors = DEFAULT_TRUCK_COLORS, opt
 	// Bed front wall at rail height, so the rear window stays clear: rolled cap and stamped ribs.
 	const bedInnerW = BODY_HALF_W * 2 - 0.1;
 	add(body, slab(0.07, BELT_Y - BED_FLOOR_Y + 0.02, bedInnerW, 0.02, 0.015), bodyMat, [CAB_BACK_X - 0.05, (BED_FLOOR_Y + BELT_Y) / 2, 0]);
-	add(body, slab(0.12, 0.05, bedInnerW, 0.02, 0.012), bodyMat, [CAB_BACK_X - 0.06, BELT_Y, 0]);
+	add(body, slab(0.12, 0.05, bedInnerW, 0.02, 0.012), bodyMat, [CAB_BACK_X - 0.06, BELT_Y, 0]).name = "bed-front-cap";
 	for (const y of [BED_FLOOR_Y + 0.09, BED_FLOOR_Y + 0.19]) {
 		add(body, slab(0.015, 0.035, bedInnerW - 0.24, 0.01, 0.004), bedLined ? linerMat : bodyMat, [CAB_BACK_X - 0.09, y, 0], { outline: 0.008 });
 	}
@@ -1393,13 +1508,15 @@ export function buildToyotaTruck(colors: TruckColors = DEFAULT_TRUCK_COLORS, opt
 	};
 	const rect = (w: number, h: number) => new ShapeGeometry(new Shape([new Vector2(-w / 2, -h / 2), new Vector2(w / 2, -h / 2), new Vector2(w / 2, h / 2), new Vector2(-w / 2, h / 2)]));
 	// Every sticker goes in the same spot: the bottom corner of the rear glass on the passenger side (+Z),
-	// the bottom right seen from behind, a 0.4 in gap from the C pillar and from the frame below. Only code
-	// can ask for more than one at once; any after the first line up inboard of it.
-	const cornerGap = 0.4 * INCH;
-	const pillarInnerZ = 0.77 - 0.07 / 2;
-	const frameTopY = BELT_Y + 0.03 + 0.025 / 2;
-	const stickerBottomY = frameTopY + cornerGap;
-	let stickerEdgeZ = pillarInnerZ - cornerGap;
+	// the bottom right seen from behind, 0.75 in inside the glass that shows on both edges. Only code can
+	// ask for more than one at once; any after the first line up inboard of it.
+	// The glass that actually shows stops short of the window frame: the C pillar's black outline covers
+	// its outboard edge, and the bed's front-wall cap (with its outline) covers its bottom.
+	const cornerGap = 0.75 * INCH;
+	const glassEdgeZ = 0.77 - 0.07 / 2 - OUTLINE_SMALL;
+	const glassBottomY = BELT_Y + 0.05 / 2 + OUTLINE_SMALL;
+	const stickerBottomY = glassBottomY + cornerGap;
+	let stickerEdgeZ = glassEdgeZ - cornerGap;
 	/** The frame for the next sticker, w across and h tall (real size), its outboard bottom corner at the corner. */
 	const atCorner = (name: string, w: number, h: number) => {
 		const [dw, dh] = [w * STICKER_DRAW_SCALE, h * STICKER_DRAW_SCALE];

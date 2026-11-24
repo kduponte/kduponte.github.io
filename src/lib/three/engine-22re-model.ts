@@ -85,6 +85,15 @@ const PISTON_H = 0.058;
 /** The main heights and lengths, for anything that draws the engine without three.js (the SVG fallback). */
 export const ENGINE_LAYOUT = { blockFront: BLOCK_FRONT, deckY: DECK_Y, panY: PAN_Y, headTop: HEAD_TOP, gasket: GASKET, pumpY: 0.16 } as const;
 
+/** The throttle body on the front of the EFI plenum (passenger side; see `plenum` in the intake below). */
+const TB = { x: -0.015 + 0.36 / 2 + 0.028, y: HEAD_TOP + 0.06, z: 0.2 };
+/** Points along the cut-short intake hose, in the engine's frame; the last is where a truck's duct picks it up. */
+export const INTAKE_STUB: readonly (readonly [number, number, number])[] = [
+	[TB.x + 0.025, TB.y, TB.z],
+	[TB.x + 0.08, TB.y + 0.01, TB.z - 0.02],
+	[TB.x + 0.12, TB.y + 0.02, TB.z - 0.07],
+];
+
 /** Stroke glyphs on a 0.75 x 1 cell, for the cast and badge lettering. */
 const GLYPHS: Record<string, [number, number, number, number][]> = {
 	E: [
@@ -428,22 +437,9 @@ export function build22REEngine(opts: EngineOptions = {}): EngineModel {
 	lettering(group, "EFI", new Vector3(plenum.x - 0.04, plenum.y, plenum.z + plenum.w / 2), new Vector3(1, 0, 0), new Vector3(0, 1, 0), 0.042, 0.007, alu);
 	const tbX = plenum.x + plenum.len / 2 + 0.028;
 	addSys("fuel", group, xCyl(0.036, 0.056, 20), [tbX, plenum.y, plenum.z], { outline: O_SMALL });
-	add(
-		group,
-		tube(
-			[
-				[tbX + 0.025, plenum.y, plenum.z],
-				[tbX + 0.09, plenum.y - 0.01, plenum.z + 0.02],
-				[tbX + 0.15, plenum.y - 0.05, plenum.z + 0.06],
-			],
-			0.035,
-			false,
-			16,
-		),
-		rubber,
-		[0, 0, 0],
-		{ outline: O_SMALL },
-	); // intake hose toward the air flow meter (cut short)
+	// The intake hose, cut short, heading forward and across toward the air flow meter on the driver's-side
+	// air cleaner (the stock crossover duct, per Trail-Gear's 1989-95 22R-E intake instructions).
+	add(group, tube(INTAKE_STUB.map((p) => [p[0], p[1], p[2]]), 0.035, false, 16), rubber, [0, 0, 0], { outline: O_SMALL });
 
 	// --- Exhaust manifold on the driver's side: four runners into a log, then the down pipe at the back ---
 	const logZ = -0.172;
@@ -494,5 +490,7 @@ export function build22REEngine(opts: EngineOptions = {}): EngineModel {
 	addSys("drivetrain", group, bellGeo, [-BLOCK_FRONT, 0, 0], { outline: O_BIG });
 
 	setCrank(0);
+	// Where a truck's intake duct picks up the hose, in the engine's frame.
+	group.userData.intakeStubEnd = [...INTAKE_STUB[INTAKE_STUB.length - 1]];
 	return { group, parts: kit.parts, systems, systemMaterials, setCrank, dispose: kit.dispose };
 }

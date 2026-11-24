@@ -41,6 +41,10 @@ const SRC = {
 	bbsRgr: { label: "BBS RG-R, 17x7.5 5x114.3 +48 (Canada Wheels)", href: "https://www.canadawheels.ca/bbs-wheels/rgr" },
 	bbsJapan: { label: "BBS Japan, RG-R sizes and finishes", href: "https://bbs-japan.co.jp/en/?p=1266" },
 	cavalryBlue: { label: "AutomotiveTouchup, 2021 Tacoma colors (8W2 Cavalry Blue)", href: "https://www.automotivetouchup.com/touch-up-paint/toyota/2021/tacoma" },
+	ifsEliminator: {
+		label: "LC Engineering, 1985-1995 Pickup & 4Runner IFS Eliminator Kit",
+		href: "https://www.lceperformance.com/1985-1995-pickup-4runner-ifs-eliminator-kit-w-options/",
+	},
 	fabtech2wd: { label: "Fabtech 3.5\" 2WD lift, 1984-95 Pickup (LC Engineering)", href: "https://www.lceperformance.com/2wd-3-5-lift-kit-with-shocks-1984-1995-pickup/" },
 	westinSteps: {
 		label: "Westin Signature 3\" step bars, 25-0575 (Vivid Racing)",
@@ -185,8 +189,17 @@ export const RIDES: RideOption[] = [
 		spec: '6.5" total: 3.5" suspension, 3" body',
 		front: 6.5 * INCH,
 		rear: 6.5 * INCH,
-		note: "Both kits together. The body lift is the PA5503M above, which doesn't fit 2WD trucks with power steering. Three inches is as far as Hawaii lets a body sit off its frame (HRS §291-35.1), and no taller 2WD suspension kit turned up, so more height has to come from bigger tires.",
+		note: "Both kits together. The body lift is the PA5503M above, which doesn't fit 2WD trucks with power steering. Three inches is as far as Hawaii lets a body sit off its frame (HRS §291-35.1), and no taller 2WD suspension kit turned up, so going higher means a solid-axle swap.",
 		source: SRC.fabtech2wd,
+	},
+	{
+		id: "sas",
+		name: "Solid-axle swap plus PA5503M body lift",
+		spec: 'About 8" total: 5" leaf springs, 3" body (estimated)',
+		front: 8 * INCH,
+		rear: 8 * INCH,
+		note: "Trades the independent front suspension for a leaf-sprung solid axle with LC Engineering's IFS Eliminator kit, on Extra-Flex 5 in lift springs front and rear, with the 3 in PA5503M body lift on top. LC Engineering sells the springs too. The kit is built around 4x4 parts, so a 2WD truck gets a front axle it never came with. The total is an estimate: the springs' 5 in is measured against a stock 4x4, which already stands taller than this 2WD. The body lift stays at Hawaii's 3 in limit.",
+		source: SRC.ifsEliminator,
 	},
 ];
 
@@ -811,13 +824,13 @@ export const KYLE_BUILD: Build = {
 
 /**
  * Noah's build: closer to a monster truck, after Marty McFly's Toyota and Poi Pounder. Toyota's 1991
- * Blue Pearl, nearer navy than gray; 6.5 inches of lift, 35-inch Super Swamper Boggers on fat 15 x 10 wheels,
+ * Blue Pearl, nearer navy than gray; about 8 inches of lift on a solid-axle swap, 35-inch Super Swamper Boggers on fat 15 x 10 wheels,
  * front shocks on hoops where they show, step bars, twin chrome stacks, and a McFly roll bar with KC lights.
  */
 export const NOAH_BUILD: Build = {
 	...AS_IT_SITS,
 	paint: "8E3",
-	ride: "fabtech-pa",
+	ride: "sas",
 	wheel: "ultra164",
 	tire: "bogger-35",
 	rack: "rollbar",

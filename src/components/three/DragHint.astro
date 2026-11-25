@@ -1,8 +1,9 @@
 ---
 /**
  * A "drag to spin" badge for a 3D viewer that holds still until you move it. Put it inside the
- * viewer's host (a `relative` element). It goes away the first time someone drags the model, and
- * the viewer's own aria-label already says it can be dragged, so screen readers skip it.
+ * viewer's host (a `relative` element). It shows once the model's canvas is in, goes away the first
+ * time someone drags the model, and the viewer's own aria-label already says it can be dragged, so
+ * screen readers skip it.
  */
 interface Props {
 	text?: string;
@@ -26,6 +27,7 @@ const { text = "Drag to spin" } = Astro.props;
 </div>
 
 <style>
+	[data-drag-hint]:not([data-ready]),
 	[data-drag-hint][data-done] {
 		opacity: 0;
 	}
@@ -53,6 +55,16 @@ const { text = "Drag to spin" } = Astro.props;
 	for (const hint of document.querySelectorAll<HTMLElement>("[data-drag-hint]")) {
 		const host = hint.parentElement;
 		if (!host) continue;
+		// Wait for the viewer to put its canvas in; there's nothing to drag before that.
+		const ready = () => {
+			if (!host.querySelector("canvas")) return false;
+			hint.dataset.ready = "";
+			return true;
+		};
+		if (!ready()) {
+			const watch = new MutationObserver(() => ready() && watch.disconnect());
+			watch.observe(host, { childList: true });
+		}
 		let downX: number | null = null;
 		const onDown = (e: PointerEvent) => (downX = e.clientX);
 		const onUp = () => (downX = null);

@@ -63,6 +63,10 @@ const SRC = {
 	hellaH4: { label: "Hella 003427291 7 x 6\" Vision Plus conversion (JEGS)", href: "https://jegs.com/p/Hella/Hella-Vision-Plus-Halogen-Sealed-Beam-Headlight-Conversions/2836501/10002/-1" },
 	retroBright: { label: "Holley RetroBright LFRB130, Classic White 3000K", href: "https://www.holley.com/products/electrical/lighting/headlights/parts/LFRB130" },
 	bilstein5100: { label: "Bilstein 5100 (VS-24-186216): 46 mm zinc body, black boot (CARiD)", href: "https://www.carid.com/bilstein/b8-5100-series-front-shock-absorber-set-mpn-vs-24-186216.html" },
+	kcSlimLite8: { label: "KC HiLiTES SlimLite 8\" LED, part 1101 (Quadratec)", href: "https://quadratec.com/p/kc-hilites/slimlite-8-led-single-light-138w-spot-beam-1101" },
+	kc5206: { label: "KC HiLiTES 5206, 8\" SlimLite cover, black with yellow KC logo (Summit Racing)", href: "https://www.summitracing.com/parts/kcc-5206" },
+	kc5210: { label: "KC HiLiTES 5210, 8\" SlimLite SAE driving shield, selective yellow (Northridge4x4)", href: "https://www.northridge4x4.com/part/5210-kc-hilites-slimlite-8in-led-light-shield-sae-driving-yellow" },
+	kcDaylighter6: { label: "KC HiLiTES Daylighter 6\" round light, part 1238 (JEGS)", href: "https://www.jegs.com/i/kc-hilites-423-1238-daylighter-6-round-off-road-light-100w-halogen-bulb" },
 	kc5105: { label: "KC HiLiTES 5105, 6\" black cover, white KC logo (ExtremeTerrain)", href: "https://www.extremeterrain.com/kc-hilites-jeep-wrangler-6-inch-slimlite-hid-daylighter-hard-light-cover-black-white-kc-logo-5105.html" },
 	linex: { label: "LINE-X Standard spray-on bedliner", href: "https://linex.com/bedliners/standard" },
 	apexSliders: { label: "Trail-Gear APEX rock sliders, 1984-95 Toyota Pickup", href: "https://trail-gear.com/armor/1984-1995-toyota-pickup-apex-rock-sliders.html" },
@@ -557,6 +561,50 @@ export const EXHAUSTS: ExhaustOption[] = [
 	},
 ];
 
+/** A pair of round KC lights on top of the front bumper. */
+export interface BumperLightOption extends Option {
+	/** Size, and either a cover (with its logo color) or a colored lens; null for none. */
+	lights: { diameterIn: number; cover?: string; logo?: string; lens?: string } | null;
+}
+
+const ON_THE_BUMPER = "A pair on brackets on top of the front bumper; where they sit and how deep the housings are are estimates.";
+
+export const BUMPER_LIGHTS: BumperLightOption[] = [
+	{ id: "none", name: "No bumper lights", spec: "", lights: null, source: SRC.story },
+	{
+		id: "kc8-black",
+		name: '8" KC SlimLites, black covers',
+		spec: 'Two 8" SlimLite LEDs (1101) in black covers with the yellow KC logo (5206)',
+		lights: { diameterIn: 8, cover: "#121315", logo: "#ffd400" },
+		note: `KC's biggest round light. KC doesn't make the 8-inch cover in yellow; its black one carries the logo in yellow. ${ON_THE_BUMPER}`,
+		source: SRC.kc5206,
+	},
+	{
+		id: "kc8-yellow",
+		name: '8" KC SlimLites, yellow lenses',
+		spec: 'Two 8" SlimLite LEDs (1101) behind selective-yellow SAE driving shields (5210)',
+		lights: { diameterIn: 8, lens: "#f2c21b" },
+		note: `The same big lights uncovered, shining through KC's yellow shield. ${ON_THE_BUMPER}`,
+		source: SRC.kc5210,
+	},
+	{
+		id: "kc6-yellow",
+		name: '6" KC Daylighters, yellow covers',
+		spec: 'Two 6" Daylighters (1238) in KC\'s yellow covers with the black logo (5202)',
+		lights: { diameterIn: 6, cover: "#ffd400", logo: "#111111" },
+		note: `The McFly roll bar's lights, a pair down on the bumper. ${ON_THE_BUMPER}`,
+		source: SRC.kcDaylighter6,
+	},
+	{
+		id: "kc6-black",
+		name: '6" KC Daylighters, black covers',
+		spec: 'Two 6" Daylighters (1238) in black covers with the white KC logo (5105)',
+		lights: { diameterIn: 6, cover: "#121315", logo: "#f7f6f1" },
+		note: ON_THE_BUMPER,
+		source: SRC.kc5105,
+	},
+];
+
 export const RACKS: RackOption[] = [
 	{ id: "none", name: "No rack", spec: "", kind: "none", lights: "none" },
 	{
@@ -773,6 +821,7 @@ export interface Build {
 	tailgate: string;
 	bed: string;
 	rack: string;
+	bumperLights: string;
 	steps: string;
 	shocks: string;
 	exhaust: string;
@@ -794,6 +843,7 @@ export const AS_IT_SITS: Build = {
 	tailgate: "factory",
 	bed: "none",
 	rack: "none",
+	bumperLights: "none",
 	steps: "none",
 	shocks: "factory",
 	exhaust: "factory",
@@ -825,7 +875,7 @@ export const KYLE_BUILD: Build = {
 /**
  * Noah's build: closer to a monster truck, after Marty McFly's Toyota and Poi Pounder. Toyota's 1991
  * Blue Pearl, nearer navy than gray; about 8 inches of lift on a solid-axle swap, 35-inch Super Swamper Boggers on fat 15 x 10 wheels,
- * front shocks on hoops where they show, step bars, twin chrome stacks, and a McFly roll bar with KC lights.
+ * front shocks on hoops where they show, step bars, twin chrome stacks, a McFly roll bar with KC lights, and big 8-inch KC lights on the front bumper.
  */
 export const NOAH_BUILD: Build = {
 	...AS_IT_SITS,
@@ -834,6 +884,7 @@ export const NOAH_BUILD: Build = {
 	wheel: "ultra164",
 	tire: "bogger-35",
 	rack: "rollbar",
+	bumperLights: "kc8-black",
 	steps: "westin",
 	shocks: "rs5000x-hoops",
 	exhaust: "stacks",
@@ -852,6 +903,7 @@ export const CATALOG = {
 	tailgate: TAILGATES,
 	bed: BEDS,
 	rack: RACKS,
+	bumperLights: BUMPER_LIGHTS,
 	steps: STEPS,
 	shocks: SHOCKS,
 	exhaust: EXHAUSTS,
@@ -888,6 +940,7 @@ export function resolveBuild(build: Build) {
 		tailgate: pick("tailgate"),
 		bed,
 		rack: pick("rack"),
+		bumperLights: pick("bumperLights"),
 		steps: pick("steps"),
 		shocks: pick("shocks"),
 		exhaust: pick("exhaust"),
@@ -898,7 +951,7 @@ export function resolveBuild(build: Build) {
 
 export type ResolvedBuild = ReturnType<typeof resolveBuild>;
 
-const KEY_ORDER: BuildKey[] = ["paint", "ride", "shocks", "wheel", "tire", "tintFront", "tintRear", "tintWindshield", "lights", "grille", "tailgate", "bed", "rack", "steps", "exhaust", "cargo", "decal"];
+const KEY_ORDER: BuildKey[] = ["paint", "ride", "shocks", "wheel", "tire", "tintFront", "tintRear", "tintWindshield", "lights", "grille", "tailgate", "bed", "rack", "bumperLights", "steps", "exhaust", "cargo", "decal"];
 
 /** A build as a short, readable URL fragment, e.g. "paint=138&ride=b444&...". */
 export function encodeBuild(build: Build): string {
@@ -933,6 +986,7 @@ export function describeBuild(build: Build): { label: string; value: string }[] 
 		{ label: "Tailgate", value: r.tailgate.name },
 		{ label: "Bed", value: r.bed.name },
 		{ label: "Rack", value: r.rack.name },
+		{ label: "Bumper lights", value: r.bumperLights.name },
 		{ label: "Steps", value: r.steps.name },
 		{ label: "Exhaust", value: r.exhaust.name },
 		{ label: "Cargo", value: r.cargo.kind === "none" ? r.cargo.name : `${r.cargo.name}, ${r.cargo.spec}` },
@@ -955,6 +1009,7 @@ export const PICKER_GROUPS: { key: BuildKey; label: string }[] = [
 	{ key: "tailgate", label: "Tailgate" },
 	{ key: "bed", label: "Bed" },
 	{ key: "rack", label: "Rack and lights" },
+	{ key: "bumperLights", label: "Bumper lights" },
 	{ key: "steps", label: "Steps" },
 	{ key: "exhaust", label: "Exhaust" },
 	{ key: "cargo", label: "Cargo" },
@@ -980,6 +1035,7 @@ export function truckSetup(build: Build) {
 			tailgateLetterColor: r.tailgate.letterHex,
 			rack: r.rack.kind,
 			rackLights: r.rack.lights,
+			bumperLights: r.bumperLights.lights ?? undefined,
 			steps: r.steps.kind,
 			shocks: r.shocks.kind,
 			shockSetup: r.shocks.setup,

@@ -24,7 +24,7 @@ const opener = [
 	{ key: "tailgate", label: "Tailgate" },
 ];
 const label =
-	"The 1991 Toyota pickup in 3D, built to whichever build is selected: paint, ride height, shocks, wheels, tires, window tint, lights, grille, bed, rack, steps, exhaust, cargo and stickers. Drag to spin it; tap the hood, a door or the tailgate to open it.";
+	"The 1991 Toyota pickup in 3D, built to whichever build is selected: paint, ride height, shocks, wheels, tires, window tint, lights, grille, bed, rack, bumper lights, steps, exhaust, cargo and stickers. Drag to spin it; tap the hood, a door or the tailgate to open it.";
 ---
 
 <section id="truck-builder" class="py-16 md:py-24">
@@ -38,15 +38,6 @@ const label =
 	<div data-truck-builder-root data-open="" class="mx-auto mt-12 grid max-w-7xl gap-6 px-6 md:grid-cols-12 md:items-start md:px-12">
 		<div class="md:sticky md:top-6 md:col-span-7">
 			<div data-truck-builder-viewer role="img" aria-label={label} class="relative aspect-[16/11] w-full select-none">
-				<svg data-fallback viewBox="0 0 560 300" class="absolute inset-0 h-full w-full" aria-hidden="true">
-					<g stroke="#111" stroke-width="6" stroke-linejoin="round">
-						<rect x="30" y="150" width="300" height="70" fill="#c4262e" />
-						<polygon points="170,150 190,90 260,90 300,150" fill="#8fd0ff" />
-						<polygon points="170,150 330,150 330,110 520,125 535,215 170,215" fill="#c4262e" />
-						<circle cx="130" cy="225" r="42" fill="#111" />
-						<circle cx="440" cy="225" r="42" fill="#111" />
-					</g>
-				</svg>
 				<DragHint />
 			</div>
 			<div class="mt-3 flex flex-wrap items-center gap-2">
@@ -68,7 +59,7 @@ const label =
 			<p class="mt-2 text-xs text-ink-soft">
 				Under the hood, the stock layout: air cleaner and meter on the driver's side, battery on the passenger side, brake booster on the
 				firewall (from <a class="link" href="https://images.carid.com/trail-gear/items/pdf/180316-1-kit-installation-instructions.pdf">Trail-Gear's 22R-E intake guide</a>).
-				The battery is a Group 24F; where the washer bottle and fuse box sit, and the other parts' sizes, are estimates.
+				The battery is a Group 24F. Where the washer bottle and fuse box sit, how the hoses, wiring, AC line and steering shaft run, and the other parts' sizes are estimates.
 			</p>
 		</div>
 
@@ -127,7 +118,7 @@ const label =
 					monster truck, built on a Toyota Pickup cab. He wants it closer to navy than gray, so it gets Blue Pearl, a navy
 					Toyota sold on this truck in 1991. Then about 8 inches of lift (he asked for more than a 2WD kit gives, so the front
 					gets swapped to a solid axle), 35-inch Super Swamper mud tires on fatter wheels for a little more height, dual front shocks stood up on hoops where you can see them, step bars to climb in, twin
-					chrome stacks, and a McFly-style roll bar with KC spotlights on top.
+					chrome stacks, a McFly-style roll bar with KC spotlights on top, and big 8-inch KC lights on the front bumper.
 				</p>
 				<dl class="mt-4 divide-y-2 divide-black border-y-2 border-black text-sm">
 					{

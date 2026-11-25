@@ -4,6 +4,7 @@ import {
 	CircleGeometry,
 	Color,
 	CylinderGeometry,
+	DoubleSide,
 	ExtrudeGeometry,
 	Group,
 	LatheGeometry,
@@ -115,6 +116,8 @@ export interface TruckOptions {
 	rack?: "none" | "rollbar";
 	/** The four 6-inch KC Daylighters on the roll bar, by cover color; yellow (McFly's) if left out. */
 	rackLights?: "none" | "yellow" | "black";
+	/** A pair of round KC lights on top of the front bumper: size, and a cover (with its logo color) or a colored lens. */
+	bumperLights?: { diameterIn: number; cover?: string; logo?: string; lens?: string };
 	/** Under the doors: 3-inch round step bars, flat chrome running boards, or tube rock sliders with fill plates. */
 	steps?: "none" | "tube" | "board" | "slider";
 	/** Shocks on custom hoops, stood up just inboard of each front tire where they show in the wheel well. Left out, shocks aren't drawn (at their stock mounts they sit behind the tires). */
@@ -655,8 +658,53 @@ export function buildToyotaTruck(colors: TruckColors = DEFAULT_TRUCK_COLORS, opt
 		}
 
 		// Fuse and relay box on the driver's shelf by the firewall.
-		add(bay, slab(0.14, 0.06, 0.11, 0.012, 0.006), blackPlastic, [CAB_FRONT_X + 0.24, onShelf + 0.03, -(OUT - 0.07)], { outline: 0.006 });
-		add(bay, slab(0.142, 0.006, 0.112, 0.002, 0.001), trimMat, [CAB_FRONT_X + 0.24, onShelf + 0.045, -(OUT - 0.07)], { outline: 0 });
+		const fuseX = CAB_FRONT_X + 0.24;
+		const fuseZ = -(OUT - 0.07);
+		add(bay, slab(0.14, 0.06, 0.11, 0.012, 0.006), blackPlastic, [fuseX, onShelf + 0.03, fuseZ], { outline: 0.006 });
+		add(bay, slab(0.142, 0.006, 0.112, 0.002, 0.001), trimMat, [fuseX, onShelf + 0.045, fuseZ], { outline: 0 });
+
+		// Hood latch in the middle of the core support's top bar.
+		add(bay, slab(0.05, 0.05, 0.08, 0.008, 0.004), trimMat, [NOSE_X - 0.08, 0.83, 0], { outline: 0.004 });
+		add(bay, slab(0.012, 0.03, 0.03, 0.002, 0.001), silverMat, [NOSE_X - 0.11, 0.84, 0], { outline: 0 });
+
+		// Steering: the shaft from the column, out through the firewall under the booster and down to the
+		// gearbox on the driver's frame rail, with a rag joint partway.
+		const boxAt: [number, number, number] = [FRONT_AXLE_X + 0.25, 0.36, -(IN - 0.06)];
+		add(bay, slab(0.12, 0.12, 0.1, 0.02, 0.008), std("#3a3c3f", 0.55, 0.4), boxAt, { outline: 0.006 });
+		const shaftFrom = new Vector3(CAB_FRONT_X + 0.03, 0.52, boxAt[2]);
+		const shaftTo = new Vector3(boxAt[0] - 0.05, boxAt[1] + 0.06, boxAt[2]);
+		const shaftLen = shaftFrom.distanceTo(shaftTo);
+		const shaft = add(bay, new CylinderGeometry(0.011, 0.011, shaftLen, 10), silverMat, [(shaftFrom.x + shaftTo.x) / 2, (shaftFrom.y + shaftTo.y) / 2, boxAt[2]], { outline: 0.003 });
+		shaft.quaternion.setFromUnitVectors(new Vector3(0, 1, 0), shaftTo.clone().sub(shaftFrom).normalize());
+		const ragAt = shaftFrom.clone().lerp(shaftTo, 0.7);
+		add(bay, new CylinderGeometry(0.03, 0.03, 0.02, 14), trimMat, [ragAt.x, ragAt.y, ragAt.z], { outline: 0.003 }).quaternion.copy(shaft.quaternion);
+
+		// The wiring harness: from the fuse box along the driver's side, over the head, to the air flow meter.
+		add(bay, tube([[fuseX + 0.05, onShelf + 0.04, fuseZ + 0.05], [fuseX + 0.15, onShelf + 0.01, -(IN - 0.02)], [1.35, 0.84, -0.26], [1.65, 0.85, -0.21], [1.84, 0.82, -0.3], [acX - 0.02, afmY + 0.07, afmZ]], 0.012), trimMat, [0, 0, 0], { outline: 0.004 });
+
+		if (engine) {
+			// Fan shroud on the back of the radiator round the fan, and the lower hose from the water pump.
+			const fan = { x: engine.position.x + 0.349, y: engine.position.y + 0.16 };
+			const shroud = new Shape([new Vector2(-0.45, -0.17), new Vector2(0.45, -0.17), new Vector2(0.45, 0.2), new Vector2(-0.45, 0.2)]);
+			const hole = new Shape();
+			hole.absarc(0, 0, 0.18, 0, Math.PI * 2, true);
+			shroud.holes.push(hole);
+			const plate = new ShapeGeometry(shroud, 32);
+			plate.rotateY(-Math.PI / 2);
+			add(bay, plate, blackPlastic, [radiatorBackX - 0.004, fan.y, 0], { outline: 0 });
+			const collar = new CylinderGeometry(0.18, 0.18, 0.05, 36, 1, true);
+			collar.rotateZ(Math.PI / 2);
+			add(bay, collar, kit.material(new MeshStandardMaterial({ color: new Color("#1d1e20"), roughness: 0.7, side: DoubleSide })), [radiatorBackX - 0.03, fan.y, 0], { outline: 0 });
+			const hose = std("#141516", 0.6);
+			add(bay, tube([[engine.position.x + 0.3, fan.y - 0.06, 0.06], [radiatorBackX - 0.08, fan.y - 0.11, 0.2], [radiatorBackX - 0.01, fan.y - 0.13, 0.33]], 0.019), hose, [0, 0, 0], { outline: 0.004 });
+			// Heater hoses from the back of the engine to the heater core on the passenger side of the firewall.
+			for (const dy of [0, -0.05]) {
+				add(bay, tube([[1.22, 0.6 + dy, 0.2], [1.0, 0.6 + dy, 0.27], [CAB_FRONT_X + 0.03, 0.6 + dy, 0.3]], 0.013), hose, [0, 0, 0], { outline: 0.003 });
+			}
+			// The AC line from the compressor (passenger side, low) back to the evaporator at the firewall.
+			const ac = { x: engine.position.x + 0.181, y: engine.position.y, z: 0.17 };
+			add(bay, tube([[ac.x, ac.y + 0.06, ac.z + 0.04], [1.6, 0.6, 0.34], [1.0, 0.68, 0.36], [CAB_FRONT_X + 0.03, 0.68, 0.36]], 0.008), castAlu, [0, 0, 0], { outline: 0.003 });
+		}
 	};
 
 	// --- Front clip: hood and fenders ---
@@ -992,6 +1040,38 @@ export function buildToyotaTruck(colors: TruckColors = DEFAULT_TRUCK_COLORS, opt
 			cover.rotateZ(-Math.PI / 2);
 			add(body, cover, coverMat, [rx + 0.046, barTop + kcR + 0.04, z], { outline: 0.006 });
 			lettering("KC", [rx + 0.054, barTop + kcR + 0.04, z], 0.05, 0.011, 1, logoMat);
+		}
+	}
+
+	// --- A pair of round KC lights on brackets on top of the front bumper, in front of the grille ---
+	if (options.bumperLights) {
+		const bl = options.bumperLights;
+		const lights = new Group();
+		lights.name = "bumper-lights";
+		body.add(lights);
+		const r = (bl.diameterIn / 2) * INCH;
+		const depth = 0.07; // housing depth, estimated
+		const bumperTop = FRONT.bumperY + FRONT.bumperH / 2;
+		const cx = NOSE_X + 0.07;
+		const cy = bumperTop + 0.035 + r;
+		const face = cx + depth / 2;
+		for (const z of [-0.3, 0.3]) {
+			add(lights, slab(0.04, 0.045, 0.03, 0.006, 0.003), trimMat, [cx - 0.01, bumperTop + 0.022, z], { outline: 0 }); // bracket
+			const housing = new CylinderGeometry(r, r * 0.85, depth, 32);
+			housing.rotateZ(-Math.PI / 2);
+			add(lights, housing, trimMat, [cx, cy, z], { outline: 0.01 });
+			const disc = new CylinderGeometry(r * 1.02, r * 1.02, 0.014, 32);
+			disc.rotateZ(-Math.PI / 2);
+			if (bl.cover) {
+				add(lights, disc, std(bl.cover, 0.45), [face + 0.006, cy, z], { outline: 0.006 });
+				if (bl.logo) lettering("KC", [face + 0.014, cy, z], r * 0.66, r * 0.15, 1, std(bl.logo, 0.5), lights);
+			} else {
+				// Uncovered: the reflector ring and a colored lens over it.
+				add(lights, disc, reflectorMat, [face + 0.004, cy, z], { outline: 0.006 });
+				const lens = new CylinderGeometry(r * 0.9, r * 0.9, 0.008, 32);
+				lens.rotateZ(-Math.PI / 2);
+				add(lights, lens, kit.material(new MeshStandardMaterial({ color: new Color(bl.lens ?? "#f4f1e6"), roughness: 0.15, emissive: new Color(bl.lens ?? "#f4f1e6"), emissiveIntensity: 0.15 })), [face + 0.013, cy, z], { outline: 0 });
+			}
 		}
 	}
 

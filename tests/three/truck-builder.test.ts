@@ -563,6 +563,34 @@ describe("buildToyotaTruck with builder options", () => {
 		closed.dispose();
 	});
 
+	it("puts Noah's big 8-inch KC lights on top of the front bumper, and none on the stock or Kyle's truck", () => {
+		const noah = resolveBuild(NOAH_BUILD);
+		expect(noah.bumperLights.id).toBe("kc8-black");
+		expect(noah.bumperLights.lights?.diameterIn).toBe(8);
+		const t = buildToyotaTruck(undefined, truckSetup(NOAH_BUILD).options);
+		const lights = boundsOf(t, "bumper-lights");
+		const bumper = new Box3();
+		t.group.updateMatrixWorld(true);
+		for (const p of t.parts) if (p.position.x > 2.2 && p.position.y > 0.5 && p.position.y < 0.66 && Math.abs(p.position.z) < 0.1) bumper.expandByObject(p);
+		// Two lights side by side, each 8 in across (plus its cover's lip), standing on the bumper.
+		expect((lights.max.y - bumper.max.y) / INCH).toBeGreaterThan(8);
+		expect(lights.min.y).toBeGreaterThan(bumper.min.y);
+		expect(lights.max.z - lights.min.z).toBeGreaterThan(2 * 8 * INCH);
+		expect(Math.max(-lights.min.z, lights.max.z)).toBeLessThan(0.82);
+		t.dispose();
+		for (const b of [AS_IT_SITS, KYLE_BUILD]) {
+			const plain = buildToyotaTruck(undefined, truckSetup(b).options);
+			expect(plain.group.getObjectByName("bumper-lights")).toBeUndefined();
+			plain.dispose();
+		}
+		// Every choice in the group builds.
+		for (const o of CATALOG.bumperLights) {
+			const truck = buildToyotaTruck(undefined, truckSetup({ ...AS_IT_SITS, bumperLights: o.id }).options);
+			expect(!!truck.group.getObjectByName("bumper-lights"), o.id).toBe(o.lights !== null);
+			truck.dispose();
+		}
+	});
+
 	it("carries the KC lights in yellow or black covers, or leaves the bar bare", () => {
 		const count = (lights: "none" | "yellow" | "black", hex: string) => {
 			const t = buildToyotaTruck(undefined, { rack: "rollbar", rackLights: lights });

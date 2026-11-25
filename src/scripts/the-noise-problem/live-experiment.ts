@@ -3,10 +3,8 @@
 // data accumulates, mirroring the reveal pattern from The Peeking Problem's live panel.
 import * as Plot from "@observablehq/plot";
 import { runCupedExperiment, type CupedDaySnapshot, type CupedExperimentConfig } from "../../lib/stats-sim/cuped-experiment";
+import { LIVE_EXPERIMENT_DEFAULTS as DEFAULTS } from "../../lib/stats-sim/cuped-defaults";
 import { wireTableToggle } from "../shared/chart-utils";
-
-const Y_MEAN = 100;
-const Y_SD = 20;
 
 function debounce<T extends (...args: never[]) => void>(fn: T, ms: number): T {
 	let timer: ReturnType<typeof setTimeout> | undefined;
@@ -38,21 +36,21 @@ export function initLiveExperiment(controlsForm: HTMLFormElement, root: HTMLElem
 	const summaryEl = root.querySelector<HTMLElement>("[data-vg-summary]")!;
 	wireTableToggle(root);
 
-	correlationInput.value = "0.75";
-	scenarioSelect.value = "lift";
-	liftInput.value = "4";
-	liftInput.disabled = false;
-	visitorsInput.value = "30";
-	daysInput.value = "20";
+	correlationInput.value = String(DEFAULTS.correlation);
+	scenarioSelect.value = DEFAULTS.true_lift > 0 ? "lift" : "none";
+	liftInput.value = String(DEFAULTS.true_lift);
+	liftInput.disabled = scenarioSelect.value !== "lift";
+	visitorsInput.value = String(DEFAULTS.visitors_per_day);
+	daysInput.value = String(DEFAULTS.days);
 
 	function readConfig(): CupedExperimentConfig {
 		const correlation = Math.min(0.95, Math.max(0, Number(correlationInput.value) || 0));
 		const hasLift = scenarioSelect.value === "lift";
 		const lift = hasLift ? Math.max(0, Number(liftInput.value) || 0) : 0;
-		const visitorsPerDay = Math.min(500, Math.max(5, Math.round(Number(visitorsInput.value) || 30)));
-		const days = Math.min(60, Math.max(5, Math.round(Number(daysInput.value) || 20)));
+		const visitorsPerDay = Math.min(500, Math.max(5, Math.round(Number(visitorsInput.value) || DEFAULTS.visitors_per_day)));
+		const days = Math.min(60, Math.max(5, Math.round(Number(daysInput.value) || DEFAULTS.days)));
 		const seed = Math.floor(Math.random() * 1_000_000_000);
-		return { true_lift: lift, y_mean: Y_MEAN, y_sd: Y_SD, correlation, visitors_per_day: visitorsPerDay, days, seed };
+		return { true_lift: lift, y_mean: DEFAULTS.y_mean, y_sd: DEFAULTS.y_sd, correlation, visitors_per_day: visitorsPerDay, days, seed };
 	}
 
 	function renderCharts(days: CupedDaySnapshot[]) {

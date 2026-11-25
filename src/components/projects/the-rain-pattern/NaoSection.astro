@@ -1,0 +1,126 @@
+---
+// 04. The print: the name, how it's put together, the half-drop repeat with its edges marked, the
+// colorways, and the print files. The figures are drawn from the same engine and seed as the print
+// files (src/lib/patterns/nao.ts), so what's on the page is what would go to a printer.
+import SectionOpener from "../../editorial/SectionOpener.astro";
+import Selections from "../../editorial/Selections.astro";
+import FactFile from "../../editorial/FactFile.astro";
+import Kicker from "../../editorial/Kicker.astro";
+import Memo from "../../editorial/Memo.astro";
+import { makeNao, naoSvg, NAO_SEED, REPEAT_IN } from "../../../lib/patterns/nao";
+import { NAO_COLORWAYS, NAO_SHOWN, colorway } from "../../../lib/patterns/nao-colorways";
+import { contrast } from "../../../lib/project-theme";
+
+const nao = makeNao(NAO_SEED);
+const { W, H, settings } = nao;
+const per = 1000 / settings.printIn; // site units per inch
+const main = colorway(NAO_SHOWN.print);
+const rain = nao.drops.filter((d) => d.layer === "main").length;
+const drizzle = nao.drops.length - rain;
+
+// 81 x 54 in of cloth in one drawing, with each repeat's edges marked: columns every 27 in, and the
+// top of each repeat, half a repeat lower in every other column.
+const SEAM_IN = { w: 81, h: 54 };
+const sw = SEAM_IN.w * per;
+const sh = SEAM_IN.h * per;
+const edges: string[] = [];
+for (let a = 0; a * W <= sw + 1; a++) {
+	edges.push(`M${a * W} 0V${sh}`);
+	for (let y = (a % 2) * (H / 2); y <= sh + 1; y += H) edges.push(`M${a * W} ${y}H${Math.min(sw, (a + 1) * W)}`);
+}
+const seam = naoSvg(nao, { ground: main.ground, ink: main.ink, region: [0, 0, sw, sh], prefix: "ns" }).replace(
+	"</svg>",
+	`<path d="${edges.join("")}" fill="none" stroke="#ff5b1f" stroke-width="7" stroke-dasharray="36 26"/></svg>`,
+).replace("<svg ", '<svg class="block h-auto w-full" role="img" aria-label="81 by 54 inches of Nao with the repeat edges marked" ');
+
+const groups = [
+	{ id: "dark", title: "Dark grounds", use: "For the workwear: the lining and pocket bags of the chore coat" },
+	{ id: "light", title: "Light grounds", use: "For the surf wax: tees, boardshorts and wrappers" },
+] as const;
+
+// A swatch shows 24 in of cloth, cropped from the 54 in wide file.
+const SWATCH_IN = 24;
+const facts = [
+	{ k: "Repeat", v: `${REPEAT_IN.w} × ${REPEAT_IN.h} in, half-drop` },
+	{ k: "Full width", v: `${2 * REPEAT_IN.w} × ${REPEAT_IN.h} in` },
+	{ k: "Drops per repeat", v: `${rain} rain, ${drizzle} drizzle` },
+	{ k: "Scale", v: `1 site width = ${settings.printIn} in of cloth` },
+	{ k: "Print", v: "One color on a dyed ground" },
+	{ k: "Files", v: "300 DPI PNG and SVG per colorway" },
+];
+---
+
+<section id="nao" class="py-20 md:py-28">
+	<SectionOpener number="04" kicker="The print" title="Nao" deck="The site's rain, made into cloth: an all-over print with no seam, in the season's colors." />
+	<div class="mx-auto mt-14 grid max-w-7xl grid-cols-1 gap-12 px-6 md:grid-cols-12 md:px-12">
+		<div class="mag md:col-span-7">
+			<p>
+				<b>Nao</b> is Hawaiian for a ripple. It's also the ridge on a kapa beater and the streak it leaves in the kapa, and the grain of wood or stone (<a class="link" href="https://wehe.hilo.hawaii.edu/?q=nao" target="_blank" rel="noopener noreferrer">Wehewehe</a>). Ripples in water, in cloth, in a tree.
+			</p>
+			<p>
+				The print is made of nothing but the site's own ripple, drawn exactly the way the headers draw their rain, at the same spacing and sizes. One site-width of ripples covers {settings.printIn} inches of cloth, so on a shirt they sit about the size they read on a laptop screen.
+			</p>
+		</div>
+		<aside class="md:col-span-4 md:col-start-9">
+			<FactFile title="Print spec" rows={facts} tone="paper" />
+		</aside>
+	</div>
+
+	<div class="mx-auto mt-12 max-w-7xl px-6 md:px-12">
+		<Selections
+			items={[
+				{ label: "Rain of every age", body: "Young drops are small and keep the splash in the middle; old ones have spread wider and broken into pieces, streaks and dots." },
+				{ label: "Less is more", body: `Only ${rain} drops in each ${REPEAT_IN.w} × ${REPEAT_IN.h} in repeat, spread fairly evenly, so no part of the cloth turns blotchy.` },
+				{ label: "A few strays", body: `${drizzle} of the site's small drizzle drops, kept apart so they read as strays rather than a patch.` },
+				{ label: "A half-drop repeat", body: "Each column of repeats starts half a repeat (18 in) lower than the one beside it, so the same drop never lines up in a row or a column." },
+			]}
+		/>
+
+		<Kicker tab="04.1" class="mt-16">No seam</Kicker>
+		<p class="mt-5 max-w-[65ch] text-[17px] font-medium leading-relaxed">
+			81 × 54 in of the print, with the orange dashes marking where each repeat ends. A drop near an edge is drawn again on the far side of every repeat it reaches, so the ripples cross the dashes without a break.
+		</p>
+		<figure class="raw-box shadow-hard-lg mt-6 overflow-hidden rounded-2xl" set:html={seam} />
+
+		<Kicker tab="04.2" class="mt-16">Colorways</Kicker>
+		<p class="mt-5 max-w-[65ch] text-[17px] font-medium leading-relaxed">
+			The season's pairs, as cloth: the ground is the fabric and the ring is the ink, so each prints as a single color. Signal's graphite-and-orange pair stays off the cloth, since orange means "you can click this" here. Each swatch shows {SWATCH_IN} in of the print.
+		</p>
+		{
+			groups.map((g) => (
+				<div class="mt-10">
+					<p class="font-anton text-3xl uppercase leading-none">{g.title}</p>
+					<p class="mt-1 text-[15px] font-medium">{g.use}</p>
+					<ul class="mt-5 grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
+						{NAO_COLORWAYS.filter((c) => c.group === g.id).map((c) => (
+							<li class="raw-box overflow-hidden rounded-2xl bg-paper">
+								<div
+									class="aspect-square max-w-full border-b-[3px] border-black bg-no-repeat"
+									style={`background-color:${c.ground};background-image:url('/patterns/nao/${c.id}.svg');background-size:${((2 * REPEAT_IN.w) / SWATCH_IN) * 100}% auto;background-position:30% 40%`}
+									role="img"
+									aria-label={`Nao in ${c.name}`}
+								/>
+								<div class="space-y-1 p-3">
+									<p class="text-[15px] font-extrabold leading-tight">{c.name}</p>
+									<p class="font-mono text-[10px] uppercase">{c.source}</p>
+									<p class="font-mono flex items-center gap-1.5 text-[10px] uppercase">
+										<i class="inline-block size-3 rounded border-2 border-black" style={`background:${c.ground}`} />{c.ground}
+										<i class="ml-1 inline-block size-3 rounded border-2 border-black" style={`background:${c.ink}`} />{c.ink}
+									</p>
+									<p class="font-mono text-[10px] uppercase text-ink-soft">{contrast(c.ground, c.ink).toFixed(1)}:1</p>
+								</div>
+							</li>
+						))}
+					</ul>
+				</div>
+			))
+		}
+
+		<Memo title="Print files" class="mt-14 max-w-3xl">
+			<p>
+				<code>npm run pattern:build</code> draws every colorway from the same seed and settings as this page: an SVG of the full 54 in width, and a 27 × 36 in repeat as a 300 DPI PNG (8100 × 10800 px) to set as a half-drop. A straight 54 in version is there for printers that only set straight repeats.
+			</p>
+			<p>The SVG renderer cuts the blur off at the edge of its canvas, which would leave a thin seam around every repeat, so the script draws a margin of cloth around each file and crops it away.</p>
+		</Memo>
+	</div>
+</section>

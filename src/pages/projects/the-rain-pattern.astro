@@ -1,0 +1,43 @@
+---
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import HeroSection from "../../components/projects/the-rain-pattern/HeroSection.astro";
+import BackstorySection from "../../components/projects/the-rain-pattern/BackstorySection.astro";
+import HowItsMadeSection from "../../components/projects/the-rain-pattern/HowItsMadeSection.astro";
+import SeasonSection from "../../components/projects/the-rain-pattern/SeasonSection.astro";
+import NaoSection from "../../components/projects/the-rain-pattern/NaoSection.astro";
+import TechPackSection from "../../components/projects/the-rain-pattern/TechPackSection.astro";
+
+const credits = [
+	{ name: "Cav Empt lookbook (the ripple drawing and nine of the season pairs)", url: "https://www.cavempt.com/looks" },
+	{ name: "Wehewehe Wikiwiki: nao", url: "https://wehe.hilo.hawaii.edu/?q=nao" },
+	{ name: "University of Hawaiʻi, Hawaiian word of the week: Kanilehua", url: "https://www.hawaii.edu/news/2024/09/10/hawaiian-word-of-the-week-kanilehua" },
+	{ name: "Ka Waihona o ka Naʻauao: Ka Ua aʻo Hilo, and the saying Hana mao ʻole ka ua o Hilo", url: "https://kaiwakiloumoku.ksbe.edu/article/mele-ka-ua-ao-hilo" },
+	{ name: "Huapala: Hawaiian song lyrics and translations", url: "https://www.huapala.org/" },
+];
+---
+
+<BaseLayout
+	title="The Rain Pattern"
+	description="How this site got its look, how its raindrop ripple is drawn, and how that ripple became Nao, a print for workwear and surf wax, taken as far as a concept tech pack."
+>
+	<HeroSection />
+	<BackstorySection />
+	<HowItsMadeSection />
+	<SeasonSection />
+	<NaoSection />
+	<TechPackSection />
+	<section class="mx-auto max-w-7xl px-6 py-16 md:px-12 md:py-20">
+		<div class="font-mono flex items-center gap-3 border-b-[3px] border-black pb-2 text-[11px] uppercase">
+			<span class="bg-black px-2 py-0.5 text-dark-ink">Credits</span>
+		</div>
+		<ul class="mt-6 space-y-3">
+			{
+				credits.map((c) => (
+					<li class="text-[15px] font-medium">
+						<a class="link" href={c.url} target="_blank" rel="noopener noreferrer">{c.name}</a>
+					</li>
+				))
+			}
+		</ul>
+	</section>
+</BaseLayout>

@@ -1,0 +1,88 @@
+---
+// The page's one motion piece: a 24 x 24 in square of Nao forming. Each drop opens outward from its
+// center behind a growing clip circle, so the whole inner rings show first and the pieces and dots
+// at the edge last; drops land in a shuffled order. It plays once, when it scrolls into view, and
+// not at all with reduced motion. Without JavaScript it's simply the finished print.
+import { busiestCrop, copiesIn, makeNao, naoSvg, NAO_SEED } from "../../../lib/patterns/nao";
+import { colorway, NAO_SHOWN } from "../../../lib/patterns/nao-colorways";
+
+interface Props {
+	class?: string;
+}
+const { class: className = "" } = Astro.props;
+
+const nao = makeNao(NAO_SEED);
+const c = colorway(NAO_SHOWN.print);
+const region = busiestCrop(nao, 24, 24);
+const svg = naoSvg(nao, { ground: c.ground, ink: c.ink, region, open: true, prefix: "nm" });
+
+// Timing per drop, in a seeded shuffled order: when it lands and how long it takes to open. Only
+// drops that show in the square get a turn, so there are no long pauses.
+let s = 17;
+const rand = () => ((s = (s * 16807) % 2147483647) - 1) / 2147483646;
+const shown = nao.drops.map((d, i) => ({ i, d })).filter(({ d }) => copiesIn(nao, d, region).length > 0);
+for (let k = shown.length - 1; k > 0; k--) {
+	const j = Math.floor(rand() * (k + 1));
+	[shown[k], shown[j]] = [shown[j], shown[k]];
+}
+const LAND = 260;
+const timing = nao.drops.map((d) => ({ r: Math.round(d.reach), start: 0, open: 0 }));
+shown.forEach(({ i, d }, n) => Object.assign(timing[i], { start: n * LAND, open: Math.round(900 + d.rings * 110) }));
+
+// At rest (no script yet, or reduced motion) every clip is fully open.
+const markup = svg
+	.replace(/<clipPath id="nmm(\d+)"><circle r="0"\/>/g, (_, i) => `<clipPath id="nmm${i}"><circle r="${timing[+i].r}"/>`)
+	.replace("<svg ", '<svg class="absolute inset-0 h-full w-full" role="img" aria-label="Raindrops landing and their ripples opening into the Nao print" ');
+---
+
+<figure class:list={["relative", className]}>
+	<div class="raw-box shadow-hard-lg relative aspect-square max-w-full overflow-hidden rounded-3xl" data-nao-motion data-timing={JSON.stringify(timing)} set:html={markup} />
+	<figcaption class="mt-3 flex flex-wrap items-center gap-3">
+		<span class="font-mono text-[10px] uppercase">24 × 24 in of Nao, in {c.name}</span>
+		<button type="button" class="btn btn-sm btn-ghost" data-nao-replay>Play again</button>
+	</figcaption>
+</figure>
+
+<script>
+	const ease = (g: number) => 1 - (1 - g) ** 2.2;
+	for (const box of document.querySelectorAll<HTMLElement>("[data-nao-motion]")) {
+		const timing: { r: number; start: number; open: number }[] = JSON.parse(box.dataset.timing ?? "[]");
+		const circles = timing.map((_, i) => box.querySelector<SVGCircleElement>(`#nmm${i} circle`));
+		const replay = box.parentElement?.querySelector<HTMLButtonElement>("[data-nao-replay]");
+		const still = matchMedia("(prefers-reduced-motion: reduce)").matches;
+		if (still) {
+			replay?.remove();
+			continue;
+		}
+		const total = Math.max(...timing.map((t) => t.start + t.open));
+		let raf = 0;
+		const frame = (t: number) =>
+			timing.forEach((tm, i) => {
+				if (!tm.open) return;
+				const g = Math.max(0, Math.min(1, (t - tm.start) / tm.open));
+				circles[i]?.setAttribute("r", String(Math.round(ease(g) * tm.r)));
+			});
+		const play = () => {
+			cancelAnimationFrame(raf);
+			const t0 = performance.now();
+			const step = (now: number) => {
+				const t = now - t0;
+				frame(t);
+				if (t < total) raf = requestAnimationFrame(step);
+			};
+			raf = requestAnimationFrame(step);
+		};
+		// Close the ripples, then open them once the square scrolls into view.
+		frame(0);
+		new IntersectionObserver(
+			(entries, io) => {
+				if (entries.some((e) => e.isIntersecting)) {
+					io.disconnect();
+					play();
+				}
+			},
+			{ threshold: 0.35 },
+		).observe(box);
+		replay?.addEventListener("click", play);
+	}
+</script>

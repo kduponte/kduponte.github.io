@@ -1,0 +1,183 @@
+---
+// 05. A concept tech pack for two garments: the chore coat (clean outside, Nao on the lining and
+// pocket bags) and the graphic tee (one raindrop on the chest, a Nao panel on the back). Flats are
+// drawn at 7 units per inch, and every print on them is the real print at its real size, from the
+// same engine and seed as the print files. Measurements are starting points for a first sample.
+import SectionOpener from "../../editorial/SectionOpener.astro";
+import Memo from "../../editorial/Memo.astro";
+import Kicker from "../../editorial/Kicker.astro";
+import { makeNao, naoPanel, naoSvg, NAO_SEED, type Nao } from "../../../lib/patterns/nao";
+import { colorway, NAO_SHOWN, TEE_BODY } from "../../../lib/patterns/nao-colorways";
+import markRaw from "../../../../public/ripple-mark.svg?raw";
+import { COAT_BOX, coatFlats } from "./coat-flats";
+
+const U = 7; // drawing units per inch
+const nao = makeNao(NAO_SEED);
+const per = 1000 / nao.settings.printIn; // site units per inch
+const lining = colorway(NAO_SHOWN.lining);
+const tee = colorway(NAO_SHOWN.tee);
+
+// A piece of Nao, at true scale, placed into a flat at (x, y) and w x h drawing units.
+const piece = (id: string, c: { ground: string; ink: string }, x: number, y: number, w: number, h: number, from: { nao: Nao; region?: [number, number, number, number] } = { nao }) => {
+	const region = from.region ?? [0, 0, (w / U) * per, (h / U) * per];
+	return naoSvg(from.nao, { ground: c.ground, ink: c.ink, region, prefix: id }).replace(/<svg [^>]*?width="[^"]*" height="[^"]*">/, (m) =>
+		m.replace(/ width="[^"]*" height="[^"]*"/, ` x="${x}" y="${y}" width="${w}" height="${h}" preserveAspectRatio="none"`),
+	);
+};
+
+const STITCH = 'fill="none" stroke="#111" stroke-width="1" stroke-dasharray="3 2.5"';
+const label = (t: string) => `<text x="160" y="292" text-anchor="middle" font-size="10" font-family="Silkscreen, monospace" fill="#111">${t.toUpperCase()}</text>`;
+const flat = (body: string, aria: string) => `<svg viewBox="0 0 320 300" class="block h-auto w-full" role="img" aria-label="${aria}">${body}</svg>`;
+
+// Chore coat, size M, in washed indigo canvas with lighter indigo topstitching: straight sleeves, a
+// black damask label with the ripple on the chest pocket, a center back seam, and an open view where
+// the fronts hang apart to show Nao, at its real size, on the lining. Drawing in ./coat-flats.ts.
+const labelMark = `data:image/svg+xml;charset=utf-8,${encodeURIComponent(markRaw.trim().replaceAll("#ff5b1f", "#f2f2f0"))}`;
+const coat = coatFlats({
+	shell: "#3d4c6b",
+	thread: "#8e9cbb",
+	mark: labelMark,
+	lining: (x, y, w, h) => piece("tpo", lining, x, y, w, h),
+	caption: (t, x) => `<text x="${x}" y="290" text-anchor="middle" font-size="11" font-family="Silkscreen, monospace" fill="#111">${t.toUpperCase()}</text>`,
+});
+const coatFlat = (body: string, aria: string) => `<svg viewBox="0 0 ${COAT_BOX.w} ${COAT_BOX.h}" class="block h-auto w-full" role="img" aria-label="${aria}">${body}</svg>`;
+const coatFront = coatFlat(coat.front, "Chore coat, outside front: washed indigo canvas, point collar, five buttons, a chest pocket with a pen slot and a black damask label woven with the ripple, two hip pockets, and straight sleeves with buttoned cuffs");
+const coatBack = coatFlat(coat.back, "Chore coat, outside back: plain washed indigo canvas with a topstitched center back seam");
+const coatOpen = coatFlat(coat.open, `Chore coat, unbuttoned and hanging open: Nao in ${lining.name} on the lining, plain canvas facings, and a woven neck label`);
+
+// Graphic tee, size M: chest 21 in flat (147), length 28 in (196) from y 40 to 236. Sleeves run 8.5
+// in out from the shoulder with a 7.5 in opening; the armhole is about 8.5 in deep.
+const TEE = "M136 40 L97 52 L43 77 L65 124 L87 110 L87 236 L233 236 L233 110 L255 124 L277 77 L223 52 L184 40";
+const SLEEVE_HEMS = `<path d="M47.5 74.9 L69.5 121.9 M272.5 74.9 L250.5 121.9" ${STITCH}/>`;
+// Front: the site's favicon ripple, recolored to the ink (orange stays for things you can click),
+// 3.5 in, where a chest pocket would sit: 5 in off center front, 9.5 in below the shoulder.
+const DROP_IN = 3.5;
+const drop = DROP_IN * U;
+const dropX = 160 + 5 * U - drop / 2;
+const dropY = 40 + 9.5 * U - drop / 2;
+const mark = `data:image/svg+xml;charset=utf-8,${encodeURIComponent(markRaw.trim().replaceAll("#ff5b1f", tee.ink))}`;
+// Back: a 14 x 10.5 in panel of Nao, the long way, 4.5 in below the collar. It's composed for the
+// rectangle (one big ripple bleeding off the left, a younger one melting into it, a small one, a few
+// strays) rather than cropped from the cloth.
+const PANEL_IN = { w: 14, h: 10.5 };
+const PANEL_DROP_IN = 4.5;
+const pw = PANEL_IN.w * U;
+const ph = PANEL_IN.h * U;
+const panel = piece("tpp", tee, 160 - pw / 2, 40 + PANEL_DROP_IN * U, pw, ph, naoPanel(PANEL_IN.w, PANEL_IN.h));
+const teeFront = flat(
+	`<path d="${TEE} Q160 64 136 40Z" fill="${TEE_BODY}" stroke="#111" stroke-width="2.5" stroke-linejoin="round"/>
+	<path d="M136 40 Q160 64 184 40 L188 42 Q160 72 132 42Z" fill="${TEE_BODY}" stroke="#111" stroke-width="2"/>
+	<image href="${mark}" x="${dropX}" y="${dropY}" width="${drop}" height="${drop}"/>
+	${SLEEVE_HEMS}<path d="M89 231 H231" ${STITCH}/>
+	${label("Front")}`,
+	`Graphic tee, front: one raindrop in ${tee.name} at the left chest`,
+);
+const teeBack = flat(
+	`<path d="${TEE} Q160 48 136 40Z" fill="${TEE_BODY}" stroke="#111" stroke-width="2.5" stroke-linejoin="round"/>
+	<path d="M136 40 Q160 48 184 40 L188 42 Q160 54 132 42Z" fill="${TEE_BODY}" stroke="#111" stroke-width="2"/>
+	${panel}
+	${SLEEVE_HEMS}<path d="M89 231 H231" ${STITCH}/>
+	${label("Back")}`,
+	`Graphic tee, back: a ${PANEL_IN.w} by ${PANEL_IN.h} inch panel of Nao in ${tee.name}`,
+);
+
+const bom = [
+	["Shell", "Washed indigo cotton canvas, weight to choose", "Natural cotton jersey"],
+	["Lining", `Nao in ${lining.name}, printed cotton: body, full or half`, "—"],
+	["Pocket bags", `Nao in ${lining.name}: inside the three patch pockets and the inside chest pocket`, "—"],
+	["Print", "All-over, one color on a dyed ground", `Front: one raindrop, ${DROP_IN} in, one color. Back: ${PANEL_IN.w} × ${PANEL_IN.h} in panel, two colors (ground and ink)`],
+	["Interfacing", "Fusible, collar and facings", "—"],
+	["Rib", "—", "1×1 cotton rib, neck"],
+	["Buttons", "5 front, 2 cuff tabs", "—"],
+	["Thread", "Topstitching a shade lighter than the indigo", "Matched to the body"],
+	["Labels", "Black damask label with the ripple on the chest pocket; woven main, size, care and content", "Printed neck label, care"],
+	["Hang tag", "Card: Nao, what it means, and the saying Hana mao ʻole ka ua o Hilo", "Same card"],
+];
+const measures = [
+	["Body length, from the high point of the shoulder", "29", "28", "±½"],
+	["Chest, 1 in below the armhole, flat", "24", "21", "±½"],
+	["Across shoulder", "19½", "18", "±½"],
+	["Sleeve length, from the shoulder", "24", "8½", "±½"],
+	["Sleeve opening, flat", "8", "7½", "±¼"],
+	["Hem, flat", "23½", "21", "±½"],
+];
+---
+
+<section id="tech-pack" class="bg-grey py-20 md:py-28">
+	<SectionOpener
+		number="05"
+		kicker="Concept tech pack"
+		title="What a factory would need"
+		deck="A tech pack is the document a clothing maker samples from. This is a first pass for two garments: a chore coat with Nao on the inside, and a graphic tee."
+	/>
+	<div class="mx-auto mt-14 max-w-7xl px-6 md:px-12">
+		<div class="grid grid-cols-1 gap-8 lg:grid-cols-12">
+			<article class="raw-box overflow-hidden rounded-2xl bg-paper lg:col-span-12">
+				<header class="font-mono flex flex-wrap items-center gap-x-4 gap-y-1 bg-black px-4 py-2.5 text-[10px] uppercase text-dark-ink">
+					<span>WW-001 · Chore coat</span><span>Size M</span><span class="ml-auto -rotate-3 rounded border-2 border-dark-ink px-2 py-0.5">Concept</span>
+				</header>
+				<div class="grid grid-cols-1 gap-2 p-4 sm:grid-cols-3">
+					<figure set:html={coatFront} />
+					<figure set:html={coatBack} />
+					<figure set:html={coatOpen} />
+				</div>
+				<p class="max-w-[80ch] px-4 pb-4 text-[15px] font-medium leading-relaxed">
+					Clean and classic outside: washed indigo canvas, a point collar on a stand, a five-button front, straight sleeves with buttoned cuffs, and a center back seam. The chest pocket has a pen slot and a small black damask label with the ripple woven in. Open it and Nao is inside, on the lining, inside the patch pockets and on an inside chest pocket. The facings and collar stay plain canvas.
+				</p>
+			</article>
+			<article class="raw-box overflow-hidden rounded-2xl bg-paper lg:col-span-12">
+				<header class="font-mono flex flex-wrap items-center gap-x-4 gap-y-1 bg-black px-4 py-2.5 text-[10px] uppercase text-dark-ink">
+					<span>SW-001 · Graphic tee</span><span>Size M</span><span class="ml-auto -rotate-3 rounded border-2 border-dark-ink px-2 py-0.5">Concept</span>
+				</header>
+				<div class="grid grid-cols-1 gap-2 p-4 sm:grid-cols-2 lg:grid-cols-4">
+					<figure set:html={teeFront} />
+					<figure set:html={teeBack} />
+					<p class="self-center text-[15px] font-medium leading-relaxed sm:col-span-2 lg:px-4">
+					Natural cotton. On the front, one raindrop, the site's own favicon ripple, where a chest pocket would sit. On the back, a {PANEL_IN.w} × {PANEL_IN.h} in panel of Nao, the long way, {PANEL_DROP_IN} in below the collar, composed for its rectangle: one big ripple running off the edge, a younger one melting into it, and a few strays.
+					</p>
+				</div>
+			</article>
+		</div>
+
+		<Kicker tab="05.1" class="mt-16">Fabric and trims</Kicker>
+		<div class="raw-box mt-6 overflow-x-auto rounded-2xl bg-paper">
+			<table class="w-full min-w-[640px] border-collapse text-[14px]">
+				<thead>
+					<tr class="font-mono bg-black text-left text-[10px] uppercase text-dark-ink">
+						<th class="px-4 py-3">Item</th><th class="px-4 py-3">Chore coat</th><th class="px-4 py-3">Graphic tee</th>
+					</tr>
+				</thead>
+				<tbody>
+					{bom.map(([k, a, b]) => (
+						<tr class="border-t-2 border-black align-top">
+							<td class="px-4 py-3 font-bold">{k}</td><td class="px-4 py-3 font-medium">{a}</td><td class="px-4 py-3 font-medium">{b}</td>
+						</tr>
+					))}
+				</tbody>
+			</table>
+		</div>
+
+		<Kicker tab="05.2" class="mt-16">Measurements, size M</Kicker>
+		<p class="mt-5 max-w-[65ch] text-[17px] font-medium leading-relaxed">Inches. Starting points for a first sample, to be fit-tested, not a finished grade.</p>
+		<div class="raw-box mt-6 overflow-x-auto rounded-2xl bg-paper">
+			<table class="w-full min-w-[560px] border-collapse text-[14px] tabular-nums">
+				<thead>
+					<tr class="font-mono bg-black text-left text-[10px] uppercase text-dark-ink">
+						<th class="px-4 py-3">Point of measure</th><th class="px-4 py-3 text-right">Chore coat</th><th class="px-4 py-3 text-right">Graphic tee</th><th class="px-4 py-3 text-right">Tolerance</th>
+					</tr>
+				</thead>
+				<tbody>
+					{measures.map(([k, a, b, t]) => (
+						<tr class="border-t-2 border-black">
+							<td class="px-4 py-3 font-medium">{k}</td><td class="px-4 py-3 text-right font-bold">{a}</td><td class="px-4 py-3 text-right font-bold">{b}</td><td class="px-4 py-3 text-right font-medium">{t}</td>
+						</tr>
+					))}
+				</tbody>
+			</table>
+		</div>
+
+		<Memo title="Concept" class="mt-14 max-w-3xl">
+			<p>This is a first pass at what a maker would sample from, not a finished spec. Fabric weights, trims and the grade across sizes would all be settled with a factory, after a first sample has been worn.</p>
+		</Memo>
+	</div>
+</section>

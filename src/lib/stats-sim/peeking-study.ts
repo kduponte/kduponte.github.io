@@ -6,10 +6,34 @@
 // The Bayesian decision rule is two-sided (P(B>A) crosses the threshold in EITHER direction), to
 // match the frequentist test being two-sided — otherwise the comparison wouldn't be apples-to-apples.
 import { runSequentialExperiment } from "./sequential-experiment";
-import type { PeekingStudyConfig, PeekingStudyResult } from "./types";
+import type { ExperimentConfig, PeekingStudyConfig, PeekingStudyResult } from "./types";
 
 function bayesianCrossed(probBBeatsA: number | null, threshold: number): boolean {
 	return probBBeatsA !== null && (probBBeatsA > threshold || probBBeatsA < 1 - threshold);
+}
+
+/**
+ * The exact single-experiment config the study runs as trial `trial`. Exported so anything that
+ * shows individual runs (e.g. the hero's p-value coaster) replays the study's own trials rather
+ * than a lookalike: the Bayesian Monte Carlo draws share the data's RNG stream, so even the
+ * frequentist p-values depend on every field here matching.
+ */
+export function peekingTrialConfig(config: PeekingStudyConfig, trial: number): ExperimentConfig {
+	return {
+		true_rate_a: config.true_rate,
+		true_rate_b: config.true_rate,
+		visitors_per_day: config.visitors_per_day,
+		days: config.days,
+		prior_strength: config.prior_strength,
+		seed: config.seed + trial, // distinct, reproducible seed per trial
+		mc_samples: config.mc_samples,
+		compute_credible_interval: false, // not needed for threshold-crossing bookkeeping
+		always_valid_relative_effect_size: config.always_valid_relative_effect_size,
+		metric_type: config.metric_type,
+		avg_revenue_per_spender_a: config.avg_revenue_per_spender,
+		avg_revenue_per_spender_b: config.avg_revenue_per_spender, // both arms share the same baseline under the null
+		revenue_sigma: config.revenue_sigma,
+	};
 }
 
 export function runPeekingStudy(config: PeekingStudyConfig): PeekingStudyResult {
@@ -24,21 +48,7 @@ export function runPeekingStudy(config: PeekingStudyConfig): PeekingStudyResult 
 	const firstCrossingDaysAlwaysValid: number[] = [];
 
 	for (let trial = 0; trial < config.trials; trial++) {
-		const result = runSequentialExperiment({
-			true_rate_a: config.true_rate,
-			true_rate_b: config.true_rate,
-			visitors_per_day: config.visitors_per_day,
-			days: config.days,
-			prior_strength: config.prior_strength,
-			seed: config.seed + trial, // distinct, reproducible seed per trial
-			mc_samples: config.mc_samples,
-			compute_credible_interval: false, // not needed for threshold-crossing bookkeeping
-			always_valid_relative_effect_size: config.always_valid_relative_effect_size,
-			metric_type: config.metric_type,
-			avg_revenue_per_spender_a: config.avg_revenue_per_spender,
-			avg_revenue_per_spender_b: config.avg_revenue_per_spender, // both arms share the same baseline under the null
-			revenue_sigma: config.revenue_sigma,
-		});
+		const result = runSequentialExperiment(peekingTrialConfig(config, trial));
 
 		let freqCrossedAnyDay = false;
 		let bayesCrossedAnyDay = false;

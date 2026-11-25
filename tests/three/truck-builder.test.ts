@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { BackSide, Box3, CylinderGeometry, Group, Mesh, MeshBasicMaterial, MeshStandardMaterial, RingGeometry, Vector3, type Object3D } from "three";
+import { BackSide, Box3, Color, CylinderGeometry, Group, Mesh, MeshBasicMaterial, MeshStandardMaterial, RingGeometry, Vector3, type Object3D } from "three";
 import {
 	AS_IT_SITS,
 	CARGO,
@@ -588,6 +588,34 @@ describe("buildToyotaTruck with builder options", () => {
 			const truck = buildToyotaTruck(undefined, truckSetup({ ...AS_IT_SITS, bumperLights: o.id }).options);
 			expect(!!truck.group.getObjectByName("bumper-lights"), o.id).toBe(o.lights !== null);
 			truck.dispose();
+		}
+	});
+
+	it("draws the body-side crease in the paint color, never a lighter or silver stripe", () => {
+		for (const build of [AS_IT_SITS, KYLE_BUILD, NOAH_BUILD]) {
+			const setup = truckSetup(build);
+			for (const openable of [false, true]) {
+				const t = buildToyotaTruck({ ...DEFAULT_TRUCK_COLORS, body: setup.body }, { ...setup.options, openable });
+				t.group.updateMatrixWorld(true);
+				// The crease runs along both sides at belt height, just proud of the skin.
+				// Measured in each part's own frame, since a raked ride tilts the long strips.
+				const crease = t.parts.filter((p) => {
+					p.geometry.computeBoundingBox();
+					const size = p.geometry.boundingBox!.getSize(new Vector3());
+					const z = Math.abs(new Box3().setFromObject(p).getCenter(new Vector3()).z);
+					return size.x > 0.5 && size.y < 0.03 && z > 0.8 && z < 0.84;
+				});
+				expect(crease.length, build.paint).toBeGreaterThanOrEqual(4);
+				const paint = new Color(setup.body);
+				for (const p of crease) {
+					const c = (p.material as MeshStandardMaterial).color;
+					// Either the paint itself or a darker shade of it: no channel brighter than the paint's.
+					expect(c.r, build.paint).toBeLessThanOrEqual(paint.r + 1e-6);
+					expect(c.g, build.paint).toBeLessThanOrEqual(paint.g + 1e-6);
+					expect(c.b, build.paint).toBeLessThanOrEqual(paint.b + 1e-6);
+				}
+				t.dispose();
+			}
 		}
 	});
 

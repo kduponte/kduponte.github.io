@@ -424,7 +424,10 @@ export function buildToyotaTruck(colors: TruckColors = DEFAULT_TRUCK_COLORS, opt
 	const bodyMat =
 		options.metallicPaint === undefined ? std(colors.body, 0.36, 0.35) : options.metallicPaint ? std(colors.body, 0.3, 0.6) : std(colors.body, 0.42, 0.12);
 	const bedFloorMat = std(shade(colors.body, 0.45), 0.5, 0.2);
-	const creaseMat = std(tint(colors.body, 0.22), 0.3, 0.35);
+	// The body-side crease is pressed into the sheet metal, so it's the paint itself: a ridge in body color
+	// over a darker shade of the same paint where it folds in, never a lighter or silver stripe.
+	const creaseMat = bodyMat;
+	const creaseShadowMat = std(shade(colors.body, 0.4), 0.5, 0.2);
 	const trimMat = std(colors.trim, 0.8);
 	const grilleMat = std(colors.bumper, 0.6);
 	const chromeMat = std(tint(colors.silver, 0.3), 0.16, 0.9);
@@ -801,7 +804,7 @@ export function buildToyotaTruck(colors: TruckColors = DEFAULT_TRUCK_COLORS, opt
 		add(door, slab(0.14, 0.04, 0.04, 0.015, 0.008), trimMat, at(-0.34, 0.9, side * (BODY_HALF_W + 0.025)), { outline: 0 }); // handle
 		// The crease across the door skin, matching the fender's and the bed's.
 		add(door, slab(doorLen, 0.022, 0.014, 0.008, 0.005), creaseMat, at(doorMidX, 0.805, side * (BODY_HALF_W + 0.004)), { outline: 0 });
-		add(door, slab(doorLen, 0.012, 0.008, 0.004, 0.002), trimMat, at(doorMidX, 0.788, side * (BODY_HALF_W + 0.002)), { outline: 0 });
+		add(door, slab(doorLen, 0.012, 0.008, 0.004, 0.002), creaseShadowMat, at(doorMidX, 0.788, side * (BODY_HALF_W + 0.002)), { outline: 0 });
 		// Window frame divider and the door glass, in the front-window tint.
 		add(door, slab(0.045, 0.6, 0.05, 0.015, 0.008), bodyMat, at(-0.2, (BELT_Y + 1.58) / 2, side * 0.77), { outline: 0.02 });
 		const doorGlass = new Shape();
@@ -847,12 +850,12 @@ export function buildToyotaTruck(colors: TruckColors = DEFAULT_TRUCK_COLORS, opt
 		// The body-side crease that runs from the front fender, through the door, along the bed.
 		const creaseFrom = TAIL_X + 0.04;
 		const creaseTo = NOSE_X - 0.08;
-		// A lit upper edge over a dark shadow line, like light catching a stamped crease.
+		// A ridge in the paint over a darker fold, like light catching a stamped crease.
 		// With opening doors, the door carries its own length of crease.
 		const runs: [number, number][] = openable ? [[creaseFrom, DOOR_BACK_X], [DOOR_FRONT_X, creaseTo]] : [[creaseFrom, creaseTo]];
 		for (const [a, b] of runs) {
 			add(body, slab(b - a, 0.022, 0.014, 0.008, 0.005), creaseMat, [(a + b) / 2, 0.805, skin], { outline: 0 });
-			add(body, slab(b - a, 0.012, 0.008, 0.004, 0.002), trimMat, [(a + b) / 2, 0.788, skin - side * 0.002], { outline: 0 });
+			add(body, slab(b - a, 0.012, 0.008, 0.004, 0.002), creaseShadowMat, [(a + b) / 2, 0.788, skin - side * 0.002], { outline: 0 });
 		}
 		// Seam between the cab and the bed.
 		add(body, slab(0.02, BELT_Y - AXLE_Y, 0.02, 0.006, 0.003), trimMat, [CAB_BACK_X - 0.005, (AXLE_Y + BELT_Y) / 2, side * (BODY_HALF_W + 0.008)], {

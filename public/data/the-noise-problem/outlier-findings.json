@@ -1,0 +1,265 @@
+{
+	"generated_at": "2026-11-02T23:04:10.122Z",
+	"seed": 20260828,
+	"trials": 2000,
+	"base": {
+		"spend_rate": 0.3,
+		"mean_per_spender": 60,
+		"sigma": 1.2,
+		"alpha": 0.05
+	},
+	"scenarios": {
+		"null_99": {
+			"config": {
+				"adjustment": "winsorize",
+				"upper_percentile": 0.99,
+				"lift_mode": "none",
+				"true_relative_lift": 0,
+				"whale_fraction": 0.05,
+				"visitors_per_day": 50,
+				"days": 20,
+				"trials": 2000
+			},
+			"true_dollar_lift": 0,
+			"methods": {
+				"raw": {
+					"final_day_detection_rate": 0.0515,
+					"ci_low": 0.0426,
+					"ci_high": 0.0621,
+					"avg_estimated_lift": -0.026,
+					"lift_capture": null,
+					"se_calibration": 0.998,
+					"implied_false_positive_rate": 0.0496
+				},
+				"pooled": {
+					"final_day_detection_rate": 0.053,
+					"ci_low": 0.044,
+					"ci_high": 0.0637,
+					"avg_estimated_lift": -0.007,
+					"lift_capture": null,
+					"se_calibration": 0.995,
+					"implied_false_positive_rate": 0.0488
+				},
+				"stratified": {
+					"final_day_detection_rate": 0.111,
+					"ci_low": 0.098,
+					"ci_high": 0.1255,
+					"avg_estimated_lift": -0.009,
+					"lift_capture": null,
+					"se_calibration": 1.209,
+					"implied_false_positive_rate": 0.105
+				}
+			}
+		},
+		"null_90": {
+			"config": {
+				"adjustment": "winsorize",
+				"upper_percentile": 0.9,
+				"lift_mode": "none",
+				"true_relative_lift": 0,
+				"whale_fraction": 0.05,
+				"visitors_per_day": 50,
+				"days": 20,
+				"trials": 2000
+			},
+			"true_dollar_lift": 0,
+			"methods": {
+				"raw": {
+					"final_day_detection_rate": 0.0515,
+					"ci_low": 0.0426,
+					"ci_high": 0.0621,
+					"avg_estimated_lift": -0.026,
+					"lift_capture": null,
+					"se_calibration": 0.998,
+					"implied_false_positive_rate": 0.0496
+				},
+				"pooled": {
+					"final_day_detection_rate": 0.05,
+					"ci_low": 0.0413,
+					"ci_high": 0.0604,
+					"avg_estimated_lift": -0.008,
+					"lift_capture": null,
+					"se_calibration": 0.993,
+					"implied_false_positive_rate": 0.0483
+				},
+				"stratified": {
+					"final_day_detection_rate": 0.2925,
+					"ci_low": 0.273,
+					"ci_high": 0.3128,
+					"avg_estimated_lift": -0.014,
+					"lift_capture": null,
+					"se_calibration": 1.873,
+					"implied_false_positive_rate": 0.2953
+				}
+			}
+		},
+		"null_99_trim": {
+			"config": {
+				"adjustment": "trim",
+				"upper_percentile": 0.99,
+				"lift_mode": "none",
+				"true_relative_lift": 0,
+				"whale_fraction": 0.05,
+				"visitors_per_day": 50,
+				"days": 20,
+				"trials": 2000
+			},
+			"true_dollar_lift": 0,
+			"methods": {
+				"raw": {
+					"final_day_detection_rate": 0.0515,
+					"ci_low": 0.0426,
+					"ci_high": 0.0621,
+					"avg_estimated_lift": -0.026,
+					"lift_capture": null,
+					"se_calibration": 0.998,
+					"implied_false_positive_rate": 0.0496
+				},
+				"pooled": {
+					"final_day_detection_rate": 0.051,
+					"ci_low": 0.0422,
+					"ci_high": 0.0615,
+					"avg_estimated_lift": -0.012,
+					"lift_capture": null,
+					"se_calibration": 1.017,
+					"implied_false_positive_rate": 0.054
+				},
+				"stratified": {
+					"final_day_detection_rate": 0.108,
+					"ci_low": 0.0951,
+					"ci_high": 0.1224,
+					"avg_estimated_lift": -0.006,
+					"lift_capture": null,
+					"se_calibration": 1.229,
+					"implied_false_positive_rate": 0.1109
+				}
+			}
+		},
+		"null_99_5x_traffic": {
+			"config": {
+				"adjustment": "winsorize",
+				"upper_percentile": 0.99,
+				"lift_mode": "none",
+				"true_relative_lift": 0,
+				"whale_fraction": 0.05,
+				"visitors_per_day": 250,
+				"days": 20,
+				"trials": 2000
+			},
+			"true_dollar_lift": 0,
+			"methods": {
+				"raw": {
+					"final_day_detection_rate": 0.0485,
+					"ci_low": 0.0399,
+					"ci_high": 0.0588,
+					"avg_estimated_lift": 0.027,
+					"lift_capture": null,
+					"se_calibration": 0.997,
+					"implied_false_positive_rate": 0.0494
+				},
+				"pooled": {
+					"final_day_detection_rate": 0.041,
+					"ci_low": 0.0332,
+					"ci_high": 0.0506,
+					"avg_estimated_lift": 0.019,
+					"lift_capture": null,
+					"se_calibration": 0.973,
+					"implied_false_positive_rate": 0.0439
+				},
+				"stratified": {
+					"final_day_detection_rate": 0.1005,
+					"ci_low": 0.0881,
+					"ci_high": 0.1145,
+					"avg_estimated_lift": 0.024,
+					"lift_capture": null,
+					"se_calibration": 1.199,
+					"implied_false_positive_rate": 0.1021
+				}
+			}
+		},
+		"uniform_99": {
+			"config": {
+				"adjustment": "winsorize",
+				"upper_percentile": 0.99,
+				"lift_mode": "uniform",
+				"true_relative_lift": 0.3,
+				"whale_fraction": 0.05,
+				"visitors_per_day": 50,
+				"days": 20,
+				"trials": 2000
+			},
+			"true_dollar_lift": 5.4,
+			"methods": {
+				"raw": {
+					"final_day_detection_rate": 0.378,
+					"ci_low": 0.357,
+					"ci_high": 0.3995,
+					"avg_estimated_lift": 5.382,
+					"lift_capture": 0.9967,
+					"se_calibration": 0.999,
+					"implied_false_positive_rate": null
+				},
+				"pooled": {
+					"final_day_detection_rate": 0.453,
+					"ci_low": 0.4313,
+					"ci_high": 0.4749,
+					"avg_estimated_lift": 3.997,
+					"lift_capture": 0.7402,
+					"se_calibration": 1.006,
+					"implied_false_positive_rate": null
+				},
+				"stratified": {
+					"final_day_detection_rate": 0.5845,
+					"ci_low": 0.5628,
+					"ci_high": 0.6059,
+					"avg_estimated_lift": 4.776,
+					"lift_capture": 0.8845,
+					"se_calibration": 1.209,
+					"implied_false_positive_rate": null
+				}
+			}
+		},
+		"tail_99": {
+			"config": {
+				"adjustment": "winsorize",
+				"upper_percentile": 0.99,
+				"lift_mode": "tail_concentrated",
+				"true_relative_lift": 0.3,
+				"whale_fraction": 0.05,
+				"visitors_per_day": 50,
+				"days": 20,
+				"trials": 2000
+			},
+			"true_dollar_lift": 5.4,
+			"methods": {
+				"raw": {
+					"final_day_detection_rate": 0.224,
+					"ci_low": 0.2063,
+					"ci_high": 0.2428,
+					"avg_estimated_lift": 5.432,
+					"lift_capture": 1.0059,
+					"se_calibration": 1.009,
+					"implied_false_positive_rate": null
+				},
+				"pooled": {
+					"final_day_detection_rate": 0.1685,
+					"ci_low": 0.1527,
+					"ci_high": 0.1855,
+					"avg_estimated_lift": 2.128,
+					"lift_capture": 0.3941,
+					"se_calibration": 1.002,
+					"implied_false_positive_rate": null
+				},
+				"stratified": {
+					"final_day_detection_rate": 0.325,
+					"ci_low": 0.3048,
+					"ci_high": 0.3458,
+					"avg_estimated_lift": 3.103,
+					"lift_capture": 0.5746,
+					"se_calibration": 1.26,
+					"implied_false_positive_rate": null
+				}
+			}
+		}
+	}
+}

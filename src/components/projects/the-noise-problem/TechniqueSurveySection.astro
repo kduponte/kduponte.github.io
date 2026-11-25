@@ -1,0 +1,112 @@
+---
+// Every citation below was re-checked against its primary source on 2026-11-02, and three were
+// corrected in that pass:
+// - Jin & Ba (arXiv 2110.13406, Stanford and LinkedIn): the "up to 30% beyond CUPED" figure is for
+//   ratio metrics specifically, and the paper corrects "regressor bias" with a de-biasing term and
+//   "double-dipping bias" with cross-fitting, not both with cross-fitting.
+// - Deng, Knoblich & Lu (KDD 2018): the delta method's job in ratio metrics is that the analysis
+//   unit (a page view) differs from the randomization unit (a user), so observations within a user
+//   are correlated and a naive standard error that treats them as independent is too small. An
+//   earlier version blamed numerator/denominator dependence, which is not the paper's argument.
+// - Spotify (Schultzberg & Ankargren, updated 2026-05-12): the 10% in its worked example is the
+//   share of users who resolved the feature flag and could actually experience the change.
+// Verified unchanged: Kohavi, Tang & Xu (2020); DoorDash's CUPAC post (Jeff Li, 2020-06-08,
+// "shorten our switchback tests by more than 25% while maintaining experimental power"); Arbour et
+// al. (arXiv 2606.08853, camera-ready for KDD 2026, gains "real if modest").
+
+interface TechniqueRow {
+	name: string;
+	needs: string;
+	helpsWith: string;
+	citationLabel: string;
+	citationHref: string;
+}
+
+const TECHNIQUES: TechniqueRow[] = [
+	{
+		name: "Stratification / post-stratification",
+		needs: "A segment correlated with the outcome (country, device, traffic source), known before or during analysis.",
+		helpsWith: "Removes the share of variance that comes from differences between segments. It is separate from CUPED and the two combine.",
+		citationLabel: "Kohavi, Tang & Xu, Trustworthy Online Controlled Experiments (2020)",
+		citationHref: "https://www.cambridge.org/core/books/trustworthy-online-controlled-experiments/D97B26382EB0EB2DC2019A7A7B518F59",
+	},
+	{
+		name: "CUPAC",
+		needs: "A machine-learning prediction of the outcome, built from features treatment cannot affect, used in place of one raw pre-period value.",
+		helpsWith:
+			"Extends CUPED to cases where no single pre-period value exists for the unit being measured. DoorDash reports shortening its switchback tests by more than 25% while keeping the same power.",
+		citationLabel: "DoorDash Engineering, \"Improving Experimental Power through CUPAC\" (2020)",
+		citationHref: "https://careersatdoordash.com/blog/improving-experimental-power-through-control-using-predictions-as-covariate-cupac/",
+	},
+	{
+		name: "Nonlinear, multi-covariate adjustment",
+		needs: "Many covariates and a nonlinear (machine-learning) adjustment model instead of one linear covariate.",
+		helpsWith:
+			"Up to 30% less variance than CUPED for ratio metrics in LinkedIn experiments. Flexible models bring two biases the paper names and fixes: \"regressor bias\" from a slow-converging predictor (corrected with a de-biasing term) and \"double-dipping bias\" from fitting and testing on the same data (corrected with cross-fitting).",
+		citationLabel: "Jin & Ba, \"Towards Optimal Variance Reduction in Online Controlled Experiments\" (2022)",
+		citationHref: "https://arxiv.org/abs/2110.13406",
+	},
+	{
+		name: "AI/LLM-predicted covariates",
+		needs: "A language model's prediction, or features it extracts from unstructured text, used as an ordinary regression covariate.",
+		helpsWith:
+			"New and not yet settled practice. The authors call the efficiency gains \"real if modest\", largest where an experiment has a lot of text or other unstructured data, and the method falls back to the plain difference in means when the predictions carry no information.",
+		citationLabel: "Arbour et al., \"AI-Assisted Variance Reduction in Randomized Experiments\", KDD '26",
+		citationHref: "https://arxiv.org/abs/2606.08853",
+	},
+	{
+		name: "Trigger / dilution analysis",
+		needs: "A way to tell which users could have encountered the change at all.",
+		helpsWith:
+			"Not about the metric's noise. It stops an effect from being diluted by users who never reached the changed feature. Spotify's worked example: an effect of 2 units among the users who could experience the change shows up as 0.2 units when they are only 10% of everyone assigned.",
+		citationLabel: "Schultzberg & Ankargren, Spotify Confidence, \"Trigger Analysis\" (2026)",
+		citationHref: "https://confidence.spotify.com/blog/trigger-analysis",
+	},
+	{
+		name: "Delta method (a different problem)",
+		needs: "A ratio metric whose unit differs from the randomization unit, like clicks per page view in a test randomized by user.",
+		helpsWith:
+			"Not variance reduction but correct variance estimation. Page views from the same user are correlated, so a standard error that treats each page view as independent is too small. The delta method computes the right one from user-level totals. It makes results honest rather than faster.",
+		citationLabel: "Deng, Knoblich & Lu, \"Applying the Delta Method in Metric Analytics\" (KDD 2018)",
+		citationHref: "https://arxiv.org/abs/1803.06336",
+	},
+];
+---
+
+<section id="other-techniques" class="mx-auto max-w-7xl px-6 py-16 md:px-12 md:py-20">
+	<h2 class="font-anton text-4xl md:text-5xl">The wider toolkit</h2>
+	<p class="mt-3 max-w-[65ch] text-base leading-relaxed text-ink-soft">
+		CUPED and outlier handling are not the only tools, and CUPED itself keeps being extended. None of these get a
+		live simulation here; each would be a project of its own. Each is in production use or published research, and
+		each row cites its source.
+	</p>
+
+	<div class="mt-8 overflow-x-auto">
+		<table class="w-full min-w-[820px] border-collapse text-sm">
+			<thead>
+				<tr class="border-b border-line text-left font-mono text-xs uppercase tracking-wide text-ink-soft">
+					<th class="py-2 pr-4">Technique</th>
+					<th class="py-2 pr-4">What it needs</th>
+					<th class="py-2 pr-4">What it helps with</th>
+					<th class="py-2">Source</th>
+				</tr>
+			</thead>
+			<tbody>
+				{
+					TECHNIQUES.map((t) => (
+						<tr class="border-b border-line/60 align-top">
+							<td class="py-3 pr-4 font-medium text-ink">{t.name}</td>
+							<td class="py-3 pr-4 text-ink-soft">{t.needs}</td>
+							<td class="py-3 pr-4 text-ink-soft">{t.helpsWith}</td>
+							<td class="py-3 text-xs text-ink-soft">
+								<a href={t.citationHref} class="text-accent-blue underline underline-offset-2">
+									{t.citationLabel}
+								</a>
+							</td>
+						</tr>
+					))
+				}
+			</tbody>
+		</table>
+	</div>
+</section>

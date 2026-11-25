@@ -222,9 +222,72 @@ export function copiesIn(nao: Nao, d: NaoDrop, [x0, y0, x1, y1]: Region): [numbe
 	return out;
 }
 
+/**
+ * A crop of the cloth for a placed print (the tee's back panel), w x h inches, put over the busiest
+ * part of the print so the panel holds a composition rather than open ground. Every placement on a
+ * grid is scored by the drops that sit well inside it (rain counts more than drizzle).
+ */
+export function busiestCrop(nao: Nao, wIn: number, hIn: number, step = 60): Region {
+	const per = 1000 / nao.settings.printIn;
+	const w = wIn * per;
+	const h = hIn * per;
+	const inset = 90;
+	let best: Region = [0, 0, w, h];
+	let bestScore = -1;
+	for (let ox = 0; ox < 2 * nao.W; ox += step)
+		for (let oy = 0; oy < nao.H; oy += step) {
+			const region: Region = [ox, oy, ox + w, oy + h];
+			let score = 0;
+			for (const d of nao.drops)
+				for (const [x, y] of copiesIn(nao, { ...d, reach: 0 }, region))
+					if (x > ox + inset && x < ox + w - inset && y > oy + inset && y < oy + h - inset) score += d.layer === "main" ? 3 : 1;
+			if (score > bestScore) [bestScore, best] = [score, region];
+		}
+	return best;
+}
+
+/**
+ * A placed graphic (the tee's back panel): Nao composed for a w x h inch rectangle instead of cropped
+ * from the all-over print. One big old ripple bleeds off the left side, a younger one meets it so
+ * their rings melt together, a small one sits low on the right, and a few drizzle strays fill the
+ * open water. Same ripple, same scale and the same filter as the cloth; positions are shares of the
+ * rectangle, so the layout holds at any size.
+ */
+export function naoPanel(wIn: number, hIn: number, seed: number = NAO_SEED, settings: Partial<NaoSettings> = {}): { nao: Nao; region: Region } {
+	const P = { ...NAO_DEFAULTS, ...settings };
+	const per = 1000 / P.printIn;
+	const W = wIn * per;
+	const H = hIn * per;
+	const style = { w: P.weight, shrink: P.shrink, random: P.random, taper: P.taper, bulb: P.bulb };
+	const place: { x: number; y: number; rings: number; gap: number; solid: number; center: number; layer: NaoDrop["layer"] }[] = [
+		{ x: 0.3, y: 0.56, rings: 10, gap: 36, solid: 1, center: 0, layer: "main" },
+		{ x: 0.7, y: 0.32, rings: 7, gap: 31, solid: 2, center: 0.45, layer: "main" },
+		{ x: 0.85, y: 0.8, rings: 4, gap: 28, solid: 2, center: 0.45, layer: "main" },
+		{ x: 0.55, y: 0.84, rings: 2, gap: 17, solid: 2, center: 0.45, layer: "fine" },
+		{ x: 0.93, y: 0.5, rings: 1, gap: 16, solid: 1, center: 0.45, layer: "fine" },
+		{ x: 0.48, y: 0.12, rings: 3, gap: 18, solid: 1, center: 0, layer: "fine" },
+		{ x: 0.08, y: 0.12, rings: 2, gap: 16, solid: 2, center: 0.45, layer: "fine" },
+	];
+	const drops: NaoDrop[] = place.map((p, i) => ({
+		x: p.x * W,
+		y: p.y * H,
+		layer: p.layer,
+		rings: p.rings,
+		gap: p.gap,
+		reach: reachOf(p.rings, p.gap, P.weight),
+		paths: dropPaths({ seed: seed * 31 + i, cx: 0, cy: 0, rings: p.rings, gap: p.gap, solid: p.solid, center: p.center, ...style }),
+	}));
+	// A panel doesn't repeat. Give it a "repeat" far larger than the rectangle, so drawing the
+	// rectangle (region) never pulls in a wrapped copy of a drop; ripples just run off its edges.
+	return { nao: { seed, settings: P, W: W * 100, H: H * 100, drops }, region: [0, 0, W, H] };
+}
+
 const pathMarkup = (p: RipplePath) => (p.fill ? `<path d="${p.d}" fill="currentColor" stroke="none"/>` : `<path d="${p.d}" stroke-width="${p.width}"/>`);
-const filter = (id: string, blur: number, box: string) =>
-	`<filter id="${id}" filterUnits="userSpaceOnUse" ${box} color-interpolation-filters="sRGB"><feGaussianBlur stdDeviation="${blur}"/><feComponentTransfer><feFuncA type="linear" slope="${NAO_FILTER.slope}" intercept="${-NAO_FILTER.slope * NAO_FILTER.threshold}"/></feComponentTransfer></filter>`;
+// Blur, cut, then fill the cut shape with the ink. The fill step matters for print files: librsvg
+// (sharp) scales alpha in premultiplied color, so without it the ink comes out white. The favicon
+// script does the same.
+const filter = (id: string, blur: number, box: string, ink: string) =>
+	`<filter id="${id}" filterUnits="userSpaceOnUse" ${box} color-interpolation-filters="sRGB"><feGaussianBlur stdDeviation="${blur}"/><feComponentTransfer result="cut"><feFuncA type="linear" slope="${NAO_FILTER.slope}" intercept="${-NAO_FILTER.slope * NAO_FILTER.threshold}"/></feComponentTransfer><feFlood flood-color="${ink}"/><feComposite in2="cut" operator="in"/></filter>`;
 
 export interface NaoSvgOptions {
 	ground: string;
@@ -246,17 +309,21 @@ export function naoSvg(nao: Nao, { ground, ink, region = fullWidth(nao), scale =
 	const w = x1 - x0;
 	const h = y1 - y0;
 	const box = `x="${r1(x0 - 120)}" y="${r1(y0 - 120)}" width="${r1(w + 240)}" height="${r1(h + 240)}"`;
+	// Only drops that show in the region are defined; ids keep each drop's index.
+	const at = nao.drops.map((d) => copiesIn(nao, d, region));
 	const defs = nao.drops
-		.map((d, i) => (open ? `<clipPath id="${prefix}m${i}"><circle r="0"/></clipPath>` : "") + `<g id="${prefix}d${i}"${open ? ` clip-path="url(#${prefix}m${i})"` : ""}>${d.paths.map(pathMarkup).join("")}</g>`)
+		.map((d, i) =>
+			at[i].length ? (open ? `<clipPath id="${prefix}m${i}"><circle r="0"/></clipPath>` : "") + `<g id="${prefix}d${i}"${open ? ` clip-path="url(#${prefix}m${i})"` : ""}>${d.paths.map(pathMarkup).join("")}</g>` : "",
+		)
 		.join("");
 	const layer = (name: NaoDrop["layer"]) =>
 		`<g filter="url(#${prefix}f${name})" color="${ink}" fill="none" stroke="currentColor" stroke-linecap="round">${nao.drops
-			.map((d, i) => (d.layer === name ? copiesIn(nao, d, region).map(([x, y]) => `<use href="#${prefix}d${i}" x="${x}" y="${y}"/>`).join("") : ""))
+			.map((d, i) => (d.layer === name ? at[i].map(([x, y]) => `<use href="#${prefix}d${i}" x="${x}" y="${y}"/>`).join("") : ""))
 			.join("")}</g>`;
 	return [
 		`<svg xmlns="http://www.w3.org/2000/svg" viewBox="${r1(x0)} ${r1(y0)} ${r1(w)} ${r1(h)}" width="${r1(w * scale)}" height="${r1(h * scale)}">`,
 		`<defs>${defs}<clipPath id="${prefix}c"><rect x="${r1(x0)}" y="${r1(y0)}" width="${r1(w)}" height="${r1(h)}"/></clipPath>`,
-		`${filter(`${prefix}fmain`, NAO_FILTER.blur.main, box)}${filter(`${prefix}ffine`, NAO_FILTER.blur.fine, box)}</defs>`,
+		`${filter(`${prefix}fmain`, NAO_FILTER.blur.main, box, ink)}${filter(`${prefix}ffine`, NAO_FILTER.blur.fine, box, ink)}</defs>`,
 		`<rect x="${r1(x0)}" y="${r1(y0)}" width="${r1(w)}" height="${r1(h)}" fill="${ground}"/>`,
 		`<g clip-path="url(#${prefix}c)">${layer("main")}${layer("fine")}</g>`,
 		`</svg>`,

@@ -12,6 +12,7 @@
     "astro": "astro",
     "test": "vitest run",
     "icons:build": "node scripts/icons/build-favicon.mjs",
+    "pattern:build": "tsx scripts/pattern/build-nao.ts",
     "og:build": "tsx scripts/og/build-og.ts",
     "surf-volume:collect": "tsx scripts/surf-volume/collect/run-all.ts",
     "surf-volume:normalize": "tsx scripts/surf-volume/normalize/normalize.ts",

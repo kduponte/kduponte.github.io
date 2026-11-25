@@ -56,6 +56,7 @@ const byPage: Record<string, SeasonId> = {
 	"the-forecast-gap": "rose",
 	"experimentation-toolkit": "drill",
 	"causal-inference-notes": "sage",
+	"the-rain-pattern": "concrete",
 };
 
 // Fixed grounds shared by every page.

@@ -1,0 +1,57 @@
+---
+// 03. The season as a static swatch spread: each pair's ground with a ripple in its ring color,
+// named, with where it came from and which page wears it.
+import SectionOpener from "../../editorial/SectionOpener.astro";
+import Ripples from "../../Ripples.astro";
+import { SEASON, contrast, isLight, seasonFor } from "../../../lib/project-theme";
+import { seedFrom } from "../../../lib/patterns/ripples";
+
+const PAGES: Record<string, string> = {
+	about: "About",
+	experience: "Experience",
+	"the-22re-restoration": "The 22RE Restoration",
+	"too-good-to-be-true": "Too Good to Be True",
+	"the-noise-problem": "The Noise Problem",
+	"the-peeking-problem": "The Peeking Problem",
+	"the-volume-gap": "The Volume Gap",
+	"the-forecast-gap": "The Forecast Gap",
+	"experimentation-toolkit": "Experimentation Toolkit",
+	"causal-inference-notes": "Causal Inference Notes",
+	"the-rain-pattern": "This page",
+};
+const wornBy = (id: string) => Object.keys(PAGES).filter((k) => seasonFor(k)?.id === id).map((k) => PAGES[k]);
+---
+
+<section id="season" class="bg-grey py-20 md:py-28">
+	<SectionOpener
+		number="03"
+		kicker="The season"
+		title="Twelve pairs, one per page"
+		deck="Color stays off the page itself: sections are white, grey or black, and safety orange only goes on things you can click. The color lives in a season of ground-and-ring pairs, one per page."
+	/>
+	<div class="mx-auto mt-14 max-w-7xl px-6 md:px-12">
+		<div class="mag max-w-[65ch]">
+			<p>
+				The season works like a lookbook. Each pair is a near-grey ground with the color in its ring, and the contrast runs from loud to almost tonal, so neighboring tiles never match. Nine pairs come from looks in Cav Empt's lookbook, where every look carries a ground and a ripple color; three come from the site's own Signal palette.
+			</p>
+		</div>
+		<ul class="mt-10 grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
+			{
+				SEASON.map((p, i) => (
+					<li class="raw-box overflow-hidden rounded-2xl bg-paper">
+						<div class="relative aspect-square max-w-full overflow-hidden border-b-[3px] border-black" style={`background:${p.ground};color:${p.ring}`}>
+							<Ripples form="drop" seed={seedFrom(p.id, 3)} cx={500} cy={500} rings={9} gap={44} />
+							<span class:list={["font-anton absolute left-3 top-2 text-xl", isLight(p.ground) ? "text-ink" : "text-dark-ink"]}>S{i + 1}</span>
+						</div>
+						<div class="space-y-1 p-3">
+							<p class="text-[15px] font-extrabold leading-tight">{p.name}</p>
+							<p class="font-mono text-[10px] uppercase leading-relaxed">{p.source}</p>
+							<p class="text-[13px] font-medium leading-snug">{wornBy(p.id).join(", ") || "Not used yet"}</p>
+							<p class="font-mono text-[10px] uppercase text-ink-soft">{p.ground} · {p.ring} · {contrast(p.ground, p.ring).toFixed(1)}:1</p>
+						</div>
+					</li>
+				))
+			}
+		</ul>
+	</div>
+</section>

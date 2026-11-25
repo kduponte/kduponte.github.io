@@ -35,4 +35,6 @@ export const colorway = (id: SeasonId): NaoColorway => {
 };
 
 /** The colorways the write-up shows on the garments and in its main figures. */
-export const NAO_SHOWN = { print: "night", lining: "moss", tee: "cobalt" } as const satisfies Record<string, SeasonId>;
+export const NAO_SHOWN = { print: "night", lining: "moss", tee: "night" } as const satisfies Record<string, SeasonId>;
+/** The graphic tee is natural cotton; the prints sit on it in the tee colorway. */
+export const TEE_BODY = "#f3f3f1";

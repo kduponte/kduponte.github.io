@@ -42,3 +42,7 @@ data/surf-forecast/cache/dlnr/
 data/surf-forecast/cache/ndbc-station-pages/
 data/surf-forecast/cache/open-meteo-breaks/
 data/surf-forecast/processed/pairs.csv
+
+# Nao print files at print resolution (scripts/pattern/build-nao.ts). Hundreds of MB, and the script
+# rebuilds them exactly from the seed and settings in src/lib/patterns/nao.ts.
+exports/

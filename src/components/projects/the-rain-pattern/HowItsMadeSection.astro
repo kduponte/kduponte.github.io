@@ -1,0 +1,62 @@
+---
+// 02. The ripple in three still frames (strokes, blur, cut), drawn by the site's own dropPaths and
+// the same filter numbers Ripples.astro uses, next to the page's one motion piece.
+import SectionOpener from "../../editorial/SectionOpener.astro";
+import Kicker from "../../editorial/Kicker.astro";
+import NaoMotion from "./NaoMotion.astro";
+import { BLUR_PER_GAP, dropPaths } from "../../../lib/patterns/ripples";
+
+const GAP = 42;
+const paths = dropPaths({ seed: 21, rings: 9, gap: GAP });
+const body = paths.map((p) => (p.fill ? `<path d="${p.d}" fill="currentColor" stroke="none"/>` : `<path d="${p.d}" stroke-width="${p.width}"/>`)).join("");
+const blur = Math.round(GAP * BLUR_PER_GAP * 10) / 10;
+const filters = {
+	strokes: "",
+	blur: `<filter id="hm-blur" filterUnits="userSpaceOnUse" x="-60" y="-60" width="1120" height="1120"><feGaussianBlur stdDeviation="${blur}"/></filter>`,
+	cut: `<filter id="hm-cut" filterUnits="userSpaceOnUse" x="-60" y="-60" width="1120" height="1120" color-interpolation-filters="sRGB"><feGaussianBlur stdDeviation="${blur}"/><feComponentTransfer><feFuncA type="linear" slope="22" intercept="-9.9"/></feComponentTransfer></filter>`,
+};
+const frame = (key: keyof typeof filters) =>
+	`<svg viewBox="150 150 700 700" class="block h-auto w-full" aria-hidden="true"><defs>${filters[key]}</defs><g${key === "strokes" ? "" : ` filter="url(#hm-${key})"`} fill="none" stroke="currentColor" stroke-linecap="round">${body}</g></svg>`;
+
+const steps = [
+	{ key: "strokes" as const, title: "Strokes", body: "Each ring is a run of rounded strokes of mixed length and weight. Inner rings are nearly whole; outer ones break into dashes and dots, some tapering, some swelling at one end." },
+	{ key: "blur" as const, title: "Blur", body: `Everything is blurred by about a sixth of the gap between rings (here ${blur} units), so strokes that sit close run into each other.` },
+	{ key: "cut" as const, title: "Cut", body: "Then only the dense parts are kept: anything darker than a little under half becomes solid ink, the rest drops away. Close strokes melt into one shape, pinch, swell into blobs." },
+];
+---
+
+<section id="how-its-made" class="py-20 md:py-28">
+	<SectionOpener
+		number="02"
+		kicker="How a ripple is made"
+		title="Strokes, a blur, a cut"
+		deck="Every ripple on the site, and every drop in the print, is drawn the same way: rounded strokes, then a blur, then a cut that keeps only the dense parts."
+	/>
+	<div class="mx-auto mt-14 max-w-7xl px-6 md:px-12">
+		<ol class="grid grid-cols-1 gap-6 md:grid-cols-3">
+			{
+				steps.map((st, i) => (
+					<li class="raw-box rounded-2xl bg-paper">
+						<div class="border-b-[3px] border-black text-ink" set:html={frame(st.key)} />
+						<div class="p-5">
+							<p class="font-mono text-[11px] uppercase">Step {i + 1}</p>
+							<p class="font-anton mt-1 text-3xl leading-none">{st.title}</p>
+							<p class="mt-2 text-[15px] font-medium leading-relaxed">{st.body}</p>
+						</div>
+					</li>
+				))
+			}
+		</ol>
+
+		<Kicker tab="02.1" class="mt-20">Ripples forming</Kicker>
+		<div class="mt-8 grid grid-cols-1 items-center gap-10 md:grid-cols-12">
+			<NaoMotion class="md:col-span-6" />
+			<div class="mag md:col-span-6">
+				<p>
+					The one thing on this page that moves. Rain lands on the print one drop at a time, and each ripple opens outward from its drop: the whole rings first, then the pieces and dots at the edge. Where two ripples meet, the cut melts them together.
+				</p>
+				<p>The last frame is the print itself, standing still.</p>
+			</div>
+		</div>
+	</div>
+</section>

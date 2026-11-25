@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import sharp from "sharp";
-import { clothDistance, makeNao, naoSvg, NAO_DEFAULTS, NAO_SEED, repeatSize, type Nao, type Region } from "../../src/lib/patterns/nao";
+import { busiestCrop, clothDistance, copiesIn, makeNao, naoPanel, naoSvg, NAO_DEFAULTS, NAO_SEED, repeatSize, type Nao, type Region } from "../../src/lib/patterns/nao";
 import { NAO_COLORWAYS } from "../../src/lib/patterns/nao-colorways";
 import { dropPaths } from "../../src/lib/patterns/ripples";
 
@@ -96,6 +96,52 @@ describe("Nao", () => {
 			const b = await pixels(nao, [800, 0, 1200, H]);
 			expect(mismatch(a, b)).toBeGreaterThan(0.02);
 		});
+	});
+});
+
+describe("placed prints", () => {
+	it("crops the tee's back panel at its size, over the busiest part of the print", () => {
+		const nao = makeNao();
+		const per = 1000 / nao.settings.printIn;
+		const [x0, y0, x1, y1] = busiestCrop(nao, 14, 10.5);
+		expect(x1 - x0).toBeCloseTo(14 * per);
+		expect(y1 - y0).toBeCloseTo(10.5 * per);
+		expect(busiestCrop(nao, 14, 10.5)).toEqual([x0, y0, x1, y1]);
+		// The chosen panel holds at least one rain drop, counting every repeat of each drop.
+		const inside = nao.drops.filter((d) => d.layer === "main" && copiesIn(nao, { ...d, reach: 0 }, [x0, y0, x1, y1]).length > 0);
+		expect(inside.length).toBeGreaterThan(0);
+	});
+});
+
+describe("print files", () => {
+	it("keep the ink's exact color through the blur-and-cut (the renderer used to turn it white)", async () => {
+		const nao = makeNao();
+		const svg = naoSvg(nao, { ground: "#1a191c", ink: "#56b2c7", region: [0, 0, 900, 900], scale: 0.5 });
+		const { data, info } = await sharp(Buffer.from(svg)).raw().toBuffer({ resolveWithObject: true });
+		let ink = 0, white = 0;
+		for (let i = 0; i < data.length; i += info.channels) {
+			if (data[i] === 0x56 && data[i + 1] === 0xb2 && data[i + 2] === 0xc7) ink++;
+			if (data[i] > 240 && data[i + 1] > 240 && data[i + 2] > 240) white++;
+		}
+		expect(ink).toBeGreaterThan(1000);
+		expect(white).toBe(0);
+	});
+});
+
+describe("the tee's back panel", () => {
+	it("is composed for its rectangle, the same way every time", () => {
+		const a = naoPanel(14, 10.5);
+		const per = 1000 / NAO_DEFAULTS.printIn;
+		expect(a.region).toEqual([0, 0, 14 * per, 10.5 * per]);
+		expect(naoSvg(a.nao, { ground: "#000", ink: "#fff", region: a.region })).toBe(naoSvg(naoPanel(14, 10.5).nao, { ground: "#000", ink: "#fff", region: a.region }));
+		// One big ripple, a few more, and some drizzle; every drop centered inside the rectangle.
+		expect(a.nao.drops.filter((d) => d.layer === "main").map((d) => d.rings)).toEqual([10, 7, 4]);
+		for (const d of a.nao.drops) {
+			expect(d.x).toBeGreaterThan(0);
+			expect(d.x).toBeLessThan(a.region[2]);
+			expect(d.y).toBeGreaterThan(0);
+			expect(d.y).toBeLessThan(a.region[3]);
+		}
 	});
 });
 

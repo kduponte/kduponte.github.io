@@ -1,0 +1,77 @@
+---
+// 01. Kyle's own words lead. The rest only restates the references he gave for the redesign;
+// nothing personal is filled in for him. Songs are named and linked, never quoted.
+import SectionOpener from "../../editorial/SectionOpener.astro";
+import FactFile from "../../editorial/FactFile.astro";
+import PullQuote from "../../editorial/PullQuote.astro";
+import Kicker from "../../editorial/Kicker.astro";
+
+const facts = [
+	{ k: "Layout", v: "Japanese magazines: Popeye, Brutus" },
+	{ k: "Streetwear", v: "Cav Empt, Stüssy Japan, Human Made" },
+	{ k: "Ripple drawing", v: "After Cav Empt's lookbook" },
+	{ k: "The rain", v: "Hilo, on the Big Island" },
+	{ k: "Hilo's rain", v: "Kanilehua" },
+];
+
+const songs = [
+	{ title: "Hilo Hanakahi", by: "Credited to Keola Naumu", note: "Names Kanilehua as the rain of the district.", href: "https://www.huapala.org/Hi/Hilo_Hanakahi.html" },
+	{ title: "Hilo Hula", by: "Joe Kalima", note: "The Kanilehua rain is its central image.", href: "https://www.huapala.org/Hi/Hilo_Hula.html" },
+	{ title: "Ka Ua aʻo Hilo", by: "Traditional, recorded by Kawai Cockett", note: "Plays on the saying about Hilo's endless rain.", href: "https://www.huapala.org/Ka/Ka_Ua_Ao_HIlo.html" },
+	{ title: "Hilo Rains", by: "Leilehua Yuen", note: "Its melody came from rain drumming on a tin roof.", href: "https://www.kaahelehawaii.com/hilo-rains/" },
+	{ title: "Ua Like nō a Like", by: "Alice Everett, 1888", note: "Calls on the Kanilehua rain in its first verse.", href: "https://ksbe.edu/article/kukahekahe-mele-hooheno-ua-like-no-a-like" },
+	{ title: "ʻAnoʻai", by: "Traditional", note: "A greeting to a lover, set in the Kanilehua rain.", href: "https://www.huapala.org/AM/Anoai.html" },
+];
+---
+
+<section id="backstory" class="pt-20 md:pt-28">
+	<SectionOpener
+		number="01"
+		kicker="The backstory"
+		title="Magazines for the layout, Hilo for the rain"
+		deck="The site borrows its look from Japanese streetwear and the magazines that cover it. The pattern running through it comes from somewhere closer to home."
+	/>
+	<div class="mx-auto mt-14 grid max-w-7xl grid-cols-1 gap-12 px-6 md:grid-cols-12 md:px-12">
+		<div class="mag md:col-span-7">
+			<!-- DRAFT: Kyle's story goes here. Only his own sentence below is his; the rest is structure. -->
+			<p>
+				In my words: we took inspiration from Japanese streetwear and magazines for the formatting and design, but the pattern is based on raindrop ripples, which is inspired by rainy Hilo.
+			</p>
+			<p>
+				The formatting is the magazine part. Every write-up opens like a feature: a running head, a big outlined section number, a title and a standfirst. Facts get gathered into tabbed boxes, the way Brutus runs a memo, and lists are set as numbered selections, the way Popeye lays out a buying guide.
+			</p>
+			<p>
+				The ripple is the Hilo part. Rings of rain on water run behind every header, tile and chapter on the site, drawn so they look wet rather than mechanical.
+			</p>
+			<h3>Ka ua Kanilehua</h3>
+			<p>
+				Hilo's rain has a name, Kanilehua: a misty rain, glossed as the rain the lehua blossoms drink, and as rain that sounds on the lehua. There's an ʻōlelo noʻeau (a Hawaiian proverb) for how often it falls: <i>Hana mao ʻole ka ua o Hilo</i>, the rain of Hilo never lets up. It's usually said of something that just keeps on. For work clothes it reads as relentless and everlasting.
+			</p>
+		</div>
+		<aside class="md:col-span-4 md:col-start-9" aria-label="References">
+			<div class="space-y-10 md:sticky md:top-24">
+				<FactFile title="References" rows={facts} tone="ink" note="From the redesign brief" />
+			</div>
+		</aside>
+	</div>
+
+	<div class="mx-auto mt-16 max-w-7xl px-6 md:px-12">
+		<Kicker tab="01.1">Hilo's rain in song</Kicker>
+		<p class="mt-5 max-w-[65ch] text-[17px] font-medium leading-relaxed">The words live at the links.</p>
+		<ol class="mt-6 grid grid-cols-1 gap-x-10 md:grid-cols-2">
+			{
+				songs.map((s) => (
+					<li class="border-t-[3px] border-black py-4">
+						<a class="link text-lg" href={s.href} target="_blank" rel="noopener noreferrer">{s.title}</a>
+						<p class="font-mono mt-1 text-[10px] uppercase">{s.by}</p>
+						<p class="mt-1 text-[15px] font-medium leading-snug">{s.note}</p>
+					</li>
+				))
+			}
+		</ol>
+	</div>
+
+	<PullQuote class="mt-20" cite="Kyle, on the redesign">
+		The pattern is based on raindrop ripples, which is inspired by rainy Hilo.
+	</PullQuote>
+</section>

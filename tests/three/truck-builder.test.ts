@@ -1,12 +1,18 @@
 import { describe, expect, it } from "vitest";
-import { BackSide, Box3, CylinderGeometry, Group, Mesh, MeshBasicMaterial, MeshStandardMaterial, Vector3 } from "three";
+import { BackSide, Box3, CylinderGeometry, Group, Mesh, MeshBasicMaterial, MeshStandardMaterial, RingGeometry, Vector3, type Object3D } from "three";
 import {
 	AS_IT_SITS,
+	CARGO,
 	CATALOG,
 	FRONT_TINTS,
 	KYLE_BUILD,
 	NOAH_BUILD,
+	PICKER_GROUPS,
 	REAR_TINTS,
+	RIDES,
+	SHOCKS,
+	TIRES,
+	WHEELS,
 	WINDSHIELD_TINTS,
 	decodeBuild,
 	describeBuild,
@@ -16,8 +22,10 @@ import {
 	truckSetup,
 	type Build,
 } from "../../src/lib/three/truck-builder-options";
-import { DEFAULT_TRUCK_COLORS, OPEN_ANGLES, buildToyotaTruck, type TruckModel } from "../../src/lib/three/toyota-truck-model";
+import { CARGO_FLOOR_Y, DEFAULT_TRUCK_COLORS, OPEN_ANGLES, STICKER_DRAW_SCALE, buildToyotaTruck, type TruckModel } from "../../src/lib/three/toyota-truck-model";
 import { FRAME_RADIUS, SPIN_CENTER_X } from "../../src/scripts/three/subjects/truck-builder";
+import { OUTLINE_SMALL } from "../../src/lib/three/kit";
+import * as engineModule from "../../src/lib/three/engine-22re-model";
 
 const INCH = 0.0254;
 
@@ -27,6 +35,22 @@ function bounds(truck: TruckModel): Box3 {
 	for (const p of truck.parts) box.expandByObject(p);
 	return box;
 }
+
+/** Bounds of the visible parts under a named node (outline shells left out). */
+function boundsOf(truck: TruckModel, name: string): Box3 {
+	truck.group.updateMatrixWorld(true);
+	const node = truck.group.getObjectByName(name);
+	const box = new Box3();
+	if (!node) return box;
+	for (const p of truck.parts) {
+		let o: Object3D | null = p;
+		while (o && o !== node) o = o.parent;
+		if (o) box.expandByObject(p, true); // precise: from the vertices, not a rotated bounding box
+	}
+	return box;
+}
+
+const colorOf = (m: Mesh) => (m.material as MeshStandardMaterial).color?.getHexString();
 
 describe("truck builder catalog", () => {
 	it("works out tire diameters from the size code", () => {
@@ -67,15 +91,21 @@ describe("truck builder catalog", () => {
 		expect([r.tintFront.vlt, r.tintRear.vlt, r.tintWindshield.vlt]).toEqual([0.2, 0.2, 0.2]);
 		expect(r.tailgate.lettering).toBe(false);
 		expect(r.exhaust.kind).toBe("tip");
-		expect(r.board.board).toBe(true);
+		expect(r.cargo.kind).toBe("longboard");
 		expect(r.bed.kind).toBe("none");
 	});
 
-	it("builds Noah's monster-truck version: 1991 navy, 6.5 in of lift, 35 in Boggers on 15 x 10s, shock hoops, steps, stacks, McFly roll bar", () => {
+	it("builds Noah's monster-truck version: 1991 navy, about 8 in of lift on a solid-axle swap, 35 in Boggers on 15 x 10s, shock hoops, steps, stacks, McFly roll bar", () => {
 		const r = resolveBuild(NOAH_BUILD);
 		expect(r.paint.id).toBe("8E3");
 		expect(r.paint.spec).toContain("1991 factory");
-		expect([r.ride.front, r.ride.rear].map((m) => m / INCH)).toEqual([6.5, 6.5]);
+		// Taller than the tallest 2WD setup (Fabtech 3.5 in plus the 3 in body lift), with the body lift still at Hawaii's 3 in.
+		expect(r.ride.id).toBe("sas");
+		expect([r.ride.front, r.ride.rear].map((m) => m / INCH)).toEqual([8, 8]);
+		const twoWdMax = RIDES.find((x) => x.id === "fabtech-pa")!;
+		expect(r.ride.front).toBeGreaterThan(twoWdMax.front);
+		expect(r.ride.spec).toContain('3" body');
+		expect(r.ride.spec).toContain("estimated");
 		expect(r.steps.kind).toBe("tube");
 		expect(r.shocks.kind).toBe("hoops");
 		expect(r.exhaust.kind).toBe("stacks");
@@ -88,8 +118,19 @@ describe("truck builder catalog", () => {
 		expect(r.rack.kind).toBe("rollbar");
 	});
 
-	it("drops the board when a shell or cover closes the bed", () => {
-		expect(resolveBuild({ ...KYLE_BUILD, bed: "shell" }).board.board).toBe(false);
+	it("drops the cargo when a shell or cover closes the bed, but not for a spray-in liner", () => {
+		for (const bed of ["shell", "tonneau"]) expect(resolveBuild({ ...KYLE_BUILD, bed }).cargo.kind).toBe("none");
+		expect(resolveBuild({ ...KYLE_BUILD, bed: "linex" }).cargo.kind).toBe("longboard");
+	});
+
+	it("offers at least four choices in every picker group, and at least four tires for every wheel size", () => {
+		for (const g of PICKER_GROUPS) expect(CATALOG[g.key].length, g.label).toBeGreaterThanOrEqual(4);
+		for (const d of new Set(WHEELS.map((w) => w.diameterIn))) expect(TIRES.filter((t) => t.rimIn === d).length, `${d} in wheels`).toBeGreaterThanOrEqual(4);
+	});
+
+	it("still opens links from before the bed held more than a surfboard", () => {
+		expect(decodeBuild("#build=paint=202&board=longboard").cargo).toBe("longboard");
+		expect(describeBuild({ ...AS_IT_SITS, cargo: "crf50f" }).find((l) => l.label === "Cargo")?.value).toMatch(/CRF50F/);
 	});
 
 	it("round-trips a build through the share link", () => {
@@ -294,10 +335,10 @@ describe("buildToyotaTruck with builder options", () => {
 		plain.dispose();
 	});
 
-	it("frames every build at one scale about one spin point, the longboard included", () => {
+	it("frames every build at one scale about one spin point, every cargo included", () => {
 		// The builder never rescales a build, so each must fit the framed radius (the camera adds a 12% margin).
 		const v = new Vector3();
-		for (const b of [AS_IT_SITS, KYLE_BUILD, NOAH_BUILD]) {
+		for (const b of [AS_IT_SITS, KYLE_BUILD, NOAH_BUILD, ...CARGO.map((c) => ({ ...NOAH_BUILD, cargo: c.id, steps: "apex-sliders", exhaust: "turndown" }))]) {
 			const { body, options } = truckSetup(b);
 			const t = buildToyotaTruck({ ...DEFAULT_TRUCK_COLORS, body }, { ...options, openable: true });
 			for (const k of ["hood", "doorLeft", "doorRight", "tailgate"] as const) t.setOpen?.(k, 1);
@@ -315,6 +356,257 @@ describe("buildToyotaTruck with builder options", () => {
 			expect(reach).toBeLessThan(FRAME_RADIUS * 1.05);
 			t.dispose();
 		}
+	});
+
+	it("carries each cargo inside the open bed, behind the cab, on the floor", () => {
+		for (const c of CARGO.filter((o) => o.kind !== "none" && o.kind !== "longboard")) {
+			// No tire size given, so the body sits at its reference height and the floor is where the model says.
+			const t = buildToyotaTruck(undefined, { cargo: c.kind });
+			const box = boundsOf(t, "cargo");
+			expect(box.isEmpty(), c.name).toBe(false);
+			expect(box.min.y, c.name).toBeGreaterThan(CARGO_FLOOR_Y - 0.005);
+			expect(Math.max(-box.min.z, box.max.z), c.name).toBeLessThan(0.74); // inside the bed walls
+			expect(box.max.x, c.name).toBeLessThan(-0.7); // behind the bed's front wall
+			// Only the ulua rods' tips reach past the tailgate.
+			expect(box.min.x, c.name).toBeGreaterThan(c.kind === "ulua" ? -2.8 : -2.58);
+			t.dispose();
+		}
+		const shell = buildToyotaTruck(undefined, { bed: "shell", cargo: "cooler" });
+		expect(boundsOf(shell, "cargo").isEmpty()).toBe(true);
+		shell.dispose();
+	});
+
+	it("draws the CRF50F to Honda's numbers: 30.5 in tall, 22.9 in across the bars, 51.3 in long", () => {
+		const t = buildToyotaTruck(undefined, { cargo: "dirtbike" });
+		const size = boundsOf(t, "crf50f").getSize(new Vector3());
+		const box = boundsOf(t, "crf50f");
+		expect((box.max.y - CARGO_FLOOR_Y) / INCH).toBeCloseTo(30.5, 0);
+		expect(size.z / INCH).toBeCloseTo(22.9, 0);
+		expect(size.x / INCH).toBeCloseTo(51.3, 0);
+		// Honda's white HONDA and CRF on both sides of the bike.
+		const node = t.group.getObjectByName("crf50f")!;
+		const ink: Mesh[] = [];
+		node.traverse((o) => {
+			if ((o as Mesh).isMesh && t.parts.includes(o as Mesh) && colorOf(o as Mesh) === "f7f6f1") ink.push(o as Mesh);
+		});
+		const sides = new Set(ink.map((m) => Math.sign(m.getWorldPosition(new Vector3()).z)));
+		expect(ink.length).toBeGreaterThan(20);
+		expect(sides).toEqual(new Set([-1, 1]));
+		t.dispose();
+	});
+
+	it("sizes the cooler as the YETI Tundra 110: 37.2 x 18 x 19.8 in outside, with its latches and nameplate", () => {
+		const t = buildToyotaTruck(undefined, { cargo: "cooler" });
+		const box = boundsOf(t, "cooler");
+		expect((box.max.y - CARGO_FLOOR_Y) / INCH).toBeCloseTo(19.8, 0); // the T-latch handles ride just over the lid
+		const size = box.getSize(new Vector3());
+		expect(size.x / INCH).toBeGreaterThan(18);
+		expect(size.x / INCH).toBeLessThan(18.8); // latches and nameplate stand off the front
+		expect(size.z / INCH).toBeGreaterThan(37.2);
+		expect(size.z / INCH).toBeLessThan(41); // the rope handles hang off the ends
+		const latches = t.parts.filter((p) => colorOf(p) === "18191b");
+		expect(latches.length).toBeGreaterThanOrEqual(4 + 4 + 1); // feet, two-part latches, nameplate
+		t.dispose();
+	});
+
+	it("lays the ulua rods in 6 ft 6 in halves, half of PENN's 13 ft, with PENN's sleeve, grips and accent bands", () => {
+		const t = buildToyotaTruck(undefined, { cargo: "ulua" });
+		const blanks = t.parts.filter((p) => colorOf(p) === "131416");
+		expect(blanks).toHaveLength(6);
+		for (const b of blanks) expect((b.geometry as CylinderGeometry).parameters.height / INCH).toBeCloseTo(78, 6);
+		for (const hex of ["b02a6b", "b8913a"]) expect(t.parts.filter((p) => colorOf(p) === hex), hex).toHaveLength(3);
+		t.dispose();
+	});
+
+	it("loads rubbish bags that differ: different fill, height and lean, one on its side", () => {
+		const t = buildToyotaTruck(undefined, { cargo: "rubbish" });
+		t.group.updateMatrixWorld(true);
+		const bags = t.parts.filter((p) => colorOf(p) === "121315" && p.geometry.type === "LatheGeometry");
+		expect(bags).toHaveLength(4);
+		const heights = bags.map((b) => Math.round(new Box3().setFromObject(b, true).getSize(new Vector3()).y * 1000));
+		expect(new Set(heights).size).toBe(4);
+		t.dispose();
+	});
+
+	it("fits each shock setup to its hoops: one or two per wheel, at the shock's own diameter", () => {
+		for (const s of SHOCKS.filter((o) => o.setup)) {
+			const t = buildToyotaTruck(undefined, { shocks: "hoops", shockSetup: s.setup, openable: true });
+			const bodies = t.parts.filter((p) => colorOf(p) === s.setup!.body.slice(1) && p.geometry instanceof CylinderGeometry);
+			expect(bodies, s.name).toHaveLength(2 * s.setup!.perWheel);
+			for (const b of bodies) expect(((b.geometry as CylinderGeometry).parameters.radiusTop * 2) / INCH).toBeCloseTo(s.setup!.diameterIn, 6);
+			t.dispose();
+		}
+	});
+
+	it("draws every new part choice without error, each adding parts to the plain truck", () => {
+		const plain = buildToyotaTruck(undefined, {});
+		const n = plain.parts.length;
+		const variants = [
+			{ headlights: "h4" },
+			{ headlights: "retro" },
+			{ steps: "slider" },
+			{ exhaust: "turndown" },
+			{ bed: "liner" },
+			{ stickers: ["tc"] },
+			{ stickers: ["lemon"] },
+			{ stickers: ["kanaka"] },
+			{ stickers: ["dahui"] },
+		] as const;
+		for (const v of variants) {
+			const t = buildToyotaTruck(undefined, v as never);
+			expect(t.parts.length, JSON.stringify(v)).toBeGreaterThan(n);
+			t.dispose();
+		}
+		plain.dispose();
+	});
+
+	it("sizes each sticker: Kanaka Maoli flag 3.75 x 2.5 in, T&C 6 in, Lemon and Da Hui about 4 in", () => {
+		/** A sticker's size in its own frame on the glass: across (z) and up the glass (y). */
+		const sizeOf = (kind: "tc" | "lemon" | "kanaka" | "dahui") => {
+			const t = buildToyotaTruck(undefined, { stickers: [kind] });
+			t.group.updateMatrixWorld(true);
+			const node = t.group.getObjectByName(`sticker-${kind}`)!;
+			const toLocal = node.matrixWorld.clone().invert();
+			const box = new Box3();
+			const v = new Vector3();
+			node.traverse((o) => {
+				const m = o as Mesh;
+				if (!m.isMesh || !t.parts.includes(m)) return;
+				const pos = m.geometry.attributes.position;
+				for (let i = 0; i < pos.count; i++) box.expandByPoint(v.fromBufferAttribute(pos, i).applyMatrix4(m.matrixWorld).applyMatrix4(toLocal));
+			});
+			t.dispose();
+			return box.getSize(new Vector3());
+		};
+		const flag = sizeOf("kanaka");
+		expect(flag.z / INCH).toBeCloseTo(3.75, 2);
+		expect(flag.y / INCH).toBeCloseTo(2.5, 2);
+		expect(sizeOf("tc").z / INCH).toBeCloseTo(6, 2);
+		for (const k of ["lemon", "dahui"] as const) {
+			const s = sizeOf(k);
+			expect(s.z / INCH, k).toBeCloseTo(4, 1);
+			expect(s.y / INCH, k).toBeCloseTo(4, 1);
+		}
+	});
+
+	it("puts every sticker in the same spot: the bottom passenger-side corner of the rear glass", () => {
+		const kinds = ["kalapana", "tc", "lemon", "kanaka", "dahui"] as const;
+		let capTop = 0;
+		const boxes = kinds.map((kind) => {
+			const t = buildToyotaTruck(undefined, { stickers: [kind] });
+			capTop = boundsOf(t, "bed-front-cap").max.y;
+			const box = boundsOf(t, `sticker-${kind}`);
+			t.dispose();
+			return box;
+		});
+		for (const [i, box] of boxes.entries()) {
+			// Outboard edges and bottoms all line up, on the glass that shows: inside the C pillar's inner
+			// face (0.735 m) and its black outline, and above the bed's front-wall cap and its outline.
+			expect(box.max.z, kinds[i]).toBeCloseTo(boxes[0].max.z, 3);
+			expect(box.min.y, kinds[i]).toBeCloseTo(boxes[0].min.y, 2);
+			expect(box.max.z, kinds[i]).toBeLessThan(0.735 - OUTLINE_SMALL);
+			expect(box.max.z, kinds[i]).toBeGreaterThan(0.735 - OUTLINE_SMALL - 0.03);
+			expect(box.min.y, kinds[i]).toBeGreaterThan(capTop + OUTLINE_SMALL);
+			expect(box.min.y, kinds[i]).toBeLessThan(capTop + OUTLINE_SMALL + 0.04);
+			// All on the passenger side's fixed pane, outboard of the slider's frame at 0.26 m.
+			expect(box.min.z, kinds[i]).toBeGreaterThan(0.26);
+		}
+		// Drawn 1.5x real size: the 3.75 in flag is 5.6 in across on the glass.
+		const flagBox = boxes[kinds.indexOf("kanaka")];
+		expect((flagBox.max.z - flagBox.min.z) / INCH).toBeCloseTo(3.75 * STICKER_DRAW_SCALE, 1);
+		// Asked for together, they line up inboard of the corner instead of piling up.
+		const both = buildToyotaTruck(undefined, { stickers: ["kanaka", "lemon"] });
+		const lemon = boundsOf(both, "sticker-lemon");
+		const flag = boundsOf(both, "sticker-kanaka");
+		expect(lemon.max.z).toBeCloseTo(boxes[0].max.z, 3);
+		expect(flag.max.z).toBeLessThan(lemon.min.z);
+		both.dispose();
+	});
+
+	it("keeps the engine-bay floor behind the radiator and between the frame rails, out of sight under the bumper", () => {
+		const t = buildToyotaTruck(undefined, { openable: true });
+		t.group.updateMatrixWorld(true);
+		const floor = new Box3().setFromObject(t.group.getObjectByName("bay-floor")!);
+		const bumper = new Box3();
+		for (const p of t.parts) if (p.position.x > 2.2 && p.position.y < 0.6) bumper.expandByObject(p);
+		// The radiator sits 0.1 m behind the nose; the floor stops short of it and well inside the fenders.
+		expect(floor.max.x).toBeLessThan(bumper.min.x - 0.1);
+		expect(floor.max.z - floor.min.z).toBeLessThan(0.9);
+		t.dispose();
+	});
+
+	it("fills the engine bay around the engine, all of it under the closed hood and inside the fenders", () => {
+		const { build22REEngine } = engineModule;
+		for (const opts of [{}, truckSetup(NOAH_BUILD).options, truckSetup(KYLE_BUILD).options]) {
+			const engine = build22REEngine({ cutaway: false });
+			const t = buildToyotaTruck(undefined, { ...opts, openable: true, engine: engine.group });
+			t.group.updateMatrixWorld(true);
+			const bay = t.group.getObjectByName("bay")!;
+			const box = boundsOf(t, "bay");
+			const hood = boundsOf(t, "hood");
+			// Battery, air cleaner, meter, duct, tanks, booster, master cylinder, fuse box and the aprons.
+			let parts = 0;
+			bay.traverse((o) => (o as Mesh).isMesh && t.parts.includes(o as Mesh) && parts++);
+			expect(parts).toBeGreaterThan(25);
+			expect(box.max.y).toBeLessThan(hood.max.y);
+			expect(box.max.z).toBeLessThan(0.82);
+			expect(box.min.z).toBeGreaterThan(-0.82);
+			// The crossover duct reaches the hose leaving the throttle body.
+			const stub = new Vector3(...(engine.group.userData.intakeStubEnd as [number, number, number])).applyMatrix4(engine.group.matrixWorld);
+			expect(box.distanceToPoint(stub)).toBeLessThan(0.01);
+			t.dispose();
+			engine.dispose();
+		}
+		// Only the openable truck (the builder) has a bay to fill.
+		const closed = buildToyotaTruck(undefined, {});
+		expect(closed.group.getObjectByName("bay")).toBeUndefined();
+		closed.dispose();
+	});
+
+	it("puts Noah's big 8-inch KC lights on top of the front bumper, and none on the stock or Kyle's truck", () => {
+		const noah = resolveBuild(NOAH_BUILD);
+		expect(noah.bumperLights.id).toBe("kc8-black");
+		expect(noah.bumperLights.lights?.diameterIn).toBe(8);
+		const t = buildToyotaTruck(undefined, truckSetup(NOAH_BUILD).options);
+		const lights = boundsOf(t, "bumper-lights");
+		const bumper = new Box3();
+		t.group.updateMatrixWorld(true);
+		for (const p of t.parts) if (p.position.x > 2.2 && p.position.y > 0.5 && p.position.y < 0.66 && Math.abs(p.position.z) < 0.1) bumper.expandByObject(p);
+		// Two lights side by side, each 8 in across (plus its cover's lip), standing on the bumper.
+		expect((lights.max.y - bumper.max.y) / INCH).toBeGreaterThan(8);
+		expect(lights.min.y).toBeGreaterThan(bumper.min.y);
+		expect(lights.max.z - lights.min.z).toBeGreaterThan(2 * 8 * INCH);
+		expect(Math.max(-lights.min.z, lights.max.z)).toBeLessThan(0.82);
+		t.dispose();
+		for (const b of [AS_IT_SITS, KYLE_BUILD]) {
+			const plain = buildToyotaTruck(undefined, truckSetup(b).options);
+			expect(plain.group.getObjectByName("bumper-lights")).toBeUndefined();
+			plain.dispose();
+		}
+		// Every choice in the group builds.
+		for (const o of CATALOG.bumperLights) {
+			const truck = buildToyotaTruck(undefined, truckSetup({ ...AS_IT_SITS, bumperLights: o.id }).options);
+			expect(!!truck.group.getObjectByName("bumper-lights"), o.id).toBe(o.lights !== null);
+			truck.dispose();
+		}
+	});
+
+	it("carries the KC lights in yellow or black covers, or leaves the bar bare", () => {
+		const count = (lights: "none" | "yellow" | "black", hex: string) => {
+			const t = buildToyotaTruck(undefined, { rack: "rollbar", rackLights: lights });
+			const c = t.parts.filter((p) => colorOf(p) === hex).length;
+			t.dispose();
+			return c;
+		};
+		expect(count("yellow", "ffd400")).toBe(4);
+		expect(count("black", "121315")).toBe(4);
+		expect(count("none", "ffd400") + count("none", "121315")).toBe(0);
+	});
+
+	it("paints the tailgate letters in the chosen color", () => {
+		const t = buildToyotaTruck(undefined, { tailgateLetterColor: "#b9bdc1" });
+		expect(t.parts.filter((p) => colorOf(p) === "b9bdc1").length).toBeGreaterThan(6);
+		t.dispose();
 	});
 
 	it("stands the McFly roll bar and its KC lights above the cab roof", () => {

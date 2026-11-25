@@ -28,7 +28,9 @@ const createTruckBuilder: SubjectFactory = ({ THREE, host, reducedMotion, reques
 	const engine = build22REEngine({ cutaway: false });
 	const rig = new THREE.Group();
 	const spinner = new THREE.Group();
-	spinner.rotation.y = -0.6;
+	// It holds still until dragged, so start on a front three-quarter: the grille and the passenger side,
+	// about 40 degrees off the camera.
+	spinner.rotation.y = -0.15;
 	rig.add(spinner);
 
 	const amount: Record<OpenerKey, number> = { hood: 0, doorLeft: 0, doorRight: 0, tailgate: 0 };
@@ -79,7 +81,8 @@ const createTruckBuilder: SubjectFactory = ({ THREE, host, reducedMotion, reques
 		root: rig,
 		spin: spinner,
 		framing: { target: new THREE.Vector3(0, 0.75, 0), turnRadius: FRAME_RADIUS, halfHeight: 1.1, viewDir: new THREE.Vector3(5.2, 1.9, 5.9) },
-		autoSpeed: 0.3,
+		// Holds still until dragged; the page shows a drag-to-spin hint instead.
+		autoSpeed: 0,
 		update({ dt, spin }) {
 			if (!truck) return;
 			for (const wheel of truck.wheels) wheel.rotation.z -= spin * dt * 3;

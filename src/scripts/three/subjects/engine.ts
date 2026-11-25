@@ -19,7 +19,8 @@ const createEngine: SubjectFactory = ({ THREE, host, reducedMotion, requestRende
 	const root = host.closest<HTMLElement>("[data-engine-root]") ?? host;
 	const tints = JSON.parse(host.dataset.tints ?? "{}") as Partial<Record<EngineSystem, string>>;
 	const engine = build22REEngine({ tints });
-	engine.group.rotation.y = -0.5;
+	// It holds still until dragged, so start on the cut-away driver's side with the timing-chain end in view.
+	engine.group.rotation.y = -1.9;
 	engine.setCrank(STILL_ANGLE);
 
 	const raycaster = new THREE.Raycaster();
@@ -54,7 +55,8 @@ const createEngine: SubjectFactory = ({ THREE, host, reducedMotion, requestRende
 		root: engine.group,
 		spin: engine.group,
 		framing: { target: new THREE.Vector3(-0.07, 0.1, 0), turnRadius: 0.6, halfHeight: 0.33 },
-		autoSpeed: 0.22,
+		// Holds still until dragged; the page shows a drag-to-spin hint instead.
+		autoSpeed: 0,
 		update({ t }) {
 			if (!reducedMotion) engine.setCrank(crankAngleAt(t));
 		},

@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { Box3, Vector3 } from "three";
-import { FIN_BOX, TC_LONGBOARD, buildLongboard, foilAt, halfWidthAt } from "../../src/lib/three/longboard-model";
+import { Box3, Mesh, MeshStandardMaterial, Vector3 } from "three";
+import { FIN_BOX, TC_LONGBOARD, buildLongboard, foilAt, halfWidthAt, surfaceY } from "../../src/lib/three/longboard-model";
 
 const INCH = 0.0254;
 const L = TC_LONGBOARD.lengthM;
@@ -45,5 +45,35 @@ describe("buildLongboard", () => {
 		expect(size.x).toBeLessThan(L + 0.05);
 		expect(FIN_BOX.lengthM / INCH).toBe(10);
 		expect(() => board.dispose()).not.toThrow();
+	});
+
+	it("is 3 in thick at the stringer, and the stringer lies just on each face from tail to nose", () => {
+		const board = buildLongboard();
+		const meshes: Mesh[] = [];
+		board.group.traverse((o) => (o as Mesh).isMesh && meshes.push(o as Mesh));
+		const isWood = (m: Mesh) => (m.material as MeshStandardMaterial).color?.getHexString() === "8b5a2b";
+		const stringers = meshes.filter(isWood);
+		expect(stringers).toHaveLength(2);
+		let checked = 0;
+		for (const s of stringers) {
+			const pos = s.geometry.getAttribute("position");
+			// Which face this one is laid on: the bottom (+1) or the deck (-1).
+			const [x0, y0, z0] = [pos.getX(0), pos.getY(0), pos.getZ(0)];
+			const side = Math.abs(y0 - surfaceY(1, x0, z0)) < Math.abs(y0 - surfaceY(-1, x0, z0)) ? 1 : -1;
+			const xs: number[] = [];
+			for (let i = 0; i < pos.count; i++) {
+				const [x, y, z] = [pos.getX(i), pos.getY(i), pos.getZ(i)];
+				// Never more than a couple of millimeters off its face, anywhere along it, and always outside it.
+				expect(Math.abs(y - surfaceY(side, x, z))).toBeLessThan(0.002);
+				expect(side * (y - surfaceY(side, x, z))).toBeGreaterThan(0);
+				xs.push(x);
+				checked++;
+			}
+			expect(Math.min(...xs)).toBeLessThan(-L / 2 + 0.01);
+			expect(Math.max(...xs)).toBeGreaterThan(L / 2 - 0.01);
+		}
+		expect(checked).toBeGreaterThan(600);
+		expect((surfaceY(1, 0, 0) - surfaceY(-1, 0, 0)) / INCH).toBeCloseTo(3, 6);
+		board.dispose();
 	});
 });

@@ -5,6 +5,7 @@ import {
 	Color,
 	CylinderGeometry,
 	ExtrudeGeometry,
+	Float32BufferAttribute,
 	Group,
 	Matrix4,
 	MeshStandardMaterial,
@@ -16,7 +17,6 @@ import {
 	Vector3,
 	type Material,
 } from "three";
-import { mergeVertices } from "three/examples/jsm/utils/BufferGeometryUtils.js";
 import { createPartKit, slab } from "./kit";
 
 /**
@@ -80,6 +80,8 @@ export function rockerAt(f: number): number {
 /** Deck dome and bottom roll, as fractions of the half thickness at the stringer, easing to nothing at the rails. */
 const DECK_DOME = 0.15;
 const BOTTOM_ROLL = 0.05;
+/** Scales the dome and roll back so the board is its stated thickness at the stringer, thinning toward the rails. */
+const DOME_NORM = 1 + (DECK_DOME + BOTTOM_ROLL) / 2;
 
 /**
  * Where the board's surface is, relative to its straight axis: `side` +1 for the bottom, -1 for the
@@ -90,7 +92,7 @@ export function surfaceY(side: 1 | -1, x: number, z: number, spec: LongboardSpec
 	const hw = halfWidthAt(f, spec) || 1e-6;
 	const zn = Math.min(1, Math.abs(z) / hw);
 	const dome = (side > 0 ? BOTTOM_ROLL : DECK_DOME) * (1 - zn * zn);
-	return side * (spec.thicknessM / 2) * foilAt(f) * (1 + dome) - rockerAt(f);
+	return (side * (spec.thicknessM / 2) * foilAt(f) * (1 + dome)) / DOME_NORM - rockerAt(f);
 }
 
 /** Distance from the board's straight axis down to its deck at the stringer, for resting it deck-down. */
@@ -216,57 +218,87 @@ export function buildLongboard(spec: LongboardSpec = TC_LONGBOARD): LongboardMod
 	const t = spec.thicknessM;
 
 	/**
-	 * Smooth a geometry and bend it into the board's shape: merge its vertices so it shades round,
-	 * then give every vertex the foil, dome and rocker of its station.
+	 * An even grid over the board: stations along its length (closer together toward the nose and tail),
+	 * and a ring round each one: across the bottom, round one rail, across the deck and round the other.
+	 * Every vertex gets the foil, dome and rocker of its own spot, so the faces follow the board's curves
+	 * instead of cutting straight across them.
 	 */
-	const shapeBoard = (geo: BufferGeometry) => {
-		geo.deleteAttribute("normal");
-		geo.deleteAttribute("uv");
-		const merged = mergeVertices(geo, 1e-5);
-		geo.dispose();
-		const pos = merged.getAttribute("position");
-		for (let i = 0; i < pos.count; i++) {
-			const x = pos.getX(i);
-			const y = pos.getY(i);
-			const z = pos.getZ(i);
-			const f = (x + L / 2) / L;
-			const zn = Math.min(1, Math.abs(z) / (halfWidthAt(f, spec) || 1e-6));
-			const dome = (y > 0 ? BOTTOM_ROLL : DECK_DOME) * (1 - zn * zn);
-			pos.setY(i, y * foilAt(f) * (1 + dome) - rockerAt(f));
+	const STATIONS = 160;
+	const stationAt = (i: number) => 0.5 - 0.5 * Math.cos((Math.PI * i) / STATIONS);
+	const FACE_PTS = 10; // across each face, rail to rail
+	const RAIL_PTS = 10; // round each rail
+	const skin = () => {
+		const pos: number[] = [];
+		const idx: number[] = [];
+		const ring = 2 * (FACE_PTS + 1) + 2 * (RAIL_PTS - 1);
+		const at = (f: number, z: number, v: number) => {
+			const hw = halfWidthAt(f, spec) || 1e-6;
+			const zn = Math.min(1, Math.abs(z) / hw);
+			const dome = (v > 0 ? BOTTOM_ROLL : DECK_DOME) * (1 - zn * zn);
+			pos.push((f - 0.5) * L, v * (t / 2) * foilAt(f) * (1 + dome) / DOME_NORM - rockerAt(f), z);
+		};
+		for (let i = 0; i <= STATIONS; i++) {
+			const f = stationAt(i);
+			const hw = halfWidthAt(f, spec);
+			// 50/50 rails: a half round as deep as the board is thick there, or as wide as it is near the nose tip.
+			const rz = Math.min((t / 2) * foilAt(f), hw);
+			const a = hw - rz;
+			for (let k = 0; k <= FACE_PTS; k++) at(f, a - (2 * a * k) / FACE_PTS, 1); // bottom, +Z to -Z
+			for (let j = 1; j < RAIL_PTS; j++) {
+				const p = Math.PI / 2 + (Math.PI * j) / RAIL_PTS;
+				at(f, -a + rz * Math.cos(p), Math.sin(p)); // the -Z rail, bottom to deck
+			}
+			for (let k = 0; k <= FACE_PTS; k++) at(f, -a + (2 * a * k) / FACE_PTS, -1); // deck, -Z to +Z
+			for (let j = 1; j < RAIL_PTS; j++) {
+				const p = (3 * Math.PI) / 2 + (Math.PI * j) / RAIL_PTS;
+				at(f, a + rz * Math.cos(p), Math.sin(p)); // the +Z rail, deck to bottom
+			}
 		}
-		pos.needsUpdate = true;
-		merged.computeVertexNormals();
-		return merged;
-	};
-	const extrudeThrough = (shape: Shape, depth: number, bevel: number) => {
-		const core = Math.max(depth - 2 * bevel, 1e-4);
-		const geo = new ExtrudeGeometry(shape, {
-			depth: core,
-			bevelEnabled: bevel > 0,
-			bevelThickness: bevel,
-			bevelSize: bevel,
-			bevelOffset: -bevel,
-			bevelSegments: 8,
-			curveSegments: 24,
-		});
-		geo.translate(0, 0, -core / 2);
-		geo.rotateX(-Math.PI / 2); // across -> Z, thickness -> Y
+		for (let i = 0; i < STATIONS; i++) {
+			for (let k = 0; k < ring; k++) {
+				const a0 = i * ring + k;
+				const b0 = i * ring + ((k + 1) % ring);
+				idx.push(a0, a0 + ring, b0, b0, a0 + ring, b0 + ring);
+			}
+		}
+		// Close the square tail with its own copy of the last ring, so its edge stays crisp.
+		const tail = pos.length / 3;
+		pos.push(...pos.slice(0, ring * 3));
+		const center = pos.length / 3;
+		let cy = 0;
+		for (let k = 0; k < ring; k++) cy += pos[k * 3 + 1] / ring;
+		pos.push(-L / 2, cy, 0);
+		for (let k = 0; k < ring; k++) idx.push(center, tail + k, tail + ((k + 1) % ring));
+		const geo = new BufferGeometry();
+		geo.setAttribute("position", new Float32BufferAttribute(pos, 3));
+		geo.setIndex(idx);
+		geo.computeVertexNormals();
 		return geo;
 	};
+	add(group, skin(), white, [0, 0, 0], { outline: 0.01 });
 
-	// Body: the plan outline, extruded through the thickness with fully rounded 50/50 rails.
-	const steps = 120;
-	const outlinePts: Vector2[] = [];
-	for (let i = 0; i <= steps; i++) outlinePts.push(new Vector2(-L / 2 + (i / steps) * L, halfWidthAt(i / steps, spec)));
-	for (let i = steps; i >= 0; i--) outlinePts.push(new Vector2(-L / 2 + (i / steps) * L, -halfWidthAt(i / steps, spec)));
-	add(group, shapeBoard(extrudeThrough(new Shape(outlinePts), t, t * 0.4)), white, [0, 0, 0], { outline: 0.01 });
-
-	// Wood stringer down the center line, through the board and just proud of both faces.
-	const stringerW = 0.25 * INCH;
-	const run: Vector2[] = [];
-	for (let i = 0; i <= 80; i++) run.push(new Vector2(-L / 2 + 0.03 + (i / 80) * (L - 0.06), -stringerW / 2));
-	for (let i = 80; i >= 0; i--) run.push(new Vector2(-L / 2 + 0.03 + (i / 80) * (L - 0.06), stringerW / 2));
-	add(group, shapeBoard(extrudeThrough(new Shape(run), t + 0.003, 0)), wood, [0, 0, 0], { outline: 0 });
+	/** A wood stringer down the center line, laid just proud of one face from tail to nose. */
+	const STRINGER_W = 0.25 * INCH;
+	const stringer = (side: 1 | -1) => {
+		const pos: number[] = [];
+		const idx: number[] = [];
+		for (let i = 0; i <= STATIONS; i++) {
+			const f = stationAt(i);
+			const x = (f - 0.5) * L;
+			const half = Math.min(STRINGER_W / 2, halfWidthAt(f, spec) * 0.9);
+			for (const z of [-half, half]) pos.push(x, surfaceY(side, x, z, spec) + side * 0.001, z);
+			if (i === STATIONS) break;
+			const [a, b, c, d] = [2 * i, 2 * i + 1, 2 * i + 2, 2 * i + 3];
+			idx.push(...(side > 0 ? [a, b, c, b, d, c] : [a, c, b, b, c, d]));
+		}
+		const geo = new BufferGeometry();
+		geo.setAttribute("position", new Float32BufferAttribute(pos, 3));
+		geo.setIndex(idx);
+		geo.computeVertexNormals();
+		return geo;
+	};
+	add(group, stringer(1), wood, [0, 0, 0], { outline: 0 });
+	add(group, stringer(-1), wood, [0, 0, 0], { outline: 0 });
 
 	/** Height of the bottom face (it's the side facing up when the board rides deck down). */
 	const faceAt = (x: number, z = 0) => surfaceY(1, x, z, spec) + 0.0015;

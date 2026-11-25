@@ -4,13 +4,16 @@ import {
 	CircleGeometry,
 	Color,
 	CylinderGeometry,
+	DoubleSide,
 	ExtrudeGeometry,
 	Group,
 	LatheGeometry,
 	Mesh,
 	MeshBasicMaterial,
 	MeshStandardMaterial,
+	RingGeometry,
 	Shape,
+	ShapeGeometry,
 	TorusGeometry,
 	TubeGeometry,
 	Vector2,
@@ -77,8 +80,11 @@ export interface TruckOptions {
 		/** Spoke finish for the mesh wheel: BBS Diamond Black (the default) or chrome. */
 		finish?: "black" | "chrome";
 	};
-	/** Factory 7x6 sealed beams, or LED units of the same size. */
-	headlights?: "sealed" | "led";
+	/**
+	 * Factory 7x6 sealed beams; a glass H4 conversion over a chrome reflector; an LED unit made to look
+	 * like the old lamp (clear lens, chrome reflector, LED module); or an LED unit with rows of emitters.
+	 */
+	headlights?: "sealed" | "h4" | "retro" | "led";
 	/**
 	 * Tire size: the wheels sit on the ground, so a taller tire raises the whole truck. `lugs` gives it a
 	 * mud tread: lugs this deep (inches) across a tread this wide (inches), standing proud of the carcass.
@@ -88,24 +94,38 @@ export interface TruckOptions {
 	ride?: { front: number; rear: number };
 	/** Visible light transmission of the side windows, the rear window and the windshield (fractions; the windshield stays factory if left out). */
 	glassVlt?: { front: number; rear: number; windshield?: number };
-	grille?: "painted" | "chrome";
-	bed?: "none" | "shell" | "tonneau";
-	/** The 7.5 x 2.5 in Kalapana sticker on the rear window. */
+	/** The grille shell: black, chrome, the body color, or black with its TOYOTA letters blacked out too. */
+	grille?: "painted" | "chrome" | "body" | "blackout";
+	/** Over the bed: nothing, a black spray-in liner (still open), a cab-high shell, or a soft tonneau. */
+	bed?: "none" | "liner" | "shell" | "tonneau";
+	/** Rear-window stickers: the 7.5 x 2.5 in Kalapana, T&C's 6 in logo, the Lemon, the 3.75 x 2.5 in Kanaka Maoli flag and the Da Hui badge. */
+	stickers?: ("kalapana" | "tc" | "lemon" | "kanaka" | "dahui")[];
+	/** The 7.5 x 2.5 in Kalapana sticker on the rear window (same as `stickers: ["kalapana"]`). */
 	sticker?: boolean;
 	/** Metallic paint flakes catch more light than a solid color. */
 	metallicPaint?: boolean;
 	/** The factory white TOYOTA on the tailgate. Default true; false leaves the tailgate plain. */
 	tailgateLettering?: boolean;
-	/** A longboard in the open bed, deck down and fin up, tail hanging out over the tailgate. */
+	/** The tailgate letters' color; factory white if left out. */
+	tailgateLetterColor?: string;
+	/** What rides in the open bed: a longboard, broken-down ulua rods, a cooler, rubbish bags or a kids' dirt bike. */
+	cargo?: "none" | "longboard" | "ulua" | "cooler" | "rubbish" | "dirtbike";
+	/** A longboard in the open bed, deck down and fin up, tail hanging out over the tailgate (same as `cargo: "longboard"`). */
 	board?: boolean;
-	/** A tube roll bar in the bed behind the cab with four 6-inch KC Daylighters on top, as on Marty McFly's truck. */
+	/** A tube roll bar in the bed behind the cab, as on Marty McFly's truck. */
 	rack?: "none" | "rollbar";
-	/** Under the doors: 3-inch round step bars, or flat chrome running boards. */
-	steps?: "none" | "tube" | "board";
+	/** The four 6-inch KC Daylighters on the roll bar, by cover color; yellow (McFly's) if left out. */
+	rackLights?: "none" | "yellow" | "black";
+	/** A pair of round KC lights on top of the front bumper: size, and a cover (with its logo color) or a colored lens. */
+	bumperLights?: { diameterIn: number; cover?: string; logo?: string; lens?: string };
+	/** Under the doors: 3-inch round step bars, flat chrome running boards, or tube rock sliders with fill plates. */
+	steps?: "none" | "tube" | "board" | "slider";
 	/** Shocks on custom hoops, stood up just inboard of each front tire where they show in the wheel well. Left out, shocks aren't drawn (at their stock mounts they sit behind the tires). */
 	shocks?: "factory" | "hoops";
-	/** The factory 1.75-inch tailpipe, the same with a chrome tip, or twin 5 x 36 in chrome stacks in the bed. Left out, no exhaust is drawn. */
-	exhaust?: "factory" | "tip" | "stacks";
+	/** On hoops: shocks per front wheel, body diameter (inches) and colors. Left out, two Rancho RS5000Xs (2.25 in, white, red boots). */
+	shockSetup?: { perWheel: 1 | 2; diameterIn: number; body: string; boot: string; metallic?: boolean };
+	/** The factory 1.75-inch tailpipe, the same with a chrome tip, a side-exit turndown ahead of the rear tire, or twin 5 x 36 in chrome stacks in the bed. Left out, no exhaust is drawn. */
+	exhaust?: "factory" | "tip" | "turndown" | "stacks";
 }
 
 /** How far each hinged part swings open, radians. */
@@ -165,6 +185,15 @@ const HOOD_BULGE_W = 0.74;
  * The front end, from photos of 1989-91 US-market pickups. The headlights are 7x6-inch rectangular
  * sealed beams (H6054: 200 x 142 mm); everything else is sized relative to them and the 1.64 m body.
  */
+/** Where cargo stands in the bed: on the tops of the floor's stamped ribs. */
+export const CARGO_FLOOR_Y = BED_FLOOR_Y + 0.021;
+/** T&C's Standard Logo sticker: 6 inches across. */
+const TC_STICKER_R = 3 * INCH;
+/**
+ * Stickers are drawn half again their real size: at true size a 4 in sticker is a few pixels on screen.
+ * Each sticker's own frame stays in real inches; only its group is scaled up.
+ */
+export const STICKER_DRAW_SCALE = 1.5;
 /** The tailgate's indented panel, meters: between the tail lamps, from just under the latch to near the bottom. */
 const GATE_PANEL = { top: 0.875, bottom: 0.56, halfW: 0.63 } as const;
 
@@ -305,6 +334,42 @@ function mudLugs(crownR: number, depth: number, halfW: number, treadHalf: number
  * in TOYOTA are needed.
  */
 const GLYPHS: Record<string, [number, number, number, number][]> = {
+	E: [
+		[0.72, 1, 0, 1],
+		[0, 1, 0, 0],
+		[0, 0, 0.72, 0],
+		[0, 0.5, 0.55, 0.5],
+	],
+	F: [
+		[0.72, 1, 0, 1],
+		[0, 1, 0, 0],
+		[0, 0.5, 0.55, 0.5],
+	],
+	H: [
+		[0, 0, 0, 1],
+		[0.75, 0, 0.75, 1],
+		[0, 0.5, 0.75, 0.5],
+	],
+	I: [
+		[0.375, 0, 0.375, 1],
+		[0.1, 1, 0.65, 1],
+		[0.1, 0, 0.65, 0],
+	],
+	D: [
+		[0, 0, 0, 1],
+		[0, 1, 0.5, 1],
+		[0.5, 1, 0.75, 0.75],
+		[0.75, 0.75, 0.75, 0.25],
+		[0.75, 0.25, 0.5, 0],
+		[0.5, 0, 0, 0],
+	],
+	R: [
+		[0, 0, 0, 1],
+		[0, 1, 0.75, 1],
+		[0.75, 1, 0.75, 0.5],
+		[0.75, 0.5, 0, 0.5],
+		[0.3, 0.5, 0.75, 0],
+	],
 	T: [
 		[0, 1, 0.75, 1],
 		[0.375, 1, 0.375, 0],
@@ -366,10 +431,11 @@ export function buildToyotaTruck(colors: TruckColors = DEFAULT_TRUCK_COLORS, opt
 	/** Fresh show chrome, brighter than the factory bumpers: the chrome wheels and the exhaust tip. */
 	const mirrorMat = std("#ffffff", 0.05, 1);
 	const dishMat = std(shade(colors.silver, 0.35), 0.5, 0.6);
-	// Shock hoops stand 2.25 in Rancho RS5000Xs just inboard of each front tire (with a little clearance),
-	// so the dark wheel well steps back behind them.
+	// Shock hoops stand the shocks (two 2.25 in Rancho RS5000Xs unless told otherwise) just inboard of each
+	// front tire, with a little clearance, so the dark wheel well steps back behind them.
 	const hoops = options.shocks === "hoops";
-	const SHOCK_R = (2.25 * INCH) / 2;
+	const shockSetup = options.shockSetup ?? { perWheel: 2, diameterIn: 2.25, body: "#f2f1ec", boot: "#c41e2a", metallic: false };
+	const SHOCK_R = (shockSetup.diameterIn * INCH) / 2;
 	const tireInnerZ = HUB_FACE_Z - (options.wheel?.offsetMm ?? 20) / 1000 - (options.tire?.widthMm ?? 195) / 2000;
 	const shockZ = Math.min(tireInnerZ - SHOCK_R - 0.03, 0.6);
 	const wellZ = shockZ - SHOCK_R - 0.03;
@@ -386,8 +452,8 @@ export function buildToyotaTruck(colors: TruckColors = DEFAULT_TRUCK_COLORS, opt
 	headMat.emissive = new Color(colors.light);
 	headMat.emissiveIntensity = 0;
 	const clearLensMat = std("#f4f1ea", 0.2);
-	// TOYOTA is painted on in white, inside the tailgate's indent, which sits a shade darker in shadow.
-	const letterPaintMat = std("#f4f2ec", 0.5);
+	// TOYOTA is painted on (factory white) inside the tailgate's indent, which sits a shade darker in shadow.
+	const letterPaintMat = std(options.tailgateLetterColor ?? "#f4f2ec", 0.5, options.tailgateLetterColor && options.tailgateLetterColor !== "#f4f2ec" ? 0.3 : 0);
 	const recessMat = std(shade(colors.body, 0.14), 0.4, 0.3);
 	const tailMat = std(colors.tail, 0.35);
 	tailMat.emissive = new Color(colors.tail);
@@ -411,12 +477,19 @@ export function buildToyotaTruck(colors: TruckColors = DEFAULT_TRUCK_COLORS, opt
 	const sideGlassMat = options.glassVlt ? glassWith(options.glassVlt.front) : glassMat;
 	const rearGlassMat = options.glassVlt ? glassWith(options.glassVlt.rear) : glassMat;
 	const windshieldMat = options.glassVlt?.windshield !== undefined ? glassWith(options.glassVlt.windshield) : glassMat;
-	const surroundMat = options.grille === "chrome" ? chromeMat : grilleMat;
+	const surroundMat = options.grille === "chrome" ? chromeMat : options.grille === "body" ? bodyMat : grilleMat;
 	const ledHousingMat = std("#1b1d20", 0.35, 0.4);
+	/** A polished reflector bowl seen through a clear lens: bright, not mirror-dark without an environment to reflect. */
+	const reflectorMat = std("#dfe3e7", 0.22, 0.55);
 	const kcYellowMat = std("#ffd400", 0.45);
 	let boardDispose: (() => void) | null = null;
 	const stickerMat = std("#4c9a6a", 0.55);
 	const stickerInkMat = std("#f7f6f1", 0.5);
+	const cargo = options.cargo ?? (options.board ? "longboard" : "none");
+	const stickers = options.stickers ?? (options.sticker ? ["kalapana"] : []);
+	/** LINE-X: a black, textured, matte coat. */
+	const linerMat = std("#1c1d1f", 0.97, 0.02);
+	const bedLined = options.bed === "liner";
 
 	const group = new Group();
 	// Everything sprung rides in `body`, so ride height and tire size can raise, lower and pitch it over the wheels.
@@ -477,6 +550,163 @@ export function buildToyotaTruck(colors: TruckColors = DEFAULT_TRUCK_COLORS, opt
 		add(parent, geo, bodyMat, [mid - ox, topAt(mid) + rise / 2 - 0.006 - oy, 0], { outline: OUTLINE_SMALL });
 	}
 
+	/**
+	 * The rest of the engine bay, for when the hood is up. The stock 1989-95 22R-E layout: the air cleaner
+	 * and its air flow meter on the driver's side at the front, beside a white plastic reservoir, with the
+	 * crossover duct running across the front of the engine to the throttle body (Trail-Gear's 1989-95 22R-E
+	 * intake kit instructions, images.carid.com/trail-gear/items/pdf/180316-1-kit-installation-instructions.pdf);
+	 * the battery opposite it on the passenger side; the brake booster and
+	 * master cylinder on the driver's side of the firewall, as on any left-hand-drive truck; the inner fender
+	 * aprons in body color. Where the washer bottle and fuse box sit, and every size but the battery's, are
+	 * estimates.
+	 */
+	const buildBay = (engine: Object3D | undefined) => {
+		const bay = new Group();
+		bay.name = "bay";
+		body.add(bay);
+		const SHELF_Y = 0.79; // over the wheel well's roof and the tallest tire the truck can carry
+		const TRAY_Y = 0.6; // the front corners, ahead of the wheels, sit lower
+		// Inner edge, over the edge of the floor below; with shock hoops, just inboard of them.
+		const IN = hoops ? Math.max(0.33, Math.min(0.42, shockZ - 0.065)) : 0.42;
+		const OUT = BODY_HALF_W - 0.12 - 0.015; // the inner fender wall
+		const wellFrontX = FRONT_AXLE_X + ARCH_RX + 0.02;
+		const radiatorBackX = NOSE_X - 0.1 - 0.025;
+		const zMid = (IN + OUT) / 2;
+		pair((side) => {
+			add(bay, slab(wellFrontX - CAB_FRONT_X - 0.06, 0.015, OUT - IN, 0.004, 0.002), bodyMat, [(wellFrontX + CAB_FRONT_X + 0.06) / 2, SHELF_Y, side * zMid], { outline: 0.006 });
+			add(bay, slab(0.015, SHELF_Y - TRAY_Y, OUT - IN, 0.004, 0.002), bodyMat, [wellFrontX, (SHELF_Y + TRAY_Y) / 2, side * zMid], { outline: 0.006 });
+			add(bay, slab(radiatorBackX - wellFrontX, 0.015, OUT - IN, 0.004, 0.002), bodyMat, [(radiatorBackX + wellFrontX) / 2, TRAY_Y, side * zMid], { outline: 0.006 });
+			// The apron's inner wall, down to the frame, so the wheel well doesn't show past the shelf's edge.
+			const wallBot = 0.2;
+			add(bay, slab(wellFrontX - CAB_FRONT_X - 0.06, SHELF_Y - wallBot, 0.015, 0.004, 0.002), bodyMat, [(wellFrontX + CAB_FRONT_X + 0.06) / 2, (SHELF_Y + wallBot) / 2, side * IN], { outline: 0.006 });
+			add(bay, slab(radiatorBackX - wellFrontX, TRAY_Y - wallBot, 0.015, 0.004, 0.002), bodyMat, [(radiatorBackX + wellFrontX) / 2, (TRAY_Y + wallBot) / 2, side * IN], { outline: 0.006 });
+		});
+		const onShelf = SHELF_Y + 0.0075;
+		const onTray = TRAY_Y + 0.0075;
+		const blackPlastic = std("#1d1e20", 0.7);
+		const castAlu = std("#a7abaf", 0.45, 0.6);
+		const milky = kit.material(new MeshStandardMaterial({ color: new Color("#eeece4"), roughness: 0.35, transparent: true, opacity: 0.82 }));
+		const tube = (pts: [number, number, number][], r: number) => new TubeGeometry(new CatmullRomCurve3(pts.map((p) => new Vector3(...p)), false, "catmullrom", 0.3), 48, r, 12, false);
+
+		// Battery, passenger side: BCI Group 24F, 10.25 x 6.81 x 8.88 in, long side across the truck, held by a
+		// bar over the top, posts to the inboard side, positive in a red boot.
+		const bat = { l: 10.25 * INCH, w: 6.81 * INCH, h: 8.88 * INCH };
+		const batX = (wellFrontX + radiatorBackX) / 2;
+		const batZ = OUT - bat.l / 2;
+		const batTop = onTray + bat.h;
+		add(bay, slab(bat.w, bat.h, bat.l, 0.01, 0.004), std("#232427", 0.55), [batX, onTray + bat.h / 2, batZ], { outline: 0.01 });
+		add(bay, slab(bat.w + 0.004, 0.018, bat.l + 0.004, 0.006, 0.003), std("#34363a", 0.5), [batX, batTop - 0.009, batZ], { outline: 0 });
+		const postZ = batZ - bat.l / 2 + 0.035;
+		for (const [dx, mat] of [[0.04, std("#c42a2a", 0.5)], [-0.04, std("#8d9094", 0.4, 0.6)]] as const) {
+			add(bay, new CylinderGeometry(0.014, 0.016, 0.028, 14), mat, [batX + dx, batTop + 0.014, postZ], { outline: 0.004 });
+		}
+		add(bay, slab(0.022, 0.012, bat.l + 0.03, 0.004, 0.002), trimMat, [batX, batTop + 0.006, batZ + 0.02], { outline: 0.003 });
+		for (const dz of [-1, 1]) add(bay, slab(0.008, bat.h * 0.85, 0.008, 0.003, 0.001), silverMat, [batX, onTray + bat.h * 0.45, batZ + 0.02 + dz * (bat.l / 2 + 0.016)], { outline: 0 });
+		// Cables: positive down past the engine toward the starter on the passenger side, negative to the body.
+		add(bay, tube([[batX + 0.04, batTop + 0.03, postZ], [batX + 0.03, batTop + 0.02, postZ - 0.05], [wellFrontX + 0.03, 0.55, 0.34], [1.55, 0.34, 0.3]], 0.008), std("#b52222", 0.5), [0, 0, 0], { outline: 0.003 });
+		add(bay, tube([[batX - 0.04, batTop + 0.03, postZ], [batX - 0.07, batTop - 0.02, postZ - 0.02], [wellFrontX + 0.02, onTray + 0.01, IN + 0.03]], 0.007), trimMat, [0, 0, 0], { outline: 0.003 });
+
+		// Air cleaner, driver's side: a black canister on the tray, its intake snout reaching forward beside the
+		// radiator toward the headlamp, the cast air flow meter on its inboard side.
+		const ac = { x: 0.2, y: 0.17, z: 0.24 };
+		const acX = (wellFrontX + radiatorBackX) / 2 + 0.005;
+		const acZ = -(OUT - ac.z / 2);
+		add(bay, slab(ac.x, ac.y * 0.55, ac.z, 0.02, 0.01), blackPlastic, [acX, onTray + ac.y * 0.275, acZ], { outline: 0.01 });
+		add(bay, slab(ac.x + 0.012, ac.y * 0.45, ac.z + 0.012, 0.025, 0.012), blackPlastic, [acX, onTray + ac.y * 0.775, acZ], { outline: 0.01 });
+		for (const dx of [-0.06, 0.06]) add(bay, slab(0.02, 0.03, 0.008, 0.003, 0.001), silverMat, [acX + dx, onTray + ac.y * 0.55, acZ - ac.z / 2 - 0.007], { outline: 0 }); // lid clips
+		add(bay, slab(NOSE_X - 0.06 - (acX + ac.x / 2), 0.055, 0.09, 0.012, 0.006), blackPlastic, [(NOSE_X - 0.06 + acX + ac.x / 2) / 2, onTray + 0.06, acZ - 0.05], { outline: 0.006 });
+		const afm = { x: 0.12, y: 0.1, z: 0.07 };
+		const afmZ = acZ + ac.z / 2 + afm.z / 2;
+		const afmY = onTray + 0.1;
+		add(bay, slab(afm.x, afm.y, afm.z, 0.012, 0.006), castAlu, [acX, afmY, afmZ], { outline: 0.006 });
+		add(bay, slab(0.04, 0.025, 0.03, 0.004, 0.002), blackPlastic, [acX - 0.02, afmY + afm.y / 2 + 0.012, afmZ], { outline: 0 }); // connector
+		// The crossover duct: from the meter, up over the fan and across the front of the engine to the hose
+		// leaving the throttle body. Drawn only with an engine to meet.
+		const stub = engine?.userData.intakeStubEnd as [number, number, number] | undefined;
+		if (engine && stub) {
+			const end: [number, number, number] = [engine.position.x + stub[0], engine.position.y + stub[1], engine.position.z + stub[2]];
+			const start: [number, number, number] = [acX, afmY, afmZ + afm.z / 2];
+			const duct = [start, [acX + 0.02, afmY + 0.07, start[2] + 0.06], [radiatorBackX - 0.06, end[1], -0.12], [radiatorBackX - 0.07, end[1], 0.04], end] as [number, number, number][];
+			add(bay, tube(duct, 0.036), trimMat, [0, 0, 0], { outline: 0.006 });
+		}
+
+		// Coolant reserve tank behind the air cleaner and the washer bottle behind the battery, both milky plastic
+		// with black caps; the washer fluid shows blue through its bottle.
+		const tank = (x: number, z: number, sx: number, sy: number, sz: number) => {
+			add(bay, slab(sx, sy, sz, 0.012, 0.006), milky, [x, onShelf + sy / 2, z], { outline: 0.006 });
+			add(bay, new CylinderGeometry(0.018, 0.018, 0.02, 14), blackPlastic, [x + sx / 4, onShelf + sy + 0.01, z], { outline: 0.003 });
+		};
+		tank(wellFrontX - 0.1, -(IN + 0.08), 0.13, 0.08, 0.1);
+		tank(wellFrontX - 0.12, IN + 0.1, 0.16, 0.075, 0.15);
+		add(bay, slab(0.15, 0.045, 0.14, 0.01, 0.005), std("#3f7fcf", 0.35), [wellFrontX - 0.12, onShelf + 0.024, IN + 0.1], { outline: 0 });
+
+		// Brake booster and master cylinder on the driver's side of the firewall, the fluid reservoir on top.
+		const boosterR = 0.11;
+		const boosterX = CAB_FRONT_X + 0.03 + 0.06;
+		const brakeY = 0.66;
+		const brakeZ = -0.31;
+		const booster = new CylinderGeometry(boosterR, boosterR, 0.12, 32);
+		booster.rotateZ(Math.PI / 2);
+		add(bay, booster, std("#1a1b1d", 0.45, 0.3), [boosterX, brakeY, brakeZ], { outline: 0.008 });
+		const mc = new CylinderGeometry(0.03, 0.03, 0.17, 18);
+		mc.rotateZ(Math.PI / 2);
+		add(bay, mc, castAlu, [boosterX + 0.06 + 0.085, brakeY, brakeZ], { outline: 0.005 });
+		add(bay, slab(0.1, 0.06, 0.05, 0.008, 0.004), milky, [boosterX + 0.15, brakeY + 0.06, brakeZ], { outline: 0.004 });
+		add(bay, new CylinderGeometry(0.018, 0.018, 0.015, 14), blackPlastic, [boosterX + 0.15, brakeY + 0.098, brakeZ], { outline: 0.003 });
+		for (const dz of [-0.012, 0.012]) {
+			add(bay, tube([[boosterX + 0.2, brakeY - 0.02, brakeZ + dz], [boosterX + 0.24, brakeY - 0.08, brakeZ - 0.06 + dz], [boosterX + 0.26, brakeY - 0.12, -IN - 0.02 + dz]], 0.004), silverMat, [0, 0, 0], { outline: 0 });
+		}
+
+		// Fuse and relay box on the driver's shelf by the firewall.
+		const fuseX = CAB_FRONT_X + 0.24;
+		const fuseZ = -(OUT - 0.07);
+		add(bay, slab(0.14, 0.06, 0.11, 0.012, 0.006), blackPlastic, [fuseX, onShelf + 0.03, fuseZ], { outline: 0.006 });
+		add(bay, slab(0.142, 0.006, 0.112, 0.002, 0.001), trimMat, [fuseX, onShelf + 0.045, fuseZ], { outline: 0 });
+
+		// Hood latch in the middle of the core support's top bar.
+		add(bay, slab(0.05, 0.05, 0.08, 0.008, 0.004), trimMat, [NOSE_X - 0.08, 0.83, 0], { outline: 0.004 });
+		add(bay, slab(0.012, 0.03, 0.03, 0.002, 0.001), silverMat, [NOSE_X - 0.11, 0.84, 0], { outline: 0 });
+
+		// Steering: the shaft from the column, out through the firewall under the booster and down to the
+		// gearbox on the driver's frame rail, with a rag joint partway.
+		const boxAt: [number, number, number] = [FRONT_AXLE_X + 0.25, 0.36, -(IN - 0.06)];
+		add(bay, slab(0.12, 0.12, 0.1, 0.02, 0.008), std("#3a3c3f", 0.55, 0.4), boxAt, { outline: 0.006 });
+		const shaftFrom = new Vector3(CAB_FRONT_X + 0.03, 0.52, boxAt[2]);
+		const shaftTo = new Vector3(boxAt[0] - 0.05, boxAt[1] + 0.06, boxAt[2]);
+		const shaftLen = shaftFrom.distanceTo(shaftTo);
+		const shaft = add(bay, new CylinderGeometry(0.011, 0.011, shaftLen, 10), silverMat, [(shaftFrom.x + shaftTo.x) / 2, (shaftFrom.y + shaftTo.y) / 2, boxAt[2]], { outline: 0.003 });
+		shaft.quaternion.setFromUnitVectors(new Vector3(0, 1, 0), shaftTo.clone().sub(shaftFrom).normalize());
+		const ragAt = shaftFrom.clone().lerp(shaftTo, 0.7);
+		add(bay, new CylinderGeometry(0.03, 0.03, 0.02, 14), trimMat, [ragAt.x, ragAt.y, ragAt.z], { outline: 0.003 }).quaternion.copy(shaft.quaternion);
+
+		// The wiring harness: from the fuse box along the driver's side, over the head, to the air flow meter.
+		add(bay, tube([[fuseX + 0.05, onShelf + 0.04, fuseZ + 0.05], [fuseX + 0.15, onShelf + 0.01, -(IN - 0.02)], [1.35, 0.84, -0.26], [1.65, 0.85, -0.21], [1.84, 0.82, -0.3], [acX - 0.02, afmY + 0.07, afmZ]], 0.012), trimMat, [0, 0, 0], { outline: 0.004 });
+
+		if (engine) {
+			// Fan shroud on the back of the radiator round the fan, and the lower hose from the water pump.
+			const fan = { x: engine.position.x + 0.349, y: engine.position.y + 0.16 };
+			const shroud = new Shape([new Vector2(-0.45, -0.17), new Vector2(0.45, -0.17), new Vector2(0.45, 0.2), new Vector2(-0.45, 0.2)]);
+			const hole = new Shape();
+			hole.absarc(0, 0, 0.18, 0, Math.PI * 2, true);
+			shroud.holes.push(hole);
+			const plate = new ShapeGeometry(shroud, 32);
+			plate.rotateY(-Math.PI / 2);
+			add(bay, plate, blackPlastic, [radiatorBackX - 0.004, fan.y, 0], { outline: 0 });
+			const collar = new CylinderGeometry(0.18, 0.18, 0.05, 36, 1, true);
+			collar.rotateZ(Math.PI / 2);
+			add(bay, collar, kit.material(new MeshStandardMaterial({ color: new Color("#1d1e20"), roughness: 0.7, side: DoubleSide })), [radiatorBackX - 0.03, fan.y, 0], { outline: 0 });
+			const hose = std("#141516", 0.6);
+			add(bay, tube([[engine.position.x + 0.3, fan.y - 0.06, 0.06], [radiatorBackX - 0.08, fan.y - 0.11, 0.2], [radiatorBackX - 0.01, fan.y - 0.13, 0.33]], 0.019), hose, [0, 0, 0], { outline: 0.004 });
+			// Heater hoses from the back of the engine to the heater core on the passenger side of the firewall.
+			for (const dy of [0, -0.05]) {
+				add(bay, tube([[1.22, 0.6 + dy, 0.2], [1.0, 0.6 + dy, 0.27], [CAB_FRONT_X + 0.03, 0.6 + dy, 0.3]], 0.013), hose, [0, 0, 0], { outline: 0.003 });
+			}
+			// The AC line from the compressor (passenger side, low) back to the evaporator at the firewall.
+			const ac = { x: engine.position.x + 0.181, y: engine.position.y, z: 0.17 };
+			add(bay, tube([[ac.x, ac.y + 0.06, ac.z + 0.04], [1.6, 0.6, 0.34], [1.0, 0.68, 0.36], [CAB_FRONT_X + 0.03, 0.68, 0.36]], 0.008), castAlu, [0, 0, 0], { outline: 0.003 });
+		}
+	};
+
 	// --- Front clip: hood and fenders ---
 	const openers = {} as Record<OpenerKey, Group>;
 	if (!openable) {
@@ -486,14 +716,15 @@ export function buildToyotaTruck(colors: TruckColors = DEFAULT_TRUCK_COLORS, opt
 		// Fenders as two walls, the hood as a panel hinged at the cowl, and a bay between them.
 		pair((side) => {
 			add(body, extrude(frontClipProfile(), 0.08, 0.02, false), bodyMat, [0, 0, side * (BODY_HALF_W - 0.04)], { outline: OUTLINE });
-			// Inner fender apron; with shock hoops in the well it stops short of the arch so the shocks show.
+			// Inner fender apron, body color as on the real truck; with shock hoops in the well it stops short of
+			// the arch so the shocks show.
 			if (!hoops) {
-				add(body, slab(NOSE_X - CAB_FRONT_X - 0.16, 0.34, 0.03, 0.01, 0.005), bedFloorMat, [(NOSE_X + CAB_FRONT_X) / 2 - 0.02, 0.72, side * (BODY_HALF_W - 0.12)], {
+				add(body, slab(NOSE_X - CAB_FRONT_X - 0.16, 0.34, 0.03, 0.01, 0.005), bodyMat, [(NOSE_X + CAB_FRONT_X) / 2 - 0.02, 0.72, side * (BODY_HALF_W - 0.12)], {
 					outline: 0,
 				});
 			} else {
 				const apron = (x0: number, x1: number, y0: number, y1: number) =>
-					add(body, slab(x1 - x0, y1 - y0, 0.03, 0.01, 0.005), bedFloorMat, [(x0 + x1) / 2, (y0 + y1) / 2, side * (BODY_HALF_W - 0.12)], { outline: 0 });
+					add(body, slab(x1 - x0, y1 - y0, 0.03, 0.01, 0.005), bodyMat, [(x0 + x1) / 2, (y0 + y1) / 2, side * (BODY_HALF_W - 0.12)], { outline: 0 });
 				const [x0, x1, y0, y1] = [CAB_FRONT_X + 0.06, NOSE_X - 0.1, 0.55, 0.89];
 				apron(x0, FRONT_AXLE_X - ARCH_RX, y0, y1);
 				apron(FRONT_AXLE_X + ARCH_RX, x1, y0, y1);
@@ -501,6 +732,7 @@ export function buildToyotaTruck(colors: TruckColors = DEFAULT_TRUCK_COLORS, opt
 			}
 		});
 		const hood = new Group();
+		hood.name = "hood";
 		hood.position.set(CAB_FRONT_X, BELT_Y, 0);
 		const hoodShape = new Shape();
 		hoodShape.moveTo(0, 0);
@@ -513,9 +745,15 @@ export function buildToyotaTruck(colors: TruckColors = DEFAULT_TRUCK_COLORS, opt
 		openers.hood = hood;
 		// Bay: firewall, radiator behind the grille, the core support's top bar, a dark floor below the engine.
 		add(body, slab(0.03, BELT_Y - CAB_FLOOR_Y, BODY_HALF_W * 2 - 0.12, 0.01, 0.005), bedFloorMat, [CAB_FRONT_X + 0.015, (CAB_FLOOR_Y + BELT_Y) / 2, 0], { outline: 0 });
-		add(body, slab(0.05, 0.42, 1.1, 0.01, 0.005), trimMat, [NOSE_X - 0.1, 0.62, 0], { outline: 0.01 });
+		const radiatorX = NOSE_X - 0.1;
+		add(body, slab(0.05, 0.42, 1.1, 0.01, 0.005), trimMat, [radiatorX, 0.62, 0], { outline: 0.01 });
 		add(body, slab(0.08, 0.04, BODY_HALF_W * 2 - 0.16, 0.01, 0.005), bodyMat, [NOSE_X - 0.06, 0.865, 0], { outline: 0.01 });
-		add(body, slab(NOSE_X - CAB_FRONT_X - 0.05, 0.02, BODY_HALF_W * 2 - 0.2, 0.005, 0.003), trimMat, [(NOSE_X + CAB_FRONT_X) / 2, 0.2, 0], { outline: 0 });
+		// The floor only darkens the bay when the hood is up, so it stays tucked between the frame rails and
+		// behind the radiator: run out to the nose and the fenders, it showed under the bumper as a big flat
+		// plate, most of all on a lowered truck.
+		const bayBackX = CAB_FRONT_X + 0.025;
+		const bayFrontX = radiatorX - 0.03;
+		add(body, slab(bayFrontX - bayBackX, 0.02, 0.84, 0.005, 0.003), trimMat, [(bayFrontX + bayBackX) / 2, 0.2, 0], { outline: 0 }).name = "bay-floor";
 		// Body-color face panel between the bumper and the lamp band, and under the valance.
 		add(body, slab(0.04, 0.05, BODY_HALF_W * 2 - 0.04, 0.01, 0.005), bodyMat, [NOSE_X - 0.01, 0.675, 0], { outline: 0.01 });
 		add(body, slab(0.04, 0.06, BODY_HALF_W * 2 - 0.2, 0.01, 0.005), bodyMat, [NOSE_X - 0.03, 0.36, 0], { outline: 0.01 });
@@ -524,6 +762,7 @@ export function buildToyotaTruck(colors: TruckColors = DEFAULT_TRUCK_COLORS, opt
 			options.engine.position.set(1.62, 0.42, 0);
 			body.add(options.engine);
 		}
+		buildBay(options.engine);
 	}
 
 	// --- Cab shell: floor pan, door walls and back wall, hollow so the interior shows through the glass ---
@@ -636,12 +875,14 @@ export function buildToyotaTruck(colors: TruckColors = DEFAULT_TRUCK_COLORS, opt
 			add(body, slab(0.07, 0.012, 0.04, 0.008, 0.003), trimMat, [x, BELT_Y + 0.026, side * (BODY_HALF_W - 0.06)], { outline: 0 });
 		}
 		// Wheel well intruding into the bed.
-		add(body, slab(0.95, 0.24, 0.22, 0.1, 0.03), bodyMat, [REAR_AXLE_X, BED_FLOOR_Y + 0.12, side * (BODY_HALF_W - 0.2)]);
+		add(body, slab(0.95, 0.24, 0.22, 0.1, 0.03), bedLined ? linerMat : bodyMat, [REAR_AXLE_X, BED_FLOOR_Y + 0.12, side * (BODY_HALF_W - 0.2)]);
 		// Inside the wall: stamped vertical ribs and tie-down hooks under the rail.
 		const innerZ = side * (BODY_HALF_W - 0.086);
 		for (const x of [CAB_BACK_X - 0.32, CAB_BACK_X - 0.44, TAIL_X + 0.3, TAIL_X + 0.42]) {
-			add(body, slab(0.04, 0.2, 0.012, 0.012, 0.004), bodyMat, [x, BED_FLOOR_Y + 0.15, innerZ], { outline: 0.008 });
+			add(body, slab(0.04, 0.2, 0.012, 0.012, 0.004), bedLined ? linerMat : bodyMat, [x, BED_FLOOR_Y + 0.15, innerZ], { outline: 0.008 });
 		}
+		// LINE-X coats the inside of the wall up to the rail.
+		if (bedLined) add(body, slab(bedLen - 0.1, BELT_Y - BED_FLOOR_Y - 0.03, 0.005, 0.004, 0.002), linerMat, [bedMidX, (BED_FLOOR_Y + BELT_Y - 0.03) / 2, side * (BODY_HALF_W - 0.083)], { outline: 0 });
 		for (const x of [CAB_BACK_X - 0.2, TAIL_X + 0.2]) {
 			add(body, new TorusGeometry(0.03, 0.007, 6, 12, Math.PI), silverMat, [x, BELT_Y - 0.1, innerZ - side * 0.01], { outline: 0 });
 		}
@@ -649,21 +890,23 @@ export function buildToyotaTruck(colors: TruckColors = DEFAULT_TRUCK_COLORS, opt
 	// Dark underbody so the gap below the floor reads as frame, not sky.
 	add(body, slab(bedLen, 0.3, BODY_HALF_W * 2 - 0.2, 0.02, 0.01), trimMat, [bedMidX, AXLE_Y + 0.15, 0], { outline: 0 });
 	// Floor, sitting well below the rails, with stamped ribs.
-	add(body, slab(bedLen - 0.08, 0.05, BODY_HALF_W * 2 - 0.16, 0.01, 0.006), bedFloorMat, [bedMidX, BED_FLOOR_Y - 0.025, 0], {
+	const floorMat = bedLined ? linerMat : bedFloorMat;
+	add(body, slab(bedLen - 0.08, 0.05, BODY_HALF_W * 2 - 0.16, 0.01, 0.006), floorMat, [bedMidX, BED_FLOOR_Y - 0.025, 0], {
 		outline: 0.02,
 	});
 	for (let i = 0; i < 8; i++) {
-		add(body, slab(0.045, 0.025, BODY_HALF_W * 2 - 0.2, 0.008, 0.004), bedFloorMat, [CAB_BACK_X - 0.2 - i * 0.24, BED_FLOOR_Y + 0.008, 0], {
+		add(body, slab(0.045, 0.025, BODY_HALF_W * 2 - 0.2, 0.008, 0.004), floorMat, [CAB_BACK_X - 0.2 - i * 0.24, BED_FLOOR_Y + 0.008, 0], {
 			outline: 0,
 		});
 	}
 	// Bed front wall at rail height, so the rear window stays clear: rolled cap and stamped ribs.
 	const bedInnerW = BODY_HALF_W * 2 - 0.1;
 	add(body, slab(0.07, BELT_Y - BED_FLOOR_Y + 0.02, bedInnerW, 0.02, 0.015), bodyMat, [CAB_BACK_X - 0.05, (BED_FLOOR_Y + BELT_Y) / 2, 0]);
-	add(body, slab(0.12, 0.05, bedInnerW, 0.02, 0.012), bodyMat, [CAB_BACK_X - 0.06, BELT_Y, 0]);
+	add(body, slab(0.12, 0.05, bedInnerW, 0.02, 0.012), bodyMat, [CAB_BACK_X - 0.06, BELT_Y, 0]).name = "bed-front-cap";
 	for (const y of [BED_FLOOR_Y + 0.09, BED_FLOOR_Y + 0.19]) {
-		add(body, slab(0.015, 0.035, bedInnerW - 0.24, 0.01, 0.004), bodyMat, [CAB_BACK_X - 0.09, y, 0], { outline: 0.008 });
+		add(body, slab(0.015, 0.035, bedInnerW - 0.24, 0.01, 0.004), bedLined ? linerMat : bodyMat, [CAB_BACK_X - 0.09, y, 0], { outline: 0.008 });
 	}
+	if (bedLined) add(body, slab(0.004, BELT_Y - BED_FLOOR_Y - 0.03, bedInnerW - 0.02, 0.002, 0.001), linerMat, [CAB_BACK_X - 0.087, (BED_FLOOR_Y + BELT_Y - 0.03) / 2, 0], { outline: 0 });
 
 	// Tailgate, flush with the walls, as on 1989-91 US trucks: ribbed inside; outside, a chrome latch
 	// handle in a recessed pocket at the top center, and below it a wide indented panel with TOYOTA
@@ -679,8 +922,9 @@ export function buildToyotaTruck(colors: TruckColors = DEFAULT_TRUCK_COLORS, opt
 	}
 	add(gate, slab(0.07, 0.5, BODY_HALF_W * 2 - 0.08, 0.02, 0.015), bodyMat, [TAIL_X + 0.03 - gx, 0.75 - gy, 0], { outline: OUTLINE });
 	for (const y of [0.62, 0.74, 0.86]) {
-		add(gate, slab(0.012, 0.03, BODY_HALF_W * 2 - 0.3, 0.01, 0.004), bodyMat, [TAIL_X + 0.071 - gx, y - gy, 0], { outline: 0.008 });
+		add(gate, slab(0.012, 0.03, BODY_HALF_W * 2 - 0.3, 0.01, 0.004), bedLined ? linerMat : bodyMat, [TAIL_X + 0.071 - gx, y - gy, 0], { outline: 0.008 });
 	}
+	if (bedLined) add(gate, slab(0.004, 0.44, BODY_HALF_W * 2 - 0.12, 0.002, 0.001), linerMat, [TAIL_X + 0.067 - gx, 0.75 - gy, 0], { outline: 0 });
 	const gateFace = TAIL_X - 0.005 - gx;
 	// The indent: a shadowed panel ringed by a raised lip, so it reads as pressed in.
 	const pan = GATE_PANEL;
@@ -757,7 +1001,7 @@ export function buildToyotaTruck(colors: TruckColors = DEFAULT_TRUCK_COLORS, opt
 	add(body, slab(0.02, 0.05, 0.05, 0.01, 0.004), silverMat, [rearGlassX(1.29) - 0.005, 1.29, 0], { rot: [0, 0, rearRake], outline: 0 });
 	if (options.rack === "rollbar") {
 		// Tube roll bar standing on the bed rails just behind the cab, braced back to the rails, with four
-		// 6-inch KC Daylighters on top in KC's yellow covers.
+		// 6-inch KC Daylighters on top in KC's yellow covers (black logo), its black ones (white logo), or none.
 		const rx = CAB_BACK_X - 0.3;
 		const railY = BELT_Y + 0.03;
 		const barTop = 1.72;
@@ -784,15 +1028,50 @@ export function buildToyotaTruck(colors: TruckColors = DEFAULT_TRUCK_COLORS, opt
 			add(body, slab(0.14, 0.02, 0.1, 0.006, 0.003), chromeMat, [rx - 0.3, railY - 0.01, side * 0.76], { outline: 0.006 }); // rail plate
 		});
 		const kcR = 3 * INCH; // 6-inch Daylighter
-		for (const z of [-0.51, -0.17, 0.17, 0.51]) {
+		const kc = options.rackLights ?? "yellow";
+		const coverMat = kc === "black" ? std("#121315", 0.45) : kcYellowMat;
+		const logoMat = kc === "black" ? stickerInkMat : trimMat;
+		for (const z of kc === "none" ? [] : [-0.51, -0.17, 0.17, 0.51]) {
 			const housing = new CylinderGeometry(kcR, kcR * 0.85, 0.08, 28);
 			housing.rotateZ(-Math.PI / 2);
 			add(body, slab(0.03, 0.06, 0.03, 0.006, 0.003), trimMat, [rx, barTop + 0.05, z], { outline: 0 }); // bracket
 			add(body, housing, trimMat, [rx, barTop + kcR + 0.04, z], { outline: 0.01 });
 			const cover = new CylinderGeometry(kcR * 1.02, kcR * 1.02, 0.014, 28);
 			cover.rotateZ(-Math.PI / 2);
-			add(body, cover, kcYellowMat, [rx + 0.046, barTop + kcR + 0.04, z], { outline: 0.006 });
-			lettering("KC", [rx + 0.054, barTop + kcR + 0.04, z], 0.05, 0.011, 1, trimMat);
+			add(body, cover, coverMat, [rx + 0.046, barTop + kcR + 0.04, z], { outline: 0.006 });
+			lettering("KC", [rx + 0.054, barTop + kcR + 0.04, z], 0.05, 0.011, 1, logoMat);
+		}
+	}
+
+	// --- A pair of round KC lights on brackets on top of the front bumper, in front of the grille ---
+	if (options.bumperLights) {
+		const bl = options.bumperLights;
+		const lights = new Group();
+		lights.name = "bumper-lights";
+		body.add(lights);
+		const r = (bl.diameterIn / 2) * INCH;
+		const depth = 0.07; // housing depth, estimated
+		const bumperTop = FRONT.bumperY + FRONT.bumperH / 2;
+		const cx = NOSE_X + 0.07;
+		const cy = bumperTop + 0.035 + r;
+		const face = cx + depth / 2;
+		for (const z of [-0.3, 0.3]) {
+			add(lights, slab(0.04, 0.045, 0.03, 0.006, 0.003), trimMat, [cx - 0.01, bumperTop + 0.022, z], { outline: 0 }); // bracket
+			const housing = new CylinderGeometry(r, r * 0.85, depth, 32);
+			housing.rotateZ(-Math.PI / 2);
+			add(lights, housing, trimMat, [cx, cy, z], { outline: 0.01 });
+			const disc = new CylinderGeometry(r * 1.02, r * 1.02, 0.014, 32);
+			disc.rotateZ(-Math.PI / 2);
+			if (bl.cover) {
+				add(lights, disc, std(bl.cover, 0.45), [face + 0.006, cy, z], { outline: 0.006 });
+				if (bl.logo) lettering("KC", [face + 0.014, cy, z], r * 0.66, r * 0.15, 1, std(bl.logo, 0.5), lights);
+			} else {
+				// Uncovered: the reflector ring and a colored lens over it.
+				add(lights, disc, reflectorMat, [face + 0.004, cy, z], { outline: 0.006 });
+				const lens = new CylinderGeometry(r * 0.9, r * 0.9, 0.008, 32);
+				lens.rotateZ(-Math.PI / 2);
+				add(lights, lens, kit.material(new MeshStandardMaterial({ color: new Color(bl.lens ?? "#f4f1e6"), roughness: 0.15, emissive: new Color(bl.lens ?? "#f4f1e6"), emissiveIntensity: 0.15 })), [face + 0.013, cy, z], { outline: 0 });
+			}
 		}
 	}
 
@@ -837,6 +1116,35 @@ export function buildToyotaTruck(colors: TruckColors = DEFAULT_TRUCK_COLORS, opt
 			}
 			for (const bx of [0.45, -0.35]) add(body, slab(0.05, 0.05, 0.1, 0.01, 0.004), trimMat, [bx, stepY + 0.035, side * (BODY_HALF_W - 0.02)], { outline: 0 });
 		});
+	} else if (options.steps === "slider") {
+		// Trail-Gear APEX rock sliders: a rail of 1.75 in DOM tube under the rocker, an outer tube of the same
+		// kicked out and up with its ends bent back to the rail, a steel fill plate between them, and 2 in
+		// square legs in to the frame, all in black powder coat. 60 in long, about the cab's length. How far
+		// the outer tube kicks out and up is estimated.
+		const tubeR = (1.75 * INCH) / 2;
+		const legW = 2 * INCH;
+		const sliderMat = std("#16171a", 0.55, 0.35);
+		const tube = (pts: Vector3[]) => new TubeGeometry(new CatmullRomCurve3(pts, false, "catmullrom", 0.08), 40, tubeR, 10, false);
+		pair((side) => {
+			const inZ = side * (BODY_HALF_W - 0.03);
+			const outZ = side * (BODY_HALF_W + 0.09);
+			const lowY = stepY - 0.02;
+			const highY = stepY + 0.045;
+			add(body, tube([new Vector3(stepFrontX, lowY, inZ), new Vector3(stepBackX, lowY, inZ)]), sliderMat, [0, 0, 0], { outline: 0.006 });
+			add(
+				body,
+				tube([new Vector3(stepFrontX, lowY, inZ), new Vector3(stepFrontX - 0.1, highY, outZ), new Vector3(stepBackX + 0.1, highY, outZ), new Vector3(stepBackX, lowY, inZ)]),
+				sliderMat,
+				[0, 0, 0],
+				{ outline: 0.008 },
+			);
+			const plateW = Math.hypot(outZ - inZ, highY - lowY);
+			add(body, slab(stepFrontX - stepBackX - 0.24, 0.006, plateW, 0.002, 0.001), sliderMat, [(stepFrontX + stepBackX) / 2, (lowY + highY) / 2, (inZ + outZ) / 2], {
+				rot: [-side * Math.atan2(highY - lowY, Math.abs(outZ - inZ)), 0, 0],
+				outline: 0,
+			});
+			for (const bx of [0.55, 0.1, -0.4]) add(body, slab(legW, legW, 0.2, 0.004, 0.002), sliderMat, [bx, lowY, side * (BODY_HALF_W - 0.13)], { outline: 0 });
+		});
 	}
 
 	// --- Exhaust ---
@@ -867,6 +1175,23 @@ export function buildToyotaTruck(colors: TruckColors = DEFAULT_TRUCK_COLORS, opt
 		const mouth = new CylinderGeometry(pipeR * 0.95, pipeR * 0.95, 0.004, 18);
 		mouth.rotateZ(Math.PI / 2);
 		add(body, mouth, trimMat, [tipEnd + 0.004, pipeY, pipeZ], { outline: 0 });
+	} else if (options.exhaust === "turndown") {
+		// Nickson's 1.75 in aluminized turndown, 12 in long, on the tailpipe cut short just ahead of the
+		// driver's rear tire: the pipe runs back under the bed's side, then bends down and out toward the
+		// ground. Where it's cut is estimated.
+		const exitX = REAR_AXLE_X + ARCH_RX + 0.26; // so the bend ends just clear of the wheel opening
+		const z = -(BODY_HALF_W - 0.14);
+		const runFrom = CAB_BACK_X + 0.3;
+		const run = new CylinderGeometry(pipeR, pipeR, runFrom - exitX, 14);
+		run.rotateZ(Math.PI / 2);
+		add(body, run, std("#55595d", 0.6, 0.6), [(runFrom + exitX) / 2, pipeY, z], { outline: 0 });
+		const bend = new CatmullRomCurve3([new Vector3(exitX + 0.02, pipeY, z), new Vector3(exitX - 0.1, pipeY - 0.01, z - 0.02), new Vector3(exitX - 0.2, pipeY - 0.09, z - 0.07), new Vector3(exitX - 0.23, pipeY - 0.16, z - 0.09)]);
+		add(body, new TubeGeometry(bend, 24, pipeR + 0.002, 14, false), std("#a3a6a9", 0.45, 0.7), [0, 0, 0], { outline: 0.004 });
+		const mouth = new CylinderGeometry(pipeR * 0.9, pipeR * 0.9, 0.004, 14);
+		const end = bend.getPoint(1);
+		const dir = bend.getTangent(1);
+		const m = add(body, mouth, trimMat, [end.x, end.y, end.z], { outline: 0 });
+		m.quaternion.setFromUnitVectors(new Vector3(0, 1, 0), dir);
 	} else if (options.exhaust === "stacks") {
 		// Twin 5-inch chrome stacks, 36 inches long, standing in the front corners of the bed with their
 		// tops cut at 45 degrees and the open side facing back, each clamped to the cab.
@@ -893,7 +1218,14 @@ export function buildToyotaTruck(colors: TruckColors = DEFAULT_TRUCK_COLORS, opt
 			}
 		});
 	}
-	if (options.board && options.bed !== "shell" && options.bed !== "tonneau") {
+	// Cargo rides in an open bed (lined or not), standing on the tops of the floor's stamped ribs.
+	const bedOpen = !options.bed || options.bed === "none" || options.bed === "liner";
+	const cargoFloorY = CARGO_FLOOR_Y;
+	// Everything in the bed hangs off one group, named so it can be found.
+	const cargoRoot = new Group();
+	cargoRoot.name = "cargo";
+	body.add(cargoRoot);
+	if (bedOpen && cargo === "longboard") {
 		// The longboard rests deck-down with its nose tip on the bed floor just behind the cab and its deck on
 		// the tailgate's top edge, fin up, tail hanging out past the back of the truck. Its rocker and foil
 		// put the deck a different distance below its straight axis at each station, so the two contacts
@@ -917,19 +1249,479 @@ export function buildToyotaTruck(colors: TruckColors = DEFAULT_TRUCK_COLORS, opt
 		const center = c1.clone().addScaledVector(axis, -(f1 - 0.5) * L);
 		board.group.position.set(center.x, center.y, 0.08);
 		board.group.rotation.z = phi;
-		body.add(board.group);
+		cargoRoot.add(board.group);
 	}
-	if (options.sticker) {
-		// Aloha Got Soul's 7.5 x 2.5 in sticker, white on green, on the lower passenger-side corner of the
-		// rear glass. Only the big KALAPANA is lettered; the small "SLOW DOWN... I'M LISTENING TO" line
-		// above it would be under a millimeter tall at this scale.
-		const sticker = new Group();
-		const sy = BELT_Y + 0.085;
-		sticker.position.set(rearGlassX(sy) - 0.004, sy, 0.38);
-		sticker.rotation.z = rearRake;
-		add(sticker, slab(0.005, 2.5 * INCH, 7.5 * INCH, 0.004, 0.001), stickerMat, [0, 0, 0], { outline: 0.003 });
+	if (bedOpen && cargo === "cooler") {
+		// YETI's Tundra 110, 37.2 x 18 x 19.8 in outside, across the front of the bed with its front to the
+		// tailgate. From YETI's photos: a white rotomolded body and a lid about a sixth of its height, a raised
+		// panel on the front that narrows toward the bottom, two black rubber T-latches pulled up over the lid's
+		// front edge, the black YETI nameplate under the lid, rope handles at the ends and black rubber feet.
+		const [cl, cd, ch] = [37.2 * INCH, 18 * INCH, 19.8 * INCH];
+		const white = std("#f2f2ee", 0.6, 0.02);
+		const rubber = std("#18191b", 0.8, 0.05);
+		const cooler = new Group();
+		cooler.name = "cooler";
+		cargoRoot.add(cooler);
+		const cx = CAB_BACK_X - 0.11 - cd / 2;
+		const front = cx - cd / 2; // the face toward the tailgate
+		const lidH = ch / 6;
+		const feetH = 0.012;
+		const seamY = cargoFloorY + ch - lidH;
+		for (const fx of [cx - cd / 2 + 0.05, cx + cd / 2 - 0.05]) {
+			for (const fz of [-cl / 2 + 0.07, cl / 2 - 0.07]) add(cooler, slab(0.07, feetH, 0.09, 0.004, 0.002), rubber, [fx, cargoFloorY + feetH / 2, fz], { outline: 0 });
+		}
+		add(cooler, slab(cd, seamY - cargoFloorY - feetH, cl, 0.035, 0.012), white, [cx, (seamY + cargoFloorY + feetH) / 2, 0], { outline: OUTLINE_SMALL });
+		add(cooler, slab(cd, lidH - 0.004, cl, 0.03, 0.012), white, [cx, seamY + 0.004 + (lidH - 0.004) / 2, 0], { outline: OUTLINE_SMALL });
+		add(cooler, slab(cd - 0.01, 0.004, cl - 0.01, 0.0015, 0.001), std("#bdbdb6", 0.7), [cx, seamY + 0.002, 0], { outline: 0 }); // seam
+		// The raised front panel: full width under the lid, its sides angling in toward the feet.
+		const panelTop = seamY - 0.03;
+		const panelBot = cargoFloorY + feetH + 0.04;
+		const panel = new Shape([new Vector2(-cl * 0.43, panelTop), new Vector2(cl * 0.43, panelTop), new Vector2(cl * 0.33, panelBot), new Vector2(-cl * 0.33, panelBot)]);
+		const panelGeo = new ShapeGeometry(panel);
+		panelGeo.rotateY(-Math.PI / 2);
+		add(cooler, panelGeo, std("#e9e9e4", 0.55, 0.02), [front - 0.002, 0, 0], { outline: 0 });
+		for (const [a, b] of [
+			[new Vector2(-cl * 0.43, panelTop), new Vector2(-cl * 0.33, panelBot)],
+			[new Vector2(cl * 0.43, panelTop), new Vector2(cl * 0.33, panelBot)],
+			[new Vector2(-cl * 0.33, panelBot), new Vector2(cl * 0.33, panelBot)],
+		]) {
+			const edge = add(cooler, slab(0.004, a.distanceTo(b), 0.004, 0.001, 0.0005), std("#c8c8c1", 0.6), [front - 0.003, (a.y + b.y) / 2, (a.x + b.x) / 2], { outline: 0 });
+			edge.rotation.x = Math.atan2(b.x - a.x, b.y - a.y);
+		}
+		// Two black T-latches, from the body up over the lid's front edge, their T-handles at the top.
+		for (const z of [-cl * 0.3, cl * 0.3]) {
+			add(cooler, slab(0.012, 0.11, 0.03, 0.004, 0.002), rubber, [front - 0.006, seamY + 0.005, z], { outline: 0.004 });
+			add(cooler, slab(0.016, 0.022, 0.07, 0.006, 0.003), rubber, [front - 0.008, seamY + lidH - 0.012, z], { outline: 0.004 });
+		}
+		// The black nameplate with YETI in white, centered under the lid.
+		add(cooler, slab(0.006, 0.032, 0.12, 0.004, 0.002), rubber, [front - 0.003, seamY - 0.04, 0], { outline: 0 });
+		lettering("YETI", [front + 0.004, seamY - 0.04, 0], 0.018, 0.0035, -1, stickerInkMat, cooler);
+		// Rope handles hanging at each end, a molded grip on each rope.
+		const ropeMat = std("#2c2c2a", 0.9);
+		pair((side) => {
+			const z = side * (cl / 2);
+			const y = seamY - 0.04;
+			const rope = new CatmullRomCurve3([
+				new Vector3(cx - 0.08, y, z),
+				new Vector3(cx - 0.06, y - 0.05, z + side * 0.03),
+				new Vector3(cx + 0.06, y - 0.05, z + side * 0.03),
+				new Vector3(cx + 0.08, y, z),
+			]);
+			add(cooler, new TubeGeometry(rope, 20, 0.006, 6, false), ropeMat, [0, 0, 0], { outline: 0 });
+			const grip = new CylinderGeometry(0.012, 0.012, 0.1, 10);
+			grip.rotateZ(Math.PI / 2);
+			add(cooler, grip, rubber, [cx, y - 0.052, z + side * 0.03], { outline: 0 });
+		});
+	}
+	if (bedOpen && cargo === "rubbish") {
+		// Four 33-gallon black bags, tied off. Flat, each is 33 x 36.5 in, so 66 in around: about a 0.27 m radius
+		// filled round. Three stand at the back of the bed and one lies on its side; each is filled, slumped and
+		// bulged differently. Those shapes are estimates.
+		const bagMat = std("#121315", 0.28, 0.05);
+		const profile = [
+			[0.001, 0],
+			[0.17, 0.02],
+			[0.235, 0.08],
+			[0.25, 0.2],
+			[0.24, 0.32],
+			[0.19, 0.4],
+			[0.1, 0.45],
+			[0.035, 0.48],
+			[0.03, 0.5],
+			[0.022, 0.53],
+			[0.001, 0.55],
+		];
+		/** One tied bag: the profile scaled by how full it is and how tall it stands, with lumps round it that fade out at the knot. */
+		const bagGeo = (fill: number, tall: number, seed: number) => {
+			const g = new LatheGeometry(
+				profile.map(([r, y]) => new Vector2(r * fill, y * tall)),
+				28,
+			);
+			const pos = g.attributes.position;
+			const v = new Vector3();
+			for (let i = 0; i < pos.count; i++) {
+				v.fromBufferAttribute(pos, i);
+				const a = Math.atan2(v.z, v.x);
+				const t = v.y / (0.55 * tall);
+				const fade = Math.sin(Math.PI * Math.min(1, t * 1.15));
+				const k = 1 + fade * (0.06 * Math.sin(3 * a + seed) + 0.04 * Math.sin(5 * a + 2.1 * seed) + 0.03 * Math.sin(2 * a + 0.7 * seed + 4 * t));
+				pos.setXYZ(i, v.x * k, v.y, v.z * k);
+			}
+			g.computeVertexNormals();
+			return g;
+		};
+		const bags: { at: [number, number]; fill: number; tall: number; seed: number; lean: [number, number]; lying?: boolean }[] = [
+			{ at: [TAIL_X + 0.37, -0.24], fill: 0.95, tall: 1.0, seed: 0.4, lean: [0.06, -0.05] },
+			{ at: [TAIL_X + 0.4, 0.26], fill: 0.85, tall: 0.88, seed: 2.2, lean: [-0.08, -0.04] },
+			{ at: [TAIL_X + 0.9, -0.25], fill: 1.0, tall: 1.08, seed: 4.1, lean: [0.04, 0.05] },
+			{ at: [TAIL_X + 1.27, 0.265], fill: 0.85, tall: 0.95, seed: 5.3, lean: [0, 0], lying: true },
+		];
+		for (const b of bags) {
+			const bag = new Group();
+			const h = 0.55 * b.tall;
+			// The widest a bag gets, lumps included.
+			const widest = 0.25 * b.fill * 1.13;
+			if (b.lying) {
+				// On its side, knot toward the tailgate, sagging flat against the floor.
+				bag.position.set(b.at[0], cargoFloorY + widest * 0.8, b.at[1]);
+				bag.rotation.z = Math.PI / 2;
+				bag.scale.set(0.8, 1, 1);
+			} else {
+				// Leaning lifts one edge of the base and would sink the other, so the bag rides up by that much.
+				bag.position.set(b.at[0], cargoFloorY + widest * Math.sin(Math.abs(b.lean[0]) + Math.abs(b.lean[1])), b.at[1]);
+				bag.rotation.set(b.lean[0], b.seed, b.lean[1]);
+			}
+			cargoRoot.add(bag);
+			add(bag, bagGeo(b.fill, b.tall, b.seed), bagMat, [0, 0, 0], { outline: 0.006 });
+			// The two ears of the knot, splayed differently on each bag.
+			for (const t of [-1, 1]) add(bag, slab(0.05, 0.07, 0.005, 0.002, 0.001), bagMat, [0, h, t * 0.02], { rot: [t * (0.5 + 0.3 * Math.sin(b.seed * 3)), 0, 0.2 * Math.cos(b.seed)], outline: 0 });
+		}
+	}
+	if (bedOpen && cargo === "ulua") {
+		// Three PENN Battalion II Ulua rods, 13 ft in two pieces, broken down: each 6 ft 6 in half lies with its
+		// thick end on the floor behind the cab and rests up on the tailgate's top edge, its tip just past it.
+		// From PENN's photos, the butt half runs: stainless butt sleeve, black rubber grip, the reel seat between
+		// silver trim rings (a conventional reel on top, drawn generic), fore grip, then a magenta band and gold
+		// label on the black blank and its first wire guides. The tip half lies beside it, guides getting
+		// smaller toward the tip. Where each sits along the rod is estimated from the photos.
+		const half = (13 * 12 * INCH) / 2;
+		const blankMat = std("#131416", 0.35, 0.35);
+		const sleeveMat = std("#c9ccd0", 0.25, 0.85);
+		const rubberMat = std("#1c1d1f", 0.9, 0.02);
+		const magentaMat = std("#b02a6b", 0.45, 0.2);
+		const goldMat = std("#b8913a", 0.35, 0.7);
+		const along = (rod: Group, geo: BufferGeometry, mat: Material, y: number) => add(rod, geo, mat, [0, y, 0], { outline: 0 });
+		const guide = (rod: Group, y: number, r: number, rodR: number) => {
+			const ring = new TorusGeometry(r, 0.0016, 6, 14);
+			ring.rotateX(Math.PI / 2);
+			add(rod, ring, silverMat, [rodR + r + 0.004, y, 0], { outline: 0 });
+			add(rod, slab(0.006, 0.02, 0.004, 0.001, 0.0005), silverMat, [rodR + 0.003, y, 0], { outline: 0 }); // foot
+		};
+		for (const z of [-0.32, -0.02, 0.28]) {
+			for (const butt of [true, false]) {
+				const zz = z + (butt ? 0 : 0.05);
+				const start = new Vector3(CAB_BACK_X - 0.16, cargoFloorY + (butt ? 0.02 : 0.012), zz);
+				const rest = new Vector3(TAIL_X + 0.03, 1.0 + (butt ? 0.012 : 0.008), zz);
+				const rod = new Group();
+				rod.position.copy(start);
+				// Along the rod is local +Y; local +X is straight up off it, the reel's and the guides' side.
+				rod.quaternion.setFromUnitVectors(new Vector3(0, 1, 0), rest.sub(start).normalize());
+				cargoRoot.add(rod);
+				const [r0, r1] = butt ? [0.012, 0.008] : [0.008, 0.0025];
+				add(rod, new CylinderGeometry(r1, r0, half, 10), blankMat, [0, half / 2, 0], { outline: 0.004 });
+				const rAt = (y: number) => r0 + ((r1 - r0) * y) / half;
+				if (!butt) {
+					[0.3, 0.7, 1.1, 1.5, 1.85].forEach((y, i) => guide(rod, y, 0.008 - i * 0.0012, rAt(y)));
+					along(rod, new CylinderGeometry(0.003, 0.003, 0.012, 8), silverMat, half - 0.006); // tip-top
+					continue;
+				}
+				along(rod, new CylinderGeometry(0.0165, 0.0165, 0.24, 12), sleeveMat, 0.12);
+				along(rod, new CylinderGeometry(0.0175, 0.0175, 0.6, 12), rubberMat, 0.54);
+				along(rod, new CylinderGeometry(0.0155, 0.0155, 0.14, 12), silverMat, 0.91);
+				for (const y of [0.845, 0.975]) along(rod, new CylinderGeometry(0.019, 0.019, 0.012, 14), sleeveMat, y);
+				along(rod, new CylinderGeometry(0.0155, 0.017, 0.26, 12), rubberMat, 1.11);
+				along(rod, new CylinderGeometry(rAt(1.32) + 0.0008, rAt(1.32) + 0.0008, 0.012, 10), magentaMat, 1.32);
+				along(rod, new CylinderGeometry(rAt(1.41) + 0.0006, rAt(1.41) + 0.0006, 0.11, 10), goldMat, 1.41);
+				for (const y of [1.6, 1.88]) guide(rod, y, 0.011, rAt(y));
+				// The reel on top of the seat: spool, silver side plates and a foot.
+				const spool = new CylinderGeometry(0.04, 0.04, 0.075, 18);
+				spool.rotateX(Math.PI / 2);
+				add(rod, spool, trimMat, [0.06, 0.91, 0], { outline: 0.006 });
+				for (const side of [-1, 1]) {
+					const plate = new CylinderGeometry(0.046, 0.046, 0.01, 18);
+					plate.rotateX(Math.PI / 2);
+					add(rod, plate, silverMat, [0.06, 0.91, side * 0.042], { outline: 0 });
+				}
+				add(rod, slab(0.03, 0.06, 0.02, 0.004, 0.002), silverMat, [0.03, 0.91, 0], { outline: 0 });
+			}
+		}
+	}
+	if (bedOpen && cargo === "dirtbike") {
+		// Honda's CRF50F standing on its wheels down the middle of the bed, front wheel to the cab, strapped to
+		// the front tie-downs. From Honda's sheet: 35.9 in wheelbase, 51.3 in long, 22.9 in across the bars,
+		// 30.5 in tall, a 21.6 in seat, 6.0 in of ground clearance, 25 degrees of rake and 2.50-10 tires
+		// (10 in rims, about 15 in tall). From Honda's studio photo: red plastics and seat, the white HONDA on
+		// each side panel and CRF on the shrouds over a navy flash, a silver frame, swingarm and fork with red
+		// guards, a high MX front fender, a red number plate, spoked wheels on knobby tires and the black
+		// exhaust on the right. Panel shapes are simplified.
+		const wb = 35.9 * INCH;
+		const bikeLen = 51.3 * INCH;
+		const barHalf = (22.9 * INCH) / 2;
+		const bikeH = 30.5 * INCH;
+		const seatH = 21.6 * INCH;
+		const clearance = 6.0 * INCH;
+		const rake = (25 * Math.PI) / 180;
+		const tw = 2.5 * INCH;
+		const wr = ((10 + 2 * 2.5) * INCH) / 2;
+		const red = std("#d0202b", 0.4, 0.05);
+		const seatRed = std("#a8121e", 0.85, 0.02);
+		const frameMat = std("#b8bcc1", 0.35, 0.7);
+		const blackPart = std("#151618", 0.6, 0.2);
+		const tireMat = std("#141414", 0.9, 0);
+		const navy = std("#1d2a5a", 0.5, 0.05);
+		const bike = new Group();
+		bike.name = "crf50f";
+		bike.position.set(CAB_BACK_X - 0.12 - wr, cargoFloorY, 0); // origin: on the floor under the front axle
+		cargoRoot.add(bike);
+		/** Lettering on one side of the bike (side +1 is its right, +Z), reading front to back as seen from that side. */
+		const sideLetters = (text: string, at: [number, number], z: number, height: number, side: 1 | -1) => {
+			const g = new Group();
+			g.position.set(at[0], at[1], side * z);
+			g.rotation.y = -side * (Math.PI / 2);
+			bike.add(g);
+			lettering(text, [-0.008, 0, 0], height, height * 0.2, 1, stickerInkMat, g);
+		};
+		const tube = (pts: [number, number, number][], r: number, mat: Material) =>
+			add(bike, new TubeGeometry(new CatmullRomCurve3(pts.map((p) => new Vector3(...p))), 24, r, 8, false), mat, [0, 0, 0], { outline: 0 });
+		// Wheels: knobby tire, spoked silver rim and hub.
+		for (const ax of [0, -wb]) {
+			add(bike, new TorusGeometry(wr - tw / 2, tw / 2 - 0.006, 10, 28), tireMat, [ax, wr, 0], { outline: 0.006 });
+			for (let i = 0; i < 22; i++) {
+				const a = (i / 22) * Math.PI * 2;
+				add(bike, slab(0.014, 0.018, tw * 0.85, 0.003, 0.002), tireMat, [ax + Math.cos(a) * (wr - 0.007), wr + Math.sin(a) * (wr - 0.007), 0], { rot: [0, 0, a], outline: 0 });
+			}
+			add(bike, new TorusGeometry(5 * INCH, 0.006, 6, 32), frameMat, [ax, wr, 0], { outline: 0 });
+			const hub = new CylinderGeometry(0.03, 0.03, 0.07, 12);
+			hub.rotateX(Math.PI / 2);
+			add(bike, hub, frameMat, [ax, wr, 0], { outline: 0 });
+			for (let i = 0; i < 12; i++) {
+				const a = (i / 12) * Math.PI * 2;
+				const z = i % 2 ? 0.02 : -0.02;
+				const from = new Vector3(ax + Math.cos(a) * 0.028, wr + Math.sin(a) * 0.028, z);
+				const to = new Vector3(ax + Math.cos(a + 0.4) * 5 * INCH, wr + Math.sin(a + 0.4) * 5 * INCH, 0);
+				const spoke = add(bike, new CylinderGeometry(0.0016, 0.0016, from.distanceTo(to), 4), frameMat, [(from.x + to.x) / 2, (from.y + to.y) / 2, (from.z + to.z) / 2], { outline: 0 });
+				spoke.quaternion.setFromUnitVectors(new Vector3(0, 1, 0), to.sub(from).normalize());
+			}
+		}
+		// Fork: silver legs raked back 25 degrees from the front axle to the steering head, red guards low on
+		// their fronts, a black clamp on top.
+		const barY = bikeH - 0.012;
+		const forkLen = (barY - 0.06 - wr) / Math.cos(rake);
+		const headX = -forkLen * Math.sin(rake);
+		const fork = new Group();
+		fork.position.set(0, wr, 0);
+		fork.rotation.z = rake;
+		bike.add(fork);
+		for (const z of [-0.055, 0.055]) {
+			add(fork, new CylinderGeometry(0.016, 0.016, forkLen, 10), frameMat, [0, forkLen / 2, z], { outline: 0 });
+			add(fork, slab(0.03, 0.2, 0.012, 0.005, 0.002), red, [0.014, 0.14, z], { outline: 0 });
+		}
+		add(fork, slab(0.05, 0.03, 0.15, 0.008, 0.004), blackPart, [0, forkLen - 0.01, 0], { outline: 0 });
+		// High MX front fender off the lower clamp, and the red number plate in front of the bars.
+		const fenderAt = new Vector3(-0.72 * forkLen * Math.sin(rake), wr + 0.72 * forkLen * Math.cos(rake), 0);
+		add(bike, slab(0.32, 0.012, 0.085, 0.005, 0.003), red, [fenderAt.x + 0.08, fenderAt.y - 0.01, 0], { rot: [0, 0, -0.18], outline: OUTLINE_SMALL });
+		add(bike, slab(0.012, 0.11, 0.13, 0.004, 0.002), red, [headX + 0.05, barY - 0.085, 0], { rot: [0, 0, rake], outline: 0.004 });
+		// Handlebar, 22.9 in across, black grips at the ends, its top at the bike's 30.5 in.
+		const bar = new CatmullRomCurve3([
+			new Vector3(headX - 0.05, barY - 0.008, -barHalf),
+			new Vector3(headX - 0.02, barY, -0.12),
+			new Vector3(headX - 0.015, barY + 0.002, 0),
+			new Vector3(headX - 0.02, barY, 0.12),
+			new Vector3(headX - 0.05, barY - 0.008, barHalf),
+		]);
+		add(bike, new TubeGeometry(bar, 30, 0.011, 8, false), blackPart, [0, 0, 0], { outline: 0.004 });
+		for (const side of [-1, 1]) {
+			const grip = new CylinderGeometry(0.0135, 0.0135, 0.09, 10);
+			grip.rotateX(Math.PI / 2);
+			add(bike, grip, tireMat, [headX - 0.048, barY - 0.007, side * (barHalf - 0.045)], { outline: 0 });
+		}
+		add(bike, slab(0.04, 0.06, 0.06, 0.008, 0.004), blackPart, [headX - 0.01, barY - 0.04, 0], { outline: 0 }); // clamp
+		// Silver frame: backbone and down tube from the head, a cradle under the engine, seat rails back to the tail.
+		const seatFront = headX - 0.24;
+		const tailX = wr - bikeLen;
+		tube([[headX - 0.01, barY - 0.1, 0], [headX - 0.12, seatH - 0.02, 0], [headX - 0.3, seatH - 0.09, 0], [headX - 0.33, clearance + 0.12, 0]], 0.012, frameMat);
+		tube([[headX + 0.005, barY - 0.12, 0], [headX - 0.02, clearance + 0.12, 0], [headX - 0.1, clearance + 0.012, 0], [headX - 0.3, clearance + 0.012, 0], [headX - 0.33, clearance + 0.12, 0]], 0.012, frameMat);
+		for (const z of [-0.05, 0.05]) tube([[headX - 0.28, seatH - 0.07, z], [tailX + 0.2, seatH - 0.05, z]], 0.008, frameMat);
+		// Red tank and shrouds, a red seat with its top at 21.6 in, red side panels and tail out to the bike's full length.
+		add(bike, slab(0.15, 0.17, 0.25, 0.03, 0.01), red, [headX - 0.08, seatH + 0.02, 0], { outline: OUTLINE_SMALL });
+		add(bike, slab(0.24, 0.12, 0.19, 0.04, 0.012), red, [headX - 0.2, seatH + 0.04, 0], { outline: OUTLINE_SMALL });
+		add(bike, slab(seatFront - (tailX + 0.22), 0.06, 0.17, 0.025, 0.01), seatRed, [(seatFront + tailX + 0.22) / 2, seatH - 0.03, 0], { outline: OUTLINE_SMALL });
+		add(bike, slab(0.3, 0.035, 0.15, 0.012, 0.006), red, [tailX + 0.15, seatH - 0.04, 0], { rot: [0, 0, -0.08], outline: OUTLINE_SMALL });
+		add(bike, slab(0.24, 0.13, 0.2, 0.02, 0.008), red, [seatFront - 0.26, seatH - 0.12, 0], { outline: 0.006 }); // side panels
+		// Decals: a navy flash with CRF in white on each shroud, and HONDA in white on each side panel.
+		for (const side of [-1, 1] as const) {
+			add(bike, slab(0.12, 0.045, 0.003, 0.002, 0.001), navy, [headX - 0.085, seatH - 0.002, side * 0.1265], { rot: [0, 0, 0.35], outline: 0 });
+			sideLetters("CRF", [headX - 0.085, seatH + 0.0], 0.125 + 0.005, 0.034, side);
+			sideLetters("HONDA", [seatFront - 0.27, seatH - 0.12], 0.1 + 0.005, 0.03, side);
+		}
+		// Engine low between the wheels, its underside at the 6.0 in clearance: a silver case and the black,
+		// near-level cylinder up front; footpegs either side; the silver swingarm back to the rear axle.
+		add(bike, slab(0.24, 0.2, 0.17, 0.03, 0.01), std("#a3a7ac", 0.45, 0.6), [headX - 0.17, clearance + 0.1, 0], { outline: 0.006 });
+		add(bike, slab(0.11, 0.09, 0.12, 0.012, 0.005), blackPart, [headX - 0.06, clearance + 0.17, 0], { rot: [0, 0, 0.5], outline: 0 });
+		for (const side of [-1, 1]) {
+			const peg = new CylinderGeometry(0.01, 0.01, 0.07, 8);
+			peg.rotateX(Math.PI / 2);
+			add(bike, peg, blackPart, [headX - 0.33, clearance + 0.1, side * 0.12], { outline: 0 });
+		}
+		for (const z of [-0.06, 0.06]) {
+			const pivot = new Vector3(headX - 0.33, clearance + 0.13, z);
+			const axle = new Vector3(-wb, wr, z);
+			const arm = add(bike, new CylinderGeometry(0.014, 0.014, pivot.distanceTo(axle), 8), frameMat, [(pivot.x + axle.x) / 2, (pivot.y + axle.y) / 2, z], { outline: 0 });
+			arm.quaternion.setFromUnitVectors(new Vector3(0, 1, 0), axle.clone().sub(pivot).normalize());
+		}
+		// Exhaust on the right: header from the cylinder, back under the seat to a black muffler by the tail.
+		tube([[headX - 0.02, clearance + 0.14, 0.07], [headX - 0.3, seatH - 0.2, 0.11], [tailX + 0.4, seatH - 0.13, 0.11]], 0.016, blackPart);
+		const muffler = new CylinderGeometry(0.03, 0.03, 0.2, 12);
+		muffler.rotateZ(Math.PI / 2);
+		add(bike, muffler, blackPart, [tailX + 0.3, seatH - 0.13, 0.11], { outline: 0.004 });
+		// Ratchet straps from each end of the bars down to the front tie-down hooks.
+		pair((side) => {
+			const from = new Vector3(bike.position.x + headX - 0.04, bike.position.y + barY, side * (barHalf - 0.05));
+			const to = new Vector3(CAB_BACK_X - 0.2, BELT_Y - 0.1, side * (BODY_HALF_W - 0.1));
+			const strap = add(cargoRoot, slab(0.004, from.distanceTo(to), 0.025, 0.001, 0.0005), trimMat, [(from.x + to.x) / 2, (from.y + to.y) / 2, (from.z + to.z) / 2], { outline: 0 });
+			strap.quaternion.setFromUnitVectors(new Vector3(0, 1, 0), to.clone().sub(from).normalize());
+		});
+	}
+	/** A sticker's own frame on the outside of the raked rear glass, centered at (centerY, z); local -X faces out. */
+	const onRearGlass = (name: string, z: number, centerY: number) => {
+		const g = new Group();
+		g.name = name;
+		g.position.set(rearGlassX(centerY) - 0.004, centerY, z);
+		g.rotation.z = rearRake;
+		body.add(g);
+		return g;
+	};
+	/** A flat piece of a sticker, drawn in its face (x across, y up), pressed on in layers so each sits just over the one below. */
+	const decal = (parent: Object3D, geo: BufferGeometry, mat: Material, layer: number, at: [number, number] = [0, 0]) => {
+		geo.rotateY(-Math.PI / 2);
+		return add(parent, geo, mat, [-0.003 - layer * 0.0004, at[1], at[0]], { outline: 0 });
+	};
+	const rect = (w: number, h: number) => new ShapeGeometry(new Shape([new Vector2(-w / 2, -h / 2), new Vector2(w / 2, -h / 2), new Vector2(w / 2, h / 2), new Vector2(-w / 2, h / 2)]));
+	// Every sticker goes in the same spot: the bottom corner of the rear glass on the passenger side (+Z),
+	// the bottom right seen from behind, 0.75 in inside the glass that shows on both edges. Only code can
+	// ask for more than one at once; any after the first line up inboard of it.
+	// The glass that actually shows stops short of the window frame: the C pillar's black outline covers
+	// its outboard edge, and the bed's front-wall cap (with its outline) covers its bottom.
+	const cornerGap = 0.75 * INCH;
+	const glassEdgeZ = 0.77 - 0.07 / 2 - OUTLINE_SMALL;
+	const glassBottomY = BELT_Y + 0.05 / 2 + OUTLINE_SMALL;
+	const stickerBottomY = glassBottomY + cornerGap;
+	let stickerEdgeZ = glassEdgeZ - cornerGap;
+	/** The frame for the next sticker, w across and h tall (real size), its outboard bottom corner at the corner. */
+	const atCorner = (name: string, w: number, h: number) => {
+		const [dw, dh] = [w * STICKER_DRAW_SCALE, h * STICKER_DRAW_SCALE];
+		const g = onRearGlass(name, stickerEdgeZ - dw / 2, stickerBottomY + dh / 2);
+		g.scale.setScalar(STICKER_DRAW_SCALE);
+		stickerEdgeZ -= dw + cornerGap;
+		return g;
+	};
+	if (stickers.includes("kalapana")) {
+		// Aloha Got Soul's 7.5 x 2.5 in sticker, white on green. Only the big KALAPANA is lettered; the
+		// "SLOW DOWN... I'M LISTENING TO" line above it would be about a millimeter tall at this scale.
+		const [w, h] = [7.5 * INCH, 2.5 * INCH];
+		const sticker = atCorner("sticker-kalapana", w, h);
+		add(sticker, slab(0.005, h, w, 0.004, 0.001), stickerMat, [0, 0, 0], { outline: 0.003 });
 		lettering("KALAPANA", [-0.004, -0.008, 0], 0.021, 0.0042, -1, stickerInkMat, sticker);
-		body.add(sticker);
+	}
+	if (stickers.includes("tc")) {
+		// T&C Surf Designs' 6 in Standard Logo, white on clear: the ring that carries "T&C Surf Designs" and
+		// "Hawaii" (too small to letter here) round a yin-yang whose other half is the clear film. The ring is
+		// about a third of the radius, as in T&C's product photo.
+		const R = TC_STICKER_R;
+		const sticker = atCorner("sticker-tc", 2 * R, 2 * R);
+		decal(sticker, new RingGeometry(R * 0.68, R, 40), stickerInkMat, 0);
+		const ry = R * 0.6;
+		const yin = new Shape();
+		yin.moveTo(0, ry);
+		yin.absarc(0, 0, ry, Math.PI / 2, (3 * Math.PI) / 2, false);
+		yin.absarc(0, -ry / 2, ry / 2, -Math.PI / 2, Math.PI / 2, false);
+		yin.absarc(0, ry / 2, ry / 2, -Math.PI / 2, Math.PI / 2, true);
+		const eye = new Shape();
+		eye.absarc(0, -ry / 2, ry * 0.15, 0, Math.PI * 2, true);
+		yin.holes.push(eye);
+		decal(sticker, new ShapeGeometry(yin, 16), stickerInkMat, 0);
+		decal(sticker, new CircleGeometry(ry * 0.15, 16), stickerInkMat, 0, [0, ry / 2]);
+	}
+	if (stickers.includes("lemon")) {
+		// The lemon from Lemon's logo, die-cut to its outline (no square, no mark): a black rim round a yellow
+		// slice, the rind set off by a black line round its lower left, and nine segments meeting just up and
+		// right of center, black showing between them. About 4 in across, an estimate.
+		const R = 2 * INCH;
+		const sticker = atCorner("sticker-lemon", 2 * R, 2 * R);
+		const ink = std("#141414", 0.5, 0);
+		const lemon = std("#f5e23c", 0.45, 0);
+		decal(sticker, new CircleGeometry(R, 40), ink, 0);
+		decal(sticker, new CircleGeometry(R * 0.92, 40), lemon, 1);
+		decal(sticker, new RingGeometry(R * 0.76, R * 0.82, 32, 1, Math.PI * 0.55, Math.PI * 1.05), ink, 2);
+		const c: [number, number] = [R * 0.06, R * 0.06];
+		decal(sticker, new CircleGeometry(R * 0.66, 36), ink, 2, c);
+		for (let i = 0; i < 9; i++) {
+			const a0 = (i / 9) * Math.PI * 2 + 0.07;
+			const a1 = ((i + 1) / 9) * Math.PI * 2 - 0.07;
+			const mid = (a0 + a1) / 2;
+			const seg = new Shape();
+			seg.moveTo(Math.cos(mid) * R * 0.11, Math.sin(mid) * R * 0.11);
+			seg.lineTo(Math.cos(a0) * R * 0.6, Math.sin(a0) * R * 0.6); // an arc after a bare moveTo wouldn't join it
+			seg.absarc(0, 0, R * 0.6, a0, a1, false);
+			decal(sticker, new ShapeGeometry(seg, 8), lemon, 3, c);
+		}
+		decal(sticker, new CircleGeometry(R * 0.08, 12), ink, 4, c);
+	}
+	if (stickers.includes("kanaka")) {
+		// Flags For Good's 3.75 x 2.5 in Kanaka Maoli flag sticker, white-bordered: nine
+		// stripes, green, red and yellow from the top, and a green shield (darker rim) carrying a yellow kahili
+		// on its staff and two paddles crossed below it, blades up and out.
+		const [w, h] = [3.75 * INCH, 2.5 * INCH];
+		const sticker = atCorner("sticker-kanaka", w, h);
+		const green = std("#3fae49", 0.5, 0);
+		const red = std("#e2312b", 0.5, 0);
+		const yellow = std("#f5df35", 0.5, 0);
+		decal(sticker, rect(w, h), stickerInkMat, 0);
+		const [fw, fh] = [w - 0.004, h - 0.004];
+		[green, red, yellow, green, red, yellow, green, red, yellow].forEach((m, i) => decal(sticker, rect(fw, fh / 9), m, 1, [0, fh / 2 - (fh / 9) * (i + 0.5)]));
+		const sw = fw * 0.38;
+		const sh = fh * 0.86;
+		const shield = (k: number) => {
+			const p = new Shape();
+			const hw = (sw / 2) * k;
+			p.moveTo(-hw, sh * 0.46 * k);
+			p.lineTo(hw, sh * 0.46 * k);
+			p.lineTo(hw, -sh * 0.08 * k);
+			p.quadraticCurveTo(hw, -sh * 0.42 * k, 0, -sh * 0.54 * k);
+			p.quadraticCurveTo(-hw, -sh * 0.42 * k, -hw, -sh * 0.08 * k);
+			return new ShapeGeometry(p, 10);
+		};
+		decal(sticker, shield(1), std("#1f6a2c", 0.5, 0), 2);
+		decal(sticker, shield(0.9), green, 3);
+		decal(sticker, new ShapeGeometry(new Shape([new Vector2(-sw * 0.2, sh * 0.36), new Vector2(sw * 0.2, sh * 0.36), new Vector2(0, sh * 0.13)])), yellow, 4);
+		decal(sticker, rect(sw * 0.05, sh * 0.52), yellow, 4, [0, -sh * 0.12]);
+		for (const s of [-1, 1]) {
+			const blade = new Shape();
+			blade.absellipse(0, sh * 0.21, sh * 0.04, sh * 0.11, 0, Math.PI * 2, false, 0);
+			const bladeGeo = new ShapeGeometry(blade, 12);
+			bladeGeo.rotateZ(-s * 0.75);
+			decal(sticker, bladeGeo, yellow, 4, [0, -sh * 0.12]);
+			const shaft = rect(sw * 0.035, sh * 0.5);
+			shaft.translate(0, -sh * 0.05, 0);
+			shaft.rotateZ(-s * 0.75);
+			decal(sticker, shaft, yellow, 4, [0, -sh * 0.12]);
+		}
+	}
+	if (stickers.includes("dahui")) {
+		// The Hui O He'e Nalu (Da Hui) badge from the Da Hui Paddle Race: a black disc ringed in
+		// yellow with a yellow surfer at its center. The ring lettering is too small to draw at this scale, and
+		// the surfer is simplified to a few strokes. About 4 in across, an estimate.
+		const R = 2 * INCH;
+		const sticker = atCorner("sticker-dahui", 2 * R, 2 * R);
+		const black = std("#111111", 0.5, 0);
+		const yellow = std("#f3d41c", 0.45, 0);
+		decal(sticker, new CircleGeometry(R, 40), black, 0);
+		decal(sticker, new RingGeometry(R * 0.9, R * 0.95, 40), yellow, 1);
+		decal(sticker, new CircleGeometry(R * 0.08, 14), yellow, 1, [R * 0.04, R * 0.38]); // head
+		const stroke = (len: number, angle: number, at: [number, number]) => {
+			const g = rect(R * 0.07, len);
+			g.rotateZ(angle);
+			decal(sticker, g, yellow, 1, at);
+		};
+		stroke(R * 0.32, -0.2, [R * 0.01, R * 0.15]); // body
+		stroke(R * 0.5, 1.2, [R * 0.0, R * 0.22]); // arms out
+		stroke(R * 0.3, 0.55, [-R * 0.1, -R * 0.13]); // back leg
+		stroke(R * 0.3, -0.45, [R * 0.12, -R * 0.13]); // front leg
+		const board = new Shape();
+		board.absellipse(0, 0, R * 0.42, R * 0.055, 0, Math.PI * 2, false, 0);
+		const boardGeo = new ShapeGeometry(board, 16);
+		boardGeo.rotateZ(0.12);
+		decal(sticker, boardGeo, yellow, 1, [R * 0.01, -R * 0.34]);
 	}
 
 	pair((side) => {
@@ -1040,7 +1832,7 @@ export function buildToyotaTruck(colors: TruckColors = DEFAULT_TRUCK_COLORS, opt
 	for (const z of [-FRONT.grilleHalfW * 0.48, FRONT.grilleHalfW * 0.48]) {
 		add(body, slab(0.026, FRONT.bandH - 0.03, 0.022, 0.006, 0.003), grilleMat, [bandX + 0.012, bandY, z], { outline: 0 });
 	}
-	lettering("TOYOTA", [bandX + 0.03, bandY, 0], 0.062, 0.014, 1, silverMat);
+	lettering("TOYOTA", [bandX + 0.03, bandY, 0], 0.062, 0.014, 1, options.grille === "blackout" ? trimMat : silverMat);
 	pair((side) => {
 		// Sealed-beam headlight in a dark bezel, centered between the grille and the corner lamp.
 		const headZ = side * FRONT.headZ;
@@ -1055,6 +1847,24 @@ export function buildToyotaTruck(colors: TruckColors = DEFAULT_TRUCK_COLORS, opt
 					add(body, dot, headMat, [bandX + 0.036, bandY + (r - 1) * 0.038, headZ + (c - 2) * 0.034], { outline: 0 });
 				}
 			}
+		} else if (options.headlights === "h4" || options.headlights === "retro") {
+			// A clear lens over a chrome reflector, so the lamp reads as a bright bowl: an H4 bulb under its
+			// shield cap at the center (Hella), or a small black LED module with its emitter (RetroBright).
+			add(body, slab(0.03, FRONT.headH, FRONT.headW, 0.02, 0.012), reflectorMat, [bandX + 0.008, bandY, headZ], { outline: 0.012 });
+			if (options.headlights === "h4") {
+				const bulb = new CylinderGeometry(0.011, 0.011, 0.03, 12);
+				bulb.rotateZ(Math.PI / 2);
+				add(body, bulb, headMat, [bandX + 0.03, bandY, headZ], { outline: 0 });
+				const cap = new CylinderGeometry(0.013, 0.013, 0.006, 12);
+				cap.rotateZ(Math.PI / 2);
+				add(body, cap, silverMat, [bandX + 0.047, bandY, headZ], { outline: 0 });
+			} else {
+				add(body, slab(0.02, 0.05, 0.06, 0.008, 0.004), ledHousingMat, [bandX + 0.03, bandY, headZ], { outline: 0 });
+				const emitter = new CylinderGeometry(0.013, 0.013, 0.006, 14);
+				emitter.rotateZ(Math.PI / 2);
+				add(body, emitter, headMat, [bandX + 0.042, bandY, headZ], { outline: 0 });
+			}
+			add(body, slab(0.006, FRONT.headH - 0.006, FRONT.headW - 0.006, 0.012, 0.002), glassWith(0.9), [bandX + 0.052, bandY, headZ], { outline: 0 });
 		} else {
 			add(body, slab(0.04, FRONT.headH, FRONT.headW, 0.02, 0.012), headMat, [bandX + 0.014, bandY, headZ], { outline: 0.012 });
 		}
@@ -1346,13 +2156,14 @@ export function buildToyotaTruck(colors: TruckColors = DEFAULT_TRUCK_COLORS, opt
 	body.position.y = ride.rear + lift - REAR_AXLE_X * pitch;
 
 	if (hoops) {
-		// Custom dual front shock hoops: two Rancho RS5000Xs (2.25 in white body, red boot) stand just inboard of
-		// each front tire, from the lower control arm up to hoops under the roof of the wheel well, one leaning
-		// forward and one back so both show over the tire. Where the hoops put them, and their 1.75 in tube, are estimates.
+		// Custom front shock hoops: the shocks (by default two Rancho RS5000Xs, 2.25 in white bodies, red boots)
+		// stand just inboard of each front tire, from the lower control arm up to hoops under the roof of the
+		// wheel well. Two to a wheel, one leans forward and one back so both show over the tire; a single one
+		// leans forward. Where the hoops put them, and their 1.75 in tube, are estimates.
 		body.updateMatrix();
 		const toBody = body.matrix.clone().invert();
-		const shockWhite = std("#f2f1ec", 0.45, 0.05);
-		const bootRed = std("#c41e2a", 0.6, 0.02);
+		const shockWhite = shockSetup.metallic ? std(shockSetup.body, 0.3, 0.8) : std(shockSetup.body, 0.45, 0.05);
+		const bootRed = std(shockSetup.boot, 0.6, 0.02);
 		const hoopMat = std("#1d1f22", 0.5, 0.4);
 		const hoopR = (1.75 * INCH) / 2;
 		// Each top sits toward one end of the arch, where the tire falls away fastest, just under the well's lined roof.
@@ -1365,7 +2176,7 @@ export function buildToyotaTruck(colors: TruckColors = DEFAULT_TRUCK_COLORS, opt
 			return g;
 		};
 		pair((side) => {
-			for (const fore of [1, -1]) {
+			for (const fore of shockSetup.perWheel === 1 ? [1] : [1, -1]) {
 				const bottom = new Vector3(FRONT_AXLE_X + fore * 0.04, tireR - 0.08, side * shockZ).applyMatrix4(toBody);
 				const top = new Vector3(FRONT_AXLE_X + fore * topDx, roofY - 0.05, side * (shockZ - 0.02));
 				const axis = top.clone().sub(bottom);

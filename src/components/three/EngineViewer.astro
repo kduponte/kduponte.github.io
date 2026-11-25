@@ -4,7 +4,7 @@
 // numbers come from engine-22re-data.ts, where each one is sourced.
 import categories from "../../../public/data/toyota-truck/failure_categories.json";
 import { OFF_ENGINE_CATEGORIES, failureTint, rampGradient, systemCounts, type CategoryCount } from "../../lib/three/engine-22re-data";
-import { ENGINE_LAYOUT as L } from "../../lib/three/engine-22re-model";
+import DragHint from "./DragHint.astro";
 
 interface Props {
 	/** Classes for the canvas box. */
@@ -33,38 +33,8 @@ const payload = JSON.stringify({
 	systems: Object.fromEntries(counts.map((c) => [c.key, { label: c.label, count: c.count, pct: pct(c.count), parts: c.parts, note: c.note ?? "" }])),
 }).replace(/</g, "\\u003c");
 
-// Static fallback: the same engine seen from the passenger side, front to the right, same colors.
-const M = 600; // px per meter
-const sx = (x: number) => (x + 0.54) * M;
-const sy = (y: number) => (0.47 - y) * M;
-const rect = (x0: number, y0: number, x1: number, y1: number) => ({ x: sx(x0), y: sy(y1), width: (x1 - x0) * M, height: (y1 - y0) * M });
-const bf = L.blockFront;
-const bell = [
-	[0, 0.16],
-	[-0.03, 0.19],
-	[-0.14, 0.18],
-	[-0.19, 0.105],
-	[-0.29, 0.1],
-] as const;
-const bellPoints = [...bell.map(([dx, r]) => [-bf + dx, r]), ...[...bell].reverse().map(([dx, r]) => [-bf + dx, -r])]
-	.map(([x, y]) => `${sx(x).toFixed(1)},${sy(y).toFixed(1)}`)
-	.join(" ");
-const fallbackParts = [
-	{ ...rect(-bf + 0.005, L.panY - 0.12, bf - 0.015, L.panY), fill: tints.oil },
-	{ ...rect(-bf, L.panY, bf, L.deckY), fill: "#5d6165" },
-	{ ...rect(-bf, L.deckY, bf, L.deckY + L.gasket), fill: tints.headGasket },
-	{ ...rect(-bf, L.deckY + L.gasket, bf, L.headTop), fill: "#b9bec3" },
-	{ ...rect(-bf + 0.017, L.headTop, bf - 0.017, L.headTop + 0.063), fill: "#1f2022" },
-	{ ...rect(-0.195, L.headTop + 0.015, 0.165, L.headTop + 0.105), fill: tints.fuel },
-	{ ...rect(0.165, L.headTop + 0.024, 0.221, L.headTop + 0.096), fill: tints.fuel },
-	{ ...rect(bf, L.panY + 0.012, bf + 0.03, L.headTop - 0.008), fill: tints.timing },
-	{ ...rect(bf + 0.03, L.pumpY - 0.05, bf + 0.075, L.pumpY + 0.05), fill: tints.cooling },
-	{ ...rect(bf + 0.122, L.pumpY - 0.165, bf + 0.134, L.pumpY + 0.165), fill: tints.cooling },
-	{ ...rect(bf - 0.105, -0.055, bf + 0.025, 0.055), fill: tints.ac },
-	{ ...rect(-bf - 0.025, -0.047, -bf + 0.125, 0.037), fill: tints.electrical },
-];
 const label =
-	"A Toyota 22R-E engine, slowly turning, with its driver's side cut away to show the pistons moving. Each system's parts are colored by how many forum threads reported a problem with it, pale for few and deep red for many. Drag to spin it; tap a part to read its count.";
+	"A Toyota 22R-E engine with its driver's side cut away to show the pistons moving. Each system's parts are colored by how many forum threads reported a problem with it, pale for few and deep red for many. Drag to spin it; tap a part to read its count.";
 ---
 
 <div data-engine-root class="grid gap-6 md:grid-cols-12 md:items-start">
@@ -76,12 +46,7 @@ const label =
 		aria-label={label}
 		class:list={["relative w-full select-none md:col-span-7", aspect, className]}
 	>
-		<svg data-fallback viewBox="0 0 560 420" class="absolute inset-0 h-full w-full" aria-hidden="true">
-			<g stroke="#111" stroke-width="3" stroke-linejoin="round">
-				<polygon points={bellPoints} fill={tints.drivetrain} />
-				{fallbackParts.map((p) => <rect x={p.x} y={p.y} width={p.width} height={p.height} fill={p.fill} />)}
-			</g>
-		</svg>
+		<DragHint />
 	</div>
 
 	<div class="raw-box rounded-xl bg-cream p-4 md:col-span-5">

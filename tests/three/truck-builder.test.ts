@@ -619,6 +619,34 @@ describe("buildToyotaTruck with builder options", () => {
 		}
 	});
 
+	it("mounts each mirror on its door at the window's front corner, and swings it out with the door", () => {
+		for (const openable of [false, true]) {
+			const t = buildToyotaTruck(undefined, { openable });
+			t.group.updateMatrixWorld(true);
+			const mirrors: Object3D[] = [];
+			t.group.traverse((o) => o.name === "mirror" && mirrors.push(o));
+			expect(mirrors).toHaveLength(2);
+			for (const m of mirrors) {
+				const box = new Box3().setFromObject(m);
+				// It reaches in to the side glass (0.765 m out) and down to the belt line (0.98 m), so nothing floats.
+				expect(Math.min(Math.abs(box.min.z), Math.abs(box.max.z))).toBeLessThan(0.78);
+				expect(box.min.y).toBeLessThan(0.99);
+				// And it sticks out past the body (0.82 m) where the driver can see it.
+				expect(Math.max(Math.abs(box.min.z), Math.abs(box.max.z))).toBeGreaterThan(1.0);
+			}
+			if (openable) {
+				// The group's origin sits on the hinge, so compare where the mirror itself is.
+				const center = (m: Object3D) => new Box3().setFromObject(m).getCenter(new Vector3());
+				const before = mirrors.map(center);
+				t.setOpen?.("doorLeft", 1);
+				t.setOpen?.("doorRight", 1);
+				t.group.updateMatrixWorld(true);
+				mirrors.forEach((m, i) => expect(center(m).distanceTo(before[i])).toBeGreaterThan(0.05));
+			}
+			t.dispose();
+		}
+	});
+
 	it("carries the KC lights in yellow or black covers, or leaves the bar bare", () => {
 		const count = (lights: "none" | "yellow" | "black", hex: string) => {
 			const t = buildToyotaTruck(undefined, { rack: "rollbar", rackLights: lights });

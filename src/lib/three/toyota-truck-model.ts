@@ -776,6 +776,27 @@ export function buildToyotaTruck(colors: TruckColors = DEFAULT_TRUCK_COLORS, opt
 		outline: 0,
 	});
 	/** Door pivots on their front hinges, right then left; filled in further down. */
+	/**
+	 * The door mirror, bolted to the door as on the 1989-95 pickup: a black sail plate filling the front
+	 * corner of the side window at the belt line, an arm out from it, and the head. `to` maps model
+	 * coordinates into the parent's (the door's own, when the doors open).
+	 */
+	const mirror = (side: 1 | -1, parent: Object3D, to: (x: number, y: number, z: number) => [number, number, number]) => {
+		const g = new Group();
+		g.name = "mirror";
+		parent.add(g);
+		// The window's front edge runs up the windshield rake from (0.6, belt line) toward (0.13, 1.56).
+		const glassEdgeX = (y: number) => 0.6 - ((y - BELT_Y - 0.01) / (1.56 - BELT_Y - 0.01)) * (0.6 - 0.13);
+		const sailTop = BELT_Y + 0.14;
+		const sail = new Shape([new Vector2(0.6, BELT_Y + 0.005), new Vector2(0.42, BELT_Y + 0.005), new Vector2(0.42, sailTop), new Vector2(glassEdgeX(sailTop), sailTop)]);
+		add(g, extrude(sail, 0.02, 0.004, false), trimMat, to(0, 0, side * 0.785), { outline: 0.006 });
+		const armY = BELT_Y + 0.08;
+		const armX = 0.5;
+		const [armIn, armOut] = [0.79, 0.95];
+		add(g, slab(0.05, 0.04, armOut - armIn, 0.015, 0.006), trimMat, to(armX, armY, side * (armIn + armOut) / 2), { outline: 0 });
+		add(g, slab(0.07, 0.22, 0.12, 0.03, 0.012), trimMat, to(armX, armY + 0.07, side * (armOut + 0.05)), { outline: 0.02 });
+	};
+
 	const doors: Group[] = [];
 	pair((side) => {
 		if (!openable) {
@@ -784,6 +805,7 @@ export function buildToyotaTruck(colors: TruckColors = DEFAULT_TRUCK_COLORS, opt
 			});
 			// Black belt molding along the window sill.
 			add(body, slab(cabLen, 0.025, 0.1, 0.01, 0.006), trimMat, [cabMidX, BELT_Y + 0.005, side * (BODY_HALF_W - 0.04)], { outline: 0 });
+			mirror(side, body, (x, y, z) => [x, y, z]);
 			return;
 		}
 		const wallZ = side * (BODY_HALF_W - 0.04);
@@ -824,6 +846,8 @@ export function buildToyotaTruck(colors: TruckColors = DEFAULT_TRUCK_COLORS, opt
 		sash(0.6, BELT_Y + 0.01, 0.13, 1.56);
 		sash(0.13, 1.56, -0.48, 1.56);
 		sash(-0.48, 1.56, -0.48, BELT_Y + 0.01);
+		// The mirror rides on the door, so it swings out with it.
+		mirror(side, door, at);
 		// Inside: trim panel, armrest, door pull.
 		add(door, slab(doorLen - 0.04, BELT_Y - CAB_FLOOR_Y - 0.04, 0.02, 0.02, 0.008), interiorMat, at(doorMidX, (CAB_FLOOR_Y + BELT_Y) / 2, side * (BODY_HALF_W - 0.09)), { outline: 0 });
 		add(door, slab(0.34, 0.05, 0.07, 0.02, 0.01), dashMat, at(0.02, 0.8, side * (BODY_HALF_W - 0.13)), { outline: 0 });
@@ -1742,9 +1766,6 @@ export function buildToyotaTruck(colors: TruckColors = DEFAULT_TRUCK_COLORS, opt
 			}
 			add(body, slab(0.14, 0.04, 0.04, 0.015, 0.008), trimMat, [-0.34, 0.9, side * (BODY_HALF_W + 0.025)], { outline: 0 });
 		}
-		// Mirror on a stalk.
-		add(body, slab(0.06, 0.05, 0.16, 0.02, 0.008), trimMat, [0.74, 1.14, side * 0.89], { outline: 0 });
-		add(body, slab(0.07, 0.24, 0.12, 0.03, 0.012), trimMat, [0.74, 1.24, side * 0.99], { outline: 0.02 });
 	});
 
 	// --- Interior. The driver sits on the left (-Z), US market. ---
